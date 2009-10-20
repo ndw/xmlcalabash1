@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="calabash" default="default" basedir=".">
+  <description>Builds the distribution jar because IntelliJ sucks at it</description>
+
+  <property name="version" value="0.9.15"/>
+  <property name="distrib.dir" value="calabash-${version}"/>
+  <property name="build.dir" value="out/production/Calabash"/>
+
+  <path id="build.classpath">
+    <fileset dir="lib">
+      <include name="**/*.jar"/>
+    </fileset>
+  </path>
+
+  <target name="default" depends="jar"/>
+
+  <target name="init"/>
+
+  <target name="update-output">
+    <copy todir="${build.dir}/etc">
+      <fileset file="etc/**xml"/>
+      <fileset file="etc/**xpl"/>
+      <fileset file="etc/**xsl"/>
+      <fileset file="etc/usage.txt"/>
+    </copy>
+  </target>
+
+  <target name="jar" depends="update-output">
+    <jar destfile="calabash.jar">
+      <manifest>
+	<attribute name="Built-By" value="Norman Walsh"/>
+	<attribute name="Implementation-Vendor" value="Norman Walsh"/>
+	<attribute name="Implementation-Title" value="XML Calabash"/>
+	<attribute name="Implementation-Version" value="${version}"/>
+      </manifest>
+
+      <fileset dir="${build.dir}"/>
+    </jar>
+  </target>
+
+  <target name="clean" depends="init">
+    <delete dir="${build.dir}"/>
+  </target>
+
+  <target name="compile" depends="init">
+    <mkdir dir="${build.dir}"/>
+    <javac destdir="${build.dir}"
+	   classpathref="build.classpath">
+      <src path="src"/>
+      <!-- Requires DeltaXML jars -->
+      <exclude name="com/xmlcalabash/extensions/DeltaXML.java"/>
+      <!-- Requires MarkLogic XCC jars -->
+      <exclude name="com/xmlcalabash/extensions/marklogic/**.java"/>
+      <!-- Requires SaxonSA -->
+      <exclude name="com/xmlcalabash/library/ValidateWithXSD.java"/>
+      <!-- Requires RenderX XEP -->
+      <exclude name="com/xmlcalabash/library/XSLFormatter.java"/>
+    </javac>
+  </target>
+
+  <target name="distrib" depends="jar">
+    <mkdir dir="${distrib.dir}"/>
+    <mkdir dir="${distrib.dir}/lib"/>
+    <mkdir dir="${distrib.dir}/docs"/>
+    <mkdir dir="${distrib.dir}/schemas"/>
+    <mkdir dir="${distrib.dir}/xpl"/>
+    <copy todir="${distrib.dir}/docs">
+      <fileset file="docs/NOTICES"/>
+      <fileset file="docs/ChangeLog"/>
+      <fileset file="docs/BUGS"/>
+      <fileset file="docs/**txt"/>
+    </copy>
+    <copy todir="${distrib.dir}">
+      <fileset file="docs/README"/>
+    </copy>
+    <copy todir="${distrib.dir}/lib">
+      <fileset file="calabash.jar"/>
+    </copy>
+    <copy todir="${distrib.dir}/xpl">
+      <fileset file="xpl/**xpl"/>
+    </copy>
+    <copy todir="${distrib.dir}/schemas">
+      <fileset file="schemas/**"/>
+    </copy>
+  </target>
+
+</project>
