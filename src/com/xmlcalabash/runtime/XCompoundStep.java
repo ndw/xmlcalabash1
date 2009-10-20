@@ -3,6 +3,7 @@ package com.xmlcalabash.runtime;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcData;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.*;
@@ -30,6 +31,14 @@ public class XCompoundStep extends XAtomicStep {
 
     public void addVariable(QName name, RuntimeValue value) {
         variables.put(name, value);
+    }
+
+    public boolean hasInScopeVariableBinding(QName name) {
+        if (variables.containsKey(name) || inScopeOptions.containsKey(name)) {
+            return true;
+        }
+
+        return getParent() == null ? false : getParent().hasInScopeVariableBinding(name);
     }
 
     public RuntimeValue getVariable(QName name) {
@@ -197,6 +206,10 @@ public class XCompoundStep extends XAtomicStep {
     }
 
     public void run() throws SaxonApiException {
+        XProcData data = runtime.getXProcData();
+        data.openFrame();
+        data.setStep(this);
+
         copyInputs();
 
         // N.B. At this time, there are no compound steps that accept parameters or options,
@@ -216,7 +229,7 @@ public class XCompoundStep extends XAtomicStep {
             RuntimeValue value = computeValue(var);
             inScopeOptions.put(var.getName(), value);
         }
-        
+
         for (XStep step : subpipeline) {
             step.run();
         }
@@ -234,5 +247,7 @@ public class XCompoundStep extends XAtomicStep {
                 }
             }
         }
+
+        data.closeFrame();
     }
 }

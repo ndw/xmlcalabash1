@@ -2,6 +2,7 @@ package com.xmlcalabash.runtime;
 
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcData;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.Pipe;
 import com.xmlcalabash.io.WritablePipe;
@@ -49,6 +50,10 @@ public class XForEach extends XCompoundStep {
     public void run() throws SaxonApiException {
         info(step.getNode(), "Running p:for-each " + step.getName());
 
+        XProcData data = runtime.getXProcData();
+        data.openFrame();
+        data.setStep(this);
+
         if (current == null) {
             current = new Pipe(runtime);
         }
@@ -72,6 +77,8 @@ public class XForEach extends XCompoundStep {
             }
         }
 
+        runtime.getXProcData().setIterationSize(sequenceLength);
+
         for (XdmNode is_doc : nodes) {
             // Setup the current port before we compute variables!
             current.resetWriter();
@@ -79,7 +86,7 @@ public class XForEach extends XCompoundStep {
             finest(step.getNode(), "Copy to current");
 
             sequencePosition++;
-            xprocFunctionLibrary.setIterationPosition(sequencePosition);
+            runtime.getXProcData().setIterationPosition(sequencePosition);
 
             for (Variable var : step.getVariables()) {
                 RuntimeValue value = computeValue(var);
@@ -141,5 +148,7 @@ public class XForEach extends XCompoundStep {
                 pipe.close(); // Indicate that we're done
             }
         }
+
+        data.closeFrame();
     }
 }

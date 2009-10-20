@@ -8,8 +8,6 @@ import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.model.NamespaceBinding;
 import com.xmlcalabash.model.Step;
 import com.xmlcalabash.model.RuntimeValue;
-import com.xmlcalabash.functions.XProcFunctionLibrary;
-import com.xmlcalabash.functions.EXProcFunctionLibrary;
 
 import java.util.Iterator;
 import java.util.Hashtable;
@@ -63,9 +61,6 @@ public class XSelect implements ReadablePipe {
     private int docindex = 0;
     private Step reader = null;
     private XStep forStep = null;
-    protected XProcFunctionLibrary xprocFunctionLibrary = null;
-    protected EXProcFunctionLibrary exprocFunctionLibrary = null;
-    protected FunctionLibraryList functionLibraryList = null;
 
     /** Creates a new instance of Select */
     public XSelect(XProcRuntime runtime, XStep forStep, ReadablePipe readFrom, String xpathExpr, XdmNode context) {
@@ -75,22 +70,6 @@ public class XSelect implements ReadablePipe {
         this.context = context;
         documents = new DocumentSequence(runtime);
         this.forStep = forStep;
-
-        Configuration config = runtime.getProcessor().getUnderlyingConfiguration();
-
-        xprocFunctionLibrary = new XProcFunctionLibrary(runtime, forStep);
-        exprocFunctionLibrary = new EXProcFunctionLibrary(runtime, forStep);
-        functionLibraryList = new FunctionLibraryList();
-
-        functionLibraryList.addFunctionLibrary(
-                SystemFunctionLibrary.getSystemFunctionLibrary(SystemFunctionLibrary.XPATH_ONLY));
-        functionLibraryList.addFunctionLibrary(config.getVendorFunctionLibrary());
-        functionLibraryList.addFunctionLibrary(new ConstructorFunctionLibrary(config));
-        if (config.isAllowExternalFunctions()) {
-            Configuration.getPlatform().addFunctionLibraries(functionLibraryList, config, Configuration.XPATH);
-        }
-        functionLibraryList.addFunctionLibrary(xprocFunctionLibrary);
-        functionLibraryList.addFunctionLibrary(exprocFunctionLibrary);
     }
 
     public void canReadSequence(boolean sequence) {
@@ -104,7 +83,6 @@ public class XSelect implements ReadablePipe {
             NamespaceBinding bindings = new NamespaceBinding(runtime,context);
             XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
             IndependentContext icontext = (IndependentContext) xcomp.getUnderlyingStaticContext();
-            icontext.setFunctionLibrary(functionLibraryList);
 
             Hashtable<QName, RuntimeValue> inScopeOptions = new Hashtable<QName, RuntimeValue> ();
             try {

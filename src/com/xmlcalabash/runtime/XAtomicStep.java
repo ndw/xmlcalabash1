@@ -1,24 +1,48 @@
 package com.xmlcalabash.runtime;
 
-import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.core.XProcConstants;
-import com.xmlcalabash.core.XProcException;
-import com.xmlcalabash.core.XProcStep;
 import com.xmlcalabash.util.RelevantNodes;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TypeUtils;
-import com.xmlcalabash.io.*;
-import com.xmlcalabash.model.*;
-import com.xmlcalabash.functions.XProcFunctionLibrary;
-import com.xmlcalabash.functions.EXProcFunctionLibrary;
-import net.sf.saxon.s9api.*;
+import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcStep;
+import com.xmlcalabash.core.XProcData;
+import com.xmlcalabash.io.ReadablePipe;
+import com.xmlcalabash.io.WritablePipe;
+import com.xmlcalabash.io.ReadableInline;
+import com.xmlcalabash.io.ReadableDocument;
+import com.xmlcalabash.io.ReadableData;
+import com.xmlcalabash.io.Pipe;
+import com.xmlcalabash.model.RuntimeValue;
+import com.xmlcalabash.model.Step;
+import com.xmlcalabash.model.Binding;
+import com.xmlcalabash.model.PipeNameBinding;
+import com.xmlcalabash.model.InlineBinding;
+import com.xmlcalabash.model.DocumentBinding;
+import com.xmlcalabash.model.DataBinding;
+import com.xmlcalabash.model.Input;
+import com.xmlcalabash.model.Output;
+import com.xmlcalabash.model.Parameter;
+import com.xmlcalabash.model.ComputableValue;
+import com.xmlcalabash.model.NamespaceBinding;
+import com.xmlcalabash.model.DeclareStep;
+import com.xmlcalabash.model.Option;
 import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.Configuration;
-import net.sf.saxon.sxpath.IndependentContext;
-import net.sf.saxon.functions.JavaExtensionLibrary;
-import net.sf.saxon.functions.FunctionLibraryList;
-import net.sf.saxon.functions.SystemFunctionLibrary;
-import net.sf.saxon.functions.ConstructorFunctionLibrary;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.Axis;
+import net.sf.saxon.s9api.XdmNodeKind;
+import net.sf.saxon.s9api.XdmAtomicValue;
+import net.sf.saxon.s9api.XPathCompiler;
+import net.sf.saxon.s9api.XPathExecutable;
+import net.sf.saxon.s9api.XPathSelector;
+import net.sf.saxon.s9api.XdmItem;
+import net.sf.saxon.s9api.XdmValue;
+import net.sf.saxon.s9api.XdmSequenceIterator;
+import net.sf.saxon.s9api.XdmDestination;
+import net.sf.saxon.s9api.SaxonApiUncheckedException;
 
 import java.util.Vector;
 import java.util.Hashtable;
@@ -41,55 +65,23 @@ public class XAtomicStep extends XStep {
     private final static QName _namespace = new QName("", "namespace");
     private final static QName _value = new QName("", "value");
     private final static QName _type = new QName("", "type");
-    private final static QName cx_filemask = new QName("cx",XProcConstants.NS_CALABASH_EX,"filemask");
+    private final static QName cx_filemask = new QName("cx", XProcConstants.NS_CALABASH_EX,"filemask");
     private final static QName cx_item = new QName("cx", XProcConstants.NS_CALABASH_EX, "item");
 
     protected Hashtable<String, Vector<ReadablePipe>> inputs = new Hashtable<String, Vector<ReadablePipe>> ();
     protected Hashtable<String, WritablePipe> outputs = new Hashtable<String, WritablePipe> ();
-    protected Hashtable<QName,RuntimeValue> inScopeOptions = null;
 
     public XAtomicStep(XProcRuntime runtime, Step step, XCompoundStep parent) {
         super(runtime, step);
         this.parent = parent;
-
-        // This is possibly a hideous design, but for the moment, every step gets its own
-        // XProcFunctionLibrary and FunctionLibraryList. That way I can manipulate
-        // iteration-position and iteration-size when I need to.
-
-        Configuration config = runtime.getProcessor().getUnderlyingConfiguration();
-
-        xprocFunctionLibrary = new XProcFunctionLibrary(runtime, this);
-        exprocFunctionLibrary = new EXProcFunctionLibrary(runtime, this);
-        functionLibraryList = new FunctionLibraryList();
-
-        functionLibraryList.addFunctionLibrary(
-                SystemFunctionLibrary.getSystemFunctionLibrary(SystemFunctionLibrary.XPATH_ONLY));
-        functionLibraryList.addFunctionLibrary(config.getVendorFunctionLibrary());
-        functionLibraryList.addFunctionLibrary(new ConstructorFunctionLibrary(config));
-        if (config.isAllowExternalFunctions()) {
-            Configuration.getPlatform().addFunctionLibraries(functionLibraryList, config, Configuration.XPATH);
-        }
-        functionLibraryList.addFunctionLibrary(xprocFunctionLibrary);
-        functionLibraryList.addFunctionLibrary(exprocFunctionLibrary);
     }
 
     public XCompoundStep getParent() {
         return parent;
     }
 
-    public Hashtable<QName,RuntimeValue> getInScopeOptions() {
-        // We make a copy so that what our children do can't effect us
-        Hashtable<QName,RuntimeValue> globals = new Hashtable<QName,RuntimeValue> ();
-        if (inScopeOptions != null) {
-            for (QName name : inScopeOptions.keySet()) {
-                globals.put(name,inScopeOptions.get(name));
-            }
-        }
-        return globals;
-    }
-
     public RuntimeValue optionAvailable(QName optName) {
-        if (inScopeOptions == null || !inScopeOptions.containsKey(optName)) {
+        if (!inScopeOptions.containsKey(optName)) {
             return null;
         }
         return inScopeOptions.get(optName);
@@ -382,6 +374,12 @@ public class XAtomicStep extends XStep {
 
         xstep.reset();
         computeParameters(xstep);
+
+        // Make sure we do this *after* calculating any option/parameter values...
+        XProcData data = runtime.getXProcData();
+        data.openFrame();
+        data.setStep(this);
+
         xstep.run();
 
         // FIXME: Is it sufficient to only do this for atomic steps?
@@ -408,6 +406,8 @@ public class XAtomicStep extends XStep {
             WritablePipe wpipe = outputs.get(port);
             wpipe.close(); // Indicate we're done
         }
+
+        data.closeFrame();
     }
 
     public void reportError(XdmNode doc) {
@@ -719,8 +719,8 @@ public class XAtomicStep extends XStep {
 
         try {
             XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
-            IndependentContext icontext = (IndependentContext) xcomp.getUnderlyingStaticContext();
-            icontext.setFunctionLibrary(functionLibraryList);
+            //IndependentContext icontext = (IndependentContext) xcomp.getUnderlyingStaticContext();
+            //icontext.setFunctionLibrary(functionLibraryList);
 
             for (QName varname : boundOpts.keySet()) {
                 xcomp.declareVariable(varname);

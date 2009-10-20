@@ -1,128 +1,111 @@
 package com.xmlcalabash.functions;
 
-import net.sf.saxon.functions.SystemFunction;
-import net.sf.saxon.expr.Expression;
-import net.sf.saxon.expr.ExpressionVisitor;
-import net.sf.saxon.expr.StringLiteral;
-import net.sf.saxon.expr.XPathContext;
+import net.sf.saxon.functions.ExtensionFunctionDefinition;
+import net.sf.saxon.functions.ExtensionFunctionCall;
+import net.sf.saxon.expr.*;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.value.StringValue;
-import net.sf.saxon.om.NamespaceResolver;
-import net.sf.saxon.om.StructuredQName;
-import net.sf.saxon.om.Item;
+import net.sf.saxon.value.SequenceType;
+import net.sf.saxon.om.*;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.core.XProcException;
 
 /**
  * Implementation of the XSLT system-property() function
  */
 
-public class SystemProperty extends SystemFunction {
-    private XProcRuntime runtime;
-    private NamespaceResolver nsContext;
-    private StructuredQName propertyName;
-    private transient boolean checked = false;
-        // the second time checkArguments is called, it's a global check so the static context is inaccurate
+public class SystemProperty extends ExtensionFunctionDefinition {
+    private static StructuredQName funcname = new StructuredQName("p", XProcConstants.NS_XPROC, "system-property");
+    private XProcRuntime runtime = null;
 
-    public SystemProperty(XProcRuntime runtime) {
-        this.runtime = runtime;
-    }
+     protected SystemProperty() {
+         // you can't call this one
+     }
 
-    public void checkArguments(ExpressionVisitor visitor) throws XPathException {
-        if (checked) return;
-        checked = true;
-        super.checkArguments(visitor);
-        if (argument[0] instanceof StringLiteral) {
-            try {
-                propertyName = StructuredQName.fromLexicalQName(
-                        ((StringLiteral)argument[0]).getStringValue(),
-                        false,
-                        visitor.getConfiguration().getNameChecker(),
-                        visitor.getStaticContext().getNamespaceResolver());
-            } catch (XPathException e) {
-                if (e.getErrorCodeLocalPart()==null || e.getErrorCodeLocalPart().equals("FOCA0002")
-                        || e.getErrorCodeLocalPart().equals("FONS0004")) {
-                    e.setErrorCode("XTDE1390");
-                    throw e;
-                }
-            }
-            // Don't actually read the system property yet, it might be different at run-time
-        } else {
-            // we need to save the namespace context
-            nsContext = visitor.getStaticContext().getNamespaceResolver();
-        }
-    }
+     public SystemProperty(XProcRuntime runtime) {
+         this.runtime = runtime;
+     }
 
-    /**
-     * preEvaluate: this method performs compile-time evaluation for properties in the XSLT namespace only
-     * @param visitor an expression visitor
-     */
+     public StructuredQName getFunctionQName() {
+         return funcname;
+     }
 
-    public Expression preEvaluate(ExpressionVisitor visitor) throws XPathException {
-        if (propertyName != null && XProcConstants.NS_XPROC.equals(propertyName.getNamespaceURI())) {
-            return new StringLiteral(getProperty(propertyName.getNamespaceURI(), propertyName.getLocalName()));
-        } else {
-           return this;
-        }
-    }
+     public int getMinimumNumberOfArguments() {
+         return 1;
+     }
 
-    /**
-    * Evaluate the function at run-time
-    */
+     public int getMaximumNumberOfArguments() {
+         return 1;
+     }
 
-    public Item evaluateItem(XPathContext context) throws XPathException {
+     public SequenceType[] getArgumentTypes() {
+         return new SequenceType[]{SequenceType.SINGLE_STRING};
+     }
 
-        StructuredQName qName = propertyName;
-        if (qName == null) {
-            CharSequence name = argument[0].evaluateItem(context).getStringValueCS();
-            try {
-                qName = StructuredQName.fromLexicalQName(name,
-                        false,
-                        context.getConfiguration().getNameChecker(),
-                        nsContext);
-            } catch (XPathException err) {
-                 dynamicError("Invalid system property name. " + err.getMessage(), "XTDE1390", context);
-                 return null;
-            }
-        }
-        return new StringValue(getProperty(qName.getNamespaceURI(), qName.getLocalName()));
-    }
+     public SequenceType getResultType(SequenceType[] suppliedArgumentTypes) {
+         return SequenceType.SINGLE_ATOMIC;
+     }
 
-    /**
-     * Here's the real code:
-     * @param uri the namespace URI of the system property name
-     * @param local the local part of the system property name
-     * @return the value of the corresponding system property
-    */
+     public ExtensionFunctionCall makeCallExpression() {
+         return new SystemPropertyCall();
+     }
 
-    private String getProperty(String uri, String local) {
-        if (uri.equals(XProcConstants.NS_XPROC)) {
-            if ("episode".equals(local)) {
-                return runtime.getEpisode();
-            } else if ("language".equals(local)) {
-                return runtime.getLanguage();
-            } else if ("product-name".equals(local)) {
-                return runtime.getProductName();
-            } else if ("product-version".equals(local)) {
-                return runtime.getProductVersion();
-            } else if ("vendor".equals(local)) {
-                return runtime.getVendor();
-            } else if ("vendor-uri".equals(local)) {
-                return runtime.getVendorURI();
-            } else if ("version".equals(local)) {
-                return runtime.getXProcVersion();
-            } else if ("xpath-version".equals(local)) {
-                return runtime.getXPathVersion();
-            } else if ("psvi-supported".equals(local)) {
-                return runtime.getPSVISupported() ? "true" : "false";
-            } else {
-                return "";
-            }
-	    } else {
-            return "";
-        }
-    }
+     private class SystemPropertyCall extends ExtensionFunctionCall {
+         private StaticContext staticContext = null;
+
+         public void supplyStaticContext(StaticContext context, int locationId, Expression[] arguments) throws XPathException {
+             staticContext = context;
+         }
+
+         public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
+             StructuredQName propertyName = null;
+
+             try {
+                 SequenceIterator iter = arguments[0];
+                 String lexicalQName = iter.next().getStringValue();
+                 propertyName = StructuredQName.fromLexicalQName(
+                      lexicalQName,
+                      false,
+                      context.getConfiguration().getNameChecker(),
+                      staticContext.getNamespaceResolver());
+             } catch (XPathException e) {
+                 if (e.getErrorCodeLocalPart()==null || e.getErrorCodeLocalPart().equals("FOCA0002")
+                         || e.getErrorCodeLocalPart().equals("FONS0004")) {
+                     e.setErrorCode("XTDE1390");
+                 }
+                 throw e;
+             }
+
+             String uri = propertyName.getNamespaceURI();
+             String local = propertyName.getLocalName();
+             String value = "";
+
+             if (uri.equals(XProcConstants.NS_XPROC)) {
+                 if ("episode".equals(local)) {
+                     value = runtime.getEpisode();
+                 } else if ("language".equals(local)) {
+                     value = runtime.getLanguage();
+                 } else if ("product-name".equals(local)) {
+                     value = runtime.getProductName();
+                 } else if ("product-version".equals(local)) {
+                     value = runtime.getProductVersion();
+                 } else if ("vendor".equals(local)) {
+                     value = runtime.getVendor();
+                 } else if ("vendor-uri".equals(local)) {
+                     value = runtime.getVendorURI();
+                 } else if ("version".equals(local)) {
+                     value = runtime.getXProcVersion();
+                 } else if ("xpath-version".equals(local)) {
+                     value = runtime.getXPathVersion();
+                 } else if ("psvi-supported".equals(local)) {
+                     value = runtime.getPSVISupported() ? "true" : "false";
+                 }
+             }
+
+             return SingletonIterator.makeIterator(
+                     new StringValue(value));
+         }
+     }
 }
 
 //

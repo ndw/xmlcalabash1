@@ -1,13 +1,21 @@
 package com.xmlcalabash.functions;
 
 import net.sf.saxon.functions.SystemFunction;
+import net.sf.saxon.functions.ExtensionFunctionDefinition;
+import net.sf.saxon.functions.ExtensionFunctionCall;
 import net.sf.saxon.expr.Expression;
 import net.sf.saxon.expr.ExpressionVisitor;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.value.DecimalValue;
+import net.sf.saxon.value.SequenceType;
+import net.sf.saxon.value.Int64Value;
 import net.sf.saxon.om.Item;
+import net.sf.saxon.om.StructuredQName;
+import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.om.SingletonIterator;
 import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.core.XProcConstants;
 
 //
 // The contents of this file are subject to the Mozilla Public License Version 1.0 (the "License");
@@ -31,40 +39,47 @@ import com.xmlcalabash.core.XProcRuntime;
  * Implementation of the XProc p:iteration-position function
  */
 
-public class IterationSize extends SystemFunction {
+public class IterationSize extends ExtensionFunctionDefinition {
     private XProcRuntime runtime;
-    private transient boolean checked = false;
-    private int size = 1;
-    // the second time checkArguments is called, it's a global check so the static context is inaccurate
+    private static StructuredQName funcname = new StructuredQName("p", XProcConstants.NS_XPROC, "iteration-size");
+
+    protected IterationSize() {
+        // you can't call this one
+    }
 
     public IterationSize(XProcRuntime runtime) {
         this.runtime = runtime;
     }
 
-    public void setSize(int size) {
-        this.size = size;
+    public StructuredQName getFunctionQName() {
+        return funcname;
     }
 
-    public void checkArguments(ExpressionVisitor visitor) throws XPathException {
-        if (checked) return;
-        checked = true;
-        super.checkArguments(visitor);
+    public int getMinimumNumberOfArguments() {
+        return 0;
     }
 
-    /**
-     * preEvaluate: iteration-position can never be resolved at compile-time
-     * @param visitor an expression visitor
-     */
-
-    public Expression preEvaluate(ExpressionVisitor visitor) throws XPathException {
-        return this;
+    public int getMaximumNumberOfArguments() {
+        return 0;
     }
 
-    /**
-    * Evaluate the function at run-time
-    */
-
-    public Item evaluateItem(XPathContext context) throws XPathException {
-        return new DecimalValue(size);
+    public SequenceType[] getArgumentTypes() {
+        return new SequenceType[]{SequenceType.OPTIONAL_ATOMIC};
     }
+
+    public SequenceType getResultType(SequenceType[] suppliedArgumentTypes) {
+        return SequenceType.SINGLE_ATOMIC;
+    }
+
+    public ExtensionFunctionCall makeCallExpression() {
+        return new IterationPositionCall();
+    }
+
+    private class IterationPositionCall extends ExtensionFunctionCall {
+        public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
+            return SingletonIterator.makeIterator(
+                    new Int64Value(runtime.getXProcData().getIterationSize()));
+        }
+    }
+
 }

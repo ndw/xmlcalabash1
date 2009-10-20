@@ -5,10 +5,7 @@ import net.sf.saxon.om.NamespaceConstant;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.Pipe;
-import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.core.XProcException;
-import com.xmlcalabash.core.XProcConstants;
-import com.xmlcalabash.core.XProcStep;
+import com.xmlcalabash.core.*;
 import com.xmlcalabash.model.*;
 import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.util.S9apiUtils;
@@ -131,6 +128,10 @@ public class XPipeline extends XCompoundStep {
             info(step.getNode(), "Running with the 'general-values' extension enabled.");
         }
 
+        XProcData data = runtime.getXProcData();
+        data.openFrame();
+        data.setStep(this);
+
         runtime.start(this);
         try {
             doRun();
@@ -142,6 +143,8 @@ public class XPipeline extends XCompoundStep {
             throw ex;
         }
         runtime.finish(this);
+
+        data.closeFrame();
     }
 
     private void setupParameters() {

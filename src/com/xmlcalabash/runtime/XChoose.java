@@ -10,6 +10,7 @@ import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcData;
 
 import java.util.Vector;
 
@@ -81,6 +82,10 @@ public class XChoose extends XCompoundStep {
         // so the order in which we calculate them doesn't matter. That will change if/when
         // there are such compound steps.
 
+        XProcData data = runtime.getXProcData();
+        data.openFrame();
+        data.setStep(this);
+
         inScopeOptions = parent.getInScopeOptions();
         for (Variable var : step.getVariables()) {
             RuntimeValue value = computeValue(var);
@@ -119,5 +124,7 @@ public class XChoose extends XCompoundStep {
         }
 
         xstep.run();
+
+        data.closeFrame();
     }
 }

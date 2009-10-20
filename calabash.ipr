@@ -280,6 +280,7 @@
       <module fileurl="file:///projects/src/isorelax/Isorelax.iml" filepath="/projects/src/isorelax/Isorelax.iml" />
       <module fileurl="file:///projects/src/msv/Msv.iml" filepath="/projects/src/msv/Msv.iml" />
       <module fileurl="file:///projects/src/saxon9/Saxon9.iml" filepath="/projects/src/saxon9/Saxon9.iml" />
+      <module fileurl="file:///projects/src/saxon9.2.0.2/Saxon9.2.0.2.iml" filepath="/projects/src/saxon9.2.0.2/Saxon9.2.0.2.iml" />
       <module fileurl="file:///projects/src/xmlresolver/Xmlresolver.iml" filepath="/projects/src/xmlresolver/Xmlresolver.iml" />
     </modules>
   </component>
@@ -471,6 +472,13 @@
     <library name="XQJ">
       <CLASSES>
         <root url="jar:///share/java/xqj/xqjapi.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="SaxonHE">
+      <CLASSES>
+        <root url="jar:///share/java/saxonhe-9.2.0.2j/saxon9he.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES />

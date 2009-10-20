@@ -1,20 +1,17 @@
 package com.xmlcalabash.functions;
 
-import net.sf.saxon.functions.SystemFunction;
-import net.sf.saxon.expr.Expression;
-import net.sf.saxon.expr.ExpressionVisitor;
-import net.sf.saxon.expr.StringLiteral;
+import net.sf.saxon.functions.ExtensionFunctionDefinition;
+import net.sf.saxon.functions.ExtensionFunctionCall;
+import net.sf.saxon.om.StructuredQName;
+import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.om.SingletonIterator;
+import net.sf.saxon.value.SequenceType;
+import net.sf.saxon.value.AnyURIValue;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.value.StringValue;
-import net.sf.saxon.value.AnyURIValue;
-import net.sf.saxon.om.NamespaceResolver;
-import net.sf.saxon.om.StructuredQName;
-import net.sf.saxon.om.Item;
-import net.sf.saxon.om.NodeInfo;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.core.XProcException;
+
 
 //
 // The contents of this file are subject to the Mozilla Public License Version 1.0 (the "License");
@@ -35,38 +32,50 @@ import com.xmlcalabash.core.XProcException;
 //
 
 /**
- * Implementation of the XSLT system-property() function
+ * Implementation of the exf:cwd() function
  */
 
-public class Cwd extends SystemFunction {
-    private XProcRuntime runtime;
-    private transient boolean checked = false;
-        // the second time checkArguments is called, it's a global check so the static context is inaccurate
+public class Cwd extends ExtensionFunctionDefinition {
+    private static StructuredQName funcname = new StructuredQName("exf", XProcConstants.NS_EXPROC_FUNCTIONS,"cwd");
+    private XProcRuntime runtime = null;
+
+    protected Cwd() {
+        // you can't call this one
+    }
 
     public Cwd(XProcRuntime runtime) {
         this.runtime = runtime;
     }
 
-    public void checkArguments(ExpressionVisitor visitor) throws XPathException {
-        if (checked) return;
-        checked = true;
-        super.checkArguments(visitor);
+    public StructuredQName getFunctionQName() {
+        return funcname;
     }
 
-    /**
-     * preEvaluate: this method performs compile-time evaluation for properties in the XSLT namespace only
-     * @param visitor an expression visitor
-     */
-
-    public Expression preEvaluate(ExpressionVisitor visitor) throws XPathException {
-        return this;
+    public int getMinimumNumberOfArguments() {
+        return 0;
     }
 
-    /**
-    * Evaluate the function at run-time
-    */
+    public int getMaximumNumberOfArguments() {
+        return 0;
+    }
 
-    public Item evaluateItem(XPathContext context) throws XPathException {
-        return new AnyURIValue(runtime.getStaticBaseURI().toASCIIString());
+    public SequenceType[] getArgumentTypes() {
+        return new SequenceType[]{SequenceType.OPTIONAL_NUMERIC};
+    }
+
+    public SequenceType getResultType(SequenceType[] suppliedArgumentTypes) {
+        return SequenceType.SINGLE_ATOMIC;
+    }
+
+    public ExtensionFunctionCall makeCallExpression() {
+        return new CwdCall();
+    }
+
+    private class CwdCall extends ExtensionFunctionCall {
+
+        public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
+            return SingletonIterator.makeIterator(
+                    new AnyURIValue(runtime.getStaticBaseURI().toASCIIString()));
+        }
     }
 }

@@ -10,7 +10,6 @@ import com.xmlcalabash.model.RuntimeValue;
 import net.sf.saxon.s9api.*;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.functions.JavaExtensionLibrary;
 
 import java.util.Hashtable;
 import java.util.Vector;

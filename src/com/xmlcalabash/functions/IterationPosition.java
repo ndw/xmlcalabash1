@@ -1,13 +1,25 @@
 package com.xmlcalabash.functions;
 
 import net.sf.saxon.functions.SystemFunction;
+import net.sf.saxon.functions.ExtensionFunctionDefinition;
+import net.sf.saxon.functions.ExtensionFunctionCall;
 import net.sf.saxon.expr.Expression;
 import net.sf.saxon.expr.ExpressionVisitor;
 import net.sf.saxon.expr.XPathContext;
+import net.sf.saxon.expr.StaticContext;
 import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.value.DecimalValue;
+import net.sf.saxon.value.*;
 import net.sf.saxon.om.Item;
+import net.sf.saxon.om.StructuredQName;
+import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.om.SingletonIterator;
+import net.sf.saxon.s9api.QName;
 import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.runtime.XStep;
+import com.xmlcalabash.runtime.XPipeline;
+import com.xmlcalabash.model.DeclareStep;
 
 //
 // The contents of this file are subject to the Mozilla Public License Version 1.0 (the "License");
@@ -31,40 +43,46 @@ import com.xmlcalabash.core.XProcRuntime;
  * Implementation of the XProc p:iteration-position function
  */
 
-public class IterationPosition extends SystemFunction {
+public class IterationPosition extends ExtensionFunctionDefinition {
     private XProcRuntime runtime;
-    private transient boolean checked = false;
-    private int position = 1;
-    // the second time checkArguments is called, it's a global check so the static context is inaccurate
+    private static StructuredQName funcname = new StructuredQName("p", XProcConstants.NS_XPROC, "iteration-position");
+
+    protected IterationPosition() {
+        // you can't call this one
+    }
 
     public IterationPosition(XProcRuntime runtime) {
         this.runtime = runtime;
     }
 
-    public void setPosition(int pos) {
-        position = pos;
+    public StructuredQName getFunctionQName() {
+        return funcname;
     }
 
-    public void checkArguments(ExpressionVisitor visitor) throws XPathException {
-        if (checked) return;
-        checked = true;
-        super.checkArguments(visitor);
+    public int getMinimumNumberOfArguments() {
+        return 0;
     }
 
-    /**
-     * preEvaluate: iteration-position can never be resolved at compile-time
-     * @param visitor an expression visitor
-     */
-
-    public Expression preEvaluate(ExpressionVisitor visitor) throws XPathException {
-        return this;
+    public int getMaximumNumberOfArguments() {
+        return 0;
     }
 
-    /**
-    * Evaluate the function at run-time
-    */
+    public SequenceType[] getArgumentTypes() {
+        return new SequenceType[]{SequenceType.OPTIONAL_ATOMIC};
+    }
 
-    public Item evaluateItem(XPathContext context) throws XPathException {
-        return new DecimalValue(position);
+    public SequenceType getResultType(SequenceType[] suppliedArgumentTypes) {
+        return SequenceType.SINGLE_ATOMIC;
+    }
+
+    public ExtensionFunctionCall makeCallExpression() {
+        return new IterationPositionCall();
+    }
+
+    private class IterationPositionCall extends ExtensionFunctionCall {
+        public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
+            return SingletonIterator.makeIterator(
+                    new Int64Value(runtime.getXProcData().getIterationPosition()));
+        }
     }
 }

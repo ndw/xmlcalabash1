@@ -3,10 +3,11 @@ package com.xmlcalabash.runtime;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.functions.FunctionLibraryList;
 
-import java.util.*;
 import java.util.logging.Logger;
+import java.util.Hashtable;
+import java.util.Set;
+import java.util.HashSet;
 
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
@@ -15,8 +16,6 @@ import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.model.Step;
 import com.xmlcalabash.model.Input;
 import com.xmlcalabash.model.DeclareStep;
-import com.xmlcalabash.functions.XProcFunctionLibrary;
-import com.xmlcalabash.functions.EXProcFunctionLibrary;
 
 /**
  * Created by IntelliJ IDEA.
@@ -34,11 +33,9 @@ public abstract class XStep {
     private Hashtable<QName, RuntimeValue> options = new Hashtable<QName, RuntimeValue> ();
     private Hashtable<String, Hashtable<QName, RuntimeValue>> parameters = new Hashtable<String, Hashtable<QName, RuntimeValue>> ();
     protected XCompoundStep parent = null;
-    protected XProcFunctionLibrary xprocFunctionLibrary = null;
-    protected EXProcFunctionLibrary exprocFunctionLibrary = null;
-    protected FunctionLibraryList functionLibraryList = null;
     public static final RuntimeValue unboundVariable = new RuntimeValue("Random string");
     protected Logger logger = Logger.getLogger(this.getClass().getName());
+    protected Hashtable<QName,RuntimeValue> inScopeOptions = new Hashtable<QName,RuntimeValue> ();
 
     public XStep(XProcRuntime runtime, Step step) {
         this.runtime = runtime;
@@ -62,10 +59,6 @@ public abstract class XStep {
 
     public XCompoundStep getParent() {
         return parent;
-    }
-
-    public XProcFunctionLibrary getFunctionLibrary() {
-        return xprocFunctionLibrary;
     }
 
     public void addInput(XInput input) {
@@ -229,6 +222,25 @@ public abstract class XStep {
             return parent.getInheritedExtensionAttribute(name);
         }
         return null;
+    }
+
+    public boolean hasInScopeVariableBinding(QName name) {
+        if (inScopeOptions.containsKey(name)) {
+            return true;
+        }
+
+        return getParent() == null ? false : getParent().hasInScopeVariableBinding(name);
+    }
+
+    public Hashtable<QName,RuntimeValue> getInScopeOptions() {
+        // We make a copy so that what our children do can't effect us
+        Hashtable<QName,RuntimeValue> globals = new Hashtable<QName,RuntimeValue> ();
+        if (inScopeOptions != null) {
+            for (QName name : inScopeOptions.keySet()) {
+                globals.put(name,inScopeOptions.get(name));
+            }
+        }
+        return globals;
     }
 
     public abstract RuntimeValue optionAvailable(QName optName);

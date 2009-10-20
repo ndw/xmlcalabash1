@@ -29,7 +29,6 @@ import com.xmlcalabash.util.URIUtils;
 import com.xmlcalabash.util.Reporter;
 
 import java.util.logging.Logger;
-import java.util.logging.Level;
 import java.util.Hashtable;
 import java.util.Vector;
 import java.util.GregorianCalendar;
@@ -46,6 +45,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import com.xmlcalabash.runtime.*;
+import com.xmlcalabash.functions.*;
 
 import javax.xml.transform.URIResolver;
 
@@ -76,11 +76,23 @@ public class XProcRuntime {
     private Hashtable<String,Vector<XdmNode>> collections = null;
     private URI staticBaseURI = null;
     private boolean allowGeneralExpressions = true;
+    private XProcData xprocData = null;
     private Logger log = null;
 
     public XProcRuntime(XProcConfiguration config) {
         this.config = config;
         processor = config.getProcessor();
+
+        xprocData = new XProcData();
+
+        processor.registerExtensionFunction(new Cwd(this));
+        processor.registerExtensionFunction(new BaseURI(this));
+        processor.registerExtensionFunction(new ResolveURI(this));
+        processor.registerExtensionFunction(new SystemProperty(this));
+        processor.registerExtensionFunction(new StepAvailable(this));
+        processor.registerExtensionFunction(new IterationSize(this));
+        processor.registerExtensionFunction(new IterationPosition(this));
+        processor.registerExtensionFunction(new ValueAvailable(this));
 
         log = Logger.getLogger(this.getClass().getName());
 
@@ -103,6 +115,10 @@ public class XProcRuntime {
         allowGeneralExpressions = config.extensionValues;
 
         reset();
+    }
+
+    public XProcData getXProcData() {
+        return xprocData;
     }
 
     public void setPhoneHome(boolean phoneHome) {

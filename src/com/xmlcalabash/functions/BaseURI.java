@@ -1,20 +1,16 @@
 package com.xmlcalabash.functions;
 
 import net.sf.saxon.functions.SystemFunction;
-import net.sf.saxon.expr.Expression;
-import net.sf.saxon.expr.ExpressionVisitor;
-import net.sf.saxon.expr.StringLiteral;
+import net.sf.saxon.functions.ExtensionFunctionCall;
+import net.sf.saxon.functions.ExtensionFunctionDefinition;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.value.StringValue;
 import net.sf.saxon.value.AnyURIValue;
-import net.sf.saxon.om.NamespaceResolver;
-import net.sf.saxon.om.StructuredQName;
-import net.sf.saxon.om.Item;
-import net.sf.saxon.om.NodeInfo;
+import net.sf.saxon.value.SequenceType;
+import net.sf.saxon.om.*;
+import net.sf.saxon.s9api.XdmNode;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.core.XProcException;
 
 //
 // The contents of this file are subject to the Mozilla Public License Version 1.0 (the "License");
@@ -38,50 +34,66 @@ import com.xmlcalabash.core.XProcException;
  * Implementation of the XSLT system-property() function
  */
 
-public class BaseURI extends SystemFunction {
-    private XProcRuntime runtime;
-    private transient boolean checked = false;
-        // the second time checkArguments is called, it's a global check so the static context is inaccurate
+public class BaseURI extends ExtensionFunctionDefinition {
+    private static StructuredQName funcname = new StructuredQName("p", XProcConstants.NS_XPROC,"base-uri");
+    private XProcRuntime runtime = null;
+
+    protected BaseURI() {
+        // you can't call this one
+    }
 
     public BaseURI(XProcRuntime runtime) {
         this.runtime = runtime;
     }
 
-    public void checkArguments(ExpressionVisitor visitor) throws XPathException {
-        if (checked) return;
-        checked = true;
-        super.checkArguments(visitor);
+    public StructuredQName getFunctionQName() {
+        return funcname;
     }
 
-    /**
-     * preEvaluate: this method performs compile-time evaluation for properties in the XSLT namespace only
-     * @param visitor an expression visitor
-     */
-
-    public Expression preEvaluate(ExpressionVisitor visitor) throws XPathException {
-        return this;
+    public int getMinimumNumberOfArguments() {
+        return 0;
     }
 
-    /**
-    * Evaluate the function at run-time
-    */
+    public int getMaximumNumberOfArguments() {
+        return 1;
+    }
 
-    public Item evaluateItem(XPathContext context) throws XPathException {
-        NodeInfo node;
+    public SequenceType[] getArgumentTypes() {
+        return new SequenceType[]{SequenceType.OPTIONAL_NODE};
+    }
 
-        if (argument.length > 0) {
-            node = (NodeInfo)argument[0].evaluateItem(context);
-        } else {
-            node = (NodeInfo) context.getContextItem();
-        }
+    public SequenceType getResultType(SequenceType[] suppliedArgumentTypes) {
+        return SequenceType.SINGLE_ATOMIC;
+    }
 
-        if (node==null) {
-            return null;
+    public boolean dependsOnFocus() {
+        return true;
+    }
+
+    public ExtensionFunctionCall makeCallExpression() {
+        return new BaseURICall();
+    }
+
+    private class BaseURICall extends ExtensionFunctionCall {
+        public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
+            String baseURI = null;
+
+            if (arguments.length > 0) {
+                SequenceIterator iter = arguments[0];
+                NodeInfo item = (NodeInfo) iter.next();
+                baseURI = item.getBaseURI();
+            } else {
+                NodeInfo item = (NodeInfo) context.getContextItem();
+                baseURI = item.getBaseURI();
+            }
+
+            if (baseURI == null) {
+                return SingletonIterator.makeIterator(
+                        new AnyURIValue(""));
+            }
+
+            return SingletonIterator.makeIterator(
+                    new AnyURIValue(baseURI));
         }
-        String s = node.getBaseURI();
-        if (s == null) {
-            return null;
-        }
-        return new AnyURIValue(s);
     }
 }

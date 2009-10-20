@@ -5,6 +5,7 @@ import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcData;
 import com.xmlcalabash.util.ProcessMatchingNodes;
 import com.xmlcalabash.util.ProcessMatch;
 import com.xmlcalabash.util.TreeWriter;
@@ -47,6 +48,12 @@ public class XViewport extends XCompoundStep implements ProcessMatchingNodes {
     }
 
     public void run() throws SaxonApiException {
+        info(step.getNode(), "Running p:viewport " + step.getName());
+
+        XProcData data = runtime.getXProcData();
+        data.openFrame();
+        data.setStep(this);
+
         if (current == null) {
             current = new Pipe(runtime);
         }
@@ -71,6 +78,8 @@ public class XViewport extends XCompoundStep implements ProcessMatchingNodes {
 
         // FIXME: Only do this if we really need to!
         sequenceLength = matcher.count(doc, match, false);
+
+        runtime.getXProcData().setIterationSize(sequenceLength);
 
         matcher.match(doc, match);
 
@@ -106,9 +115,7 @@ public class XViewport extends XCompoundStep implements ProcessMatchingNodes {
         finest(step.getNode(), "Viewport copy matching node to " + current);
 
         sequencePosition++;
-
-        xprocFunctionLibrary.setIterationPosition(sequencePosition);
-        xprocFunctionLibrary.setIterationSize(sequenceLength);
+        runtime.getXProcData().setIterationPosition(sequencePosition);
 
         // Calculate all the variables
         inScopeOptions = parent.getInScopeOptions();

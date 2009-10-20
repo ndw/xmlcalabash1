@@ -1,15 +1,14 @@
 package com.xmlcalabash.functions;
 
 import net.sf.saxon.functions.SystemFunction;
-import net.sf.saxon.expr.Expression;
-import net.sf.saxon.expr.ExpressionVisitor;
-import net.sf.saxon.expr.StringLiteral;
-import net.sf.saxon.expr.XPathContext;
+import net.sf.saxon.functions.ExtensionFunctionDefinition;
+import net.sf.saxon.functions.ExtensionFunctionCall;
+import net.sf.saxon.expr.*;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.value.BooleanValue;
-import net.sf.saxon.om.NamespaceResolver;
-import net.sf.saxon.om.StructuredQName;
-import net.sf.saxon.om.Item;
+import net.sf.saxon.value.SequenceType;
+import net.sf.saxon.value.StringValue;
+import net.sf.saxon.om.*;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.ItemTypeFactory;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -44,98 +43,94 @@ import com.xmlcalabash.model.DeclareStep;
  * Implementation of the XProc p:step-available function
  */
 
-public class StepAvailable extends SystemFunction {
+public class StepAvailable extends ExtensionFunctionDefinition {
     private XProcRuntime runtime;
-    private NamespaceResolver nsContext;
-    private StructuredQName stepName;
-    private XStep xstep;
-    private transient boolean checked = false;
-    // the second time checkArguments is called, it's a global check so the static context is inaccurate
+    private static StructuredQName funcname = new StructuredQName("p", XProcConstants.NS_XPROC, "step-available");
 
-    public StepAvailable(XProcRuntime runtime, XStep xstep) {
-        this.runtime = runtime;
-        this.xstep = xstep;
+    protected StepAvailable() {
+        // you can't call this one
     }
 
-    public void checkArguments(ExpressionVisitor visitor) throws XPathException {
-        if (checked) return;
-        checked = true;
-        super.checkArguments(visitor);
-        if (argument[0] instanceof StringLiteral) {
+    public StepAvailable(XProcRuntime runtime) {
+        this.runtime = runtime;
+    }
+
+    public StructuredQName getFunctionQName() {
+        return funcname;
+    }
+
+    public int getMinimumNumberOfArguments() {
+        return 1;
+    }
+
+    public int getMaximumNumberOfArguments() {
+        return 1;
+    }
+
+    public SequenceType[] getArgumentTypes() {
+        return new SequenceType[]{SequenceType.SINGLE_STRING};
+    }
+
+    public SequenceType getResultType(SequenceType[] suppliedArgumentTypes) {
+        return SequenceType.SINGLE_ATOMIC;
+    }
+
+    public ExtensionFunctionCall makeCallExpression() {
+        return new StepAvailableCall();
+    }
+
+    private class StepAvailableCall extends ExtensionFunctionCall {
+        private StaticContext staticContext = null;
+
+        public void supplyStaticContext(StaticContext context, int locationId, Expression[] arguments) throws XPathException {
+            staticContext = context;
+        }
+
+        public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
+            StructuredQName stepName = null;
+
             try {
+                SequenceIterator iter = arguments[0];
+                String lexicalQName = iter.next().getStringValue();
                 stepName = StructuredQName.fromLexicalQName(
-                        ((StringLiteral)argument[0]).getStringValue(),
-                        false,
-                        visitor.getConfiguration().getNameChecker(),
-                        visitor.getStaticContext().getNamespaceResolver());
+                     lexicalQName,
+                     false,
+                     context.getConfiguration().getNameChecker(),
+                     staticContext.getNamespaceResolver());
             } catch (XPathException e) {
-                if (e.getErrorCodeLocalPart()==null || e.getErrorCodeLocalPart().equals("FOCA0002")
-                        || e.getErrorCodeLocalPart().equals("FONS0004")) {
-                    e.setErrorCode("XTDE1390");
-                    throw e;
+                // FIXME: bad formatting
+                throw new XProcException("Invalid step name. " + e.getMessage() + "XTDE1390");
+            }
+
+            boolean value = false;
+            QName stepType = new QName("x", stepName.getNamespaceURI(), stepName.getLocalName());
+
+            // FIXME: This doesn't seem terribly efficient...
+
+            XStep step = runtime.getXProcData().getStep();
+
+            while (! (step instanceof XPipeline)) {
+                step = step.getParent();
+            }
+
+            DeclareStep decl = step.getDeclareStep();
+
+            try {
+                decl = decl.getStepDeclaration(stepType);
+            } catch (XProcException e) {
+                decl = null;
+            }
+
+            if (decl != null) {
+                if (decl.isAtomic()) {
+                    String className = runtime.getConfiguration().implementationClass(decl.getDeclaredType());
+                    value = (className != null);
+                } else {
+                    value = true;
                 }
             }
-            // Don't actually read the system property yet, it might be different at run-time
-        } else {
-            // we need to save the namespace context
-            nsContext = visitor.getStaticContext().getNamespaceResolver();
-        }
-    }
 
-    /**
-     * preEvaluate: step-available can never be resolved at compile-time
-     * @param visitor an expression visitor
-     */
-
-    public Expression preEvaluate(ExpressionVisitor visitor) throws XPathException {
-        return this;
-    }
-
-    /**
-    * Evaluate the function at run-time
-    */
-
-    public Item evaluateItem(XPathContext context) throws XPathException {
-        StructuredQName qName = stepName;
-        if (qName == null) {
-            CharSequence name = argument[0].evaluateItem(context).getStringValueCS();
-            try {
-                qName = StructuredQName.fromLexicalQName(name,
-                        false,
-                        context.getConfiguration().getNameChecker(),
-                        nsContext);
-            } catch (XPathException err) {
-                dynamicError("Invalid step name. " + err.getMessage(), "XTDE1390", context);
-                return null;
-            }
-        }
-
-        QName stepType = new QName("x", qName.getNamespaceURI(), qName.getLocalName());
-
-        // FIXME: This doesn't seem terribly efficient...
-
-        XStep step = xstep;
-        while (! (step instanceof XPipeline)) {
-            step = step.getParent();
-        }
-
-        DeclareStep decl = step.getDeclareStep();
-
-        try {
-            decl = decl.getStepDeclaration(stepType);
-        } catch (XProcException e) {
-            decl = null;
-        }
-
-        if (decl != null) {
-            if (decl.isAtomic()) {
-                String className = runtime.getConfiguration().implementationClass(decl.getDeclaredType());
-                return new BooleanValue(className != null, BuiltInAtomicType.BOOLEAN);
-            } else {
-                return new BooleanValue(true, BuiltInAtomicType.BOOLEAN); 
-            }
-        } else {
-            return new BooleanValue(false, BuiltInAtomicType.BOOLEAN);
+            return SingletonIterator.makeIterator(value ? BooleanValue.TRUE : BooleanValue.FALSE);
         }
     }
 }
