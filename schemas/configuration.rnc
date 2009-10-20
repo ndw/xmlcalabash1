@@ -1,0 +1,153 @@
+default namespace local = ""
+namespace cc = "http://com.xmlcalabash/ns/configuration"
+
+xmlid.attr = attribute xml:id { xsd:ID }
+xmlbase.attr = attribute xml:base { xsd:anyURI }
+
+common.attributes = xmlid.attr?, xmlbase.attr?, extension.attr*
+
+# ============================================================
+
+start = XProcConfiguration
+
+# ============================================================
+
+XProcConfiguration =
+   element xproc-config {
+      common.attributes,
+      (NotCC|CCConfig)*
+   }
+
+NotCC =
+   element (* - cc:*) {
+      (_any.attr | text | Any)*
+   }
+
+CCConfig =
+   CCSchema | CCBinding | CCDebug | CCEntityResolver
+ | CCInput | CCLogLevel | CCLibrary | CCOutput | CCOption | CCWithParam
+ | CCSafe | SSStepName | CCURIResolver | CCImplementation
+ | CCPipeline
+
+CCSchema =
+   element cc:schema-aware {
+      common.attributes,
+      xsd:boolean
+   }
+   
+CCBinding =
+   element cc:namespace-binding {
+      common.attributes,
+      attribute prefix { text },
+      attribute uri { xsd:anyURI },
+      empty
+   }
+
+CCDebug =
+   element cc:debug {
+      common.attributes,
+      xsd:boolean
+   }
+
+CCEntityResolver =
+   element cc:entity-resolver {
+      common.attributes,
+      attribute class-name { xsd:NMTOKEN },
+      empty
+   }
+
+CCInput =
+   element cc:input {
+      common.attributes,
+      attribute port { xsd:NMTOKEN },
+      attribute href { xsd:anyURI }?,
+      Any?
+   }
+
+CCLogLevel =
+   element cc:log-level {
+      common.attributes,
+      attribute logger { xsd:NMTOKEN }?,
+      attribute level {
+         "finest" | "finer" | "fine" | "info"
+       | "warning" | "error" | "severe"
+      },
+      empty
+   }
+
+CCLibrary =
+   element cc:library {
+      common.attributes,
+      attribute href { xsd:anyURI }?,
+      Any?
+   }
+
+CCOutput =
+   element cc:output {
+      common.attributes,
+      attribute port { xsd:NMTOKEN },
+      attribute href { xsd:anyURI },
+      empty
+   }
+
+CCOption =
+   element cc:with-option {
+      common.attributes,
+      attribute name { xsd:QName },
+      attribute value { text }?
+   }
+
+CCWithParam =
+   element cc:with-param {
+      common.attributes,
+      attribute port { xsd:NMTOKEN }?,
+      attribute name { xsd:QName },
+      attribute value { text }?
+   }
+
+CCSafe =
+   element cc:safe-mode {
+      common.attributes,
+      xsd:boolean
+   }
+
+SSStepName =
+   element cc:step-name {
+      common.attributes,
+      xsd:NMTOKEN
+   }
+
+CCURIResolver =
+   element cc:uri-resolver {
+      common.attributes,
+      attribute class-name { xsd:NMTOKEN },
+      empty
+   }
+
+CCImplementation =
+   element cc:implementation {
+      common.attributes,
+      attribute type { xsd:QName },
+      attribute class-name { xsd:NMTOKEN },
+      empty
+   }
+
+CCPipeline =
+   element cc:pipeline {
+      common.attributes,
+      attribute href { xsd:anyURI }?,
+      Any?
+   }
+
+# ============================================================
+
+_any.attr =
+   attribute * { text }
+
+extension.attr =
+   attribute (* - (local:*|xml:*)) { text }
+
+Any =
+   element * {
+      (_any.attr | text | Any)*
+   }

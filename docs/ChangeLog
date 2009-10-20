@@ -1,0 +1,54 @@
+Changes in 0.7.1
+
+  * Fixed some stupid errors in handling of command-line bindings to source
+	  ports.	
+
+Changes in 0.7.0
+
+  * Fixed bugs in handling of bindings for options/variables/parameters. This
+	  involved a significant refactoring of input/output processing.
+  * Enabled the "phone home" feature; report compound steps and options/parameters
+  * Improved product-related functions and p:episode
+  * Fixed the static error associated with unbound inputs on variables/parameters
+  * Fixed bug that caused p:empty in side p:with-param to crash
+  * Added -L option for setting the default logging level
+  * Fixed namespace bindings in option value calculations
+  * Fixed bugs in select handling
+
+Changes in 0.6.3
+
+  * Added support for p:log
+  * Improved error messages; report line numbers
+  * Check for err:XD0006 (writing sequences to non-sequence inputs)
+  * Detect select expressions that return atomic values
+  * Fixed bugs in bindings, options, and parameters when calling user-defined
+	  pipelines
+  * Check for attempts to use parameters when there's no parameter input port
+	
+Changes in 0.6.2
+	
+  * Fixed (some of the) bugs that caused attempts to call declared pipelines
+	  to fail. It is now possible to call some simple, declared pipelines.
+	
+Changes in 0.6.1
+	
+  * Added -a option to enable schema-aware processing (attempts to use SaxonSA,
+	   you must have a license for SaxonSA)
+  * Fixed bug where group-adjacent was ignored on p:wrap
+  * Fixed bug where step and port names could be non-NCNames
+  * Fixed bug where spaces in a directory name caused an NPE; really fixed
+	  it this time, I mean
+  * Fixed bug where p:output was not rejected on atomic steps
+  * Fixed bug where build was with Java 1.6 instead of Java 1.5
+	
+Changes in 0.6.0
+
+  * Added p:filter, p:hash, p:uuid, p:www-form-urlencode, p:www-form-urldecode,
+    p:exec, and p:validate-with-relax-ng
+  * Added support for p:data
+  * Fixed bug where spaces in a directory name caused an NPE
+  * Added stub (non-working) p:xquery
+
+Changes in 0.5.1
+
+  * Fixed bug where version in Java manifest didn't match the claimed version

@@ -1,0 +1,3 @@
+These jars are in the repository only for the ant build process. Make
+sure they're up-to-date with respect to the distributions that you
+have on your CLASSPATH or you may get runtime exceptions.

@@ -1,0 +1,520 @@
+package com.xmlcalabash.extensions;
+
+
+import java.io.IOException;
+import java.io.BufferedInputStream;
+import java.io.InputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileInputStream;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URISyntaxException;
+import java.util.Enumeration;
+import java.util.GregorianCalendar;
+import java.util.Hashtable;
+import java.util.TimeZone;
+import java.util.Calendar;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
+import java.util.zip.Deflater;
+import java.text.SimpleDateFormat;
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.transform.sax.SAXSource;
+
+import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.util.TreeWriter;
+import com.xmlcalabash.util.Base64;
+import com.xmlcalabash.util.S9apiUtils;
+import com.xmlcalabash.util.RelevantNodes;
+import com.xmlcalabash.io.WritablePipe;
+import com.xmlcalabash.io.ReadablePipe;
+import com.xmlcalabash.io.Pipe;
+import org.xml.sax.InputSource;
+import com.xmlcalabash.library.DefaultStep;
+import com.xmlcalabash.library.HttpRequest;
+import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.model.RuntimeValue;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.DocumentBuilder;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.Axis;
+import net.sf.saxon.s9api.XdmNodeKind;
+import net.sf.saxon.s9api.Serializer;
+
+/**
+ *
+ * @author ndw
+ */
+public class Zip extends DefaultStep {
+    protected final static QName _href = new QName("", "href");
+    protected final static QName _name = new QName("", "name");
+    protected final static QName _command = new QName("", "command");
+    protected final static QName _compression_method = new QName("", "compression-method");
+    protected final static QName _compression_level = new QName("", "compression-level");
+    protected final static QName c_zip_manifest = new QName("c", XProcConstants.NS_XPROC_STEP, "zip-manifest");
+    protected final static QName c_zipfile = new QName("c", XProcConstants.NS_XPROC_STEP, "zipfile");
+    protected final static QName c_entry = new QName("c", XProcConstants.NS_XPROC_STEP, "entry");
+    protected final static QName c_file = new QName("c", XProcConstants.NS_XPROC_STEP, "file");
+    protected final static QName c_directory = new QName("c", XProcConstants.NS_XPROC_STEP, "directory");
+    protected final static QName _compressed_size = new QName("", "compressed-size");
+    protected final static QName _comment = new QName("", "comment");
+    protected final static QName _size = new QName("", "size");
+    protected final static QName _date = new QName("", "date");
+    private static final QName _status_only = new QName("status-only");
+    private static final QName _detailed = new QName("detailed");
+    private static final QName _status = new QName("status");
+    private static final QName _value = new QName("value");
+    private final static int bufsize = 8192;
+
+    private ReadablePipe source = null;
+    private ReadablePipe manifest = null;
+    private WritablePipe result = null;
+    private Hashtable<String, FileToZip> zipManifest = new Hashtable<String, FileToZip> ();
+    private Hashtable<String, XdmNode> srcManifest = new Hashtable<String, XdmNode> ();
+
+    /** Creates a new instance of Unzip */
+    public Zip(XProcRuntime runtime, XAtomicStep step) {
+        super(runtime,step);
+    }
+
+    public void setInput(String port, ReadablePipe pipe) {
+        if ("source".equals(port)) {
+            source = pipe;
+        } else {
+            manifest = pipe;
+        }
+    }
+
+    public void setOutput(String port, WritablePipe pipe) {
+        result = pipe;
+    }
+
+    public void reset() {
+        source.resetReader();
+        manifest.resetReader();
+        result.resetWriter();
+    }
+
+    public void run() throws SaxonApiException {
+        super.run();
+
+        String zipFn = getOption(_href).getString();
+
+        XdmNode man = S9apiUtils.getDocumentElement(manifest.read());
+
+        if (!c_zip_manifest.equals(man.getNodeName())) {
+            throw new XProcException("The cx:zip manifest must be a c:zip-manifest.");
+        }
+
+        parseManifest(man);
+
+        while (source.moreDocuments()) {
+            XdmNode doc = source.read();
+            XdmNode root = S9apiUtils.getDocumentElement(doc);
+            srcManifest.put(root.getBaseURI().toASCIIString(), doc);
+        }
+
+        File zipFile = new File(zipFn);
+        File zipParent = zipFile.getParentFile();
+        File zipTemp = null;
+        ZipFile inZip = null;
+        ZipOutputStream outZip = null;
+
+        try {
+            zipTemp = File.createTempFile("calabashZip",".zip",zipParent);
+            zipTemp.deleteOnExit();
+            if (zipFile.exists()) {
+                inZip = new ZipFile(zipFile);
+            }
+            outZip = new ZipOutputStream(new FileOutputStream(zipTemp));
+        } catch (IOException ioe) {
+            throw new XProcException(ioe);
+        }
+
+        String command = getOption(_command).getString();
+
+        if ("create".equals(command)) {
+            try {
+                if (inZip != null) {
+                    inZip.close();
+                }
+            } catch (IOException ioe) {
+                throw new XProcException(ioe);
+            }
+            inZip = null;
+        }
+
+        if ("update".equals(command) || "create".equals(command)) {
+            update(inZip, outZip, false);
+        } else if ("freshen".equals(command)) {
+            update(inZip, outZip, true);
+        } else if ("delete".equals(command)) {
+            delete(inZip, outZip);
+        } else {
+            throw new XProcException("Unexpected cx:zip command: " + command);
+        }
+
+        if (zipFile.exists()) {
+            zipFile.delete();
+        }
+
+        zipTemp.renameTo(zipFile);
+
+        TreeWriter tree = new TreeWriter(runtime);
+
+        tree.startDocument(step.getNode().getBaseURI());
+        tree.addStartElement(c_zipfile);
+        tree.addAttribute(_href, zipFile.toURI().toASCIIString());
+        tree.startContent();
+
+        try {
+            URL url = zipFile.toURL();
+            URLConnection connection = url.openConnection();
+            InputStream stream = connection.getInputStream();
+
+            ZipInputStream zipStream = new ZipInputStream(stream);
+
+            DatatypeFactory dfactory = DatatypeFactory.newInstance();
+            GregorianCalendar cal = new GregorianCalendar();
+
+            ZipEntry entry = zipStream.getNextEntry();
+            while (entry != null) {
+                cal.setTimeInMillis(entry.getTime());
+                XMLGregorianCalendar xmlCal = dfactory.newXMLGregorianCalendar(cal);
+
+                if (entry.isDirectory()) {
+                    tree.addStartElement(c_directory);
+                } else {
+                    tree.addStartElement(c_file);
+
+                    tree.addAttribute(_compressed_size, ""+entry.getCompressedSize());
+                    tree.addAttribute(_size, ""+entry.getSize());
+                }
+
+                if (entry.getComment() != null) {
+                    tree.addAttribute(_comment, entry.getComment());
+                }
+
+                tree.addAttribute(_name, ""+entry.getName());
+                tree.addAttribute(_date, xmlCal.toXMLFormat());
+                tree.startContent();
+                tree.addEndElement();
+                entry = zipStream.getNextEntry();
+            }
+
+            zipStream.close();
+        } catch (MalformedURLException mue) {
+            throw new XProcException(XProcException.err_E0001, mue);
+        } catch (IOException ioe) {
+            throw new XProcException(XProcException.err_E0001, ioe);
+        } catch (DatatypeConfigurationException dce) {
+            throw new XProcException(XProcException.err_E0001, dce);
+        }
+
+        tree.addEndElement();
+        tree.endDocument();
+        result.write(tree.getResult());
+    }
+
+    private void parseManifest(XdmNode man) {
+        for (XdmNode child : new RelevantNodes(man, Axis.CHILD)) {
+            if (XdmNodeKind.ELEMENT == child.getNodeKind()) {
+                if (c_entry.equals(child.getNodeName())) {
+                    String name = child.getAttributeValue(_name);
+                    if (name == null || "".equals(name)) {
+                        throw new XProcException("Missing or invalid name in cx:zip manifest.");
+                    }
+                    String href = child.getAttributeValue(_href);
+                    if (href == null || "".equals(href)) {
+                        throw new XProcException("Missing or invalid href in cx:zip manifest.");
+                    }
+                    String hrefuri = child.getBaseURI().resolve(href).toASCIIString();
+                    String comment = child.getAttributeValue(_comment);
+
+                    int method = ZipEntry.DEFLATED;
+                    int level = Deflater.DEFAULT_COMPRESSION;
+
+                    String value = child.getAttributeValue(_compression_method);
+                    if ("stored".equals(value)) {
+                        method = ZipEntry.STORED;
+                    }
+
+                    value = child.getAttributeValue(_compression_level);
+                    if ("smallest".equals(value)) {
+                        level = Deflater.BEST_COMPRESSION;
+                    } else if ("fastest".equals(value)) {
+                        level = Deflater.BEST_SPEED;
+                    } else if ("huffman".equals(value)) {
+                        level = Deflater.HUFFMAN_ONLY;
+                    } else if ("none".equals(value)) {
+                        level = Deflater.NO_COMPRESSION;
+                        method = ZipEntry.STORED;
+                    }
+
+                    zipManifest.put(name, new FileToZip(name, hrefuri, method, level, comment));
+                } else {
+                    throw new XProcException("Unexpected element in cx:zip manifest: " + child.getNodeName());
+                }
+            } else {
+                    throw new XProcException("Unexpected content in cx:zip manifest.");
+            }
+        }
+    }
+
+    public void update(ZipFile inZip, ZipOutputStream outZip, boolean freshen) {
+        byte[] buffer = new byte[bufsize];
+
+        try {
+            if (inZip != null) {
+                Enumeration zenum = inZip.entries();
+                while (zenum.hasMoreElements()) {
+                    ZipEntry entry = (ZipEntry) zenum.nextElement();
+                    String name = entry.getName();
+
+                    boolean skip = srcManifest.containsKey(name);
+
+                    if (!skip) {
+                        if (zipManifest.containsKey(name) && freshen) {
+                            FileToZip file = zipManifest.get(name);
+                            long zipDate = entry.getTime();
+                            long lastMod = file.getLastModified();
+
+                            skip = (lastMod > zipDate);
+                            if (!skip) {
+                                zipManifest.remove(name);
+                            }
+                        } else if (zipManifest.containsKey(name)) {
+                            skip = true;
+                        }
+                    }
+
+                    if (!skip) {
+                        outZip.putNextEntry(entry);
+                        InputStream stream = inZip.getInputStream(entry);
+                        int read = stream.read(buffer, 0, bufsize);
+                        while (read >= 0) {
+                            outZip.write(buffer,0, read);
+                            read = stream.read(buffer, 0, bufsize);
+                        }
+                        stream.close();
+                        outZip.closeEntry();
+                    }
+                }
+            }
+
+            for (String name : zipManifest.keySet()) {
+                FileToZip file = zipManifest.get(name);
+                ZipEntry ze = new ZipEntry(name);
+                if (file.getComment() != null) {
+                    ze.setComment(file.getComment());
+                }
+                ze.setMethod(file.getMethod());
+                outZip.setLevel(file.getLevel());
+
+                outZip.putNextEntry(ze);
+
+                URI uri = zipManifest.get(name).getHref();
+                String href = uri.toASCIIString();
+
+                if (srcManifest.containsKey(href)) {
+                    XdmNode doc = srcManifest.get(href);
+                    Serializer serializer = new Serializer();
+                    serializer.setOutputStream(outZip);
+                    S9apiUtils.serialize(runtime, doc, serializer);
+                } else {
+                    URL url = uri.toURL();
+                    URLConnection connection = url.openConnection();
+                    InputStream stream = connection.getInputStream();
+                    int read = stream.read(buffer, 0, bufsize);
+                    while (read >= 0) {
+                        outZip.write(buffer,0, read);
+                        read = stream.read(buffer, 0, bufsize);
+                    }
+                    stream.close();
+                }
+
+                outZip.closeEntry();
+            }
+
+            outZip.close();
+        } catch (IOException ioe) {
+            throw new XProcException(ioe);
+        } catch (SaxonApiException sae) {
+            throw new XProcException(sae);
+        }
+    }
+
+    public void delete(ZipFile inZip, ZipOutputStream outZip) {
+        try {
+            if (inZip != null) {
+                Enumeration zenum = inZip.entries();
+                while (zenum.hasMoreElements()) {
+                    ZipEntry entry = (ZipEntry) zenum.nextElement();
+                    String name = entry.getName();
+                    boolean delete = false;
+
+                    if (zipManifest.containsKey(name)) {
+                        delete = true;
+                    }
+
+                    if (!delete) {
+                        outZip.putNextEntry(entry);
+                        InputStream stream = inZip.getInputStream(entry);
+                        byte[] buffer = new byte[bufsize];
+                        int read = stream.read(buffer, 0, bufsize);
+                        while (read >= 0) {
+                            outZip.write(buffer,0, read);
+                            read = stream.read(buffer, 0, bufsize);
+                        }
+                        stream.close();
+                        outZip.closeEntry();
+                    }
+                }
+            }
+
+            outZip.close();
+        } catch (IOException ioe) {
+            throw new XProcException(ioe);
+        }
+    }
+
+    private class FileToZip {
+        private String zipName = null;
+        private URI href = null;
+        private int method = -1;
+        private int level = -1;
+        private String comment = null;
+        private long lastModified = -1;
+
+        public FileToZip(String zipName, String href, int method, int level, String comment) {
+            try {
+                this.zipName = zipName;
+                this.href = new URI(href);
+                this.method = method;
+                this.level = level;
+                this.comment = comment;
+
+                lastModified = readLastModified(this.href);
+            } catch (URISyntaxException use) {
+                throw new XProcException(use);
+            }
+        }
+
+        public String getName() {
+            return zipName;
+        }
+
+        public URI getHref() {
+            return href;
+        }
+
+        public int getMethod() {
+            return method;
+        }
+
+        public int getLevel() {
+            return level;
+        }
+
+        public String getComment() {
+            return comment;
+        }
+
+        public long getLastModified() {
+            return lastModified;
+        }
+
+        private long readLastModified(URI uri) {
+            if (uri.getScheme().equals("file")) {
+                String fn = uri.toASCIIString();
+                if (fn.startsWith("file:")) {
+                    fn = fn.substring(5);
+                    if (fn.startsWith("///")) {
+                        fn = fn.substring(2);
+                    }
+                }
+
+                File f = new File(fn);
+                return f.lastModified();
+            } else {
+                // Let's try HTTP
+                HttpRequest httpReq = new HttpRequest(runtime, step);
+                Pipe inputPipe = new Pipe(runtime);
+                Pipe outputPipe = new Pipe(runtime);
+                httpReq.setInput("source", inputPipe);
+                httpReq.setOutput("result", outputPipe);
+
+                TreeWriter req = new TreeWriter(runtime);
+                req.startDocument(step.getNode().getBaseURI());
+                req.addStartElement(XProcConstants.c_request);
+                req.addAttribute(_method, "HEAD");
+                req.addAttribute(_href, uri.toASCIIString());
+                req.addAttribute(_status_only, "true");
+                req.addAttribute(_detailed, "true");
+
+                req.startContent();
+                req.addEndElement();
+                req.endDocument();
+
+                inputPipe.write(req.getResult());
+
+                try {
+                    httpReq.run();
+                } catch (SaxonApiException sae) {
+                    throw new XProcException(sae);
+                }
+
+                XdmNode result = S9apiUtils.getDocumentElement(outputPipe.read());
+                int status = Integer.parseInt(result.getAttributeValue(_status));
+
+                if (status == 200) {
+                    for (XdmNode node : new RelevantNodes(result, Axis.CHILD)) {
+                        if ("Last-Modified".equals(node.getAttributeValue(_name))) {
+                            String months[] = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+                                               "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
+                            String dateStr = node.getAttributeValue(_value);
+                            // dateStr = Fri, 13 Mar 2009 12:12:07 GMT
+                            //           00000000001111111111222222222
+                            //           01234567890123456789012345678
+
+                            //System.err.println("dateStr: " + dateStr);
+
+                            int day = Integer.parseInt(dateStr.substring(5,7));
+                            String monthStr = dateStr.substring(8,11).toUpperCase();
+                            int year = Integer.parseInt(dateStr.substring(12,16));
+                            int hour = Integer.parseInt(dateStr.substring(17,19));
+                            int min = Integer.parseInt(dateStr.substring(20,22));
+                            int sec = Integer.parseInt(dateStr.substring(23,25));
+                            String tzStr = dateStr.substring(26,29);
+
+                            int month = 0;
+                            for (month = 0; month < 12; month++) {
+                                if (months[month].equals(monthStr)) {
+                                    break;
+                                }
+                            }
+
+                            // FIXME: check if this is correct!
+                            GregorianCalendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
+                            cal.set(year,month,day,hour,min,sec);
+                            return cal.getTimeInMillis();
+                        }
+                    }
+                    return -1;
+                } else {
+                    return -1;
+                }
+            }
+        }
+    }
+}

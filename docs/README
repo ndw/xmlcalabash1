@@ -1,0 +1,78 @@
+README
+
+What is Calabash?
+
+Calabash is an implementation of XProc: An XML Pipeline Language.
+
+This is a very early, alpha release. It passes most of the tests in
+the XProc Test Suite but is known to be incomplete.
+
+Prerequisites
+
+Calabash is built with Java 1.5 on top of Saxon. To run it, you'll
+need:
+
+    * Java 1.5 or later,
+    * Saxon 9.1.0.1 or later
+    * Apache HTTP Client (and Apache Commons logging and codec),
+      if you want to use p:http-request
+    * Saxon-SA, if you want to use p:validate-with-xml-schema
+    * XQuery API for Java (XQJ), if you want to use p:xquery
+    * Jing if you want to use p:validate-with-relax-ng
+    * TagSoup, if you want to be able to parse text/html content
+      with the p:unescape-markup step
+    * RenderX's XEP, if you want to use the p:xsl-formatter step.
+      (You may possibly need the XEP developers kit in addition to XEP.)
+
+(Note: dependency on commercial applications for core XProc steps is a
+temporary expediency. Eventually, I'll integrate support for open
+source tools like Xerces and FOP. Patches welcome.)
+
+Calabash also implements several extension steps. These are not part
+of the XProc core language standard and cannot be expected to reliably
+interoperate with other implementations.
+
+    * cx:collection-manager provides a mechanism for associating sets
+      of documents with collection() URIs for use in the p:xslt (2.0)
+      and p:xquery steps.
+    * cx:delta-xml provides an integration with DeltaXML's commercial
+      XML-diffing tool suite. Requires the DeltaXML tools, naturally.
+    * cx:message is a debugging aid; it's the identity step with a
+      message option that will be printed on stderr.
+    * cx:nvdl supports NVDL validation of mixed-namespace documents.
+    * cx:unzip provides access to the files in a ZIP archive.
+    * ml:adhoc-query, ml:invoke-module, and ml:insert-document
+      implement Mark Logic Server XCC primitives (incompletely).
+
+How do I use it?
+
+Download the latest release. Inside the archive you'll find calabash.jar.
+Make sure that jar file and the prerequisites are on your class path.
+Then you can run it from the command line:
+
+  java com.xmlcalabash.drivers.Main options pipeline.xpl
+
+For example:
+
+  java com.xmlcalabash.drivers.Main xpl/pipe.xpl
+  <doc xmlns:p="http://www.w3.org/ns/xproc">
+  Congratulations! You've run your first pipeline!
+  </doc>
+
+You can use -iport=file to change the inputs and -oport=file to change
+the output location.
+
+For example:
+
+  $ java com.xmlcalabash.drivers.Main -isource=xpl/pipe.xpl -oresult=/tmp/out.xml xpl/pipe.xpl
+
+That will run xpl/pipe.xpl using xpl/pipe.xpl as the input and writing the
+result to /tmp/out.xml.
+
+If you run java com.xmlcalabash.drivers.Main with no options, it will
+print a short usage summary.
+
+What do I do if it all goes wrong?
+
+Tell Norm, ndw@nwalsh.com. You can also report your experiences on
+http://getsatisfaction.com/calabash

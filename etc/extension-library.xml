@@ -1,0 +1,111 @@
+<p:library xmlns:p="http://www.w3.org/ns/xproc"
+	   xmlns:cx="http://xmlcalabash.com/ns/extensions"
+	   xmlns:pxp="http://exproc.org/proposed/steps"
+	   xmlns:ml="http://xmlcalabash.com/ns/extensions/marklogic"
+	   xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+<p:declare-step type="cx:collection-manager">
+  <p:input port="source" sequence="true"/>
+  <p:output port="result" sequence="true" primary="false"/>
+  <p:option name="href" required="true" cx:type="xsd:anyURI"/>
+</p:declare-step>
+
+<p:declare-step type="cx:delta-xml">
+  <p:input port="source"/>
+  <p:input port="alternate"/>
+  <p:input port="dxp"/>
+  <p:output port="result"/>
+</p:declare-step>
+
+<p:declare-step type="cx:message">
+  <p:input port="source" sequence="true"/>
+  <p:output port="result" sequence="true"/>
+  <p:option name="message" required="true"/>
+</p:declare-step>
+
+<!-- ============================================================ -->
+
+<p:declare-step type="cx:nvdl">
+  <p:input port="source" primary="true"/>
+  <p:input port="nvdl"/>
+  <p:input port="schemas" sequence="true"/>
+  <p:output port="result"/>
+  <p:option name="assert-valid" select="'true'" cx:type="xsd:boolean"/>
+</p:declare-step>
+
+<p:declare-step type="pxp:nvdl">
+  <p:input port="source" primary="true"/>
+  <p:input port="nvdl"/>
+  <p:input port="schemas" sequence="true"/>
+  <p:output port="result"/>
+  <p:option name="assert-valid" select="'true'" cx:type="xsd:boolean"/>
+</p:declare-step>
+
+<!-- ============================================================ -->
+
+<p:declare-step type="cx:unzip">
+  <p:output port="result"/>
+  <p:option name="href" required="true" cx:type="xsd:anyURI"/>
+  <p:option name="file"/>
+  <p:option name="content-type"/>
+</p:declare-step>
+
+<p:declare-step type="pxp:unzip">
+  <p:output port="result"/>
+  <p:option name="href" required="true" cx:type="xsd:anyURI"/>
+  <p:option name="file"/>
+  <p:option name="content-type"/>
+</p:declare-step>
+
+<!-- ============================================================ -->
+
+<p:declare-step type="cx:uri-info">
+  <p:output port="result"/>
+  <p:option name="href" required="true" cx:type="xsd:anyURI"/>
+  <p:option name="username"/>
+  <p:option name="password"/>
+  <p:option name="auth-method"/>
+  <p:option name="send-authorization"/>
+</p:declare-step>
+
+<p:declare-step type="ml:adhoc-query">
+  <p:input port="source" sequence="true" primary="true"/>
+  <p:input port="parameters" kind="parameter"/>
+  <p:output port="result" sequence="true"/>
+  <p:option name="host"/>
+  <p:option name="port" cx:type="xsd:integer"/>
+  <p:option name="user"/>
+  <p:option name="password"/>
+  <p:option name="content-base"/>
+  <p:option name="wrapper" cx:type="xsd:QName"/>
+</p:declare-step>
+
+<p:declare-step type="ml:invoke-module">
+  <p:input port="parameters" kind="parameter"/>
+  <p:output port="result" sequence="true"/>
+  <p:option name="module" required="true"/>
+  <p:option name="host"/>
+  <p:option name="port" cx:type="xsd:integer"/>
+  <p:option name="user"/>
+  <p:option name="password"/>
+  <p:option name="content-base"/>
+  <p:option name="wrapper" cx:type="xsd:QName"/>
+</p:declare-step>
+
+<p:declare-step type="ml:insert-document">
+  <p:input port="source"/>
+  <p:output port="result" primary="false"/>
+  <p:option name="host"/>
+  <p:option name="port" cx:type="xsd:integer"/>
+  <p:option name="user"/>
+  <p:option name="password"/>
+  <p:option name="content-base"/>
+  <p:option name="uri" required="true"/>
+  <p:option name="buffer-size" cx:type="xsd:integer"/>
+  <p:option name="collections"/>
+  <p:option name="format" cx:type="xml|text|binary"/>
+  <p:option name="language"/>
+  <p:option name="locale"/>
+</p:declare-step>
+
+</p:library>
