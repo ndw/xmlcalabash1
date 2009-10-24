@@ -6,6 +6,7 @@ import net.sf.saxon.expr.*;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.value.StringValue;
 import net.sf.saxon.value.SequenceType;
+import net.sf.saxon.value.UntypedAtomicValue;
 import net.sf.saxon.om.*;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcRuntime;
@@ -43,7 +44,7 @@ public class SystemProperty extends ExtensionFunctionDefinition {
      }
 
      public SequenceType getResultType(SequenceType[] suppliedArgumentTypes) {
-         return SequenceType.SINGLE_ATOMIC;
+         return SequenceType.SINGLE_UNTYPED_ATOMIC;
      }
 
      public ExtensionFunctionCall makeCallExpression() {
@@ -103,7 +104,7 @@ public class SystemProperty extends ExtensionFunctionDefinition {
              }
 
              return SingletonIterator.makeIterator(
-                     new StringValue(value));
+                     new UntypedAtomicValue(value));
          }
      }
 }

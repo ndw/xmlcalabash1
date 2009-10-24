@@ -227,7 +227,7 @@ public class Zip extends DefaultStep {
     }
 
     private void parseManifest(XdmNode man) {
-        for (XdmNode child : new RelevantNodes(man, Axis.CHILD)) {
+        for (XdmNode child : new RelevantNodes(runtime, man, Axis.CHILD)) {
             if (XdmNodeKind.ELEMENT == child.getNodeKind()) {
                 if (c_entry.equals(child.getNodeName())) {
                     String name = child.getAttributeValue(_name);
@@ -478,7 +478,7 @@ public class Zip extends DefaultStep {
                 int status = Integer.parseInt(result.getAttributeValue(_status));
 
                 if (status == 200) {
-                    for (XdmNode node : new RelevantNodes(result, Axis.CHILD)) {
+                    for (XdmNode node : new RelevantNodes(runtime, result, Axis.CHILD)) {
                         if ("Last-Modified".equals(node.getAttributeValue(_name))) {
                             String months[] = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN",
                                                "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };

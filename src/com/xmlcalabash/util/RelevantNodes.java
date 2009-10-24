@@ -24,10 +24,23 @@ import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.XdmItem;
+import net.sf.saxon.s9api.XPathCompiler;
+import net.sf.saxon.s9api.XPathExecutable;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XPathSelector;
+import net.sf.saxon.s9api.XdmValue;
+import net.sf.saxon.s9api.SaxonApiUncheckedException;
+import net.sf.saxon.trans.XPathException;
 
 import java.util.Iterator;
+import java.util.Vector;
+import java.util.Hashtable;
 
 import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.model.RuntimeValue;
 
 /**
  * Created by IntelliJ IDEA.
@@ -37,9 +50,13 @@ import com.xmlcalabash.core.XProcConstants;
  * To change this template use File | Settings | File Templates.
  */
 public class RelevantNodes implements Iterable<XdmNode> {
+    private static QName use_when = new QName("", "use-when");
+    private static QName p_use_when = new QName(XProcConstants.NS_XPROC, "use-when");
     private RelevantNodesIter iter = null;
+    private XProcRuntime runtime = null;
 
-    public RelevantNodes(XdmNode start, Axis axis) {
+    public RelevantNodes(XProcRuntime runtime, XdmNode start, Axis axis) {
+        this.runtime = runtime;
         iter = new RelevantNodesIter(start, axis);
     }
 
@@ -127,11 +144,75 @@ public class RelevantNodes implements Iterable<XdmNode> {
                 return !"".equals(node.toString().trim());
             }
 
-            if (node.getNodeKind() == XdmNodeKind.ELEMENT || node.getNodeKind() == XdmNodeKind.ATTRIBUTE) {
+            if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
+                if ((XProcConstants.NS_XPROC.equals(node.getNodeName().getNamespaceURI())
+                     && node.getAttributeValue(use_when) != null)
+                    || (!XProcConstants.NS_XPROC.equals(node.getNodeName().getNamespaceURI())
+                        && node.getAttributeValue(p_use_when) != null)) {
+                    String expr = node.getAttributeValue(use_when);
+                    if (!XProcConstants.NS_XPROC.equals(node.getNodeName().getNamespaceURI())) {
+                        expr = node.getAttributeValue(p_use_when);
+                    }
+                    return useWhen(node, expr);
+                } else {
+                    return onlyMatch == null || onlyMatch.equals(node.getNodeName());
+                }
+            }
+
+            if (node.getNodeKind() == XdmNodeKind.ATTRIBUTE) {
                 return onlyMatch == null || onlyMatch.equals(node.getNodeName());
             }
 
             return false; // What can this be anyway?
+        }
+
+        private boolean useWhen(XdmNode element, String xpath) {
+            boolean use = false;
+
+            try {
+                XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
+
+                XdmSequenceIterator nsIter = element.axisIterator(Axis.NAMESPACE);
+                while (nsIter.hasNext()) {
+                    XdmNode ns = (XdmNode) nsIter.next();
+                    xcomp.declareNamespace(ns.getNodeName().getLocalName(),ns.getStringValue());
+                }
+
+                XPathExecutable xexec = null;
+
+                try {
+                    xexec = xcomp.compile(xpath);
+                } catch (SaxonApiException sae) {
+                    throw sae;
+                }
+
+                XPathSelector selector = xexec.load();
+
+                try {
+                    use = selector.effectiveBooleanValue();
+                } catch (SaxonApiUncheckedException saue) {
+                    Throwable sae = saue.getCause();
+                    if (sae instanceof XPathException) {
+                        XPathException xe = (XPathException) sae;
+                        if ("http://www.w3.org/2005/xqt-errors".equals(xe.getErrorCodeNamespace()) && "XPDY0002".equals(xe.getErrorCodeLocalPart())) {
+                            throw XProcException.dynamicError(26,"Expression refers to context when none is available: " + xpath);
+                        } else {
+                            throw saue;
+                        }
+
+                    } else {
+                        throw saue;
+                    }
+                }
+            } catch (SaxonApiException sae) {
+                if (S9apiUtils.xpathSyntaxError(sae)) {
+                    throw XProcException.dynamicError(23, sae.getCause().getMessage());
+                } else {
+                    throw new XProcException(sae);
+                }
+            }
+
+            return use;
         }
     }
 }

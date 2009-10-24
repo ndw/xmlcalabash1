@@ -165,7 +165,7 @@ public class Info extends DefaultStep {
             tree.addAttribute(_exists, status >= 400 && status < 500 ? "false" : "true");
             tree.addAttribute(_uri, uri.toASCIIString());
 
-            for (XdmNode node : new RelevantNodes(result, Axis.CHILD)) {
+            for (XdmNode node : new RelevantNodes(runtime, result, Axis.CHILD)) {
                 if ("Last-Modified".equals(node.getAttributeValue(_name))) {
                     String months[] = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN",
                                        "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
@@ -202,7 +202,7 @@ public class Info extends DefaultStep {
 
             tree.startContent();
 
-            for (XdmNode node : new RelevantNodes(result, Axis.CHILD)) {
+            for (XdmNode node : new RelevantNodes(runtime, result, Axis.CHILD)) {
                 tree.addSubtree(node);
             }
 

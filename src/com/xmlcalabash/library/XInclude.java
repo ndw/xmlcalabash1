@@ -309,7 +309,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
         finest(node, "fallback: " + node.getNodeName());
         boolean valid = true;
         XdmNode fallback = null;
-        for (XdmNode child : new RelevantNodes(node, Axis.CHILD)) {
+        for (XdmNode child : new RelevantNodes(runtime, node, Axis.CHILD)) {
             if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
                 valid = valid && xi_fallback.equals(child.getNodeName()) && (fallback == null);
                 fallback = child;

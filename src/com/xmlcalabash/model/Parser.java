@@ -152,7 +152,7 @@ public class Parser {
 
         if (XProcConstants.p_library.equals(node.getNodeName())) {
             checkAttributes(node, new String[] { "xpath-version", "psvi-required" }, false);
-            for (XdmNode snode : new RelevantNodes(node, Axis.CHILD)) {
+            for (XdmNode snode : new RelevantNodes(runtime, node, Axis.CHILD)) {
                 Step substep = readStep(snode);
 
                 if (XProcConstants.p_import.equals(substep.getType())) {
@@ -248,7 +248,7 @@ public class Parser {
 
         int pos = 1;
         boolean done = false;
-        for (XdmNode node : new RelevantNodes(step.getNode(), Axis.CHILD)) {
+        for (XdmNode node : new RelevantNodes(runtime, step.getNode(), Axis.CHILD)) {
             if (done) {
                 rest.add(node);
                 continue;
@@ -533,7 +533,7 @@ public class Parser {
             input.setSelect(select);
         }
 
-        for (XdmNode snode : new RelevantNodes(node, Axis.CHILD)) {
+        for (XdmNode snode : new RelevantNodes(runtime, node, Axis.CHILD)) {
             Binding binding = readBinding(snode);
             if (binding != null) {
                 input.addBinding(binding);
@@ -560,7 +560,7 @@ public class Parser {
         output.setSequence(sequence);
         output.setPrimary(primary);
 
-        for (XdmNode snode : new RelevantNodes(node, Axis.CHILD)) {
+        for (XdmNode snode : new RelevantNodes(runtime, node, Axis.CHILD)) {
             Binding binding = readBinding(snode);
             if (binding != null) {
                 output.addBinding(binding);
@@ -602,7 +602,7 @@ public class Parser {
         pipe.setStep(step);
         pipe.setPort(port);
 
-        RelevantNodes rnodes = new RelevantNodes(node, Axis.CHILD);
+        RelevantNodes rnodes = new RelevantNodes(runtime, node, Axis.CHILD);
         Iterator<XdmNode> iter = rnodes.iterator();
         while (iter.hasNext()) {
             XdmNode snode = iter.next();
@@ -620,7 +620,7 @@ public class Parser {
         DocumentBinding doc = new DocumentBinding(runtime, node);
         doc.setHref(href);
 
-        for (XdmNode snode : new RelevantNodes(node, Axis.CHILD)) {
+        for (XdmNode snode : new RelevantNodes(runtime, node, Axis.CHILD)) {
             throw new IllegalArgumentException("Unexpected in document: " + snode.getNodeName());
         }
 
@@ -648,7 +648,7 @@ public class Parser {
             doc.setContentType(contentType);
         }
 
-        for (XdmNode snode : new RelevantNodes(node, Axis.CHILD)) {
+        for (XdmNode snode : new RelevantNodes(runtime, node, Axis.CHILD)) {
             throw new IllegalArgumentException("Unexpected in document: " + snode.getNodeName());
         }
 
@@ -660,7 +660,7 @@ public class Parser {
 
         EmptyBinding empty = new EmptyBinding(runtime, node);
 
-        for (XdmNode snode : new RelevantNodes(node, Axis.CHILD)) {
+        for (XdmNode snode : new RelevantNodes(runtime, node, Axis.CHILD)) {
             throw new IllegalArgumentException("Unexpected in empty: " + snode.getNodeName());
         }
         
@@ -809,7 +809,7 @@ public class Parser {
 
     private void readNamespaceBindings(EndPoint endpoint, XdmNode node) {
         boolean hadNamespaceBinding = false;
-        for (XdmNode snode : new RelevantNodes(node, Axis.CHILD)) {
+        for (XdmNode snode : new RelevantNodes(runtime, node, Axis.CHILD)) {
             QName nodeName = snode.getNodeName();
 
             if (XProcConstants.p_namespaces.equals(nodeName)) {
@@ -843,7 +843,7 @@ public class Parser {
                 // FIXME: ? HACK!
                 ((ComputableValue) endpoint).addNamespaceBinding(nsbinding);
 
-                for (XdmNode tnode : new RelevantNodes(snode, Axis.CHILD)) {
+                for (XdmNode tnode : new RelevantNodes(runtime, snode, Axis.CHILD)) {
                     throw new XProcException("p:namespaces must be empty");
                 }
             } else {
@@ -956,7 +956,7 @@ public class Parser {
         value = node.getAttributeValue(new QName("version"));
         serial.setVersion(value);
 
-        for (XdmNode snode : new RelevantNodes(node, Axis.CHILD)) {
+        for (XdmNode snode : new RelevantNodes(runtime, node, Axis.CHILD)) {
             throw new XProcException("serialization must be empty");
         }
 
@@ -985,7 +985,7 @@ public class Parser {
 
         checkExtensionAttributes(node, log);
 
-        for (XdmNode snode : new RelevantNodes(node, Axis.CHILD)) {
+        for (XdmNode snode : new RelevantNodes(runtime, node, Axis.CHILD)) {
             throw new XProcException("log must be empty");
         }
         
@@ -1038,7 +1038,7 @@ public class Parser {
         step.setDeclaration(decl);
 
         // Store extension attributes and convert any option shortcut attributes into options
-        for (XdmNode attr : new RelevantNodes(node, Axis.ATTRIBUTE)) {
+        for (XdmNode attr : new RelevantNodes(runtime, node, Axis.ATTRIBUTE)) {
             QName aname = attr.getNodeName();
             if (XMLConstants.NULL_NS_URI.equals(aname.getNamespaceURI())) {
                 if (!"name".equals(aname.getLocalName())) {
@@ -1114,7 +1114,7 @@ public class Parser {
         }
 
         // Store extension attributes and convert any option shortcut attributes into options
-        for (XdmNode attr : new RelevantNodes(node, Axis.ATTRIBUTE)) {
+        for (XdmNode attr : new RelevantNodes(runtime, node, Axis.ATTRIBUTE)) {
             QName aname = attr.getNodeName();
             if (XMLConstants.NULL_NS_URI.equals(aname.getNamespaceURI())) {
                 if (!"type".equals(aname.getLocalName()) && !"name".equals(aname.getLocalName())
@@ -1239,7 +1239,7 @@ public class Parser {
         URI importURI = node.getBaseURI().resolve(href);
 
         XdmNode child = null;
-        for (XdmNode cnode : new RelevantNodes(node, Axis.CHILD)) {
+        for (XdmNode cnode : new RelevantNodes(runtime, node, Axis.CHILD)) {
             child = cnode;
         }
 
@@ -1520,7 +1520,7 @@ public class Parser {
         }
         HashSet<String> options = null;
   
-        for (XdmNode attr : new RelevantNodes(node, Axis.ATTRIBUTE)) {
+        for (XdmNode attr : new RelevantNodes(runtime, node, Axis.ATTRIBUTE)) {
             QName aname = attr.getNodeName();
             if ("".equals(aname.getNamespaceURI())) {
                 if (hash.contains(aname.getLocalName())) {
@@ -1545,7 +1545,7 @@ public class Parser {
 
     // Can't be used for steps because it doesn't handle option shortcut attributes
     private void checkExtensionAttributes(XdmNode node, SourceArtifact src) {
-        for (XdmNode attr : new RelevantNodes(node, Axis.ATTRIBUTE)) {
+        for (XdmNode attr : new RelevantNodes(runtime, node, Axis.ATTRIBUTE)) {
             QName aname = attr.getNodeName();
             if ("".equals(aname.getNamespaceURI())) {
                 // nop

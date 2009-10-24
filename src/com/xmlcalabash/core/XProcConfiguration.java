@@ -188,7 +188,7 @@ public class XProcConfiguration {
             doc = S9apiUtils.getDocumentElement(doc);
         }
 
-        for (XdmNode node : new RelevantNodes(doc, Axis.CHILD)) {
+        for (XdmNode node : new RelevantNodes(null, doc, Axis.CHILD)) {
             String uri = node.getNodeName().getNamespaceURI();
             String localName = node.getNodeName().getLocalName();
 
@@ -295,7 +295,7 @@ public class XProcConfiguration {
         Vector<XdmValue> docnodes = new Vector<XdmValue> ();
         boolean sawElement = false;
 
-        for (XdmNode child : new RelevantNodes(node, Axis.CHILD)) {
+        for (XdmNode child : new RelevantNodes(null, node, Axis.CHILD)) {
             if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
                 if (sawElement) {
                     throw new XProcException("Invalid configuration value for input '" + port + "': content is not a valid XML document.");
@@ -366,7 +366,7 @@ public class XProcConfiguration {
         Vector<XdmValue> docnodes = new Vector<XdmValue> ();
         boolean sawElement = false;
 
-        for (XdmNode child : new RelevantNodes(node, Axis.CHILD)) {
+        for (XdmNode child : new RelevantNodes(null, node, Axis.CHILD)) {
             if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
                 if (sawElement) {
                     throw new XProcException("Content of library is not a valid XML document.");
@@ -392,7 +392,7 @@ public class XProcConfiguration {
         Vector<XdmValue> docnodes = new Vector<XdmValue> ();
         boolean sawElement = false;
 
-        for (XdmNode child : new RelevantNodes(node, Axis.CHILD)) {
+        for (XdmNode child : new RelevantNodes(null, node, Axis.CHILD)) {
             if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
                 if (sawElement) {
                     throw new XProcException("Content of pipeline is not a valid XML document.");
@@ -417,7 +417,7 @@ public class XProcConfiguration {
         String port = node.getAttributeValue(_port);
         String href = node.getAttributeValue(_href);
 
-        for (XdmNode child : new RelevantNodes(node, Axis.CHILD)) {
+        for (XdmNode child : new RelevantNodes(null, node, Axis.CHILD)) {
             if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
                 throw new XProcException("Output must be empty.");
             }
@@ -543,7 +543,7 @@ public class XProcConfiguration {
                 serializationOptions.put(name, value);
             }
 
-            for (XdmNode snode : new RelevantNodes(node, Axis.CHILD)) {
+            for (XdmNode snode : new RelevantNodes(null, node, Axis.CHILD)) {
                 throw new XProcException("Configuration error: serialization must be empty");
             }
         }
@@ -559,7 +559,7 @@ public class XProcConfiguration {
         }
         HashSet<String> options = null;
 
-        for (XdmNode attr : new RelevantNodes(node, Axis.ATTRIBUTE)) {
+        for (XdmNode attr : new RelevantNodes(null, node, Axis.ATTRIBUTE)) {
             QName aname = attr.getNodeName();
             if ("".equals(aname.getNamespaceURI())) {
                 if (hash.contains(aname.getLocalName())) {

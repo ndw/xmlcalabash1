@@ -693,7 +693,7 @@ private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
         }
 
         private void scan(XdmNode pipeline) throws SaxonApiException {
-            for (XdmNode node : new RelevantNodes(pipeline,Axis.CHILD)) {
+            for (XdmNode node : new RelevantNodes(runtime, pipeline,Axis.CHILD)) {
                 if (t_title.equals(node.getNodeName())) {
                     title = node;
                     continue;
@@ -819,7 +819,7 @@ private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
                 }
             }
 
-            for (XdmNode node : new RelevantNodes(input,Axis.CHILD)) {
+            for (XdmNode node : new RelevantNodes(runtime, input,Axis.CHILD)) {
                 throw new IllegalArgumentException("Options and parameters must be empty.");
             }
         }
@@ -874,7 +874,7 @@ private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
         public XProcPipeline (XdmNode root) {
             pipeline = root;
 
-            for (XdmNode node : new RelevantNodes(root,Axis.CHILD)) {
+            for (XdmNode node : new RelevantNodes(runtime, root,Axis.CHILD)) {
                 if (XProcConstants.p_input.equals(node.getNodeName())) {
                     inputPorts.add(node.getAttributeValue(_port));
                 }

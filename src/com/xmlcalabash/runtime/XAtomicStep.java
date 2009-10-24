@@ -228,7 +228,7 @@ public class XAtomicStep extends XStep {
 
                             if (XProcConstants.c_param_set.equals(docelem.getNodeName())) {
                                 // Check the attributes...
-                                for (XdmNode attr : new RelevantNodes(docelem, Axis.ATTRIBUTE)) {
+                                for (XdmNode attr : new RelevantNodes(runtime, docelem, Axis.ATTRIBUTE)) {
                                     QName aname = attr.getNodeName();
                                     if ("".equals(aname.getNamespaceURI())
                                         || XProcConstants.NS_XPROC.equals(aname.getNamespaceURI())) {
@@ -236,7 +236,7 @@ public class XAtomicStep extends XStep {
                                     }
                                 }
 
-                                for (XdmNode child : new RelevantNodes(docelem, Axis.CHILD)) {
+                                for (XdmNode child : new RelevantNodes(runtime, docelem, Axis.CHILD)) {
                                     if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
                                         if (!child.getNodeName().equals(XProcConstants.c_param)) {
                                             throw XProcException.dynamicError(18, "Element not allowed: " + child.getNodeName());
@@ -450,7 +450,7 @@ public class XAtomicStep extends XStep {
 
         p.setName(pname);
 
-        for (XdmNode attr : new RelevantNodes(pnode, Axis.ATTRIBUTE)) {
+        for (XdmNode attr : new RelevantNodes(runtime, pnode, Axis.ATTRIBUTE)) {
             QName aname = attr.getNodeName();
             if ("".equals(aname.getNamespaceURI())) {
                 if (!aname.equals(_name) && !aname.equals(_namespace) && !aname.equals(_value)) {
@@ -491,7 +491,7 @@ public class XAtomicStep extends XStep {
 
         p.setName(pname);
 
-        for (XdmNode attr : new RelevantNodes(pnode, Axis.ATTRIBUTE)) {
+        for (XdmNode attr : new RelevantNodes(runtime, pnode, Axis.ATTRIBUTE)) {
             QName aname = attr.getNodeName();
             if ("".equals(aname.getNamespaceURI())) {
                 if (!aname.equals(_name) && !aname.equals(_namespace)) {
@@ -502,7 +502,7 @@ public class XAtomicStep extends XStep {
 
         String stringValue = "";
         Vector<XdmItem> items = new Vector<XdmItem> ();
-        for (XdmNode child : new RelevantNodes(pnode, Axis.CHILD)) {
+        for (XdmNode child : new RelevantNodes(runtime, pnode, Axis.CHILD)) {
             if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
                if (!child.getNodeName().equals(cx_item)) {
                     throw XProcException.dynamicError(18, "Element not allowed: " + child.getNodeName());

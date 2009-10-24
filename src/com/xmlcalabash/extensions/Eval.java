@@ -208,7 +208,7 @@ public class Eval extends DefaultStep {
                 }
 
                 
-                for (XdmNode opt : new RelevantNodes(root, Axis.CHILD)) {
+                for (XdmNode opt : new RelevantNodes(runtime, root, Axis.CHILD)) {
                     if (opt.getNodeKind() != XdmNodeKind.ELEMENT || !cx_option.equals(opt.getNodeName())) {
                         throw new XProcException("A cx:options document must only contain cx:option elements");
                     }

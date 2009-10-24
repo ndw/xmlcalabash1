@@ -76,7 +76,7 @@ public class EscapeMarkup extends DefaultStep {
 
         TreeWriter tree = new TreeWriter(runtime);
         tree.startDocument(doc.getBaseURI());
-        for (XdmNode child : new RelevantNodes(doc, Axis.CHILD)) {
+        for (XdmNode child : new RelevantNodes(runtime, doc, Axis.CHILD)) {
             if (child.getNodeKind() == XdmNodeKind.COMMENT) {
                 tree.addComment(child.getStringValue());
             } else if (child.getNodeKind() == XdmNodeKind.PROCESSING_INSTRUCTION) {
