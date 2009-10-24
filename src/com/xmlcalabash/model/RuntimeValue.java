@@ -100,7 +100,8 @@ public class RuntimeValue {
     }
 
     public XdmAtomicValue getUntypedAtomicHack(XProcRuntime runtime) {
-        String xpath = "xs:untypedAtomic('" + value + "')";
+        String qvalue = value.replace("'", "''");
+        String xpath = "xs:untypedAtomic('" + qvalue + "')";
         try {
             XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
             XPathExecutable xexec = null;
