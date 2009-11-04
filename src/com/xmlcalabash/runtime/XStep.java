@@ -232,6 +232,15 @@ public abstract class XStep {
         return getParent() == null ? false : getParent().hasInScopeVariableBinding(name);
     }
 
+    public boolean hasInScopeVariableValue(QName name) {
+        if (inScopeOptions.containsKey(name)) {
+            RuntimeValue v = getOption(name);
+            return v != null;
+        }
+
+        return getParent() == null ? false : getParent().hasInScopeVariableBinding(name);
+    }
+
     public Hashtable<QName,RuntimeValue> getInScopeOptions() {
         // We make a copy so that what our children do can't effect us
         Hashtable<QName,RuntimeValue> globals = new Hashtable<QName,RuntimeValue> ();

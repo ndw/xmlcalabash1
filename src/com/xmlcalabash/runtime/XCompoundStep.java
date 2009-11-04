@@ -41,6 +41,15 @@ public class XCompoundStep extends XAtomicStep {
         return getParent() == null ? false : getParent().hasInScopeVariableBinding(name);
     }
 
+    public boolean hasInScopeVariableValue(QName name) {
+        if (variables.containsKey(name) || inScopeOptions.containsKey(name)) {
+            RuntimeValue v = getVariable(name);
+            return v != null;
+        }
+
+        return getParent() == null ? false : getParent().hasInScopeVariableValue(name);
+    }
+
     public RuntimeValue getVariable(QName name) {
         if (variables.containsKey(name)) {
             return variables.get(name);

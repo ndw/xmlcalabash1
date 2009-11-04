@@ -116,10 +116,14 @@ public class ValueAvailable extends ExtensionFunctionDefinition {
 
             value = step.hasInScopeVariableBinding(varName);
 
-            if (failIfUnknown && !value) {
-                throw XProcException.dynamicError(33);
+            if (!value) {
+                if (failIfUnknown) {
+                    throw XProcException.dynamicError(33);
+                }
+            } else {
+                value = step.hasInScopeVariableValue(varName);
             }
-
+            
             return SingletonIterator.makeIterator(value ? BooleanValue.TRUE : BooleanValue.FALSE);
         }
     }
