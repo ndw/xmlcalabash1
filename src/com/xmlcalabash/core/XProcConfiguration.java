@@ -101,6 +101,10 @@ public class XProcConfiguration {
 
     public XProcConfiguration(boolean schemaAware) {
         cfgProcessor = new Processor(schemaAware);
+        boolean sa = cfgProcessor.isSchemaAware();
+        if (schemaAware && !sa) {
+            System.err.println("Failed to obtain schema-aware processor.");
+        }
         loadConfiguration();
     }
 
