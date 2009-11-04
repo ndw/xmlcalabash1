@@ -39,7 +39,7 @@ public class Parser {
     private XProcRuntime runtime = null;
     private Stack<DeclareStep> declStack = null;
     protected HashSet<String> topLevelImports = new HashSet<String> ();
-    private boolean loadingStandardLibrary = false;
+    private boolean loadingStandardLibrary = false;                                                             
     private Logger logger = Logger.getLogger(this.getClass().getName());
 
     public Parser(XProcRuntime runtime) {
@@ -151,7 +151,7 @@ public class Parser {
         PipelineLibrary library = new PipelineLibrary(runtime, node);
 
         if (XProcConstants.p_library.equals(node.getNodeName())) {
-            checkAttributes(node, new String[] { "xpath-version", "psvi-required" }, false);
+            checkAttributes(node, new String[] { "xpath-version", "psvi-required", "version"}, false);
             for (XdmNode snode : new RelevantNodes(runtime, node, Axis.CHILD)) {
                 Step substep = readStep(snode);
 
@@ -1076,7 +1076,7 @@ public class Parser {
             throw XProcException.staticError(59);
         }
 
-        checkAttributes(node, new String[] { "type", "name", "psvi-required", "xpath-version", "exclude-inline-prefixes"}, false);
+        checkAttributes(node, new String[] { "type", "name", "version", "psvi-required", "xpath-version", "exclude-inline-prefixes"}, false);
 
         String stepName = checkNCName(node.getAttributeValue(_name));
         String typeName = node.getAttributeValue(_type);
@@ -1118,6 +1118,7 @@ public class Parser {
             QName aname = attr.getNodeName();
             if (XMLConstants.NULL_NS_URI.equals(aname.getNamespaceURI())) {
                 if (!"type".equals(aname.getLocalName()) && !"name".equals(aname.getLocalName())
+                        && !"version".equals(aname.getLocalName())
                         && !"psvi-required".equals(aname.getLocalName()) && !"xpath-version".equals(aname.getLocalName())
                         && !"exclude-inline-prefixes".equals(aname.getLocalName())) {
                     throw new XProcException("Attribute not allowed: " + aname.getLocalName());
