@@ -142,6 +142,7 @@ public class XSLT extends DefaultStep {
 
         QName initialMode = null;
         QName templateName = null;
+        String outputBaseURI = null;
 
         RuntimeValue opt = getOption(_initial_mode);
         if (opt != null) {
@@ -151,6 +152,11 @@ public class XSLT extends DefaultStep {
         opt = getOption(_template_name);
         if (opt != null) {
             templateName = opt.getQName();
+        }
+
+        opt = getOption(_output_base_uri);
+        if (opt != null) {
+            outputBaseURI = opt.getString();
         }
 
         Configuration config = runtime.getProcessor().getUnderlyingConfiguration();
@@ -192,13 +198,20 @@ public class XSLT extends DefaultStep {
             transformer.setInitialTemplate(templateName);
         }
 
+        if (outputBaseURI != null) {
+            transformer.setBaseOutputURI(outputBaseURI);
+        }
+
         transformer.transform();
 
         config.setOutputURIResolver(uriResolver);
         config.setCollectionURIResolver(collectionResolver);
 
         XdmNode xformed = result.getXdmNode();
-        resultPipe.write(xformed);
+        if (xformed != null) {
+            // Can be null when nothing is written to the principle result tree...
+            resultPipe.write(xformed);
+        }
     }
 
     class OutputResolver implements OutputURIResolver {
