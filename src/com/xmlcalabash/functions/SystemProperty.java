@@ -44,7 +44,7 @@ public class SystemProperty extends ExtensionFunctionDefinition {
      }
 
      public SequenceType getResultType(SequenceType[] suppliedArgumentTypes) {
-         return SequenceType.SINGLE_UNTYPED_ATOMIC;
+         return SequenceType.SINGLE_STRING;
      }
 
      public ExtensionFunctionCall makeCallExpression() {
