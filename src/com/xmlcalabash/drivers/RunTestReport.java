@@ -147,7 +147,7 @@ public class RunTestReport {
 
     public void runTests(Vector<String> tests) {
         // We create this runtime for startReport(), I know it never actually gets used...
-        XProcConfiguration config = new XProcConfiguration(false);
+        XProcConfiguration config = new XProcConfiguration(schemaAware);
         runtime = new XProcRuntime(config);
         runtime.setPhoneHome(false);
 
