@@ -409,7 +409,7 @@ public class Step extends SourceArtifact {
         for (Output output : decl.outputs()) {
             declOutputs.put(output.getPort(), output);
         }
-                
+
         for (Output output : outputs()) {
             String port = output.getPort();
             if (!port.endsWith("|")) {
@@ -459,17 +459,22 @@ public class Step extends SourceArtifact {
             }
 
             // Are all the options we have allowed?
+            Vector<Option> okOpts = new Vector<Option> ();
             for (Option option : options()) {
                 Option doption = decl.getOption(option.getName());
                 if (doption == null) {
                     if (getVersion() > 1.0) {
-                        delete option
+                        // nop
                     } else {
                         valid = false;
                         xproc.error(logger, node, "Undeclared option specified: " + option.getName(), XProcConstants.staticError(10));
                     }
+                } else {
+                    okOpts.add(option);
                 }
             }
+            // Make sure bogus 2.0 options are removed, otherwise we have to test for them elsewhere
+            options = okOpts;
         }
         
         return valid;
