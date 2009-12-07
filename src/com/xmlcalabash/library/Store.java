@@ -142,7 +142,7 @@ public class Store extends DefaultStep {
             xqeval.run();
             outstr.close();
         } catch (IOException ioe) {
-            throw new XProcException(ioe);
+            throw XProcException.stepError(50, ioe);
         }
 
     }

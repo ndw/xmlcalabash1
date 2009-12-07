@@ -31,6 +31,7 @@ import com.xmlcalabash.core.XProcConstants;
 public class Import extends Step {
     URI href = null;
     PipelineLibrary library = null;
+    XdmNode root = null;
 
     /** Creates a new instance of Import */
     public Import(XProcRuntime xproc, XdmNode node) {
@@ -43,6 +44,14 @@ public class Import extends Step {
 
     public URI getHref() {
         return href;
+    }
+
+    public void setRoot(XdmNode root) {
+        this.root = root;
+    }
+
+    public XdmNode getRoot() {
+        return root;
     }
 
     public void setLibrary(PipelineLibrary library) {

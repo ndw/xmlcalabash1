@@ -2,21 +2,27 @@ package com.xmlcalabash.model;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.MalformedURLException;
-import java.util.*;
 import java.util.logging.Logger;
+import java.util.Stack;
+import java.util.HashSet;
+import java.util.Vector;
+import java.util.Hashtable;
+import java.util.Iterator;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.io.IOException;
 import javax.xml.transform.sax.SAXSource;
-import javax.xml.transform.URIResolver;
 import javax.xml.XMLConstants;
 
-import net.sf.saxon.s9api.*;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.NamePool;
 import net.sf.saxon.om.NamespaceIterator;
-import net.sf.saxon.Configuration;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmNodeKind;
+import net.sf.saxon.s9api.DocumentBuilder;
+import net.sf.saxon.s9api.Axis;
+import net.sf.saxon.s9api.XdmSequenceIterator;
 import org.xml.sax.InputSource;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.util.RelevantNodes;
@@ -35,7 +41,12 @@ public class Parser {
     private static QName _name = new QName("name");
     private static QName _href = new QName("href");
     private static QName _type = new QName("type");
+    private static QName _version = new QName("version");
     private static QName _select = new QName("select");
+    private static QName err_XS0063 = new QName(XProcConstants.NS_XPROC_ERROR, "XS0063");
+    private static QName p_use_when = new QName(XProcConstants.NS_XPROC, "use-when");
+    private static QName _use_when = new QName("use-when");
+
     private XProcRuntime runtime = null;
     private Stack<DeclareStep> declStack = null;
     protected HashSet<String> topLevelImports = new HashSet<String> ();
@@ -152,6 +163,9 @@ public class Parser {
 
         if (XProcConstants.p_library.equals(node.getNodeName())) {
             checkAttributes(node, new String[] { "xpath-version", "psvi-required", "version"}, false);
+
+            library.setVersion(inheritedVersion(node));
+
             for (XdmNode snode : new RelevantNodes(runtime, node, Axis.CHILD)) {
                 Step substep = readStep(snode);
 
@@ -187,7 +201,7 @@ public class Parser {
     }
 
     private Vector<XdmNode> readSignature(Step step) {
-        Vector<XdmNode> rest = null;
+        Vector<XdmNode> rest = new Vector<XdmNode> ();
         boolean allowPrimary = false;
         boolean allowVariables = false;
         int primaryParamInputCount = 0;
@@ -352,7 +366,7 @@ public class Parser {
                     }
                     loggers.put(log.getPort(), log);
                 } else if (XProcConstants.p_import.equals(nodeName)) {
-                    readImport(node);
+                    rest.add(node);
                 } else if (XProcConstants.p_serialization.equals(nodeName)) {
                     Serialization ser = readSerialization(node);
                     String port = ser.getPort();
@@ -370,7 +384,6 @@ public class Parser {
                 }
                 
                 done = true;
-                rest = new Vector<XdmNode> ();
                 rest.add(node);
             }
         }
@@ -433,8 +446,13 @@ public class Parser {
         for (String port : loggers.keySet()) {
             step.addLog(loggers.get(port));
         }
-        
-        if (rest != null && XProcConstants.p_variable.equals(rest.get(0).getNodeName())) {
+
+        boolean vars = false;
+        for (XdmNode node : rest) {
+            vars = vars || XProcConstants.p_variable.equals(node.getNodeName());
+        }
+
+        if (vars) {
             if (!allowVariables) {
                 throw new XProcException("Variables are not allowed here");
             }
@@ -449,7 +467,7 @@ public class Parser {
             }
         }
 
-        return rest;
+        return rest.size() == 0 ? null : rest;
     }    
 
     private Input readInput(XdmNode node) {
@@ -1037,9 +1055,21 @@ public class Parser {
         Step step = new Step(runtime, node, stepType, stepName);
         step.setDeclaration(decl);
 
+        boolean pStep = XProcConstants.NS_XPROC.equals(node.getNodeName().getNamespaceURI());
+
+        if (pStep && node.getAttributeValue(p_use_when) != null) {
+            throw new XProcException("You can't use p:use-when on a p: step.");
+        }
+
         // Store extension attributes and convert any option shortcut attributes into options
         for (XdmNode attr : new RelevantNodes(runtime, node, Axis.ATTRIBUTE)) {
             QName aname = attr.getNodeName();
+
+            if ((pStep && aname.equals(_use_when))
+                || (!pStep && aname.equals(p_use_when))) {
+                continue;
+            }
+            
             if (XMLConstants.NULL_NS_URI.equals(aname.getNamespaceURI())) {
                 if (!"name".equals(aname.getLocalName())) {
                     Option option = new Option(runtime, node);
@@ -1103,6 +1133,8 @@ public class Parser {
         }
 
         DeclareStep step = new DeclareStep(runtime, node, stepName);
+
+        step.setVersion(inheritedVersion(node));
 
         boolean psviRequired = booleanAttr(node.getAttributeValue(new QName("psvi-required")));
         String xpathVersion = node.getAttributeValue(new QName("xpath-version"));
@@ -1202,6 +1234,30 @@ public class Parser {
         return step;
     }
 
+    private Double inheritedVersion(XdmNode node) {
+        String version = node.getAttributeValue(_version);
+
+        if (XProcConstants.p_declare_step.equals(node.getNodeName())
+            || XProcConstants.p_pipeline.equals(node.getNodeName())
+            || XProcConstants.p_library.equals(node.getNodeName())) {
+            if (version != null) {
+                TypeUtils.checkType(runtime, version, XProcConstants.xs_decimal, node, err_XS0063);
+                return Double.parseDouble(version);
+            }
+        }
+
+        if (version != null && XProcConstants.NS_XPROC.equals(node.getNodeName().getNamespaceURI())) {
+            throw XProcException.staticError(8);
+        }
+
+        XdmNode parent = node.getParent();
+        if (parent == null) {
+            throw XProcException.staticError(62);
+        } else {
+            return inheritedVersion(parent);
+        }
+    }
+
     private void parseDeclareStepBody(DeclareStep step) {
         Vector<XdmNode> rest = step.getXmlContent();
 
@@ -1217,6 +1273,13 @@ public class Parser {
 
                     if (XProcConstants.p_declare_step.equals(substep.stepType)) {
                         // nop, this isn't really in the pipeline
+                    } else if (XProcConstants.p_import.equals(substep.stepType)) {
+                        Import importElem = (Import) substep;
+                        XdmNode root = importElem.getRoot();
+                        // root will be null if the library has already been imported
+                        if (root != null) {
+                            importElem.setLibrary(readLibrary(root));
+                        }
                     } else {
                         step.addStep(substep);
                     }
@@ -1227,7 +1290,13 @@ public class Parser {
         }
 
         for (DeclareStep subdecl : step.declaredSteps.values()) {
-            parseDeclareStepBody(subdecl);
+            // This seems like an odd test, I bet it could be done better. If we import a library
+            // then by the time we get here, we've already parsed the body of the types imported
+            // in the library and we don't want to parse them again. But if we've also got inline
+            // decls, we do want to parse them...
+            if (subdecl.getNode().getBaseURI().equals(step.getNode().getBaseURI())) {
+                parseDeclareStepBody(subdecl);
+            }
         }
         
         declStack.pop();
@@ -1251,14 +1320,10 @@ public class Parser {
         Import importElem = new Import(runtime, node);
         importElem.setHref(importURI);
 
-        if (XProcConstants.STANDARD_XPROC_LIBRARY_1_0.equals(importURI.toASCIIString())) {
-            runtime.makeBuiltinsExplicit();
-            return importElem;
-        }
-
-        if (importURI.toASCIIString().matches(XProcConstants.STANDARD_XPROC_LIBRARY_REGEX)) {
-            runtime.clearBuiltins();
-            runtime.makeBuiltinsExplicit();
+        if (XProcConstants.STANDARD_XPROC_LIBRARY_1_0.equals(importURI.toASCIIString())
+            || importURI.toASCIIString().matches(XProcConstants.STANDARD_XPROC_LIBRARY_REGEX)) {
+            // Don't bother downloading the library, just throw the error.
+            throw XProcException.staticError(36);
         }
 
         XdmNode doc;
@@ -1278,6 +1343,9 @@ public class Parser {
             throw new XProcException(e);
         }
 
+        //System.err.println("BASE: " + doc.getBaseURI());
+        importURI = doc.getBaseURI();
+
         XdmNode root = S9apiUtils.getDocumentElement(doc);
 
         boolean imported = topLevelImports.contains(importURI.toASCIIString());
@@ -1295,7 +1363,7 @@ public class Parser {
             topLevelImports.add(importURI.toASCIIString());
         }
 
-        importElem.setLibrary(readLibrary(root));
+        importElem.setRoot(root);
 
         return importElem;
     }
@@ -1520,7 +1588,9 @@ public class Parser {
             }
         }
         HashSet<String> options = null;
-  
+
+        Double version = inheritedVersion(node);
+
         for (XdmNode attr : new RelevantNodes(runtime, node, Axis.ATTRIBUTE)) {
             QName aname = attr.getNodeName();
             if ("".equals(aname.getNamespaceURI())) {
@@ -1531,6 +1601,8 @@ public class Parser {
                         options = new HashSet<String> ();
                     }
                     options.add(aname.getLocalName());
+                } else if (version > 1.0) {
+                    // Ok, then, we'll just ignore it...
                 } else {
                     error("Attribute \"" + aname + "\" not allowed on " + node.getNodeName(), XProcConstants.staticError(8));
                 }

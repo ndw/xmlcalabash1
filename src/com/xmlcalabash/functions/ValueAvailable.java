@@ -75,10 +75,10 @@ public class ValueAvailable extends ExtensionFunctionDefinition {
     }
 
     public ExtensionFunctionCall makeCallExpression() {
-        return new StepAvailableCall();
+        return new ValueAvailableCall();
     }
 
-    private class StepAvailableCall extends ExtensionFunctionCall {
+    private class ValueAvailableCall extends ExtensionFunctionCall {
         private StaticContext staticContext = null;
 
         public void supplyStaticContext(StaticContext context, int locationId, Expression[] arguments) throws XPathException {
@@ -98,7 +98,7 @@ public class ValueAvailable extends ExtensionFunctionDefinition {
                      staticContext.getNamespaceResolver());
             } catch (XPathException e) {
                 // FIXME: bad formatting
-                throw new XProcException("Invalid step name. " + e.getMessage() + "XTDE1390");
+                throw new XProcException("Invalid variable/option name. " + e.getMessage() + "XTDE1390");
             }
 
             boolean failIfUnknown = true;

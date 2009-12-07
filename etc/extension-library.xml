@@ -2,7 +2,8 @@
 	   xmlns:cx="http://xmlcalabash.com/ns/extensions"
 	   xmlns:pxp="http://exproc.org/proposed/steps"
 	   xmlns:ml="http://xmlcalabash.com/ns/extensions/marklogic"
-	   xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	   xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+           version="1.0">
 
 <p:declare-step type="cx:collection-manager">
   <p:input port="source" sequence="true"/>

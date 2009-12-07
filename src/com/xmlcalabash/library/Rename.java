@@ -105,7 +105,10 @@ public class Rename extends DefaultStep implements ProcessMatchingNodes {
     }
 
     public void processPI(XdmNode node) throws SaxonApiException {
-        throw new UnsupportedOperationException("not impl yet");
+        if (!"".equals(newName.getNamespaceURI())) {
+            throw XProcException.stepError(13);
+        }
+        matcher.addPI(newName.getLocalName(), node.getStringValue());
     }
 
     public void processAttribute(XdmNode node) throws SaxonApiException {

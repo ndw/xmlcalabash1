@@ -86,8 +86,6 @@ public class RuntimeValue {
     }
 
     public XdmAtomicValue getUntypedAtomic(XProcRuntime runtime) {
-        return getUntypedAtomicHack(runtime);
-        /*
         try {
             ItemTypeFactory itf = new ItemTypeFactory(runtime.getProcessor());
             ItemType untypedAtomic = itf.getAtomicType(new QName(NamespaceConstant.SCHEMA, "xs:untypedAtomic"));
@@ -95,54 +93,6 @@ public class RuntimeValue {
             return val;
         } catch (SaxonApiException sae) {
             throw new XProcException(sae);
-        }
-        */
-    }
-
-    public XdmAtomicValue getUntypedAtomicHack(XProcRuntime runtime) {
-        String qvalue = value.replace("'", "''");
-        String xpath = "xs:untypedAtomic('" + qvalue + "')";
-        try {
-            XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
-            XPathExecutable xexec = null;
-            try {
-                xexec = xcomp.compile(xpath);
-            } catch (SaxonApiException sae) {
-                Throwable t = sae.getCause();
-                if (t instanceof XPathException) {
-                    XPathException xe = (XPathException) t;
-                    if (xe.getMessage().contains("Undeclared (or unbound?) variable")) {
-                        throw XProcException.dynamicError(26, xe.getMessage());
-                    }
-                }
-                throw sae;
-            }
-
-            XPathSelector selector = xexec.load();
-
-            try {
-                Iterator<XdmItem> values = selector.iterator();
-                return (XdmAtomicValue) values.next();
-            } catch (SaxonApiUncheckedException saue) {
-                Throwable sae = saue.getCause();
-                if (sae instanceof XPathException) {
-                    XPathException xe = (XPathException) sae;
-                    if ("http://www.w3.org/2005/xqt-errors".equals(xe.getErrorCodeNamespace()) && "XPDY0002".equals(xe.getErrorCodeLocalPart())) {
-                        throw XProcException.dynamicError(26,"Expression refers to context when none is available: " + xpath);
-                    } else {
-                        throw saue;
-                    }
-
-                } else {
-                    throw saue;
-                }
-            }
-        } catch (SaxonApiException sae) {
-            if (S9apiUtils.xpathSyntaxError(sae)) {
-                throw XProcException.dynamicError(23, sae.getCause().getMessage());
-            } else {
-                throw new XProcException(sae);
-            }
         }
     }
 

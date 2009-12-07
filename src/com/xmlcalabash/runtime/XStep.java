@@ -89,7 +89,12 @@ public abstract class XStep {
         if (outputs.containsKey(port)) {
             return outputs.get(port);
         } else {
-            throw new XProcException("Attempt to get non-existant output '" + port + "' port from step.");
+            if (XProcConstants.NS_XPROC.equals(step.getType().getNamespaceURI())
+                    && step.getStep().getVersion() > 1.0) {
+                return null;
+            } else {
+                throw new XProcException("Attempt to get non-existant output '" + port + "' port from step.");
+            }
         }
     }
 
@@ -235,7 +240,7 @@ public abstract class XStep {
     public boolean hasInScopeVariableValue(QName name) {
         if (inScopeOptions.containsKey(name)) {
             RuntimeValue v = getOption(name);
-            return v != null;
+            return v != unboundVariable; //HST
         }
 
         return getParent() == null ? false : getParent().hasInScopeVariableBinding(name);

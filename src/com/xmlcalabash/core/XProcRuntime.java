@@ -93,6 +93,8 @@ public class XProcRuntime {
         processor.registerExtensionFunction(new IterationSize(this));
         processor.registerExtensionFunction(new IterationPosition(this));
         processor.registerExtensionFunction(new ValueAvailable(this));
+        processor.registerExtensionFunction(new VersionAvailable(this));
+        processor.registerExtensionFunction(new XPathVersionAvailable(this));
 
         log = Logger.getLogger(this.getClass().getName());
 

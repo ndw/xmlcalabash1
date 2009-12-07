@@ -37,6 +37,7 @@ import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.util.MIMEReader;
 import com.xmlcalabash.util.Base64;
+import com.xmlcalabash.util.RelevantNodes;
 
 import javax.xml.XMLConstants;
 import javax.xml.transform.sax.SAXSource;
@@ -74,6 +75,9 @@ import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.commons.httpclient.methods.*;
+import org.apache.commons.httpclient.methods.multipart.Part;
+import org.apache.commons.httpclient.methods.multipart.StringPart;
+import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 
 public class HttpRequest extends DefaultStep {
     public static final QName c_request = new QName("c", XProcConstants.NS_XPROC_STEP, "request");
@@ -134,7 +138,7 @@ public class HttpRequest extends DefaultStep {
         XdmNode start = S9apiUtils.getDocumentElement(requestDoc);
 
         if (!c_request.equals(start.getNodeName())) {
-            throw new UnsupportedOperationException("Not a c:http-request!");
+            throw XProcException.stepError(40);
         }
 
         // Check for valid attributes
@@ -159,6 +163,14 @@ public class HttpRequest extends DefaultStep {
         statusOnly = "true".equals(start.getAttributeValue(_status_only));
         detailed = "true".equals(start.getAttributeValue(_detailed));
         overrideContentType = start.getAttributeValue(_override_content_type);
+
+        if (method == null) {
+            throw XProcException.stepError(6);
+        }
+
+        if (statusOnly && !detailed) {
+            throw XProcException.stepError(4);
+        }
 
         if (start.getAttributeValue(_href) == null) {
             throw new XProcException("The 'href' attribute must be specified on c:request for p:http-request");
@@ -246,19 +258,22 @@ public class HttpRequest extends DefaultStep {
 
         HttpMethodBase httpResult;
 
-        if (method == null) {
-            throw new XProcException("Method must be specified.");
+        String lcMethod = method.toLowerCase();
+
+        // You can only have a body on PUT or POST
+        if (body != null && !("put".equals(lcMethod) || "post".equals(lcMethod))) {
+            throw XProcException.stepError(5);
         }
 
-        if ("get".equals(method.toLowerCase())) {
+        if ("get".equals(lcMethod)) {
             httpResult = doGet();
-        } else if ("post".equals(method.toLowerCase())) {
+        } else if ("post".equals(lcMethod)) {
             httpResult = doPost(body);
-        } else if ("put".equals(method.toLowerCase())) {
+        } else if ("put".equals(lcMethod)) {
             httpResult = doPut(body);
-        } else if ("head".equals(method.toLowerCase())) {
+        } else if ("head".equals(lcMethod)) {
             httpResult = doHead();
-        } else if ("delete".equals(method.toLowerCase())) {
+        } else if ("delete".equals(lcMethod)) {
             httpResult = doDelete();
         } else {
             throw new UnsupportedOperationException("Unrecognized http method: " + method);
@@ -394,6 +409,14 @@ public class HttpRequest extends DefaultStep {
     }
 
     private void doPutOrPost(EntityEnclosingMethod method, XdmNode body) {
+        if (XProcConstants.c_multipart.equals(body.getNodeName())) {
+            doPutOrPostMultipart(method, body);
+        } else {
+            doPutOrPostBody(method, body);
+        }
+    }
+
+    private void doPutOrPostMultipart(EntityEnclosingMethod method, XdmNode multipart) {
         // Provide custom retry handler is necessary
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER,
                 new DefaultHttpMethodRetryHandler(3, false));
@@ -402,16 +425,147 @@ public class HttpRequest extends DefaultStep {
             method.addRequestHeader(header);
         }
 
+        String boundary = multipart.getAttributeValue(_boundary);
+
+        if (boundary == null) {
+            throw new XProcException("A boundary value must be specified on c:multipart");
+        }
+
+        if (boundary.startsWith("--")) {
+            throw XProcException.stepError(2);
+        }
+
+        contentType = multipart.getAttributeValue(_content_type);
+        if (contentType == null) {
+            contentType = "multipart/mixed";
+        }
+
+        if (!contentType.startsWith("multipart/")) {
+            throw new UnsupportedOperationException("Multipart content-type must be multipart/...");
+        }
+
+        Vector<Part> parts = new Vector<Part> ();
+
+        for (XdmNode body : new RelevantNodes(runtime, multipart, Axis.CHILD)) {
+            String bodyContentType = body.getAttributeValue(_content_type);
+            if (bodyContentType == null) {
+                throw new XProcException("Content-type on c:body is required.");
+            }
+
+            String bodyCharset = null;
+            if (bodyContentType.matches("^.*;[ \t]*charset=([^ \t]+)")) {
+                bodyCharset = bodyContentType.replaceAll("^.*;[ \t]*charset=([^ \t]+).*$", "$1");
+            }
+
+            if (bodyContentType.contains(";")) {
+                int pos = bodyContentType.indexOf(";");
+                bodyContentType = bodyContentType.substring(0, pos);
+            }
+
+            String bodyEncoding = body.getAttributeValue(_encoding);
+
+            // FIXME: This sucks rocks. I want to write the data to be posted, not provide some way to read it
+            String postContent = null;
+            try {
+                if (xmlContentType(bodyContentType)) {
+                    Serializer serializer = makeSerializer();
+
+                    Vector<XdmNode> content = new Vector<XdmNode> ();
+                    XdmSequenceIterator iter = body.axisIterator(Axis.CHILD);
+                    while (iter.hasNext()) {
+                        XdmNode node = (XdmNode) iter.next();
+                        content.add(node);
+                    }
+
+                    // FIXME: set serializer properties appropriately!
+                    StringWriter writer = new StringWriter();
+                    serializer.setOutputWriter(writer);
+                    S9apiUtils.serialize(runtime, content, serializer);
+                    writer.close();
+                    postContent = writer.toString();
+                    bodyCharset = "utf-8";
+                } else {
+                    StringWriter writer = new StringWriter();
+                    XdmSequenceIterator iter = body.axisIterator(Axis.CHILD);
+                    while (iter.hasNext()) {
+                        XdmNode node = (XdmNode) iter.next();
+                        if (node.getNodeKind() != XdmNodeKind.TEXT) {
+                            throw XProcException.stepError(28);
+                        }
+                        writer.write(node.getStringValue());
+                    }
+                    writer.close();
+                    postContent = writer.toString();
+                }
+
+                String name = "name" + parts.size();
+                if (body.getAttributeValue(_id) != null) {
+                    name = body.getAttributeValue(_id);
+                }
+
+                StringPart part = new StringPart(name, postContent);
+                part.setContentType(bodyContentType);
+                if (bodyCharset != null) {
+                    part.setCharSet(bodyCharset);
+                }
+                if ("base64".equals(bodyEncoding)) {
+                    part.setTransferEncoding(bodyEncoding);
+                }
+                parts.add(part);
+
+                //StringRequestEntity requestEntity = new StringRequestEntity(postContent, contentType,"UTF-8");
+                //method.setRequestEntity(requestEntity);
+
+            } catch (IOException ioe) {
+                throw new XProcException(ioe);
+            } catch (SaxonApiException sae) {
+                throw new XProcException(sae);
+            }
+        }
+
+        Part[] partsArr = new Part[parts.size()];
+        for (int pos = 0; pos < parts.size(); pos++) {
+            Part part = parts.get(pos);
+            partsArr[pos] = part;
+        }
+
+        MultipartRequestEntity mre = new MultipartRequestEntity(partsArr, method.getParams());
+        method.setRequestEntity(mre);
+    }
+
+    private void doPutOrPostBody(EntityEnclosingMethod method, XdmNode body) {
+        // Provide custom retry handler is necessary
+        method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER,
+                new DefaultHttpMethodRetryHandler(3, false));
+
+        // Check for consistency of content-type
+        String hcontentType = null;
+        for (Header header : headers) {
+            if ("content-type".equals(header.getName().toLowerCase())) {
+                hcontentType = header.getValue().toLowerCase();
+            }
+            method.addRequestHeader(header);
+        }
+
         contentType = body.getAttributeValue(_content_type);
         if (contentType == null) {
             throw new XProcException("Content-type on c:body is required.");
         }
+
+        if (hcontentType != null && !hcontentType.equals(contentType.toLowerCase())) {
+            throw XProcException.stepError(20);
+        }
+
 
         // FIXME: This sucks rocks. I want to write the data to be posted, not provide some way to read it
         String postContent = null;
         try {
             if (xmlContentType(contentType)) {
                 Serializer serializer = makeSerializer();
+
+                if (!S9apiUtils.isDocumentContent(body.axisIterator(Axis.CHILD))) {
+                    throw XProcException.stepError(22);
+                }
 
                 Vector<XdmNode> content = new Vector<XdmNode> ();
                 XdmSequenceIterator iter = body.axisIterator(Axis.CHILD);
@@ -431,6 +585,9 @@ public class HttpRequest extends DefaultStep {
                 XdmSequenceIterator iter = body.axisIterator(Axis.CHILD);
                 while (iter.hasNext()) {
                     XdmNode node = (XdmNode) iter.next();
+                    if (node.getNodeKind() != XdmNodeKind.TEXT) {
+                        throw XProcException.stepError(28);
+                    }
                     writer.write(node.getStringValue());
                 }
                 writer.close();

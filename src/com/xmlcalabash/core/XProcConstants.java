@@ -115,6 +115,7 @@ public class XProcConstants {
     public static final QName xs_string = new QName("xs", NS_XMLSCHEMA, "string");
     public static final QName xs_NCName = new QName("xs", NS_XMLSCHEMA, "NCName");
     public static final QName xs_boolean = new QName("xs", NS_XMLSCHEMA, "boolean");
+    public static final QName xs_decimal = new QName("xs", NS_XMLSCHEMA, "decimal");
 
 
     /** Creates a new instance of XProcConstants */

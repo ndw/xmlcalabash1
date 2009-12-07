@@ -41,6 +41,7 @@ public class TypeUtils {
     private static final QName _ListOfQNames = new QName("ListOfQNames");
     private static final QName _XPathExpression = new QName("XPathExpression");
     private static final QName _NormalizationForm = new QName("NormalizationForm");
+    private static final QName err_XD0045 = new QName(XProcConstants.NS_XPROC_ERROR, "XD0045");
 
     private static int anonTypeCount = 0;
     private static ItemTypeFactory typeFactory = null;
@@ -68,6 +69,10 @@ public class TypeUtils {
     }
 
     public static void checkType(XProcRuntime runtime, String value, QName type, XdmNode node) {
+        checkType(runtime, value, type, node, err_XD0045);
+    }
+
+    public static void checkType(XProcRuntime runtime, String value, QName type, XdmNode node, QName error) {
         if (XProcConstants.xs_string.equals(type) || XProcConstants.xs_untypedAtomic.equals(type)) {
             return;
         }
@@ -82,7 +87,7 @@ public class TypeUtils {
             try {
                 QName name = new QName(value, node);
             } catch (Exception e) {
-                throw XProcException.dynamicError(45, e);
+                throw new XProcException(error, e);
             }
             return;
         }
@@ -109,7 +114,7 @@ public class TypeUtils {
         try {
             XdmAtomicValue avalue = new XdmAtomicValue(value, itype);
         } catch (SaxonApiException sae) {
-            throw XProcException.dynamicError(45, sae);
+            throw new XProcException(error, sae);
         }
     }    
 }

@@ -22,7 +22,6 @@ package com.xmlcalabash.model;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Vector;
-import java.util.Set;
 import java.util.List;
 
 import net.sf.saxon.s9api.QName;
@@ -53,6 +52,7 @@ public class Step extends SourceArtifact {
     // FIXME: This should only be in compoundstep!
     Vector<Step> subpipeline = new Vector<Step>();
     protected DeclareStep declaration = null;
+    protected Double version = null;
 
     /** Creates a new instance of Step */
     public Step(XProcRuntime xproc, XdmNode node, QName type) {
@@ -121,6 +121,21 @@ public class Step extends SourceArtifact {
 
     public Step getStep() {
         return this;
+    }
+
+    protected void setVersion(Double version) {
+        this.version = version;
+    }
+
+    public Double getVersion() {
+        if (this.version == null) {
+            if (parent != null) {
+                return parent.getVersion();
+            } else
+                throw new UnsupportedOperationException("Step with no version or inherited version!?");
+        } else {
+            return version;
+        }
     }
 
     public QName getDeclaredType() {
@@ -380,8 +395,10 @@ public class Step extends SourceArtifact {
             String port = input.getPort();
             if (!port.startsWith("|")) {
                 if (!declInputs.containsKey(port)) {
-                    xproc.error(logger, node, "Undeclared input port '" + port + "' on " + this, XProcConstants.staticError(10));
-                    valid = false;
+                    if (getVersion() == 1.0) {
+                      xproc.error(logger, node, "Undeclared input port '" + port + "' on " + this, XProcConstants.staticError(10));
+                      valid = false;
+                    }
                 } else {
                     input.setPrimary(declInputs.get(port).getPrimary());
                 }
@@ -445,8 +462,12 @@ public class Step extends SourceArtifact {
             for (Option option : options()) {
                 Option doption = decl.getOption(option.getName());
                 if (doption == null) {
-                    valid = false;
-                    xproc.error(logger, node, "Undeclared option specified: " + option.getName(), XProcConstants.staticError(10));
+                    if (getVersion() > 1.0) {
+                        delete option
+                    } else {
+                        valid = false;
+                        xproc.error(logger, node, "Undeclared option specified: " + option.getName(), XProcConstants.staticError(10));
+                    }
                 }
             }
         }
@@ -639,11 +660,22 @@ public class Step extends SourceArtifact {
                 Output output = env.readablePort(pipe.getStep(), pipe.getPort());
                 if (output == null) {
                     Step fromstep = env.visibleStep(pipe.getStep());
+
+                    if (fromstep == null) {
+                        throw XProcException.staticError(22);
+                    }
+
                     if ("error".equals(pipe.getPort()) && XProcConstants.p_catch.equals(fromstep.getType())) {
                         catchErrors = true;
                     } else {
-                        xproc.error(logger, node, "Unreadable port: " + pipe.getPort() + " on " + pipe.getStep(), XProcConstants.staticError(22));
-                        valid = false;
+                        if (XProcConstants.NS_XPROC.equals(fromstep.getType().getNamespaceURI())
+                                && getVersion() > 1.0) {
+                            // Nevermind, it's ok to bind to unknown ports in this case
+                            input.setSequence(true);
+                        } else {
+                            xproc.error(logger, node, "Unreadable port: " + pipe.getPort() + " on " + pipe.getStep(), XProcConstants.staticError(22));
+                            valid = false;
+                        }
                     }
                 } else if (!pipe.getPort().equals(output.getPort())) {
                     Step step = env.visibleStep(pipe.getStep());

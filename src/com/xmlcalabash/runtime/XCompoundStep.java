@@ -6,6 +6,7 @@ import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcData;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
+import com.xmlcalabash.io.ReadableEmpty;
 import com.xmlcalabash.model.*;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.QName;
@@ -44,7 +45,7 @@ public class XCompoundStep extends XAtomicStep {
     public boolean hasInScopeVariableValue(QName name) {
         if (variables.containsKey(name) || inScopeOptions.containsKey(name)) {
             RuntimeValue v = getVariable(name);
-            return v != null;
+            return v != null &&  v != unboundVariable;
         }
 
         return getParent() == null ? false : getParent().hasInScopeVariableValue(name);
@@ -54,7 +55,11 @@ public class XCompoundStep extends XAtomicStep {
         if (variables.containsKey(name)) {
             return variables.get(name);
         } else {
-            return null;
+            if (inScopeOptions.containsKey(name)) {
+                return inScopeOptions.get(name);
+            } else {
+                return null;
+            }
         }
     }
 
@@ -67,8 +72,12 @@ public class XCompoundStep extends XAtomicStep {
         for (XStep step : subpipeline) {
             if (stepName.equals(step.getName())) {
                 XOutput output = step.getOutput(portName);
-                ReadablePipe rpipe = output.getReader();
-                return rpipe;
+                if (output == null) {
+                    return new ReadableEmpty();
+                } else {
+                    ReadablePipe rpipe = output.getReader();
+                    return rpipe;
+                }
             }
         }
         return parent.getBinding(stepName, portName);

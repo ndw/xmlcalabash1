@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- $Id: typed-pipeline-library.xml,v 1.48 2009/05/26 19:41:26 NormanWalsh Exp $ -->
+<!-- $Id: typed-pipeline-library.xsl,v 1.4 2009/11/06 17:09:59 NormanWalsh Exp $ -->
 <p:library xmlns:p="http://www.w3.org/ns/xproc"
-	   xmlns:cx="http://xmlcalabash.com/ns/extensions"
-	   xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+           xmlns:cx="http://xmlcalabash.com/ns/extensions"
+           xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+           version="1.0">
    <p:declare-step type="p:add-attribute" xml:id="add-attribute">
       <p:input port="source"/>
       <p:output port="result"/>

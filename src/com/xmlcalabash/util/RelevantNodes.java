@@ -169,6 +169,11 @@ public class RelevantNodes implements Iterable<XdmNode> {
         private boolean useWhen(XdmNode element, String xpath) {
             boolean use = false;
 
+            // FIXME: I don't think this is a good idea, but XProcConfiguration calls relevant nodes w/o a runtime...
+            if (runtime == null) {
+                return true;
+            }
+
             try {
                 XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
 

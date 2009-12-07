@@ -101,6 +101,8 @@ public class ValidateWithXSD extends DefaultStep {
     }
 
     public void validateWithSaxonSA(SchemaManager manager) throws SaxonApiException {
+        info(step.getNode(), "Validating with Saxon");
+
         // Populate the URI cache so that URI references in schema documents will find
         // the schemas provided preferentially
         Vector<XdmNode> schemaDocuments = new Vector<XdmNode> ();
@@ -145,6 +147,8 @@ public class ValidateWithXSD extends DefaultStep {
     }
 
     private void validateWithXerces() throws SaxonApiException {
+        info(step.getNode(), "Validating with Xerces");
+
         Vector<XdmNode> schemaDocuments = new Vector<XdmNode> ();
         while (schemas.moreDocuments()) {
             XdmNode schemaNode = schemas.read();

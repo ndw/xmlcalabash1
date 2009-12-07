@@ -119,7 +119,7 @@ public class S9apiUtils {
 
     public static XdmNode getDocumentElement(XdmNode doc) {
         // We know this is a document...
-        for (XdmNode node : new RelevantNodes(null, doc,Axis.CHILD)) {
+        for (XdmNode node : new RelevantNodes(doc,Axis.CHILD,true)) {
             if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
                 return node; // There can be only one, this is an XML document
             }
@@ -231,6 +231,11 @@ public class S9apiUtils {
                     boolean delete = excludeNS.contains(uri);
                     excludeDefault = excludeDefault || ("".equals(pfx) && delete);
 
+                    // You can't exclude the default namespace if it's in use
+                    if ("".equals(pfx) && usesDefaultNS) {
+                        delete = false;
+                    }
+
                     changed = changed || delete;
 
                     if (!delete) {
@@ -304,25 +309,33 @@ public class S9apiUtils {
         boolean ok = true;
 
         if (doc.getNodeKind() == XdmNodeKind.DOCUMENT) {
-            XdmSequenceIterator iter = doc.axisIterator(Axis.CHILD);
-            int elemCount = 0;
-            while (iter.hasNext()) {
-                XdmNode child = (XdmNode) iter.next();
-                if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
-                    elemCount++;
-                } else if (child.getNodeKind() == XdmNodeKind.PROCESSING_INSTRUCTION
-                        || child.getNodeKind() == XdmNodeKind.COMMENT) {
-                    // that's ok
-                } else if (child.getNodeKind() == XdmNodeKind.TEXT) {
-                    ok = ok && "".equals(child.getStringValue().trim());
-                } else {
-                    ok = false;
-                }
-            }
+            ok = S9apiUtils.isDocumentContent(doc.axisIterator(Axis.CHILD));
         } else if (doc.getNodeKind() == XdmNodeKind.ELEMENT) {
             // this is ok
         } else {
             ok = false;
+        }
+
+        return ok;
+    }
+
+    public static
+    boolean isDocumentContent(XdmSequenceIterator iter) {
+        boolean ok = true;
+
+        int elemCount = 0;
+        while (iter.hasNext()) {
+            XdmNode child = (XdmNode) iter.next();
+            if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
+                elemCount++;
+            } else if (child.getNodeKind() == XdmNodeKind.PROCESSING_INSTRUCTION
+                    || child.getNodeKind() == XdmNodeKind.COMMENT) {
+                // that's ok
+            } else if (child.getNodeKind() == XdmNodeKind.TEXT) {
+                ok = ok && "".equals(child.getStringValue().trim());
+            } else {
+                ok = false;
+            }
         }
 
         return ok;

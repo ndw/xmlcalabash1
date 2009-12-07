@@ -719,8 +719,6 @@ public class XAtomicStep extends XStep {
 
         try {
             XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
-            //IndependentContext icontext = (IndependentContext) xcomp.getUnderlyingStaticContext();
-            //icontext.setFunctionLibrary(functionLibraryList);
 
             for (QName varname : boundOpts.keySet()) {
                 xcomp.declareVariable(varname);

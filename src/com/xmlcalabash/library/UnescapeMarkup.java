@@ -94,6 +94,9 @@ public class UnescapeMarkup extends DefaultStep {
 
         String escapedContent = null;
         if ("base64".equals(encoding)) {
+            if (charset == null) {
+                throw XProcException.stepError(10);
+            }
             escapedContent = decodeBase64(doc, charset);
         } else if (encoding != null) {
             throw new XProcException("Unexpected encoding: " + encoding);
@@ -123,7 +126,7 @@ public class UnescapeMarkup extends DefaultStep {
                 remapDefaultNamespace(tree, tagDoc);
             }
         } else if (!"application/xml".equals(contentType)) {
-            throw XProcException.dynamicError(51);
+            throw XProcException.stepError(51);
         } else {
             // Put a wrapper around it so that it doesn't have to have a single root...
             escapedContent = "<wrapper>" + escapedContent + "</wrapper>";
@@ -249,7 +252,7 @@ public class UnescapeMarkup extends DefaultStep {
         try {
             return new String(decoded, charset);
         } catch (UnsupportedEncodingException uee) {
-            throw new XProcException(uee);
+            throw XProcException.stepError(10, uee);
         }
     }
 

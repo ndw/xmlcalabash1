@@ -146,7 +146,7 @@ public class DefaultStep implements XProcStep {
     }
 
     public void run() throws SaxonApiException {
-        runtime.info(logger, step.getNode(), "Running " + logger);
+        runtime.info(logger, step.getNode(), "Running " + step.getName());
         runtime.reportStep(step);
     }
 

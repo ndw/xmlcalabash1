@@ -81,10 +81,15 @@ public class XChoose extends XCompoundStep {
         // N.B. At this time, there are no compound steps that accept parameters or options,
         // so the order in which we calculate them doesn't matter. That will change if/when
         // there are such compound steps.
-
+        
+        // Don't reset iteration-position and iteration-size
         XProcData data = runtime.getXProcData();
+        int ipos = data.getIterationPosition();
+        int isize = data.getIterationSize();
         data.openFrame();
         data.setStep(this);
+        data.setIterationPosition(ipos);
+        data.setIterationSize(isize);
 
         inScopeOptions = parent.getInScopeOptions();
         for (Variable var : step.getVariables()) {

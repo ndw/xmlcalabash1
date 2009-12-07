@@ -16,7 +16,6 @@ import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.WhitespaceStrippingPolicy;
 import net.sf.saxon.Configuration;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcConstants;
@@ -81,7 +80,7 @@ public class XProcURIResolver implements URIResolver, EntityResolver {
         } catch (URISyntaxException use) {
             runtime.finest(logger,null,"URISyntaxException resolving base and href?");
         }
-        
+
         if (uriResolver != null) {
             Source resolved = uriResolver.resolve(href, base);
             // FIXME: This is a grotesque hack. This is wrong. Wrong. Wrong.
@@ -146,7 +145,11 @@ public class XProcURIResolver implements URIResolver, EntityResolver {
         try {
             return builder.build(source);
         } catch (SaxonApiException sae) {
-            throw new XProcException(XProcConstants.dynamicError(11), sae);
+            if (sae.getMessage().contains("validation")) {
+                throw XProcException.stepError(27, sae);
+            } else {
+                throw XProcException.dynamicError(11, sae);
+            }
         }
     }
 

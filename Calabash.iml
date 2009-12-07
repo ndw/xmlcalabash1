@@ -10,7 +10,8 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="JUnit" level="project" />
     <orderEntry type="module" module-name="Msv" />
-    <orderEntry type="module" module-name="Saxon9.2.0.2" />
+    <orderEntry type="module" module-name="Saxon9.2.0.3" />
+    <orderEntry type="library" name="SaxonEE" level="project" />
     <orderEntry type="module" module-name="Isorelax" />
     <orderEntry type="library" name="Home" level="project" />
     <orderEntry type="library" name="DeltaXML" level="project" />
@@ -20,7 +21,6 @@
     <orderEntry type="library" name="CLI" level="project" />
     <orderEntry type="library" name="XCC" level="project" />
     <orderEntry type="library" name="Xerces" level="project" />
-    <orderEntry type="library" name="SaxonSA" level="project" />
     <orderEntry type="library" name="HTTPClient" level="project" />
     <orderEntry type="library" name="Logging" level="project" />
     <orderEntry type="library" name="Codec" level="project" />

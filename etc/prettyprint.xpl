@@ -1,4 +1,4 @@
-<p:pipeline xmlns:p='http://www.w3.org/ns/xproc'>
+<p:pipeline xmlns:p='http://www.w3.org/ns/xproc' version='1.0'>
 <p:xslt>
   <p:input port='stylesheet'>
     <p:inline><xsl:stylesheet xmlns:xsl='http://www.w3.org/1999/XSL/Transform'

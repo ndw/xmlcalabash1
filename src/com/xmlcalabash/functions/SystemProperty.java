@@ -104,7 +104,7 @@ public class SystemProperty extends ExtensionFunctionDefinition {
              }
 
              return SingletonIterator.makeIterator(
-                     new UntypedAtomicValue(value));
+                     new StringValue(value));
          }
      }
 }
