@@ -1235,22 +1235,18 @@ public class Parser {
     }
 
     private Double inheritedVersion(XdmNode node) {
-        String version = node.getAttributeValue(_version);
+        XdmNode parent = node.getParent();
 
         if (XProcConstants.p_declare_step.equals(node.getNodeName())
             || XProcConstants.p_pipeline.equals(node.getNodeName())
             || XProcConstants.p_library.equals(node.getNodeName())) {
+            String version = node.getAttributeValue(_version);
             if (version != null) {
                 TypeUtils.checkType(runtime, version, XProcConstants.xs_decimal, node, err_XS0063);
                 return Double.parseDouble(version);
             }
         }
 
-        if (version != null && XProcConstants.NS_XPROC.equals(node.getNodeName().getNamespaceURI())) {
-            throw XProcException.staticError(8);
-        }
-
-        XdmNode parent = node.getParent();
         if (parent == null) {
             throw XProcException.staticError(62);
         } else {
