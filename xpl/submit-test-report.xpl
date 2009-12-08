@@ -2,7 +2,7 @@
 		xmlns:c="http://www.w3.org/ns/xproc-step"
 		xmlns:cx="http://xmlcalabash.com/ns/extensions"
 		exclude-inline-prefixes="c cx"
-		name="main">
+		name="main" version="1.0">
 <p:output port="result"/>
 <p:option name="host" select="'tests.xproc.org'"/>
 <p:option name="username" select="'calabash'"/>
