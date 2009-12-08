@@ -34,9 +34,11 @@ import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.util.CollectionResolver;
+import com.xmlcalabash.util.S9apiUtils;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.OutputURIResolver;
 import net.sf.saxon.CollectionURIResolver;
+import net.sf.saxon.om.Validation;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -46,6 +48,8 @@ import net.sf.saxon.s9api.XsltExecutable;
 import net.sf.saxon.s9api.XsltTransformer;
 import net.sf.saxon.s9api.XdmAtomicValue;
 import net.sf.saxon.s9api.MessageListener;
+import net.sf.saxon.s9api.ValidationMode;
+import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.event.Receiver;
 import com.xmlcalabash.runtime.XAtomicStep;
 
@@ -121,9 +125,10 @@ public class XSLT extends DefaultStep {
 
         String version = null;
         if (getOption(_version) == null) {
-            version = stylesheet.getAttributeValue(new QName("","version"));
+            XdmNode ssroot = S9apiUtils.getDocumentElement(stylesheet);
+            version = ssroot.getAttributeValue(new QName("","version"));
             if (version == null) {
-                version = stylesheet.getAttributeValue(new QName("http://www.w3.org/1999/XSL/Transform","version"));
+                version = ssroot.getAttributeValue(new QName("http://www.w3.org/1999/XSL/Transform","version"));
             }
             if (version == null) {
                 version = "2.0"; // WTF?
@@ -159,7 +164,8 @@ public class XSLT extends DefaultStep {
             outputBaseURI = opt.getString();
         }
 
-        Configuration config = runtime.getProcessor().getUnderlyingConfiguration();
+        Processor processor = runtime.getProcessor();
+        Configuration config = processor.getUnderlyingConfiguration();
 
         OutputURIResolver uriResolver = config.getOutputURIResolver();
         CollectionURIResolver collectionResolver = config.getCollectionURIResolver();
@@ -168,6 +174,7 @@ public class XSLT extends DefaultStep {
         config.setCollectionURIResolver(new CollectionResolver(runtime, defaultCollection, collectionResolver));
 
         XsltCompiler compiler = runtime.getProcessor().newXsltCompiler();
+        compiler.setSchemaAware(processor.isSchemaAware());
         XsltExecutable exec = compiler.compile(stylesheet.asSource());
         XsltTransformer transformer = exec.load();
 
@@ -202,6 +209,7 @@ public class XSLT extends DefaultStep {
             transformer.setBaseOutputURI(outputBaseURI);
         }
 
+        transformer.setSchemaValidationMode(ValidationMode.DEFAULT);
         transformer.transform();
 
         config.setOutputURIResolver(uriResolver);
