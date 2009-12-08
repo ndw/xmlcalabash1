@@ -4,7 +4,7 @@
     <p:inline><xsl:stylesheet xmlns:xsl='http://www.w3.org/1999/XSL/Transform'
                 xmlns:saxon='http://icl.com/saxon'
                 exclude-result-prefixes='saxon'
-                version='1.0'>
+                version='2.0'>
 
   <xsl:output method='xml' indent='yes' saxon:indent-spaces='2'/>
 
