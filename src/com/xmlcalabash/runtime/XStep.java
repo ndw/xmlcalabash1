@@ -33,7 +33,6 @@ public abstract class XStep {
     private Hashtable<QName, RuntimeValue> options = new Hashtable<QName, RuntimeValue> ();
     private Hashtable<String, Hashtable<QName, RuntimeValue>> parameters = new Hashtable<String, Hashtable<QName, RuntimeValue>> ();
     protected XCompoundStep parent = null;
-    public static final RuntimeValue unboundVariable = new RuntimeValue("Random string");
     protected Logger logger = Logger.getLogger(this.getClass().getName());
     protected Hashtable<QName,RuntimeValue> inScopeOptions = new Hashtable<QName,RuntimeValue> ();
 
@@ -240,7 +239,7 @@ public abstract class XStep {
     public boolean hasInScopeVariableValue(QName name) {
         if (inScopeOptions.containsKey(name)) {
             RuntimeValue v = getOption(name);
-            return v != unboundVariable; //HST
+            return v.initialized();
         }
 
         return getParent() == null ? false : getParent().hasInScopeVariableBinding(name);

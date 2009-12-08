@@ -45,7 +45,7 @@ public class XCompoundStep extends XAtomicStep {
     public boolean hasInScopeVariableValue(QName name) {
         if (variables.containsKey(name) || inScopeOptions.containsKey(name)) {
             RuntimeValue v = getVariable(name);
-            return v != null &&  v != unboundVariable;
+            return v != null &&  v.initialized();
         }
 
         return getParent() == null ? false : getParent().hasInScopeVariableValue(name);

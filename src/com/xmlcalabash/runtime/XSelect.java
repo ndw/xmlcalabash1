@@ -94,9 +94,7 @@ public class XSelect implements ReadablePipe {
             Hashtable<QName, RuntimeValue> boundOpts = new Hashtable<QName, RuntimeValue> ();
             for (QName name : inScopeOptions.keySet()) {
                 RuntimeValue v = inScopeOptions.get(name);
-                if (v == XStep.unboundVariable) {
-                    // nop;
-                } else {
+                if (v.initialized()) {
                     boundOpts.put(name, v);
                 }
             }

@@ -218,7 +218,7 @@ public class XPipeline extends XCompoundStep {
                 }
 
                 if (option.getSelect() == null) {
-                    value = unboundVariable;
+                    value = new RuntimeValue();
                 } else {
                     value = computeValue(option);
                 }

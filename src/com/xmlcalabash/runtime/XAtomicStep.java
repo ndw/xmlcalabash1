@@ -710,9 +710,7 @@ public class XAtomicStep extends XStep {
 
         for (QName name : globals.keySet()) {
             RuntimeValue v = globals.get(name);
-            if (v == unboundVariable) {
-                // nop;
-            } else {
+            if (v.initialized()) {
                 boundOpts.put(name, v);
             }
         }

@@ -41,11 +41,17 @@ public class RuntimeValue {
     private String value = null;
     private XdmNode node = null;
     private ComputableValue val = null;
+    private boolean initialized = false;
     private Hashtable<String,String> nsBindings = null;
-    
+
+    public RuntimeValue() {
+        // nop; returns an uninitialized value
+    }
+
     public RuntimeValue(String value, XdmNode node) {
         this.value = value;
         this.node = node;
+        initialized = true;
 
         nsBindings = new Hashtable<String,String> ();
         XdmSequenceIterator nsIter = node.axisIterator(Axis.NAMESPACE);
@@ -68,6 +74,7 @@ public class RuntimeValue {
         this.value = value;
         this.node = node;
         this.nsBindings = nsBindings;
+        initialized = true;
     }
 
     public RuntimeValue(String value, Vector<XdmItem> generalValue, XdmNode node, Hashtable<String,String> nsBindings) {
@@ -75,14 +82,21 @@ public class RuntimeValue {
         this.generalValue = generalValue;
         this.node = node;
         this.nsBindings = nsBindings;
+        initialized = true;
     }
 
     public RuntimeValue(String value) {
         this.value = value;
+        initialized = true;
     }
 
     public void setComputableValue(ComputableValue value) {
         val = value;
+        initialized = true;
+    }
+
+    public boolean initialized() {
+        return initialized;
     }
 
     public XdmAtomicValue getUntypedAtomic(XProcRuntime runtime) {
