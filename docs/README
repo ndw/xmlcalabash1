@@ -1,22 +1,23 @@
 README
 
-What is Calabash?
+What is XML Calabash?
 
-Calabash is an implementation of XProc: An XML Pipeline Language.
+XML Calabash is an implementation of XProc: An XML Pipeline Language,
+http://www.w3.org/TR/xproc/
 
-This is a very early, alpha release. It passes most of the tests in
-the XProc Test Suite but is known to be incomplete.
+This is an early, beta release. It passes most of the tests in the
+XProc Test Suite but is known to be incomplete.
 
 Prerequisites
 
-Calabash is built with Java 1.5 on top of Saxon. To run it, you'll
+XML Calabash is built with Java 1.5 on top of Saxon. To run it, you'll
 need:
 
     * Java 1.5 or later,
-    * Saxon 9.1.0.1 or later
+    * Saxon 9.2.0.3 or later
     * Apache HTTP Client (and Apache Commons logging and codec),
       if you want to use p:http-request
-    * Saxon-SA, if you want to use p:validate-with-xml-schema
+    * Saxon EE, if you want to use p:validate-with-xml-schema
     * XQuery API for Java (XQJ), if you want to use p:xquery
     * Jing if you want to use p:validate-with-relax-ng
     * TagSoup, if you want to be able to parse text/html content
@@ -28,7 +29,7 @@ need:
 temporary expediency. Eventually, I'll integrate support for open
 source tools like Xerces and FOP. Patches welcome.)
 
-Calabash also implements several extension steps. These are not part
+XML Calabash also implements several extension steps. These are not part
 of the XProc core language standard and cannot be expected to reliably
 interoperate with other implementations.
 
@@ -47,7 +48,7 @@ interoperate with other implementations.
 How do I use it?
 
 Download the latest release. Inside the archive you'll find calabash.jar.
-Make sure that jar file and the prerequisites are on your class path.
+Make sure that jar file and the prerequisites are on your class path.[*]
 Then you can run it from the command line:
 
   java com.xmlcalabash.drivers.Main options pipeline.xpl
@@ -74,5 +75,34 @@ print a short usage summary.
 
 What do I do if it all goes wrong?
 
-Tell Norm, ndw@nwalsh.com. You can also report your experiences on
-http://getsatisfaction.com/calabash
+Tell Norm, ndw@nwalsh.com. There is also an XProc developers mailing list,
+xproc-dev@lists.w3.org which may provide useful advice.
+
+------------------------------------------------------------
+
+[*] Here is the CLASSPATH that Norm uses:
+
+CLASSPATH=/projects/src/calabash/out/production/Saxon9.2.0.3\
+:/projects/src/calabash/out/production/Isorelax\
+:/projects/src/calabash/out/production/Msv\
+:/share/java/msv/relaxngDatatype.jar\
+:/share/java/msv/xsdlib.jar\
+:/share/java/tagsoup/tagsoup-1.2.jar\
+:/projects/src/calabash/out/production/Calabash\
+:/projects/src/xmlresolver/out/production/Xmlresolver\
+:/projects/src/jing-trang/build/jing.jar\
+:/usr/local/DeltaXMLCore-5_1/command.jar\
+:/usr/local/DeltaXMLCore-5_1/deltawing.jar\
+:/usr/local/DeltaXMLCore-5_1/deltaxml.jar\
+:/projects/marklogic/Java/xcc.jar\
+:/share/java/xepdev-4.13/lib/xep-debug.jar\
+:/share/java/xep/lib/xt.jar\
+:/share/java/apache-httpclient/commons-httpclient-3.1/commons-httpclient-3.1.jar\
+:/share/java/apache-logging/commons-logging-1.1.1/commons-logging-1.1.1.jar\
+:/share/java/apache-codec/commons-codec-1.3.jar\
+:/share/java/xerces2/xml-apis.jar\
+:/share/java/xerces2/xercesImpl.jar\
+:/share/java/saxonee-9.2.0.3j/saxon9ee.jar
+
+Paths that begin /projects/src/calabash/out/... are versions of libraries
+that Norm has built from source as an aid to debugging.
