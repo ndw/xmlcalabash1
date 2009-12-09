@@ -28,6 +28,7 @@
     <orderEntry type="library" name="JAXP" level="project" />
     <orderEntry type="library" name="XQJ" level="project" />
     <orderEntry type="library" name="SaxonHE" level="project" />
+    <orderEntry type="library" name="XMLUnit" level="project" />
   </component>
 </module>
 

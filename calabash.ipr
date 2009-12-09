@@ -404,15 +404,6 @@
       <JAVADOC />
       <SOURCES />
     </library>
-    <library name="SaxonSA">
-      <CLASSES>
-        <root url="jar:///share/java/saxonsa9/saxon9sa.jar!/" />
-        <root url="file:///Users/ndw/java" />
-      </CLASSES>
-      <JAVADOC />
-      <SOURCES />
-      <jarDirectory url="file:///Users/ndw/java" recursive="false" />
-    </library>
     <library name="HTTPClient">
       <CLASSES>
         <root url="jar:///share/java/apache-httpclient/commons-httpclient-3.1/commons-httpclient-3.1.jar!/" />
@@ -502,6 +493,13 @@
       <CLASSES>
         <root url="jar:///share/java/stax-api-1.0.1.jar!/" />
         <root url="jar:///share/java/stax-1.2.0.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="XMLUnit">
+      <CLASSES>
+        <root url="jar:///share/java/xmlunit-1.3/lib/xmlunit-1.3.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES />

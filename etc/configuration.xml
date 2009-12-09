@@ -3,7 +3,8 @@
 	      xmlns:p="http://www.w3.org/ns/xproc"
 	      xmlns:cx="http://xmlcalabash.com/ns/extensions"
 	      xmlns:cxf="http://xmlcalabash.com/ns/extensions/fileutils"
-	      xmlns:cxo="http://xmlcalabash.com/ns/extensions/osutils">
+	      xmlns:cxo="http://xmlcalabash.com/ns/extensions/osutils"
+	      xmlns:cxu="http://xmlcalabash.com/ns/extensions/xmlunit">
 
 <implementation type="p:add-attribute"
 		class-name="com.xmlcalabash.library.AddAttribute"/>
@@ -208,5 +209,10 @@
 
 <implementation type="cxo:env"
 		class-name="com.xmlcalabash.extensions.osutils.Env"/>
+
+<!-- XMLUnit -->
+
+<implementation type="cxu:compare"
+		class-name="com.xmlcalabash.extensions.xmlunit.Compare" />
 
 </xproc-config>
