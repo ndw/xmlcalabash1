@@ -86,8 +86,7 @@ public class XChoose extends XCompoundStep {
         XProcData data = runtime.getXProcData();
         int ipos = data.getIterationPosition();
         int isize = data.getIterationSize();
-        data.openFrame();
-        data.setStep(this);
+        data.openFrame(this);
         data.setIterationPosition(ipos);
         data.setIterationSize(isize);
 

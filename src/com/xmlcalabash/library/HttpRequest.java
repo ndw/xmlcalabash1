@@ -447,6 +447,12 @@ public class HttpRequest extends DefaultStep {
         Vector<Part> parts = new Vector<Part> ();
 
         for (XdmNode body : new RelevantNodes(runtime, multipart, Axis.CHILD)) {
+            if (XProcConstants.c_header.equals(body.getNodeName())) {
+                Header header = new Header(body.getAttributeValue(_name), body.getAttributeValue(_value));
+                method.addRequestHeader(header);
+                continue;
+            }
+
             String bodyContentType = body.getAttributeValue(_content_type);
             if (bodyContentType == null) {
                 throw new XProcException("Content-type on c:body is required.");

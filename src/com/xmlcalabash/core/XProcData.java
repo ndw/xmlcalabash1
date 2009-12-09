@@ -1,8 +1,16 @@
 package com.xmlcalabash.core;
 
 import com.xmlcalabash.runtime.XStep;
+import com.xmlcalabash.util.TreeWriter;
 
 import java.util.Stack;
+import java.util.Vector;
+import java.util.List;
+import java.net.URI;
+import java.net.URISyntaxException;
+
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.QName;
 
 /**
  * Created by IntelliJ IDEA.
@@ -18,17 +26,13 @@ public class XProcData {
         stack = new Stack<StackFrame> ();
     }
 
-    public void openFrame() {
+    public void openFrame(XStep step) {
         stack.push(new StackFrame());
+        stack.peek().step = step;
     }
-
 
     public void closeFrame() {
         stack.pop();
-    }
-
-    public void setStep(XStep step) {
-        stack.peek().step = step;
     }
 
     public XStep getStep() {
@@ -51,10 +55,48 @@ public class XProcData {
         return stack.peek().iterSize;
     }
 
+    private boolean tryGroup(XStep step) {
+        if (XProcConstants.p_group.equals(step.getType())) {
+            XdmNode node = step.getNode();
+            return XProcConstants.p_try.equals(node.getParent().getNodeName());
+        }
+        return false;
+    }
+
+    public void addError(XdmNode error) {
+        // Errors accumulate on the nearest p:try/p:group ancestor because that's where we
+        // can read them. Note, however, that errors raised in a p:catch are NOT
+        // part of the parent p:try but rather the grandparent.
+        int pos = stack.size() - 1;
+        if (XProcConstants.p_catch.equals(stack.peek().step.getType())) {
+            pos = pos - 2;
+        }
+        while (pos >= 0 && !tryGroup(stack.get(pos).step)) {
+            pos = pos - 1;
+        }
+        if (pos >= 0) {
+            stack.get(pos).errors.add(error);
+        }
+    }
+
+    public List<XdmNode> errors() {
+        // Errors accumulate on the nearest p:try/p:group ancestor
+        int pos = stack.size() - 1;
+        while (pos >= 0 && !tryGroup(stack.get(pos).step)) {
+            pos = pos - 1;
+        }
+        if (pos >= 0) {
+            return stack.get(pos).errors;
+        } else {
+            return new Stack<XdmNode> ();
+        }
+    }
+    
     private class StackFrame {
         public XStep step = null;
         public int iterPos = 1;
         public int iterSize = 1;
+        public Vector<XdmNode> errors = new Vector<XdmNode> ();
 
         public StackFrame() {
             // nop;

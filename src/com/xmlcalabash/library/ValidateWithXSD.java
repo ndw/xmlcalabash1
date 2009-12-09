@@ -108,6 +108,7 @@ public class ValidateWithXSD extends DefaultStep {
         Vector<XdmNode> schemaDocuments = new Vector<XdmNode> ();
         while (schemas.moreDocuments()) {
             XdmNode schemaNode = schemas.read();
+            fine(step.getNode(), "Caching input schema: " + schemaNode.getBaseURI().toASCIIString());
             schemaDocuments.add(schemaNode);
             runtime.getResolver().cache(schemaNode, schemaNode.getBaseURI());
         }
@@ -135,6 +136,7 @@ public class ValidateWithXSD extends DefaultStep {
         
         try {
             XdmNode doc = source.read();
+            fine(step.getNode(), "Validating: " + doc.getBaseURI().toASCIIString());
             validator.validate(new SAXSource(S9apiUtils.xdmToInputSource(runtime, doc)));
         } catch (SaxonApiException sae) {
             if (getOption(_assert_valid,false)) {

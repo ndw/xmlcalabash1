@@ -377,8 +377,7 @@ public class XAtomicStep extends XStep {
 
         // Make sure we do this *after* calculating any option/parameter values...
         XProcData data = runtime.getXProcData();
-        data.openFrame();
-        data.setStep(this);
+        data.openFrame(this);
 
         xstep.run();
 

@@ -32,6 +32,7 @@ import com.xmlcalabash.model.PipelineLibrary;
 import com.xmlcalabash.util.XProcURIResolver;
 import com.xmlcalabash.util.URIUtils;
 import com.xmlcalabash.util.Reporter;
+import com.xmlcalabash.util.XProcErrorListener;
 
 import java.util.logging.Logger;
 import java.util.Hashtable;
@@ -122,6 +123,9 @@ public class XProcRuntime {
         } catch (Exception e) {
             throw new XProcException(e);
         }
+
+        XProcErrorListener errListener = new XProcErrorListener(this, saxonConfig.getErrorListener());
+        saxonConfig.setErrorListener(errListener);
 
         allowGeneralExpressions = config.extensionValues;
 
@@ -525,7 +529,7 @@ public class XProcRuntime {
     }
 
     public void phoneHome(Exception ex) {
-        // We only get here if something went wrong; so the earlier thread might still be running
+        // We only get here if something went ``wrong; so the earlier thread might still be running
         int seconds = 0;
         try {
             while (phoneHomeThread != null && phoneHomeThread.isAlive()) {

@@ -225,9 +225,8 @@ public class XCompoundStep extends XAtomicStep {
 
     public void run() throws SaxonApiException {
         XProcData data = runtime.getXProcData();
-        data.openFrame();
-        data.setStep(this);
-
+        data.openFrame(this);
+        
         copyInputs();
 
         // N.B. At this time, there are no compound steps that accept parameters or options,

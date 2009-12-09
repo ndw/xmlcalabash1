@@ -51,8 +51,7 @@ public class XForEach extends XCompoundStep {
         info(step.getNode(), "Running p:for-each " + step.getName());
 
         XProcData data = runtime.getXProcData();
-        data.openFrame();
-        data.setStep(this);
+        data.openFrame(this);
 
         if (current == null) {
             current = new Pipe(runtime);

@@ -48,6 +48,10 @@ public abstract class XStep {
         return step.getNode();
     }
 
+    public QName getType() {
+        return step.getNode().getNodeName();
+    }
+
     public String getName() {
         return name;
     }

@@ -10,25 +10,24 @@ import javax.xml.transform.TransformerException;
  * Date: Dec 9, 2009
  * Time: 7:13:02 AM
  *
- * This class only exists to test that changing the error listener works.
+ * The XProcErrorListener puts errors on the p:catch error port and passes the error along to the next
+ * listener. If you want the next listener to just drop messages on the floor, use this one.
+ *
  */
-public class TestErrorListener extends StandardErrorListener {
-    public TestErrorListener() {
+public class SilentErrorListener extends StandardErrorListener {
+    public SilentErrorListener() {
         super();
     }
-    
+
     public void error(TransformerException exception) throws TransformerException {
-        System.err.println("ERROR!");
-        super.error(exception);
+        // what, me, worry?
     }
 
     public void fatalError(TransformerException exception) throws TransformerException {
-        System.err.println("FATAL!");
-        super.fatalError(exception);
+        // what, me, worry?
     }
 
     public void warning(TransformerException exception) throws TransformerException {
-        System.err.println("WARNING!");
-        super.warning(exception);
+        // what, me, worry?
     }
 }

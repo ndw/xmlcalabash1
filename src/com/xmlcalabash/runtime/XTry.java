@@ -92,6 +92,10 @@ public class XTry extends XCompoundStep {
             treeWriter.addStartElement(c_errors);
             treeWriter.startContent();
 
+            for (XdmNode doc : runtime.getXProcData().errors()) {
+                treeWriter.addSubtree(doc);
+            }
+
             for (XdmNode doc : errors) {
                 treeWriter.addSubtree(doc);
             }

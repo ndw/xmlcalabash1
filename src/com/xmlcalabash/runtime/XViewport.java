@@ -51,8 +51,7 @@ public class XViewport extends XCompoundStep implements ProcessMatchingNodes {
         info(step.getNode(), "Running p:viewport " + step.getName());
 
         XProcData data = runtime.getXProcData();
-        data.openFrame();
-        data.setStep(this);
+        data.openFrame(this);
 
         if (current == null) {
             current = new Pipe(runtime);

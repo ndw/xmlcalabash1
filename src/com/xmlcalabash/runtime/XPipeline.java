@@ -129,8 +129,7 @@ public class XPipeline extends XCompoundStep {
         }
 
         XProcData data = runtime.getXProcData();
-        data.openFrame();
-        data.setStep(this);
+        data.openFrame(this);
 
         runtime.start(this);
         try {

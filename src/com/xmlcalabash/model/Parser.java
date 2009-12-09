@@ -170,7 +170,12 @@ public class Parser {
                 Step substep = readStep(snode);
 
                 if (XProcConstants.p_import.equals(substep.getType())) {
-                    // nop, already handled by the import reader (FIXME: right?)
+                    Import importElem = (Import) substep;
+                    XdmNode root = importElem.getRoot();
+                    // root will be null if the library has already been imported
+                    if (root != null) {
+                        importElem.setLibrary(readLibrary(root));
+                    }
                 } else if (substep instanceof DeclareStep) {
                     library.addStep((DeclareStep) substep);
                 } else {
