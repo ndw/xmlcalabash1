@@ -20,10 +20,15 @@
 
 package com.xmlcalabash.core;
 
-import net.sf.saxon.s9api.*;
 import net.sf.saxon.Configuration;
-import com.xmlcalabash.model.*;
+import net.sf.saxon.StandardErrorListener;
+import net.sf.saxon.s9api.Processor;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.SaxonApiException;
 import com.xmlcalabash.model.Parser;
+import com.xmlcalabash.model.DeclareStep;
+import com.xmlcalabash.model.PipelineLibrary;
 import com.xmlcalabash.util.XProcURIResolver;
 import com.xmlcalabash.util.URIUtils;
 import com.xmlcalabash.util.Reporter;
@@ -48,6 +53,7 @@ import com.xmlcalabash.runtime.*;
 import com.xmlcalabash.functions.*;
 
 import javax.xml.transform.URIResolver;
+import javax.xml.transform.ErrorListener;
 
 import org.xml.sax.EntityResolver;
 
@@ -67,7 +73,7 @@ public class XProcRuntime {
     private Thread phoneHomeThread = null;
     private QName errorCode = null;
     private String errorMessage = null;
-    private Hashtable<QName,DeclareStep> declaredSteps = new Hashtable<QName,DeclareStep> ();
+    private Hashtable<QName, DeclareStep> declaredSteps = new Hashtable<QName,DeclareStep> ();
     private boolean explicitDeclarations = false;
     private DeclareStep pipeline = null;
     private XPipeline xpipeline = null;
@@ -109,6 +115,9 @@ public class XProcRuntime {
             }
             if (config.entityResolver != null) {
                 uriResolver.setUnderlyingEntityResolver((EntityResolver) Class.forName(config.entityResolver).newInstance());
+            }
+            if (config.errorListener != null) {
+                saxonConfig.setErrorListener((ErrorListener) Class.forName(config.errorListener).newInstance());
             }
         } catch (Exception e) {
             throw new XProcException(e);

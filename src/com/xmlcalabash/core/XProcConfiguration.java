@@ -59,9 +59,7 @@ public class XProcConfiguration {
     public boolean schemaAware = false;
     public Hashtable<String,String> nsBindings = new Hashtable<String,String> ();
     public boolean debug = false;
-    public String entityResolver = null;
     public Hashtable<String,Vector<ReadablePipe>> inputs = new Hashtable<String,Vector<ReadablePipe>> ();
-    public Level defaultLogLevel = Level.WARNING;
     public Hashtable<String,Level> logLevel = new Hashtable<String,Level> ();
     public ReadablePipe pipeline = null;
     public ReadablePipe library = null;
@@ -70,7 +68,9 @@ public class XProcConfiguration {
     public Hashtable<QName,String> options = new Hashtable<QName,String> ();
     public boolean safeMode = false;
     public String stepName = null;
+    public String entityResolver = null;
     public String uriResolver = null;
+    public String errorListener = null;
     public Hashtable<QName,String> implementations = new Hashtable<QName,String> ();
     public Hashtable<String,String> serializationOptions = new Hashtable<String,String>();
     public LogOptions logOpt = LogOptions.WRAPPED;
@@ -224,6 +224,8 @@ public class XProcConfiguration {
                     parseStepName(node);
                 } else if ("uri-resolver".equals(localName)) {
                     parseURIResolver(node);
+                } else if ("error-listener".equals(localName)) {
+                    parseErrorListener(node);
                 } else if ("pipeline".equals(localName)) {
                     parsePipeline(node);
                 } else if ("serialization".equals(localName)) {
@@ -244,24 +246,6 @@ public class XProcConfiguration {
         } else {
             return null;
         }
-    }
-
-    public Level loggingLevel(String logger) {
-        // Find the longest matching level
-        Level found = defaultLogLevel;
-        int length = 0;
-
-        // E.g., find "org.xproc.components.xinclude" in ("org.xproc", "org.xproc.components", ...)
-        for (String log : logLevel.keySet()) {
-            if (log.length() > length) {
-                if (logger.startsWith(log)) {
-                    length = log.length();
-                    found = logLevel.get(log);
-                }
-            }
-        }
-
-        return found;
     }
 
     private void parseSchemaAware(XdmNode node) {
@@ -497,6 +481,11 @@ public class XProcConfiguration {
     private void parseURIResolver(XdmNode node) {
         String value = node.getAttributeValue(_class_name);
         uriResolver = value;
+    }
+
+    private void parseErrorListener(XdmNode node) {
+        String value = node.getAttributeValue(_class_name);
+        errorListener = value;
     }
 
     private void parseImplementation(XdmNode node) {
