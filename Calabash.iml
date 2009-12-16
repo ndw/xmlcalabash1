@@ -11,7 +11,7 @@
     <orderEntry type="library" name="JUnit" level="project" />
     <orderEntry type="module" module-name="Msv" />
     <orderEntry type="module" module-name="Saxon9.2.0.3" />
-    <orderEntry type="library" name="SaxonEE" level="project" />
+    <orderEntry type="library" name="SaxonEE 9.2.0.4" level="project" />
     <orderEntry type="module" module-name="Isorelax" />
     <orderEntry type="library" name="Home" level="project" />
     <orderEntry type="library" name="DeltaXML" level="project" />

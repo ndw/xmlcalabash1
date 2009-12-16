@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project relativePaths="false" version="4">
+<project version="4">
   <component name="AntConfiguration">
     <defaultAnt bundledAnt="true" />
   </component>
@@ -22,6 +22,15 @@
           <option name="LABEL_INDENT_SIZE" value="0" />
           <option name="LABEL_INDENT_ABSOLUTE" value="false" />
         </ADDITIONAL_INDENT_OPTIONS>
+        <ADDITIONAL_INDENT_OPTIONS fileType="jsp">
+          <option name="INDENT_SIZE" value="4" />
+          <option name="CONTINUATION_INDENT_SIZE" value="8" />
+          <option name="TAB_SIZE" value="4" />
+          <option name="USE_TAB_CHARACTER" value="false" />
+          <option name="SMART_TABS" value="false" />
+          <option name="LABEL_INDENT_SIZE" value="0" />
+          <option name="LABEL_INDENT_ABSOLUTE" value="false" />
+        </ADDITIONAL_INDENT_OPTIONS>
         <ADDITIONAL_INDENT_OPTIONS fileType="xml">
           <option name="INDENT_SIZE" value="4" />
           <option name="CONTINUATION_INDENT_SIZE" value="8" />
@@ -33,11 +42,9 @@
         </ADDITIONAL_INDENT_OPTIONS>
       </value>
     </option>
-    <option name="USE_PER_PROJECT_SETTINGS" value="false" />
   </component>
   <component name="CompilerConfiguration">
     <option name="DEFAULT_COMPILER" value="Javac" />
-    <option name="DEPLOY_AFTER_MAKE" value="0" />
     <resourceExtensions>
       <entry name=".+\.(properties|xml|html|dtd|tld)" />
       <entry name=".+\.(gif|png|jpeg|jpg)" />
@@ -53,6 +60,7 @@
       <entry name="?*.dtd" />
       <entry name="?*.tld" />
     </wildcardResourcePatterns>
+    <annotationProcessing enabled="false" useClasspath="true" />
   </component>
   <component name="CopyrightManager" default="">
     <module2copyright />
@@ -103,28 +111,13 @@
   </component>
   <component name="IdProvider" IDEtalkID="BD7C721006F91026CD0A17831C6EAC2A" />
   <component name="InspectionProjectProfileManager">
-    <option name="PROJECT_PROFILE" value="Project Default" />
-    <option name="USE_PROJECT_LEVEL_SETTINGS" value="false" />
-    <scopes />
-    <profiles>
-      <profile version="1.0" is_locked="false">
-        <option name="myName" value="Project Default" />
-        <option name="myLocal" value="false" />
-      </profile>
-    </profiles>
-    <list size="4">
+    <list size="5">
       <item index="0" class="java.lang.String" itemvalue="SERVER PROBLEM" />
       <item index="1" class="java.lang.String" itemvalue="INFO" />
-      <item index="2" class="java.lang.String" itemvalue="WARNING" />
-      <item index="3" class="java.lang.String" itemvalue="ERROR" />
+      <item index="2" class="java.lang.String" itemvalue="TYPO" />
+      <item index="3" class="java.lang.String" itemvalue="WARNING" />
+      <item index="4" class="java.lang.String" itemvalue="ERROR" />
     </list>
-  </component>
-  <component name="JavacSettings">
-    <option name="DEBUGGING_INFO" value="true" />
-    <option name="GENERATE_NO_WARNINGS" value="false" />
-    <option name="DEPRECATION" value="true" />
-    <option name="ADDITIONAL_OPTIONS_STRING" value="" />
-    <option name="MAXIMUM_HEAP_SIZE" value="128" />
   </component>
   <component name="JavadocGenerationManager">
     <option name="OUTPUT_DIRECTORY" />
@@ -275,19 +268,18 @@
   <component name="ProjectDetails">
     <option name="projectName" value="calabash" />
   </component>
-  <component name="ProjectFileVersion" converted="true" />
   <component name="ProjectKey">
     <option name="state" value="http://svn.xmlcalabash.com/calabash/calabash.ipr" />
   </component>
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Calabash.iml" filepath="$PROJECT_DIR$/Calabash.iml" />
-      <module fileurl="file:///projects/src/isorelax/Isorelax.iml" filepath="/projects/src/isorelax/Isorelax.iml" />
-      <module fileurl="file:///projects/src/msv/Msv.iml" filepath="/projects/src/msv/Msv.iml" />
-      <module fileurl="file:///projects/src/saxon9/Saxon9.iml" filepath="/projects/src/saxon9/Saxon9.iml" />
-      <module fileurl="file:///projects/src/saxon9.2.0.2/Saxon9.2.0.2.iml" filepath="/projects/src/saxon9.2.0.2/Saxon9.2.0.2.iml" />
-      <module fileurl="file:///projects/src/saxon9.2.0.3/Saxon9.2.0.3.iml" filepath="/projects/src/saxon9.2.0.3/Saxon9.2.0.3.iml" />
-      <module fileurl="file:///projects/src/xmlresolver/Xmlresolver.iml" filepath="/projects/src/xmlresolver/Xmlresolver.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../isorelax/Isorelax.iml" filepath="$PROJECT_DIR$/../isorelax/Isorelax.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../msv/Msv.iml" filepath="$PROJECT_DIR$/../msv/Msv.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../saxon9/Saxon9.iml" filepath="$PROJECT_DIR$/../saxon9/Saxon9.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../saxon9.2.0.2/Saxon9.2.0.2.iml" filepath="$PROJECT_DIR$/../saxon9.2.0.2/Saxon9.2.0.2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../saxon9.2.0.3/Saxon9.2.0.3.iml" filepath="$PROJECT_DIR$/../saxon9.2.0.3/Saxon9.2.0.3.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../xmlresolver/Xmlresolver.iml" filepath="$PROJECT_DIR$/../xmlresolver/Xmlresolver.iml" />
     </modules>
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_1_5" assert-keyword="true" jdk-15="true" project-jdk-name="1.5" project-jdk-type="JavaSDK">
@@ -300,13 +292,6 @@
       </value>
     </option>
   </component>
-  <component name="RmicSettings">
-    <option name="IS_EANABLED" value="false" />
-    <option name="DEBUGGING_INFO" value="true" />
-    <option name="GENERATE_NO_WARNINGS" value="false" />
-    <option name="GENERATE_IIOP_STUBS" value="false" />
-    <option name="ADDITIONAL_OPTIONS_STRING" value="" />
-  </component>
   <component name="SvnBranchConfigurationManager">
     <option name="myConfigurationMap">
       <map>
@@ -317,7 +302,7 @@
             </SvnBranchConfiguration>
           </value>
         </entry>
-        <entry key="/projects/src/xmlresolver">
+        <entry key="$PROJECT_DIR$/../xmlresolver">
           <value>
             <SvnBranchConfiguration>
               <option name="trunkUrl" value="http://svn.xmlresolver.org/xmlresolver" />
@@ -399,7 +384,7 @@
     </library>
     <library name="XCC">
       <CLASSES>
-        <root url="jar:///projects/marklogic/Java/xcc.jar!/" />
+        <root url="jar://$PROJECT_DIR$/../../marklogic/Java/xcc.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES />
@@ -429,25 +414,25 @@
     </library>
     <library name="Jing">
       <CLASSES>
-        <root url="jar:///projects/src/jing-trang/build/jing.jar!/" />
+        <root url="jar://$PROJECT_DIR$/../jing-trang/build/jing.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES>
-        <root url="file:///projects/src/jing-trang/mod/schematron/src/main" />
-        <root url="file:///projects/src/jing-trang/mod/picl/src/main" />
-        <root url="file:///projects/src/jing-trang/mod/regex-gen/src/main" />
-        <root url="file:///projects/src/jing-trang/mod/xsd-datatype/src/main" />
-        <root url="file:///projects/src/jing-trang/mod/rng-validate/src/main" />
-        <root url="file:///projects/src/jing-trang/mod/regex/src/main" />
-        <root url="file:///projects/src/jing-trang/mod/infer/src/main" />
-        <root url="file:///projects/src/jing-trang/mod/datatype/src/main" />
-        <root url="file:///projects/src/jing-trang/mod/pattern/src/main" />
-        <root url="file:///projects/src/jing-trang/mod/nvdl/src/main" />
-        <root url="file:///projects/src/jing-trang/mod/util/src/main" />
-        <root url="file:///projects/src/jing-trang/mod/rng-jarv/src/main" />
-        <root url="file:///projects/src/jing-trang/mod/validate/src/main" />
-        <root url="file:///projects/src/jing-trang/mod/rng-schema/src/main" />
-        <root url="file:///projects/src/jing-trang/mod/rng-parse/src/main" />
+        <root url="file://$PROJECT_DIR$/../jing-trang/mod/schematron/src/main" />
+        <root url="file://$PROJECT_DIR$/../jing-trang/mod/picl/src/main" />
+        <root url="file://$PROJECT_DIR$/../jing-trang/mod/regex-gen/src/main" />
+        <root url="file://$PROJECT_DIR$/../jing-trang/mod/xsd-datatype/src/main" />
+        <root url="file://$PROJECT_DIR$/../jing-trang/mod/rng-validate/src/main" />
+        <root url="file://$PROJECT_DIR$/../jing-trang/mod/regex/src/main" />
+        <root url="file://$PROJECT_DIR$/../jing-trang/mod/infer/src/main" />
+        <root url="file://$PROJECT_DIR$/../jing-trang/mod/datatype/src/main" />
+        <root url="file://$PROJECT_DIR$/../jing-trang/mod/pattern/src/main" />
+        <root url="file://$PROJECT_DIR$/../jing-trang/mod/nvdl/src/main" />
+        <root url="file://$PROJECT_DIR$/../jing-trang/mod/util/src/main" />
+        <root url="file://$PROJECT_DIR$/../jing-trang/mod/rng-jarv/src/main" />
+        <root url="file://$PROJECT_DIR$/../jing-trang/mod/validate/src/main" />
+        <root url="file://$PROJECT_DIR$/../jing-trang/mod/rng-schema/src/main" />
+        <root url="file://$PROJECT_DIR$/../jing-trang/mod/rng-parse/src/main" />
       </SOURCES>
     </library>
     <library name="Xerces">
@@ -482,7 +467,7 @@
       <JAVADOC />
       <SOURCES />
     </library>
-    <library name="SaxonEE">
+    <library name="SaxonEE 9.2.0.2">
       <CLASSES>
         <root url="jar:///share/java/saxonee-9.2.0.2j/saxon9ee.jar!/" />
       </CLASSES>
@@ -500,6 +485,13 @@
     <library name="XMLUnit">
       <CLASSES>
         <root url="jar:///share/java/xmlunit-1.3/lib/xmlunit-1.3.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="SaxonEE 9.2.0.4">
+      <CLASSES>
+        <root url="jar:///share/java/saxonee-9.2.0.4j/saxon9ee.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES />

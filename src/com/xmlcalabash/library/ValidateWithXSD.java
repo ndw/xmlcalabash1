@@ -26,6 +26,7 @@ import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.util.S9apiUtils;
+import net.sf.saxon.Configuration;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
@@ -51,6 +52,8 @@ import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Schema;
 import javax.xml.validation.Validator;
 import javax.xml.XMLConstants;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Vector;
 import java.io.IOException;
 
@@ -61,6 +64,7 @@ import java.io.IOException;
 public class ValidateWithXSD extends DefaultStep {
     private static final QName _assert_valid = new QName("", "assert-valid");
     private static final QName _mode = new QName("", "mode");
+    private static final Class [] paramTypes = new Class [] {};
     private ReadablePipe source = null;
     private ReadablePipe schemas = null;
     private WritablePipe result = null;
@@ -103,6 +107,26 @@ public class ValidateWithXSD extends DefaultStep {
     public void validateWithSaxonSA(SchemaManager manager) throws SaxonApiException {
         info(step.getNode(), "Validating with Saxon");
 
+        Configuration config = runtime.getProcessor().getUnderlyingConfiguration();
+
+        // Saxon 9.2.0.4j introduces a clearSchemaCache method on Configuration.
+        // Call it if it's available.
+        try {
+            Method clearSchemaCache = config.getClass().getMethod("clearSchemaCache", paramTypes);
+            clearSchemaCache.invoke(config);
+            finer(step.getNode(), "Cleared schema cache.");
+        } catch (NoSuchMethodException nsme) {
+            // nop; oh, well
+            finer(step.getNode(), "Cannot reset schema cache.");
+        } catch (IllegalAccessException nsme) {
+            // nop; oh, well
+            finer(step.getNode(), "Cannot reset schema cache.");
+        } catch (InvocationTargetException nsme) {
+            // nop; oh, well
+            finer(step.getNode(), "Cannot reset schema cache.");
+        }
+
+
         // Populate the URI cache so that URI references in schema documents will find
         // the schemas provided preferentially
         Vector<XdmNode> schemaDocuments = new Vector<XdmNode> ();
@@ -122,7 +146,7 @@ public class ValidateWithXSD extends DefaultStep {
         }
 
         XdmDestination destination = new XdmDestination();
-        Controller controller = new Controller(runtime.getProcessor().getUnderlyingConfiguration());
+        Controller controller = new Controller(config);
         Receiver receiver = destination.getReceiver(controller.getConfiguration());
         PipelineConfiguration pipe = controller.makePipelineConfiguration();
         pipe.setRecoverFromValidationErrors(!getOption(_assert_valid,false));
