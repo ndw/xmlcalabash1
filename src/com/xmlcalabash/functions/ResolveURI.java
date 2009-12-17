@@ -91,8 +91,7 @@ public class ResolveURI extends ExtensionFunctionDefinition {
                 iter = arguments[1];
                 baseURI = iter.next().getStringValue();
             } else {
-                NodeInfo item = (NodeInfo) context.getContextItem();
-                baseURI = item.getBaseURI();
+                baseURI = runtime.getStaticBaseURI().toASCIIString();
             }
 
             String resolvedURI = "";
