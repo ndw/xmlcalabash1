@@ -74,9 +74,11 @@ public class XProcURIResolver implements URIResolver, EntityResolver {
                 return cache.get(uri).asSource();
             }
 
+            /* This is clearly not right because with it you can't even load pipelines from the local disk...
             if (runtime.getSafeMode() && uri.startsWith("file:")) {
                 throw XProcException.dynamicError(21);
             }
+            */
         } catch (URISyntaxException use) {
             runtime.finest(logger,null,"URISyntaxException resolving base and href?");
         }

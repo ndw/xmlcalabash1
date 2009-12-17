@@ -278,7 +278,7 @@ public class XAtomicStep extends XStep {
         }
 
         // FIXME: This isn't really very secure...
-        if (runtime.getSafeMode() && !className.startsWith("org.xmlcalabash.")) {
+        if (runtime.getSafeMode() && !className.startsWith("com.xmlcalabash.")) {
             throw XProcException.dynamicError(21);
         }
 
