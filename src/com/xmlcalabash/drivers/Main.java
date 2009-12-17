@@ -57,7 +57,7 @@ public class Main {
     private XProcRuntime runtime = null;
     private boolean readStdin = false;
     private Logger logger = Logger.getLogger(this.getClass().getName());
-
+    private boolean debug = false;
 
     /**
      * @param args the command line arguments
@@ -129,6 +129,8 @@ public class Main {
             }
 
             config.extensionValues = cmd.extensionValues;
+
+            debug = config.debug;
 
             runtime = new XProcRuntime(config);
 
@@ -272,8 +274,6 @@ public class Main {
                     wd.write(rpipe.read());
                 }
             }
-
-
         } catch (XProcException err) {
             if (err.getErrorCode() != null) {
                 String message = "Pipeline failed: err:" + err.getErrorCode() + ": " + err.getMessage();
@@ -281,36 +281,32 @@ public class Main {
                     message += "  at " + err.getStep();
                 }
                 message += "  " + errorMessage(err.getErrorCode());
-                runtime.error(logger, null, message, err.getErrorCode());
+                error(logger, null, message, err.getErrorCode());
                 if (err.getCause() != null) {
                     Throwable cause = err.getCause();
-                    runtime.error(logger, null, "Underlying exception: " + cause, null);
+                    error(logger, null, "Underlying exception: " + cause, null);
                 }
-                if (runtime.getDebug()) {
+                if (debug) {
                     err.printStackTrace();
                 }
             } else {
-                runtime.error(logger, null, "Pipeline failed: " + err.toString(), null);
+                error(logger, null, "Pipeline failed: " + err.toString(), null);
                 if (err.getCause() != null) {
                     Throwable cause = err.getCause();
-                    runtime.error(logger, null, "Underlying exception: " + cause, null);
+                    error(logger, null, "Underlying exception: " + cause, null);
                 }
-                if (runtime.getDebug()) {
+                if (debug) {
                     err.printStackTrace();
                 }
             }
         } catch (Exception err) {
-            if (runtime != null) {
-                runtime.error(logger, null, "Pipeline failed: " + err.toString(), null);
-                if (err.getCause() != null) {
-                    Throwable cause = err.getCause();
-                    runtime.error(logger, null, "Underlying exception: " + cause, null);
-                }
-                if (runtime.getDebug()) {
-                    err.printStackTrace();
-                }
-            } else {
-                throw new RuntimeException(err);
+            error(logger, null, "Pipeline failed: " + err.toString(), null);
+            if (err.getCause() != null) {
+                Throwable cause = err.getCause();
+                error(logger, null, "Underlying exception: " + cause, null);
+            }
+            if (debug) {
+                err.printStackTrace();
             }
         }
     }
@@ -356,4 +352,49 @@ public class Main {
         }
         return "Unknown error";
     }
+
+    // ===========================================================
+    // Logging methods repeated here so that they don't rely
+    // on the XProcRuntime constructor succeeding.
+
+    private String message(XdmNode node, String message) {
+        String baseURI = "(unknown URI)";
+        int lineNumber = -1;
+
+        if (node != null) {
+            baseURI = node.getBaseURI().toASCIIString();
+            lineNumber = node.getLineNumber();
+            return baseURI + ":" + lineNumber + ": " + message;
+        } else {
+            return message;
+        }
+
+    }
+
+    public void error(Logger logger, XdmNode node, String message, QName code) {
+        logger.severe(message(node, message));
+    }
+
+    public void warning(Logger logger, XdmNode node, String message) {
+        logger.warning(message(node, message));
+    }
+
+    public void info(Logger logger, XdmNode node, String message) {
+        logger.info(message(node, message));
+    }
+
+    public void fine(Logger logger, XdmNode node, String message) {
+        logger.fine(message(node, message));
+    }
+
+    public void finer(Logger logger, XdmNode node, String message) {
+        logger.finer(message(node, message));
+    }
+
+    public void finest(Logger logger, XdmNode node, String message) {
+        logger.finest(message(node, message));
+    }
+
+    // ===========================================================
+
 }
