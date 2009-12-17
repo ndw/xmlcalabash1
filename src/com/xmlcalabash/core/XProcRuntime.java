@@ -63,7 +63,7 @@ import org.xml.sax.EntityResolver;
  * @author ndw
  */
 public class XProcRuntime {
-    protected Logger logger = Logger.getLogger("org.xproc");
+    protected Logger logger = Logger.getLogger("com.xmlcalabash");
     private Processor processor = null;
     private Parser parser = null;
     private XProcURIResolver uriResolver = null;
