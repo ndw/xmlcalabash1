@@ -60,7 +60,7 @@ public class ReadableInline implements ReadablePipe {
             XdmNode doc = dest.getXdmNode();
 
             doc = S9apiUtils.removeNamespaces(runtime, doc, excludeNS);
-            runtime.finest(logger, null, "Instantiate a ReadableInline");
+            runtime.finest(null, null, "Instantiate a ReadableInline");
             documents.add(doc);
         } catch (SaxonApiException sae) {
             throw new XProcException(sae);
@@ -99,7 +99,7 @@ public class ReadableInline implements ReadablePipe {
         XdmNode doc = documents.get(pos++);
 
         if (reader != null) {
-            runtime.finest(logger, reader.getNode(), reader.getName() + " read '" + (doc == null ? "null" : doc.getBaseURI()) + "' from " + this);
+            runtime.finest(null, reader.getNode(), reader.getName() + " read '" + (doc == null ? "null" : doc.getBaseURI()) + "' from " + this);
         }
         
         return doc;

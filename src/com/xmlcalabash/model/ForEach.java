@@ -65,7 +65,7 @@ public class ForEach extends DeclareStep {
     @Override
     protected void augmentIO() {
         if (getInput("#iteration-source") == null) {
-            Input isource = new Input(xproc, node);
+            Input isource = new Input(runtime, node);
             isource.setPort("#iteration-source");
             isource.setPrimary(true);
             isource.setSequence(true);

@@ -64,7 +64,7 @@ public class Viewport extends DeclareStep {
     @Override
     protected void augmentIO() {
         if (getInput("#viewport-source") == null) {
-            Input isource = new Input(xproc, node);
+            Input isource = new Input(runtime, node);
             isource.setPort("#viewport-source");
             addInput(isource);
         }
@@ -96,7 +96,7 @@ public class Viewport extends DeclareStep {
         boolean valid = true;
         
         if (match == null || "".equals(match)) {
-            xproc.error(logger, node, "Match expression on p:viewport must be specified.", XProcConstants.staticError(38));
+            error(node, "Match expression on p:viewport must be specified.", XProcConstants.staticError(38));
             valid = false;
         }
 

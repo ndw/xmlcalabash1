@@ -51,7 +51,7 @@ public class Message extends DefaultStep {
 
         while (source.moreDocuments()) {
             XdmNode doc = source.read();
-            finest(null, "Message step " + step.getName() + " read " + doc.getDocumentURI());
+            runtime.finest(this, step.getNode(), "Message step " + step.getName() + " read " + doc.getDocumentURI());
             result.write(doc);
         }
     }

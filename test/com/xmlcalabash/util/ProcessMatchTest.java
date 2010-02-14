@@ -55,7 +55,7 @@ public class ProcessMatchTest extends TestCase {
     }
 
     public void testMatch1() throws SaxonApiException, XPathException {
-        //String uri = "file:///projects/src/xproc/testdocs/simple.xml";
+        //String uri = "file:///projects/src/runtime/testdocs/simple.xml";
         String xml = "<doc>\n" +
                 "<p>Some document</p>\n" +
                 "<p class=\"del\">Some deleted content</p>\n" +

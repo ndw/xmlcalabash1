@@ -34,7 +34,7 @@ public class XLibrary {
         DeclareStep step = library.getDeclaration(stepName);
 
         if (step == null) {
-            runtime.error(logger, null, "No step named " + stepName + " in library.", null);
+            runtime.error(null, library.getNode(), "No step named " + stepName + " in library.", null);
             return null;
         }
 

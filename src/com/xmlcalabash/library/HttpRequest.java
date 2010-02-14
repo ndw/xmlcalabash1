@@ -12,7 +12,7 @@ package com.xmlcalabash.library;
  * Development and Distribution License("CDDL") (collectively, the
  * "License"). You may not use this file except in compliance with the
  * License. You can obtain a copy of the License at
- * https://xproc.dev.java.net/public/CDDL+GPL.html or
+ * https://runtime.dev.java.net/public/CDDL+GPL.html or
  * docs/CDDL+GPL.txt in the distribution. See the License for the
  * specific language governing permissions and limitations under the
  * License. When distributing the software, include this License Header
@@ -43,15 +43,10 @@ import javax.xml.XMLConstants;
 import javax.xml.transform.sax.SAXSource;
 import java.util.Vector;
 import java.util.List;
-import java.net.URL;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.ProxySelector;
 import java.net.Proxy;
 import java.net.InetSocketAddress;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -59,14 +54,12 @@ import java.io.StringReader;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileNotFoundException;
 import java.io.FileInputStream;
 
 import org.xml.sax.InputSource;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
-import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HeaderElement;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.HttpMethodBase;

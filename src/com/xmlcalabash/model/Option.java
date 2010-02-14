@@ -95,18 +95,12 @@ public class Option extends EndPoint implements ComputableValue {
         boolean valid = true;
 
         if (bindings.size() > 1) {
-            xproc.error(logger,node, "Option can have at most one binding.", XProcConstants.dynamicError(8));
+            error("Option can have at most one binding.", XProcConstants.dynamicError(8));
             valid = false;
         }
 
-        /* ???
-        if (select == null) {
-            xproc.error(logger,node, "You must specify either select on option.", XProcConstants.staticError(16));
-        }
-        */
-
         if (required && (select != null)) {
-            xproc.error(logger,node, "You can't specify a default value on a required option", XProcConstants.staticError(17));
+            error("You can't specify a default value on a required option", XProcConstants.staticError(17));
         }
         
         return valid;

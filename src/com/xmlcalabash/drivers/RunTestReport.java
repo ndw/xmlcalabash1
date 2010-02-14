@@ -544,7 +544,7 @@ private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
         System.out.println("<vendor-uri>" + runtime.getVendorURI() + "</vendor-uri>");
         System.out.println("<version>" + runtime.getProductVersion() + "</version>");
         System.out.println("<language>" + runtime.getLanguage() + "</language>");
-        System.out.println("<xproc-version>" + runtime.getXProcVersion() + "</xproc-version>");
+        System.out.println("<runtime-version>" + runtime.getXProcVersion() + "</runtime-version>");
         System.out.println("<xpath-version>" + runtime.getXPathVersion() + "</xpath-version>");
         System.out.println("<psvi-supported>" + runtime.getPSVISupported() + "</psvi-supported>");
         System.out.println("</processor>");

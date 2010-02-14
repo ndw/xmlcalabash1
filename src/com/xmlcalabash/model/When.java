@@ -56,7 +56,7 @@ public class When extends DeclareStep {
     @Override
     protected void augmentIO() {
         if (getInput("#xpath-context") == null) {
-            Input isource = new Input(xproc, node);
+            Input isource = new Input(runtime, node);
             isource.setPort("#xpath-context");
             addInput(isource);
         }
@@ -68,7 +68,7 @@ public class When extends DeclareStep {
         boolean valid = true;
         
         if (testExpr == null || "".equals(testExpr)) {
-            xproc.error(logger, node, "Test expression on p:when must be specified.", XProcConstants.staticError(38));
+            runtime.error(null, node, "Test expression on p:when must be specified.", XProcConstants.staticError(38));
             valid = false;
         }
 

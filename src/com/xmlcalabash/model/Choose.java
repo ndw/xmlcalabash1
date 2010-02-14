@@ -19,7 +19,6 @@
 
 package com.xmlcalabash.model;
 
-import java.util.HashSet;
 import java.util.Hashtable;
 
 import net.sf.saxon.s9api.XdmNode;
@@ -65,7 +64,7 @@ public class Choose extends DeclareStep {
 
     protected void augmentIO() {
         if (getInput("#xpath-context") == null) {
-            Input isource = new Input(xproc, node);
+            Input isource = new Input(runtime, node);
             isource.setPort("#xpath-context");
             addInput(isource);
         }
@@ -74,14 +73,14 @@ public class Choose extends DeclareStep {
         if (subpipeline.size() > 0) {
             Step step = subpipeline.get(0);
             for (Input input : step.inputs()) {
-                Input cinput = new Input(xproc, step.getNode());
+                Input cinput = new Input(runtime, step.getNode());
                 cinput.setPort(input.getPort());
                 cinput.setPrimary(input.getPrimary());
                 cinput.setSequence(input.getSequence());
                 addInput(cinput);
             }
             for (Output output : step.outputs()) {
-                Output coutput = new Output(xproc, step.getNode());
+                Output coutput = new Output(runtime, step.getNode());
                 coutput.setPort(output.getPort());
                 coutput.setPrimary(output.getPrimary());
                 coutput.setSequence(output.getSequence());
@@ -133,22 +132,22 @@ public class Choose extends DeclareStep {
                             Input s1input = inputs.get(input.getPort());
                             if (s1input.getPrimary() != input.getPrimary()) {
                                 valid = false;
-                                xproc.error(logger, step.getNode(), "Input port " + input.getPort() + " has different primary status.", XProcConstants.staticError(7));
+                                error("Input port " + input.getPort() + " has different primary status.", XProcConstants.staticError(7));
                             }
                             if (s1input.getSequence() != input.getSequence()) {
                                 valid = false;
-                                xproc.error(logger, step.getNode(), "Input port " + input.getPort() + " has different sequence status.", XProcConstants.staticError(7));
+                                error("Input port " + input.getPort() + " has different sequence status.", XProcConstants.staticError(7));
                             }
                         }
                     } else {
                         valid = false;
-                        xproc.error(logger, step.getNode(), "Input port " + input.getPort() + " is extra.", XProcConstants.staticError(7));
+                        error("Input port " + input.getPort() + " is extra.", XProcConstants.staticError(7));
                     }
                 }
                 for (String port : inputs.keySet()) {
                     if (!port.startsWith("|") && !port.startsWith("#") && step.getInput(port) == null) {
                         valid = false;
-                        xproc.error(logger, step.getNode(), "Input port " + port + " missing.", XProcConstants.staticError(7));
+                        error("Input port " + port + " missing.", XProcConstants.staticError(7));
                     }
                 }
                 for (Output output : step.outputs()) {
@@ -164,27 +163,27 @@ public class Choose extends DeclareStep {
                         } else {
                             if (s1output.getPrimary() != output.getPrimary()) {
                                 valid = false;
-                                xproc.error(logger, step.getNode(), "Output port " + output.getPort() + " has different primary status.", XProcConstants.staticError(7));
+                                error("Output port " + output.getPort() + " has different primary status.", XProcConstants.staticError(7));
                             }
                             if (s1output.getSequence() != output.getSequence()) {
                                 valid = false;
-                                xproc.error(logger, step.getNode(), "Output port " + output.getPort() + " has different sequence status.", XProcConstants.staticError(7));
+                                error("Output port " + output.getPort() + " has different sequence status.", XProcConstants.staticError(7));
                             }
                         }
                     } else {
                         valid = false;
-                        xproc.error(logger, step.getNode(), "Output port " + output.getPort() + " is extra.", XProcConstants.staticError(7));
+                        error("Output port " + output.getPort() + " is extra.", XProcConstants.staticError(7));
                     }
                 }
                 for (String port : outputs.keySet()) {
                     if (!port.endsWith("|") && step.getOutput(port) == null) {
                         valid = false;
-                        xproc.error(logger, step.getNode(), "Output port " + port + " missing.", XProcConstants.staticError(7));
+                        error("Output port " + port + " missing.", XProcConstants.staticError(7));
                     }
                 }
             }
         } else {
-            xproc.error(logger, step.getNode(), "Choose must contain when or otherwise", XProcConstants.staticError(27));
+            error("Choose must contain when or otherwise", XProcConstants.staticError(27));
         }
 
         return valid && super.validBindings();

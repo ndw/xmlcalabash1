@@ -15,12 +15,10 @@ import java.util.Hashtable;
  * Time: 7:43:09 AM
  * To change this template use File | Settings | File Templates.
  */
-public interface XProcStep {
+public interface XProcStep extends XProcRunnable {
     public void setInput(String port, ReadablePipe pipe);
     public void setOutput(String port, WritablePipe pipe);
     public void setParameter(QName name, RuntimeValue value);
     public void setParameter(String port, QName name, RuntimeValue value);
     public void setOption(QName name, RuntimeValue value);
-    public void reset();
-    public void run() throws SaxonApiException;
 }

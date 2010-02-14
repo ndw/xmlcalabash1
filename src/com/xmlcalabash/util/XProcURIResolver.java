@@ -64,13 +64,13 @@ public class XProcURIResolver implements URIResolver, EntityResolver {
     }
 
     public Source resolve(String href, String base) throws TransformerException {
-        runtime.finest(logger,null,"URIResolver(" + href + "," + base + ")");
+        runtime.finest(null,null,"URIResolver(" + href + "," + base + ")");
 
         try {
             URI baseURI = new URI(base);
             String uri = baseURI.resolve(href).toASCIIString();
             if (cache.containsKey(uri)) {
-                runtime.finest(logger,null,"Returning cached document.");
+                runtime.finest(null ,null,"Returning cached document.");
                 return cache.get(uri).asSource();
             }
 
@@ -80,7 +80,7 @@ public class XProcURIResolver implements URIResolver, EntityResolver {
             }
             */
         } catch (URISyntaxException use) {
-            runtime.finest(logger,null,"URISyntaxException resolving base and href?");
+            runtime.finest(null,null,"URISyntaxException resolving base and href?");
         }
 
         if (uriResolver != null) {
@@ -119,7 +119,7 @@ public class XProcURIResolver implements URIResolver, EntityResolver {
 
         href = URIUtils.encode(href);
 
-        runtime.finest(logger,null,"Attempting to parse: " + href + " (" + base + ")");
+        runtime.finest(null,null,"Attempting to parse: " + href + " (" + base + ")");
 
         try {
             source = resolve(href, base);
@@ -156,17 +156,17 @@ public class XProcURIResolver implements URIResolver, EntityResolver {
     }
 
     public InputSource resolveEntity(String publicId, String systemId) throws SAXException, IOException {
-        runtime.finest(logger,null,"ResolveEntity(" + publicId + "," + systemId + ")");
+        runtime.finest(null,null,"ResolveEntity(" + publicId + "," + systemId + ")");
 
         try {
             URI baseURI = new URI(systemId);
             String uri = baseURI.toASCIIString();
             if (cache.containsKey(uri)) {
-                runtime.finest(logger,null,"Returning cached document.");
+                runtime.finest(null,null,"Returning cached document.");
                 return S9apiUtils.xdmToInputSource(runtime, cache.get(uri));
             }
         } catch (URISyntaxException use) {
-            runtime.finest(logger,null,"URISyntaxException resolving entityResolver systemId: " + systemId);
+            runtime.finest(null,null,"URISyntaxException resolving entityResolver systemId: " + systemId);
         } catch (SaxonApiException sae) {
             throw new XProcException(sae);
         }

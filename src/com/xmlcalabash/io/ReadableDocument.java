@@ -110,7 +110,7 @@ public class ReadableDocument implements ReadablePipe {
         XdmNode doc = documents.get(pos++);
 
         if (reader != null) {
-            runtime.finest(logger, reader.getNode(), reader.getName() + " select read '" + (doc == null ? "null" : doc.getBaseURI()) + "' from " + this);
+            runtime.finest(null, reader.getNode(), reader.getName() + " select read '" + (doc == null ? "null" : doc.getBaseURI()) + "' from " + this);
         }
 
         return doc;

@@ -115,7 +115,7 @@ public class Pipe implements ReadablePipe, WritablePipe {
         XdmNode doc = documents.get(pos++);
 
         if (reader != null) {
-            runtime.finest(logger, reader.getNode(), reader.getName() + " read '" + (doc == null ? "null" : doc.getBaseURI()) + "' from " + this);
+            runtime.finest(null, reader.getNode(), reader.getName() + " read '" + (doc == null ? "null" : doc.getBaseURI()) + "' from " + this);
         }
         
         return doc;
@@ -123,7 +123,7 @@ public class Pipe implements ReadablePipe, WritablePipe {
 
     public void write(XdmNode doc) {
         if (writer != null) {
-            runtime.finest(logger, writer.getNode(), writer.getName() + " wrote '" + (doc == null ? "null" : doc.getBaseURI()) + "' to " + this);
+            runtime.finest(null, writer.getNode(), writer.getName() + " wrote '" + (doc == null ? "null" : doc.getBaseURI()) + "' to " + this);
         }
         documents.add(doc);
 

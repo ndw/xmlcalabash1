@@ -1,5 +1,7 @@
 package com.xmlcalabash.runtime;
 
+import com.xmlcalabash.core.XProcRunnable;
+import com.xmlcalabash.core.XProcStep;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -24,7 +26,8 @@ import com.xmlcalabash.model.DeclareStep;
  * Time: 8:02:28 AM
  * To change this template use File | Settings | File Templates.
  */
-public abstract class XStep {
+public abstract class XStep implements XProcRunnable 
+{
     protected XProcRuntime runtime = null;
     protected Step step = null;
     protected String name = null;
@@ -266,26 +269,26 @@ public abstract class XStep {
     public abstract void run() throws SaxonApiException;
 
     public void error(XdmNode node, String message, QName code) {
-        runtime.error(logger, node, message, code);
+        runtime.error(this, node, message, code);
     }
 
     public void warning(XdmNode node, String message) {
-        runtime.warning(logger, node, message);
+        runtime.warning(this, node, message);
     }
 
     public void info(XdmNode node, String message) {
-        runtime.info(logger, node, message);
+        runtime.info(this, node, message);
     }
 
     public void fine(XdmNode node, String message) {
-        runtime.fine(logger, node, message);
+        runtime.fine(this, node, message);
     }
 
     public void finer(XdmNode node, String message) {
-        runtime.fine(logger, node, message);
+        runtime.finer(this, node, message);
     }
 
     public void finest(XdmNode node, String message) {
-        runtime.fine(logger, node, message);
+        runtime.finest(this, node, message);
     }
 }

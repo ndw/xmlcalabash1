@@ -224,7 +224,7 @@ public class XProcConfiguration {
                     parseStepName(node);
                 } else if ("uri-resolver".equals(localName)) {
                     parseURIResolver(node);
-                } else if ("error-listener".equals(localName)) {
+                } else if ("step-error-listener".equals(localName)) {
                     parseErrorListener(node);
                 } else if ("pipeline".equals(localName)) {
                     parsePipeline(node);

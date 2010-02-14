@@ -19,6 +19,8 @@
 
 package com.xmlcalabash.model;
 
+import java.util.Collection;
+import java.util.Hashtable;
 import java.util.Vector;
 import java.util.HashSet;
 
@@ -34,8 +36,7 @@ import com.xmlcalabash.core.XProcRuntime;
  */
 public class CompoundStep extends Step {
     private Environment inheritedEnv = null;
-    // It's a vector because it may contain duplicates. They must be evaluated in order.
-    private Vector<Variable> variables = new Vector<Variable> ();
+    private Hashtable<QName,Variable> variables = new Hashtable<QName,Variable> ();
     private boolean augmented = false;
     
     /** Creates a new instance of CompoundStep */
@@ -53,11 +54,16 @@ public class CompoundStep extends Step {
     }
 
     public void addVariable(Variable variable) {
-        variables.add(variable);
+        if (variables.containsKey(variable.getName())) {
+            throw XProcException.staticError(4, "Duplicate variable name: " + variable.getName());
+
+        } else {
+            variables.put(variable.getName(), variable);
+        }
     }
 
-    public Vector<Variable> getVariables() {
-        return variables;
+    public Collection<Variable> getVariables() {
+        return variables.values();
     }
 
     @Override
@@ -123,13 +129,13 @@ public class CompoundStep extends Step {
                 }
             
                 if (primary != null) {
-                    Output output = new Output(xproc, node);
+                    Output output = new Output(runtime, node);
                     output.setPort(portName);
                     output.setPrimary(true);
                     output.setSequence(primary.getSequence());
                     addOutput(output);
                 
-                    Input input = new Input(xproc, node);
+                    Input input = new Input(runtime, node);
                     input.setPort("|" + portName);
                     input.setSequence(primary.getSequence());
                     input.setPrimary(true);
@@ -152,7 +158,7 @@ public class CompoundStep extends Step {
             if (!"#current".equals(output.getPort())) {
                 Input input = getInput("|" + output.getPort());
                 if (input == null) {
-                    input = new Input(xproc, output.getNode());
+                    input = new Input(runtime, output.getNode());
                     input.setPort("|" + output.getPort());
                     input.setSequence(true); // the other half will check
                     input.setPrimary(output.getPrimary());
@@ -164,7 +170,7 @@ public class CompoundStep extends Step {
         // inputs on compound steps are really outputs from the point of view of the subpipeline
         for (Input input : inputs()) {
             if (!input.getPort().startsWith("|") && !input.getPort().startsWith("#")) {
-                Output output = new Output(xproc, input.getNode());
+                Output output = new Output(runtime, input.getNode());
                 output.setPort(input.getPort() + "|");
                 output.setSequence(true); // the other half will check
                 output.setPrimary(input.getPrimary());
@@ -241,13 +247,13 @@ public class CompoundStep extends Step {
                     input.addBinding(empty);
                 } else {
                     valid = false;
-                    xproc.error(logger, node, "Input " + input.getPort() + " unbound on " + getType() + " step named " + getName() + " and no default binding available.", XProcConstants.staticError(32));
+                    error("Input " + input.getPort() + " unbound on " + getType() + " step named " + getName() + " and no default binding available.", XProcConstants.staticError(32));
                 }
             } else {
                 String stepName = port.getStep().getName();
                 String portName = port.getPort();
 
-                PipeNameBinding binding = new PipeNameBinding(xproc, node);
+                PipeNameBinding binding = new PipeNameBinding(runtime, node);
                 binding.setStep(stepName);
                 binding.setPort(portName);
 
@@ -260,7 +266,7 @@ public class CompoundStep extends Step {
                 PipeNameBinding pipe = (PipeNameBinding) binding;
                 Output output = env.readablePort(pipe.getStep(), pipe.getPort());
                 if (output == null) {
-                    xproc.error(logger, node, "Unreadable port: " + pipe.getPort() + " on " + pipe.getStep(), XProcException.err_E0001);
+                    error("Unreadable port: " + pipe.getPort() + " on " + pipe.getStep(), XProcException.err_E0001);
                     valid = false;
                 }
             }
@@ -373,7 +379,7 @@ public class CompoundStep extends Step {
         valid = valid && validBindings();
 
         if (env.countVisibleSteps(getName()) > 1) {
-            xproc.error(logger, node, "Duplicate step name: " + getName(), XProcConstants.staticError(2));
+            error("Duplicate step name: " + getName(), XProcConstants.staticError(2));
             valid = false;
         }
 
@@ -425,7 +431,7 @@ public class CompoundStep extends Step {
 
 
                 if (!ok) {
-                    xproc.error(logger, node, "Unbound primary output port on last step: " + getName(), XProcConstants.staticError(6));
+                    error("Unbound primary output port on last step: " + getName(), XProcConstants.staticError(6));
                 }
             }
         }
@@ -436,7 +442,7 @@ public class CompoundStep extends Step {
     protected boolean validBindings() {
         boolean valid = super.validBindings();
         for (Variable var : getVariables()) {
-            if (!checkOptionBinding(var)) {
+            if (!checkOptionBinding(var, true)) {
                 valid = false;
             }
         }

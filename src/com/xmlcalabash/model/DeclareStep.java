@@ -141,7 +141,7 @@ public class DeclareStep extends CompoundStep {
         } else if (parentDecl != null) {
             return parentDecl.getStepDeclaration(type);
         } else {
-            return xproc.getBuiltinDeclaration(type);
+            return runtime.getBuiltinDeclaration(type);
         }
     }
 
@@ -195,7 +195,7 @@ public class DeclareStep extends CompoundStep {
     }
 
     public void setup() {
-        XProcRuntime runtime = xproc;
+        XProcRuntime runtime = this.runtime;
         DeclareStep decl = this;
         boolean debug = runtime.getDebug();
 
@@ -214,10 +214,10 @@ public class DeclareStep extends CompoundStep {
         for (Input input : decl.inputs()) {
             if (!input.getPort().startsWith("|") && input.getPrimary()) {
                 if (seenPrimaryDocument && !input.getParameterInput()) {
-                    runtime.error(logger, getNode(), "At most one primary document input port is allowed", XProcConstants.staticError(30));
+                    error("At most one primary document input port is allowed", XProcConstants.staticError(30));
                 }
                 if (seenPrimaryParameter && input.getParameterInput()) {
-                    runtime.error(logger, getNode(), "At most one primary parameter input port is allowed", XProcConstants.staticError(30));
+                    error("At most one primary parameter input port is allowed", XProcConstants.staticError(30));
                 }
 
                 if (input.getParameterInput()) {
@@ -232,7 +232,7 @@ public class DeclareStep extends CompoundStep {
         for (Output output : decl.outputs()) {
             if (!output.getPort().endsWith("|") && output.getPrimary()) {
                 if (seenPrimary) {
-                    runtime.error(logger, getNode(), "At most one primary output port is allowed", XProcConstants.staticError(30));
+                    error("At most one primary output port is allowed", XProcConstants.staticError(30));
                 }
                 seenPrimary = true;
             }
@@ -244,7 +244,7 @@ public class DeclareStep extends CompoundStep {
         }
 
         if (subpipeline.size() == 0) {
-            runtime.error(logger, getNode(), "Declared step has no subpipeline, but is not known.", XProcConstants.staticError(100)); // FIXME!
+            error("Declared step has no subpipeline, but is not known.", XProcConstants.staticError(100)); // FIXME!
             return;
         }
 
@@ -280,6 +280,9 @@ public class DeclareStep extends CompoundStep {
             System.err.println("After ordering:");
             decl.dump();
         }
+
+        HashSet<QName> vars = new HashSet<QName> ();
+        checkDuplicateVars(vars);
 
         // Are all the primary outputs bound?
         if (!checkOutputBindings()) {
@@ -353,7 +356,7 @@ public class DeclareStep extends CompoundStep {
         while (outputIter.hasNext()) {
             Output output = outputIter.next();
             if (output.getPrimary()) {
-                xproc.error(logger, getNode(), "Unbound primary output: " + output, new QName("", "ERR"));
+                error("Unbound primary output: " + output, new QName("", "ERR"));
                 valid = false;
             }
         }
@@ -373,7 +376,7 @@ public class DeclareStep extends CompoundStep {
             if ("#xpath-context".equals(input.getPort())) {
                 if (this instanceof When) {
                     // Manufacture the right port
-                    port = new Port(xproc,getNode());
+                    port = new Port(runtime,getNode());
                     port.setStep(parent);
                     port.setPort("#xpath-context");
                 } else {
@@ -404,7 +407,7 @@ public class DeclareStep extends CompoundStep {
                 port = substep.getDefaultOutput();
 
                 if (port == null) {
-                    xproc.error(logger, node, "Output port '" + input.getPort().substring(1) + "' on " + getStep() + " unbound", XProcException.err_E0001);
+                    error("Output port '" + input.getPort().substring(1) + "' on " + getStep() + " unbound", XProcConstants.staticError(5));
                     valid = false;
                 }
             }
@@ -438,7 +441,7 @@ public class DeclareStep extends CompoundStep {
                 String stepName = port.getStep().getName();
                 String portName = port.getPort();
 
-                PipeNameBinding binding = new PipeNameBinding(xproc, node);
+                PipeNameBinding binding = new PipeNameBinding(runtime, node);
                 binding.setStep(stepName);
                 binding.setPort(portName);
 
@@ -467,7 +470,7 @@ public class DeclareStep extends CompoundStep {
                 } else {
                     Output output = env.readablePort(pipe.getStep(), pipe.getPort());
                     if (output == null) {
-                        xproc.error(logger, node, "Unreadable port: " + pipe.getPort() + " on " + pipe.getStep(), XProcException.err_E0001);
+                        error("Unreadable port: " + pipe.getPort() + " on " + pipe.getStep(), XProcException.err_E0001);
                         valid = false;
                     }
                 }

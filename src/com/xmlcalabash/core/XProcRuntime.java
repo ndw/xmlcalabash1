@@ -20,8 +20,9 @@
 
 package com.xmlcalabash.core;
 
+import com.xmlcalabash.util.DefaultXProcMessageListener;
+import com.xmlcalabash.util.StepErrorListener;
 import net.sf.saxon.Configuration;
-import net.sf.saxon.StandardErrorListener;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmNode;
@@ -32,7 +33,6 @@ import com.xmlcalabash.model.PipelineLibrary;
 import com.xmlcalabash.util.XProcURIResolver;
 import com.xmlcalabash.util.URIUtils;
 import com.xmlcalabash.util.Reporter;
-import com.xmlcalabash.util.XProcErrorListener;
 
 import java.util.logging.Logger;
 import java.util.Hashtable;
@@ -78,19 +78,20 @@ public class XProcRuntime {
     private boolean explicitDeclarations = false;
     private DeclareStep pipeline = null;
     private XPipeline xpipeline = null;
-    private Vector<XdmNode> errors = null;
+    private Vector<Throwable> errors = null;
     private static String episode = null;
     private Hashtable<String,Vector<XdmNode>> collections = null;
     private URI staticBaseURI = null;
     private boolean allowGeneralExpressions = true;
     private XProcData xprocData = null;
     private Logger log = null;
+    private XProcMessageListener msgListener = null;
 
     public XProcRuntime(XProcConfiguration config) {
         this.config = config;
         processor = config.getProcessor();
 
-        xprocData = new XProcData();
+        xprocData = new XProcData(this);
 
         processor.registerExtensionFunction(new Cwd(this));
         processor.registerExtensionFunction(new BaseURI(this));
@@ -117,14 +118,17 @@ public class XProcRuntime {
             if (config.entityResolver != null) {
                 uriResolver.setUnderlyingEntityResolver((EntityResolver) Class.forName(config.entityResolver).newInstance());
             }
+
             if (config.errorListener != null) {
-                saxonConfig.setErrorListener((ErrorListener) Class.forName(config.errorListener).newInstance());
+                msgListener = (XProcMessageListener) Class.forName(config.errorListener).newInstance();
+            } else {
+                msgListener = new DefaultXProcMessageListener();
             }
         } catch (Exception e) {
             throw new XProcException(e);
         }
 
-        XProcErrorListener errListener = new XProcErrorListener(this, saxonConfig.getErrorListener());
+        StepErrorListener errListener = new StepErrorListener(this);
         saxonConfig.setErrorListener(errListener);
 
         allowGeneralExpressions = config.extensionValues;
@@ -263,7 +267,7 @@ public class XProcRuntime {
 
         String phone = System.getProperty("com.xmlcalabash.phonehome");
         if (phone != null && ("0".equals(phone) || "no".equals(phone) || "false".equals(phone))) {
-            log.finest(message(null,"Phonehome suppressed by user."));
+            finest(null, null,"Phonehome suppressed by user.");
             phoneHome = false;
         }
 
@@ -287,7 +291,20 @@ public class XProcRuntime {
         }
     }
 
+    // FIXME: This design sucks
     public XPipeline load(String pipelineURI) throws SaxonApiException {
+        try {
+            return _load(pipelineURI);
+        } catch (SaxonApiException sae) {
+            error(sae);
+            throw sae;
+        } catch (XProcException xe) {
+            error(xe);
+            throw xe;
+        }
+    }
+
+    private XPipeline _load(String pipelineURI) throws SaxonApiException {
         reset();
         pipeline = parser.loadPipeline(pipelineURI);
         if (errorCode != null) {
@@ -314,7 +331,19 @@ public class XProcRuntime {
         return xpipeline;
     }
 
+    // FIXME: This design sucks
     public XPipeline use(XdmNode p_pipeline) throws SaxonApiException {
+        try {
+            return _use(p_pipeline);
+        } catch (SaxonApiException sae) {
+            error(sae);
+            throw sae;
+        } catch (XProcException xe) {
+            error(xe);
+            throw xe;
+        }
+    }
+    private XPipeline _use(XdmNode p_pipeline) throws SaxonApiException {
         reset();
         pipeline = parser.usePipeline(p_pipeline);
         if (errorCode != null) {
@@ -341,7 +370,21 @@ public class XProcRuntime {
         return xpipeline;
     }
 
+    // FIXME: This design sucks
     public XLibrary loadLibrary(String libraryURI) throws SaxonApiException {
+        try {
+            return _loadLibrary(libraryURI);
+        } catch (SaxonApiException sae) {
+            error(sae);
+            throw sae;
+        } catch (XProcException xe) {
+            error(xe);
+            throw xe;
+        }
+    }
+
+    private XLibrary _loadLibrary(String libraryURI) throws SaxonApiException {
+
         PipelineLibrary plibrary = parser.loadLibrary(libraryURI);
         if (errorCode != null) {
             throw new XProcException(errorCode, errorMessage);
@@ -356,7 +399,20 @@ public class XProcRuntime {
         return xlibrary;
     }
 
+    // FIXME: This design sucks
     public XLibrary useLibrary(XdmNode library) throws SaxonApiException {
+        try {
+            return _useLibrary(library);
+        } catch (SaxonApiException sae) {
+            error(sae);
+            throw sae;
+        } catch (XProcException xe) {
+            error(xe);
+            throw xe;
+        }
+    }
+
+    private XLibrary _useLibrary(XdmNode library) throws SaxonApiException {
         PipelineLibrary plibrary = parser.useLibrary(library);
         if (errorCode != null) {
             throw new XProcException(errorCode, errorMessage);
@@ -400,6 +456,7 @@ public class XProcRuntime {
         }
     }
 
+    /*
     public void makeBuiltinsExplicit() {
         explicitDeclarations = true;
     }
@@ -420,7 +477,8 @@ public class XProcRuntime {
             declaredSteps.remove(type);
         }
     }
-
+    */
+    
     public QName getErrorCode() {
         return errorCode;
     }
@@ -434,47 +492,37 @@ public class XProcRuntime {
     // so that messages can be formatted in a common way and so
     // that errors can be trapped.
 
-    private String message(XdmNode node, String message) {
-        String baseURI = "(unknown URI)";
-        int lineNumber = -1;
-
-        if (node != null) {
-            baseURI = node.getBaseURI().toASCIIString();
-            lineNumber = node.getLineNumber();
-            return baseURI + ":" + lineNumber + ": " + message;
-        } else {
-            return message;
-        }
-
-    }
-
-    public void error(Logger logger, XdmNode node, String message, QName code) {
+    public void error(XProcRunnable step, XdmNode node, String message, QName code) {
         if (errorCode == null) {
             errorCode = code;
             errorMessage = message;
         }
 
-        logger.severe(message(node, message));
+        msgListener.error(step, node, message, code);
     }
 
-    public void warning(Logger logger, XdmNode node, String message) {
-        logger.warning(message(node, message));
+    public void error(Throwable error) {
+        msgListener.error(error);
     }
 
-    public void info(Logger logger, XdmNode node, String message) {
-        logger.info(message(node, message));
+    public void warning(XProcRunnable step, XdmNode node, String message) {
+        msgListener.warning(step, node, message);
     }
 
-    public void fine(Logger logger, XdmNode node, String message) {
-        logger.fine(message(node, message));
+    public void info(XProcRunnable step, XdmNode node, String message) {
+        msgListener.info(step, node, message);
     }
 
-    public void finer(Logger logger, XdmNode node, String message) {
-        logger.finer(message(node, message));
+    public void fine(XProcRunnable step, XdmNode node, String message) {
+        msgListener.fine(step, node, message);
     }
 
-    public void finest(Logger logger, XdmNode node, String message) {
-        logger.finest(message(node, message));
+    public void finer(XProcRunnable step, XdmNode node, String message) {
+        msgListener.finer(step, node, message);
+    }
+
+    public void finest(XProcRunnable step, XdmNode node, String message) {
+        msgListener.finest(step, node, message);
     }
 
     // ===========================================================
@@ -493,7 +541,7 @@ public class XProcRuntime {
                 phoneHomeThread.join(1000);
                 seconds++;
                 if (seconds == 4) {
-                    log.warning(message(null, "Please wait...sending statistics to xproc.org"));
+                    warning(null, null, "Please wait...sending statistics to xproc.org");
                 }
             }
         } catch(InterruptedException ie) {
@@ -512,7 +560,7 @@ public class XProcRuntime {
                 phoneHomeThread.join(1000);
                 seconds++;
                 if (seconds == 4) {
-                    log.warning(message(null, "Please wait...sending statistics to xproc.org"));
+                    warning(null, null, "Please wait...sending statistics to xproc.org");
                 }
             }
         } catch(InterruptedException ie) {
@@ -536,7 +584,7 @@ public class XProcRuntime {
                 phoneHomeThread.join(1000);
                 seconds++;
                 if (seconds == 4) {
-                    log.warning(message(null, "Please wait...sending statistics to xproc.org"));
+                    warning(null, null, "Please wait...sending statistics to xproc.org");
                 }
                 if (seconds > 16) {
                     // Give up.
@@ -645,7 +693,7 @@ public class XProcRuntime {
 
                 pr.close();
             } catch (Exception e) {
-                log.finest(message(null,"Failed to phone home: " + e));
+                finest(null, null,"Failed to phone home: " + e);
             }
         }
     }

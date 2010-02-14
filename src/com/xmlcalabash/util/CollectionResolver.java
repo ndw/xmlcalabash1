@@ -35,7 +35,7 @@ public class CollectionResolver implements CollectionURIResolver {
     }
 
     public SequenceIterator resolve(String href, String base, XPathContext context) throws XPathException {
-        runtime.finest(logger, null, "Collection: " + href + " (" + base + ")");
+        runtime.finest(null, null, "Collection: " + href + " (" + base + ")");
         if (href == null) {
             Item[] array = new Item[docs.size()];
             for (int pos = 0; pos < docs.size(); pos++) {
@@ -60,7 +60,7 @@ public class CollectionResolver implements CollectionURIResolver {
                     return new ArrayIterator(items);
                 }
             } catch (URISyntaxException use) {
-                runtime.finest(logger, null, "URI Syntax exception resolving collection URI: " + href + " (" + base + ")");
+                runtime.finest(null, null, "URI Syntax exception resolving collection URI: " + href + " (" + base + ")");
             }
 
             return chainedResolver.resolve(href,base,context);

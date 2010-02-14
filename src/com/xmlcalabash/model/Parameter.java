@@ -104,7 +104,7 @@ public class Parameter extends EndPoint implements ComputableValue {
         boolean valid = true;
         
         if (bindings.size() > 1) {
-            xproc.error(logger,node, "Parameter can have at most one binding.", XProcConstants.dynamicError(8));
+            error("Parameter can have at most one binding.", XProcConstants.dynamicError(8));
             valid = false;
         }
 

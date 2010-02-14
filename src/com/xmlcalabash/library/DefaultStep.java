@@ -7,6 +7,7 @@ import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcStep;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.model.RuntimeValue;
+import com.xmlcalabash.runtime.XStep;
 import net.sf.saxon.s9api.*;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.trans.XPathException;
@@ -122,31 +123,31 @@ public class DefaultStep implements XProcStep {
     }
 
     public void error(XdmNode node, String message, QName code) {
-        runtime.error(logger, node, message, code);
+        runtime.error(this, node, message, code);
     }
 
     public void warning(XdmNode node, String message) {
-        runtime.warning(logger, node, message);
+        runtime.warning(this, node, message);
     }
 
     public void info(XdmNode node, String message) {
-        runtime.info(logger, node, message);
+        runtime.info(this, node, message);
     }
 
     public void fine(XdmNode node, String message) {
-        runtime.fine(logger, node, message);
+        runtime.fine(this, node, message);
     }
 
     public void finer(XdmNode node, String message) {
-        runtime.fine(logger, node, message);
+        runtime.finer(this, node, message);
     }
 
     public void finest(XdmNode node, String message) {
-        runtime.finest(logger, node, message);
+        runtime.finest(this, node, message);
     }
 
     public void run() throws SaxonApiException {
-        runtime.info(logger, step.getNode(), "Running " + step.getName());
+        info(null, "Running " + step.getName());
         runtime.reportStep(step);
     }
 

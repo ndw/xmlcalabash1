@@ -78,12 +78,12 @@ public class Variable extends EndPoint implements ComputableValue {
         boolean valid = true;
 
         if (bindings.size() > 1) {
-            xproc.error(logger,node, "Variables can have at most one binding.", XProcConstants.dynamicError(8));
+            error("Variables can have at most one binding.", XProcConstants.dynamicError(8));
             valid = false;
         }
 
         if (select == null) {
-            xproc.error(logger,node, "You must specify select on variable.", XProcConstants.staticError(16));
+            error("You must specify select on variable.", XProcConstants.staticError(16));
         }
         
         return valid;

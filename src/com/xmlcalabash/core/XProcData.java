@@ -21,8 +21,10 @@ import net.sf.saxon.s9api.QName;
  */
 public class XProcData {
     private Stack<StackFrame> stack = null;
+    private XProcRuntime runtime = null;
 
-    public XProcData() {
+    public XProcData(XProcRuntime runtime) {
+        this.runtime = runtime;
         stack = new Stack<StackFrame> ();
     }
 
@@ -63,7 +65,7 @@ public class XProcData {
         return false;
     }
 
-    public void addError(XdmNode error) {
+    public boolean catchError(XdmNode error) {
         // Errors accumulate on the nearest p:try/p:group ancestor because that's where we
         // can read them. Note, however, that errors raised in a p:catch are NOT
         // part of the parent p:try but rather the grandparent.
@@ -76,6 +78,9 @@ public class XProcData {
         }
         if (pos >= 0) {
             stack.get(pos).errors.add(error);
+            return true;
+        } else {
+            return false;
         }
     }
 

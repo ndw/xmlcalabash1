@@ -155,7 +155,7 @@ public class Parser {
         if (!XProcConstants.p_library.equals(node.getNodeName())
                 && !XProcConstants.p_pipeline.equals(node.getNodeName())
                 && !XProcConstants.p_declare_step.equals(node.getNodeName())) {
-            runtime.error(logger,node,"Not a pipeline or library: " + node.getNodeName(), XProcConstants.staticError(52));
+            runtime.error(null, node,"Not a pipeline or library: " + node.getNodeName(), XProcConstants.staticError(52));
             return null;
         }
 
@@ -302,7 +302,7 @@ public class Parser {
 
                     input.setPosition(pos++);
                     if (step.getInput(input.getPort()) != null || step.getOutput(input.getPort()) != null) {
-                        error("Duplicate port name: " + input.getPort(), XProcConstants.staticError(11));
+                        runtime.error(null, node, "Duplicate port name: " + input.getPort(), XProcConstants.staticError(11));
                     } else {
                         step.addInput(input);
                     }
@@ -335,7 +335,7 @@ public class Parser {
                     }
 
                     if (step.getInput(output.getPort()) != null || step.getOutput(output.getPort()) != null) {
-                        error("Duplicate port name: " + output.getPort(), XProcConstants.staticError(11));
+                        runtime.error(null, node, "Duplicate port name: " + output.getPort(), XProcConstants.staticError(11));
                     } else {
                         step.addOutput(output);
                     }
@@ -504,21 +504,21 @@ public class Parser {
         }
         
         if (!"document".equals(kind) && !"parameter".equals(kind)) {
-            runtime.error(logger, node, "Kind must be document or parameter", XProcConstants.staticError(33));
+            runtime.error(null, node, "Kind must be document or parameter", XProcConstants.staticError(33));
         }
 
         if (primary != null &&  !"true".equals(primary) && !"false".equals(primary)) {
-            runtime.error(logger, node, "Primary must be 'true' or 'false'", XProcConstants.staticError(40));
+            runtime.error(null, node, "Primary must be 'true' or 'false'", XProcConstants.staticError(40));
         }
         
         if (sequence != null) {
             if ("parameter".equals(kind)) {
                 if (!"true".equals(sequence)) {
-                    runtime.error(logger, node, "Sequence cannot be 'false' on a parameter input", XProcConstants.staticError(40));
+                    runtime.error(null, node, "Sequence cannot be 'false' on a parameter input", XProcConstants.staticError(40));
                 }
             } else {
                 if (!"true".equals(sequence) && !"false".equals(sequence)) {
-                    runtime.error(logger, node, "Sequence must be 'true' or 'false'", XProcConstants.staticError(40));
+                    runtime.error(null, node, "Sequence must be 'true' or 'false'", XProcConstants.staticError(40));
                 }                
             }
         }
@@ -796,7 +796,7 @@ public class Parser {
         String port = checkNCName(node.getAttributeValue(new QName("port")));
 
         if (name == null) {
-            error("Attribute \"name\" required on p:with-param", XProcConstants.staticError(38));
+            runtime.error(null, node, "Attribute \"name\" required on p:with-param", XProcConstants.staticError(38));
         }
 
         Parameter parameter = new Parameter(runtime, node);
@@ -947,12 +947,12 @@ public class Parser {
                 if ("html".equals(method) || "xhtml".equals(method) || "text".equals(method) || "xml".equals(method)) {
                     serial.setMethod(name);
                 } else {
-                    runtime.error(logger, node,
+                    runtime.error(null, node,
                             "Only the xml, xhtml, html, and text serialization methods are supported.",
                             XProcConstants.stepError(1));
                 }
             } else {
-                runtime.error(logger, node,
+                runtime.error(null, node,
                         "Only the xml, xhtml, html, and text serialization methods are supported.",
                         XProcConstants.stepError(1));
             }
@@ -988,7 +988,7 @@ public class Parser {
 
     private void checkBoolean(XdmNode node, String name, String value) {
         if (value != null && !"true".equals(value) && !"false".equals(value)) {
-            runtime.error(logger, node, name + " on serialization must be 'true' or 'false'", XProcConstants.staticError(40));
+            runtime.error(null, node, name + " on serialization must be 'true' or 'false'", XProcConstants.staticError(40));
         }
     }
     
@@ -1213,13 +1213,13 @@ public class Parser {
         for (Input input : step.inputs()) {
             if (step.isAtomic()) {
                 if (input.getBinding().size() != 0) {
-                    runtime.error(logger,input.getNode(),"Input bindings are not allowed on an atomic step",XProcConstants.staticError(42));
+                    runtime.error(null,input.getNode(),"Input bindings are not allowed on an atomic step",XProcConstants.staticError(42));
                 }
             } else {
                 if (!input.getPort().startsWith("|")) {
                     for (Binding binding : input.getBinding()) {
                         if (binding.getBindingType() == Binding.PIPE_NAME_BINDING) {
-                            runtime.error(logger,input.getNode(),"Default input bindings cannot use p:pipe",XProcConstants.staticError(44));
+                            runtime.error(null,input.getNode(),"Default input bindings cannot use p:pipe",XProcConstants.staticError(44));
                         }
                     }
                 }
@@ -1230,7 +1230,7 @@ public class Parser {
         for (Output output : step.outputs()) {
             Input input = step.getInput("|" + output.getPort());
             if (step.isAtomic() && input != null) {
-                runtime.error(logger,output.getNode(),"Output bindings are not allowed on an atomic step",XProcConstants.staticError(29));
+                runtime.error(null,output.getNode(),"Output bindings are not allowed on an atomic step",XProcConstants.staticError(29));
             }
         }
 
@@ -1605,10 +1605,10 @@ public class Parser {
                 } else if (version > 1.0) {
                     // Ok, then, we'll just ignore it...
                 } else {
-                    error("Attribute \"" + aname + "\" not allowed on " + node.getNodeName(), XProcConstants.staticError(8));
+                    runtime.error(null, node, "Attribute \"" + aname + "\" not allowed on " + node.getNodeName(), XProcConstants.staticError(8));
                 }
             } else if (XProcConstants.NS_XPROC.equals(aname.getNamespaceURI())) {
-                error("Attribute \"" + aname + "\" not allowed on " + node.getNodeName(), XProcConstants.staticError(8));
+                runtime.error(null, node, "Attribute \"" + aname + "\" not allowed on " + node.getNodeName(), XProcConstants.staticError(8));
                 return null;
             }
             // Everything else is ok
@@ -1624,7 +1624,7 @@ public class Parser {
             if ("".equals(aname.getNamespaceURI())) {
                 // nop
             } else if (XProcConstants.NS_XPROC.equals(aname.getNamespaceURI())) {
-                error("Attribute \"" + aname + "\" not allowed on " + node.getNodeName(), XProcConstants.staticError(8));
+                runtime.error(null, node, "Attribute \"" + aname + "\" not allowed on " + node.getNodeName(), XProcConstants.staticError(8));
             } else {
                 src.addExtensionAttribute(attr);
             }
@@ -1646,10 +1646,6 @@ public class Parser {
             return false;
         }
         throw new IllegalArgumentException("Boolean value must be 'true' or 'false'.");
-    }
-
-    private void error(String message, QName errorCode) {
-        runtime.error(logger, null, errorCode.toString() + ": " + message, errorCode);
     }
 
     private String checkNCName(String name) {

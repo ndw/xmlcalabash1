@@ -45,7 +45,6 @@ import com.xmlcalabash.util.URIUtils;
  * @author ndw
  */
 public class WritableDocument implements WritablePipe {
-    private Logger logger = Logger.getLogger(this.getClass().getName());
     private Serializer serializer = null;
     private int writeCount = 0;
     private String uri = null;
@@ -139,7 +138,7 @@ public class WritableDocument implements WritablePipe {
                 serializer.setOutputStream(System.out);
             } else {
                 File file = URIUtils.getFile(uri);
-                runtime.finest(logger, null, "Attempt to write file: " + uri);
+                runtime.finest(null, null, "Attempt to write file: " + uri);
                 FileOutputStream fos = new FileOutputStream(file);
                 serializer.setOutputStream(fos);
             }
@@ -161,7 +160,7 @@ public class WritableDocument implements WritablePipe {
         }
 
         if (writer != null) {
-            runtime.finest(logger, writer.getNode(), writer.getName() + " wrote '" + (doc == null ? "null" : doc.getBaseURI()));
+            runtime.finest(null, writer.getNode(), writer.getName() + " wrote '" + (doc == null ? "null" : doc.getBaseURI()));
         }
     }
 

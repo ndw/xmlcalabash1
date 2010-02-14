@@ -85,7 +85,7 @@ public class Select implements ReadablePipe {
                 XdmNode doc = source.read();
 
                 if (reader != null) {
-                    runtime.finest(logger, reader.getNode(), reader.getName() + " select read '" + (doc == null ? "null" : doc.getBaseURI()) + "' from " + source);
+                    runtime.finest(null, reader.getNode(), reader.getName() + " select read '" + (doc == null ? "null" : doc.getBaseURI()) + "' from " + source);
                 }
 
                 selector.setContextItem(doc);
@@ -105,7 +105,7 @@ public class Select implements ReadablePipe {
                     XdmNode sdoc = dest.getXdmNode();
 
                     if (reader != null) {
-                        runtime.finest(logger, reader.getNode(), reader.getName() + " select wrote '" + (sdoc == null ? "null" : sdoc.getBaseURI()) + "' to " + documents);
+                        runtime.finest(null, reader.getNode(), reader.getName() + " select wrote '" + (sdoc == null ? "null" : sdoc.getBaseURI()) + "' to " + documents);
                     }
 
                     documents.add(sdoc);
@@ -157,7 +157,7 @@ public class Select implements ReadablePipe {
         }
 
         if (reader != null) {
-            runtime.finest(logger, reader.getNode(), reader.getName() + " read '" + (doc == null ? "null" : doc.getBaseURI()) + "' from " + this);
+            runtime.finest(null, reader.getNode(), reader.getName() + " read '" + (doc == null ? "null" : doc.getBaseURI()) + "' from " + this);
         }
 
         return doc;

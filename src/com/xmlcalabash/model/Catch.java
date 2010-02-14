@@ -51,7 +51,7 @@ public class Catch extends DeclareStep {
         for (Output output : outputs) {
             Input input = getInput("|" + output.getPort());
             if (input == null) {
-                input = new Input(xproc, output.getNode());
+                input = new Input(runtime, output.getNode());
                 input.setPort("|" + output.getPort());
                 input.setSequence(true); // the other half will check
                 input.setPrimary(output.getPrimary());

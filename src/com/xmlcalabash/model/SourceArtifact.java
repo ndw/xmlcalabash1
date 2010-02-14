@@ -33,19 +33,19 @@ import java.util.logging.Logger;
  */
 public abstract class SourceArtifact {
     protected XdmNode node = null;
-    protected XProcRuntime xproc = null;
+    protected XProcRuntime runtime = null;
     protected Hashtable<QName,String> extnAttrs = null;
     protected Logger logger = null;
 
     /** Creates a new instance of SourceArtifact */
-    public SourceArtifact(XProcRuntime xproc, XdmNode node) {
-        this.xproc = xproc;
+    public SourceArtifact(XProcRuntime runtime, XdmNode node) {
+        this.runtime = runtime;
         this.node = node;
         logger = Logger.getLogger(this.getClass().getName());
     }
 
     public XProcRuntime getXProc() {
-        return xproc;
+        return runtime;
     }
     
     public XdmNode getNode() {
@@ -68,6 +68,7 @@ public abstract class SourceArtifact {
         }
     }
 
+/*
     public String getLocation() {
         if (node == null) {
             return "";
@@ -79,6 +80,7 @@ public abstract class SourceArtifact {
             }
         }
     }
+*/
 
     public void addExtensionAttribute(XdmNode attr) {
         if (extnAttrs == null) {
@@ -100,5 +102,13 @@ public abstract class SourceArtifact {
             extnAttrs = new Hashtable<QName,String> ();
         }
         return extnAttrs.keySet();
+    }
+
+    public void error(String message, QName code) {
+        runtime.error(null, node, message, code);
+    }
+
+    public void error(XdmNode node, String message, QName code) {
+        runtime.error(null, node, message, code);
     }
 }

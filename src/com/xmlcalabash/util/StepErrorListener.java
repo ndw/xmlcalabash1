@@ -1,28 +1,13 @@
 package com.xmlcalabash.util;
 
-import net.sf.saxon.StandardErrorListener;
-import net.sf.saxon.Configuration;
-import net.sf.saxon.trace.InstructionInfo;
-import net.sf.saxon.trace.Location;
-import net.sf.saxon.trans.KeyDefinition;
+import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.instruct.Instruction;
-import net.sf.saxon.instruct.Procedure;
-import net.sf.saxon.instruct.UserFunction;
-import net.sf.saxon.instruct.Template;
-import net.sf.saxon.instruct.AttributeSet;
-import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.om.Navigator;
-import net.sf.saxon.om.StandardNames;
 import net.sf.saxon.om.StructuredQName;
-import net.sf.saxon.om.NamespaceConstant;
 import net.sf.saxon.s9api.QName;
-import net.sf.saxon.type.ValidationException;
 
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.SourceLocator;
 import javax.xml.transform.ErrorListener;
-import javax.xml.transform.dom.DOMLocator;
 
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcConstants;
@@ -38,7 +23,7 @@ import java.net.URISyntaxException;
  *
  * This listener collects messages to send to the error port if applicable.
  */
-public class XProcErrorListener implements ErrorListener {
+public class StepErrorListener implements ErrorListener {
     private static QName c_error = new QName(XProcConstants.NS_XPROC_STEP, "error");
     private static QName _name = new QName("", "name");
     private static QName _type = new QName("", "type");
@@ -47,43 +32,35 @@ public class XProcErrorListener implements ErrorListener {
     private static QName _column = new QName("", "column");
     private static QName _code = new QName("", "code");
 
-    private ErrorListener parentListener = null;
     private XProcRuntime runtime = null;
     private URI baseURI = null;
 
-    public XProcErrorListener(XProcRuntime runtime, ErrorListener parentListener) {
+    public StepErrorListener(XProcRuntime runtime) {
         super();
         this.runtime = runtime;
-        this.parentListener = parentListener;
-        try {
-            baseURI = new URI("http://xproc.org/errors");
-        } catch (URISyntaxException use) {
-            // nop;
-        }
+        baseURI = runtime.getStaticBaseURI();
     }
 
     public void error(TransformerException exception) throws TransformerException {
-        report("error", exception);
-        if (parentListener != null) {
-            parentListener.error(exception);
+        if (!report("error", exception)) {
+            runtime.error(exception);
         }
     }
 
     public void fatalError(TransformerException exception) throws TransformerException {
-        report("fatal-error", exception);
-        if (parentListener != null) {
-            parentListener.fatalError(exception);
+        if (!report("fatal-error", exception)) {
+            runtime.error(exception);
         }
     }
 
     public void warning(TransformerException exception) throws TransformerException {
-        report("warning", exception);
-        if (parentListener != null) {
-            parentListener.warning(exception);
+        if (!report("warning", exception)) {
+            // XProc doesn't have recoverable exceptions...
+            runtime.error(exception);
         }
     }
 
-    private void report(String type, TransformerException exception) {
+    private boolean report(String type, TransformerException exception) {
         TreeWriter writer = new TreeWriter(runtime);
 
         writer.startDocument(baseURI);
@@ -137,6 +114,8 @@ public class XProcErrorListener implements ErrorListener {
         writer.addEndElement();
         writer.endDocument();
 
-        runtime.getXProcData().addError(writer.getResult());
+        XdmNode node = writer.getResult();
+
+        return runtime.getXProcData().catchError(node);
     }
 }

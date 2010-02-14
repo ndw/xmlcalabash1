@@ -564,6 +564,9 @@ public class XAtomicStep extends XStep {
                 Binding binding = var.getBinding().firstElement();
                 ReadablePipe pipe = getPipeFromBinding(binding);
                 doc = pipe.read();
+                if (pipe.moreDocuments()) {
+                    throw XProcException.dynamicError(step, 8, "More than one document in context for parameter '" + var.getName() + "'");
+                }
             }
         } catch (SaxonApiException sae) {
             throw new XProcException(sae);
