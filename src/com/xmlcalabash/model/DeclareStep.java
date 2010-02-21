@@ -448,12 +448,7 @@ public class DeclareStep extends CompoundStep {
                 input.addBinding(binding);
             }
         } else if (input.getParameterInput()) {
-            // An explicitly empty binding is ok
-            boolean nonEmpty = false;
-            for (Binding binding : input.getBinding()) {
-                nonEmpty = nonEmpty || binding.getBindingType() != Binding.EMPTY_BINDING;
-            }
-            if (nonEmpty) {
+            if (input.getBinding().size() > 0) {
                 throw XProcException.staticError(35);
             }
         }

@@ -44,6 +44,8 @@ import com.xmlcalabash.runtime.XAtomicStep;
 public class Wrap extends DefaultStep implements ProcessMatchingNodes {
     private static final QName _match = new QName("match");
     private static final QName _wrapper = new QName("wrapper");
+    private static final QName _wrapper_prefix = new QName("wrapper-prefix");
+    private static final QName _wrapper_namespace = new QName("wrapper-namespace");
     private static final QName _group_adjacent = new QName("group-adjacent");
     private ReadablePipe source = null;
     private WritablePipe result = null;
@@ -75,8 +77,26 @@ public class Wrap extends DefaultStep implements ProcessMatchingNodes {
     public void run() throws SaxonApiException {
         super.run();
 
+        RuntimeValue wrapperNameValue = getOption(_wrapper);
+        String wrapperNameStr = wrapperNameValue.getString();
+        String wpfx = getOption(_wrapper_prefix, (String) null);
+        String wns = getOption(_wrapper_namespace, (String) null);
+
+        if (wpfx != null && wns == null) {
+            throw XProcException.dynamicError(34, "You can't specify a prefix without a namespace");
+        }
+
+        if (wns != null && wrapperNameStr.contains(":")) {
+            throw XProcException.dynamicError(34, "You can't specify a namespace if the wrapper name contains a colon");
+        }
+
+        if (wrapperNameStr.contains(":")) {
+            wrapper = new QName(wrapperNameStr, wrapperNameValue.getNode());
+        } else {
+            wrapper = new QName(wpfx == null ? "" : wpfx, wns, wrapperNameStr);
+        }
+
         groupAdjacent = getOption(_group_adjacent, (String) null);
-        wrapper = getOption(_wrapper).getQName();
 
         inGroup.push(false);
 

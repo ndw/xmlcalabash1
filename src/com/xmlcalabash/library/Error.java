@@ -22,6 +22,8 @@ package com.xmlcalabash.library;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.io.WritablePipe;
+import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.io.ReadablePipe;
 import net.sf.saxon.s9api.QName;
@@ -37,6 +39,8 @@ public class Error extends DefaultStep {
     private static final QName c_error = new QName("c", XProcConstants.NS_XPROC_STEP, "error");
     private static final QName _name = new QName("name");
     private static final QName _code = new QName("code");
+    private static final QName _code_prefix = new QName("code-prefix");
+    private static final QName _code_namespace = new QName("code-namespace");
     private static final QName _type = new QName("type");
     private ReadablePipe source = null;
 
@@ -49,6 +53,10 @@ public class Error extends DefaultStep {
         source = pipe;
     }
 
+    public void setOutput(String port, WritablePipe pipe) {
+        // p:error always throws an exception, so who cares.
+    }
+
     public void reset() {
         source.resetReader();
     }
@@ -59,7 +67,29 @@ public class Error extends DefaultStep {
         XdmNode doc = source.read();
         finest(null, "Error step " + "???" + " read " + doc.getDocumentURI());
 
-        QName errorCode = getOption(_code).getQName();
+        RuntimeValue codeNameValue = getOption(_code);
+        String codeNameStr = codeNameValue.getString();
+        String cpfx = getOption(_code_prefix, (String) null);
+        String cns = getOption(_code_namespace, (String) null);
+
+        if (cpfx == null && cns != null) {
+            cpfx = "ERR";
+        }
+
+        if (cpfx != null && cns == null) {
+            throw XProcException.dynamicError(34, "You can't specify a prefix without a namespace");
+        }
+
+        if (cns != null && codeNameStr.contains(":")) {
+            throw XProcException.dynamicError(34, "You can't specify a namespace if the code name contains a colon");
+        }
+
+        QName errorCode = null;
+        if (codeNameStr.contains(":")) {
+            errorCode = new QName(codeNameStr, codeNameValue.getNode());
+        } else {
+            errorCode = new QName(cpfx == null ? "" : cpfx, cns, codeNameStr);
+        }
 
         TreeWriter treeWriter = new TreeWriter(runtime);
         treeWriter.startDocument(step.getNode().getBaseURI());

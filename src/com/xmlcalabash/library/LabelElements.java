@@ -49,6 +49,8 @@ import com.xmlcalabash.core.XProcException;
  */
 public class LabelElements extends DefaultStep implements ProcessMatchingNodes {
     private static final QName _attribute = new QName("attribute");
+    private static final QName _attribute_prefix = new QName("attribute-prefix");
+    private static final QName _attribute_namespace = new QName("attribute-namespace");
     private static final QName _match = new QName("match");
     private static final QName _label = new QName("label");
     private static final QName _replace = new QName("replace");
@@ -84,7 +86,25 @@ public class LabelElements extends DefaultStep implements ProcessMatchingNodes {
     public void run() throws SaxonApiException {
         super.run();
 
-        attribute = getOption(_attribute).getQName();
+        RuntimeValue attrNameValue = getOption(_attribute);
+        String attrNameStr = attrNameValue.getString();
+        String apfx = getOption(_attribute_prefix, (String) null);
+        String ans = getOption(_attribute_namespace, (String) null);
+
+        if (apfx != null && ans == null) {
+            throw XProcException.dynamicError(34, "You can't specify a prefix without a namespace");
+        }
+
+        if (ans != null && attrNameStr.contains(":")) {
+            throw XProcException.dynamicError(34, "You can't specify a namespace if the attribute name contains a colon");
+        }
+
+        if (attrNameStr.contains(":")) {
+            attribute = new QName(attrNameStr, attrNameValue.getNode());
+        } else {
+            attribute = new QName(apfx == null ? "" : apfx, ans, attrNameStr);
+        }
+
         label = getOption(_label).getString();
         replace = getOption(_replace).getBoolean();
 

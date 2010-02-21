@@ -616,8 +616,14 @@ public class Step extends SourceArtifact {
                     }
                 
                     if (paramsin == null || (!paramsin.getPrimary() && count > 1)) {
-                        valid = false;
-                        error("Parameter input " + input.getPort() + " unbound on " + getType() + " step named " + getName() + " and no default binding available.", XProcConstants.staticError(55));
+                        if (params.size() > 0) {
+                            // There's at least one explicit with-param, so unbound is ok.
+                            EmptyBinding binding = new EmptyBinding(runtime, node);
+                            input.addBinding(binding);
+                        } else {
+                            valid = false;
+                            error("Parameter input " + input.getPort() + " unbound on " + getType() + " step named " + getName() + " and no default binding available.", XProcConstants.staticError(55));
+                        }
                     } else {
                         PipeNameBinding binding = new PipeNameBinding(runtime, node);
                         binding.setStep(pipeline.getName());

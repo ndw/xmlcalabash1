@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- $Id: typed-pipeline-library.xsl,v 1.4 2009/11/06 17:09:59 NormanWalsh Exp $ -->
+<!-- $Id: typed-pipeline-library.xml,v 1.79 2010/02/11 17:27:30 NormanWalsh Exp $ -->
 <p:library xmlns:p="http://www.w3.org/ns/xproc"
            xmlns:cx="http://xmlcalabash.com/ns/extensions"
            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
@@ -9,6 +9,8 @@
       <p:output port="result"/>
       <p:option name="match" required="true" cx:type="XSLTMatchPattern"/>
       <p:option name="attribute-name" required="true" cx:type="xsd:QName"/>
+      <p:option name="attribute-prefix" cx:type="xsd:NCName"/>
+      <p:option name="attribute-namespace" cx:type="xsd:anyURI"/>
       <p:option name="attribute-value" required="true" cx:type="xsd:string"/>
    </p:declare-step>
    <p:declare-step type="p:add-xml-base" xml:id="add-xml-base">
@@ -43,6 +45,8 @@
       <p:input port="source" primary="false"/>
       <p:output port="result" sequence="true"/>
       <p:option name="code" required="true" cx:type="xsd:QName"/>
+      <p:option name="code-prefix" cx:type="xsd:NCName"/>
+      <p:option name="code-namespace" cx:type="xsd:anyURI"/>
    </p:declare-step>
    <p:declare-step type="p:escape-markup" xml:id="escape-markup">
       <p:input port="source"/>
@@ -99,7 +103,9 @@
       <p:input port="source"/>
       <p:output port="result"/>
       <p:option name="attribute" select="'xml:id'" cx:type="xsd:QName"/>
-      <p:option name="label" select="'concat(&#34;_&#34;,$p:index)'" cx:type="xsd:string"/>
+      <p:option name="attribute-prefix" cx:type="xsd:NCName"/>
+      <p:option name="attribute-namespace" cx:type="xsd:anyURI"/>
+      <p:option name="label" select="'concat(&#34;_&#34;,$p:index)'" cx:type="XPathExpression"/>
       <p:option name="match" select="'*'" cx:type="XSLTMatchPattern"/>
       <p:option name="replace" select="'true'" cx:type="xsd:boolean"/>
    </p:declare-step>
@@ -126,6 +132,8 @@
       <p:input port="alternate" sequence="true"/>
       <p:output port="result" sequence="true"/>
       <p:option name="wrapper" required="true" cx:type="xsd:QName"/>
+      <p:option name="wrapper-prefix" cx:type="xsd:NCName"/>
+      <p:option name="wrapper-namespace" cx:type="xsd:anyURI"/>
    </p:declare-step>
    <p:declare-step type="p:parameters" xml:id="parameters">
       <p:input port="parameters" kind="parameter" primary="false"/>
@@ -136,6 +144,8 @@
       <p:output port="result"/>
       <p:option name="match" required="true" cx:type="XSLTMatchPattern"/>
       <p:option name="new-name" required="true" cx:type="xsd:QName"/>
+      <p:option name="new-prefix" cx:type="xsd:NCName"/>
+      <p:option name="new-namespace" cx:type="xsd:anyURI"/>
    </p:declare-step>
    <p:declare-step type="p:replace" xml:id="replace">
       <p:input port="source" primary="true"/>
@@ -202,6 +212,8 @@
       <p:input port="source"/>
       <p:output port="result"/>
       <p:option name="wrapper" required="true" cx:type="xsd:QName"/>
+      <p:option name="wrapper-prefix" cx:type="xsd:NCName"/>
+      <p:option name="wrapper-namespace" cx:type="xsd:anyURI"/>
       <p:option name="match" required="true" cx:type="XSLTMatchPattern"/>
       <p:option name="group-adjacent" cx:type="XPathExpression"/>
    </p:declare-step>
@@ -209,6 +221,8 @@
       <p:input port="source" sequence="true"/>
       <p:output port="result" sequence="true"/>
       <p:option name="wrapper" required="true" cx:type="xsd:QName"/>
+      <p:option name="wrapper-prefix" cx:type="xsd:NCName"/>
+      <p:option name="wrapper-namespace" cx:type="xsd:anyURI"/>
       <p:option name="group-adjacent" cx:type="XPathExpression"/>
    </p:declare-step>
    <p:declare-step type="p:xinclude" xml:id="xinclude">

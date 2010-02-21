@@ -1,5 +1,7 @@
 package com.xmlcalabash.functions;
 
+import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.runtime.XCompoundStep;
 import net.sf.saxon.functions.SystemFunction;
 import net.sf.saxon.functions.ExtensionFunctionDefinition;
 import net.sf.saxon.functions.ExtensionFunctionCall;
@@ -88,6 +90,12 @@ public class ValueAvailable extends ExtensionFunctionDefinition {
         public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
             StructuredQName sVarName = null;
 
+            XStep step = runtime.getXProcData().getStep();
+            // FIXME: this can't be the best way to do this...
+            if (!(step instanceof XCompoundStep)) {
+                throw XProcException.dynamicError(23);
+            }
+
             try {
                 SequenceIterator iter = arguments[0];
                 String lexicalQName = iter.next().getStringValue();
@@ -111,7 +119,6 @@ public class ValueAvailable extends ExtensionFunctionDefinition {
             }
 
             boolean value = false;
-            XStep step = runtime.getXProcData().getStep();
             QName varName = new QName(sVarName.getNamespaceURI(), sVarName.getLocalName());
 
             value = step.hasInScopeVariableBinding(varName);

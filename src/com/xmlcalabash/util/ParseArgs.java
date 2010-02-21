@@ -148,7 +148,7 @@ public class ParseArgs {
             }
         }
 
-        if (libraryURI == null && argpos < args.length) {
+        if (libraryURI == null && stepName == null && argpos < args.length) {
             pipelineURI = args[argpos++];
         }
 

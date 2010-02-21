@@ -90,10 +90,12 @@ public class RuntimeValue {
         initialized = true;
     }
 
+    /*
     public void setComputableValue(ComputableValue value) {
         val = value;
         initialized = true;
     }
+    */
 
     public boolean initialized() {
         return initialized;
@@ -139,6 +141,10 @@ public class RuntimeValue {
         }
     }
 
+    public XdmNode getNode() {
+        return node;
+    }
+    
     public URI getBaseURI() {
         return node.getBaseURI();
     }

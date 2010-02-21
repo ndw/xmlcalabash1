@@ -54,12 +54,11 @@ public class CompoundStep extends Step {
     }
 
     public void addVariable(Variable variable) {
-        if (variables.containsKey(variable.getName())) {
-            throw XProcException.staticError(4, "Duplicate variable name: " + variable.getName());
-
-        } else {
-            variables.put(variable.getName(), variable);
+        if (variables.containsKey(variable.getName()) || (getOption(variable.getName()) != null)) {
+            throw XProcException.staticError(4, "Duplicate variable/option name: " + variable.getName());
         }
+
+        variables.put(variable.getName(), variable);
     }
 
     public Collection<Variable> getVariables() {
@@ -132,7 +131,8 @@ public class CompoundStep extends Step {
                     Output output = new Output(runtime, node);
                     output.setPort(portName);
                     output.setPrimary(true);
-                    output.setSequence(primary.getSequence());
+                    // N.B. The output of a for-each can always produce a sequence!
+                    output.setSequence(primary.getSequence() || XProcConstants.p_for_each.equals(this.getType()));
                     addOutput(output);
                 
                     Input input = new Input(runtime, node);
@@ -151,7 +151,17 @@ public class CompoundStep extends Step {
     }
 
     @Override
-    protected void augmentIO() {        
+    protected void augmentIO() {
+        /*
+        // Special case: if an *atomic* step is run directly, what we're looking at here is
+        // its declaration which is *compound*. But we don't want to augment it's I/O like
+        // a compound step because we've wrapped a pipeline around it and want to treat it
+        // like an atomic step. This is a bit messy, I know.
+        if (subpipeline.size() == 0) {
+            return;
+        }
+        */
+
         // Output bindings on a compound step are really the input half of an input/output binding;
         // create the other half
         for (Output output : outputs) {

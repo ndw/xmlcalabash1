@@ -1,5 +1,9 @@
 package com.xmlcalabash.functions;
 
+import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.runtime.XCompoundStep;
+import com.xmlcalabash.runtime.XStep;
 import net.sf.saxon.functions.ExtensionFunctionDefinition;
 import net.sf.saxon.functions.ExtensionFunctionCall;
 import net.sf.saxon.expr.*;
@@ -74,6 +78,13 @@ public class VersionAvailable extends ExtensionFunctionDefinition {
      private class SystemPropertyCall extends ExtensionFunctionCall {
          public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
              SequenceIterator iter = arguments[0];
+
+             XStep step = runtime.getXProcData().getStep();
+             // FIXME: this can't be the best way to do this...
+             if (!(step instanceof XCompoundStep)) {
+                 throw XProcException.dynamicError(23);
+             }
+
              DoubleValue reqVer = (DoubleValue) iter.next();
 
              return SingletonIterator.makeIterator(reqVer.getDoubleValue() == 1.0 ? BooleanValue.TRUE : BooleanValue.FALSE);

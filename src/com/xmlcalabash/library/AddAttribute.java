@@ -21,6 +21,7 @@ package com.xmlcalabash.library;
 
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.util.ProcessMatchingNodes;
 import com.xmlcalabash.util.ProcessMatch;
 import com.xmlcalabash.io.ReadablePipe;
@@ -32,6 +33,9 @@ import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.Axis;
 import com.xmlcalabash.runtime.XAtomicStep;
 
+import javax.xml.XMLConstants;
+import java.util.Hashtable;
+
 /**
  *
  * @author ndw
@@ -40,6 +44,8 @@ public class AddAttribute extends DefaultStep implements ProcessMatchingNodes {
     private static final QName _match = new QName("", "match");
     private static final QName _attribute_name = new QName("", "attribute-name");
     private static final QName _attribute_value = new QName("", "attribute-value");
+    private static final QName _attribute_prefix = new QName("", "attribute-prefix");
+    private static final QName _attribute_namespace = new QName("", "attribute-namespace");
     private QName attrName = null;
     private String attrValue = null;
     private ProcessMatch matcher = null;
@@ -69,11 +75,35 @@ public class AddAttribute extends DefaultStep implements ProcessMatchingNodes {
     public void run() throws SaxonApiException {
         super.run();
 
-        attrName = getOption(_attribute_name).getQName();
+        RuntimeValue attrNameValue = getOption(_attribute_name);
+        String attrNameStr = attrNameValue.getString();
+        String apfx = getOption(_attribute_prefix, (String) null);
+        String ans = getOption(_attribute_namespace, (String) null);
+
+        if (apfx != null && ans == null) {
+            throw XProcException.dynamicError(34, "You can't specify a prefix without a namespace");
+        }
+
+        if (ans != null && attrNameStr.contains(":")) {
+            throw XProcException.dynamicError(34, "You can't specify a namespace if the attribute name contains a colon");
+        }
+
+
+        if (attrNameStr.contains(":")) {
+            attrName = new QName(attrNameStr, attrNameValue.getNode());
+        } else {
+            attrName = new QName(apfx == null ? "" : apfx, ans, attrNameStr);
+        }
+
         attrValue = getOption(_attribute_value).getString();
 
-        if ("xmlns".equals(attrName.getLocalName())) {
-            // The xmlns:x case can't occur...
+        if ("xmlns".equals(attrName.getLocalName())
+                || "xmlns".equals(attrName.getPrefix())
+                || XMLConstants.XMLNS_ATTRIBUTE_NS_URI.equals(attrName.getNamespaceURI())
+                || (!"xml".equals(attrName.getPrefix())
+                        && XMLConstants.XML_NS_URI.equals(attrName.getNamespaceURI()))
+                || ("xml".equals(attrName.getPrefix())
+                        && !XMLConstants.XML_NS_URI.equals(attrName.getNamespaceURI()))) {
             throw XProcException.stepError(59);
         }
 
@@ -92,9 +122,11 @@ public class AddAttribute extends DefaultStep implements ProcessMatchingNodes {
     }
 
     public boolean processStartElement(XdmNode node) throws SaxonApiException {
-        boolean found = false;
+        // We're going to have to loop through the attributes several times, so let's grab 'em
+        Hashtable<QName, String> attrs = new Hashtable<QName, String> ();
 
-        matcher.addStartElement(node);
+        // Put the "new" one in, to start with...
+        attrs.put(attrName, attrValue);
 
         XdmSequenceIterator iter = node.axisIterator(Axis.ATTRIBUTE);
         while (iter.hasNext()) {
@@ -102,12 +134,44 @@ public class AddAttribute extends DefaultStep implements ProcessMatchingNodes {
             String value =  child.getStringValue();
             if (child.getNodeName().equals(attrName)) {
                 value = attrValue;
-                found = true;
             }
-            matcher.addAttribute(child, value);
+            attrs.put(child.getNodeName(), value);
         }
-        if (!found) {
-            matcher.addAttribute(attrName,attrValue);
+
+        // If the requested prefix is already bound to something else, drop it
+        String prefix = attrName.getPrefix();
+        for (QName attr : attrs.keySet()) {
+            if (prefix.equals(attr.getPrefix())
+                    && !attrName.getNamespaceURI().equals(attr.getNamespaceURI())) {
+                prefix = "";
+            }
+        }
+
+        // If there isn't a prefix, we have to make one up
+        if ("".equals(prefix)) {
+            int acount = 0;
+            String aprefix = "_0";
+            boolean done = false;
+
+            while (!done) {
+                acount++;
+                aprefix = "_" + acount;
+                done = true;
+
+                for (QName attr : attrs.keySet()) {
+                    if (aprefix.equals(attr.getPrefix())) {
+                        done = false;
+                    }
+                }
+            }
+
+            attrName = new QName(aprefix, attrName.getNamespaceURI(), attrName.getLocalName());
+        }
+
+        matcher.addStartElement(node);
+
+        for (QName attr : attrs.keySet()) {
+            matcher.addAttribute(attr, attrs.get(attr));
         }
 
         return true;

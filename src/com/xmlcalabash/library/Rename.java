@@ -39,6 +39,8 @@ import com.xmlcalabash.runtime.XAtomicStep;
 public class Rename extends DefaultStep implements ProcessMatchingNodes {
     private static final QName _match = new QName("", "match");
     private static final QName _new_name = new QName("", "new-name");
+    private static final QName _new_prefix = new QName("", "new-prefix");
+    private static final QName _new_namespace = new QName("", "new-namespace");
     private ReadablePipe source = null;
     private WritablePipe result = null;
     private Map<QName, RuntimeValue> inScopeOptions = null;
@@ -66,7 +68,24 @@ public class Rename extends DefaultStep implements ProcessMatchingNodes {
     public void run() throws SaxonApiException {
         super.run();
 
-        newName = getOption(_new_name).getQName();
+        RuntimeValue nameValue = getOption(_new_name);
+        String nameStr = nameValue.getString();
+        String npfx = getOption(_new_prefix, (String) null);
+        String nns = getOption(_new_namespace, (String) null);
+
+        if (npfx != null && nns == null) {
+            throw XProcException.dynamicError(34, "You can't specify a prefix without a namespace");
+        }
+
+        if (nns != null && nameStr.contains(":")) {
+            throw XProcException.dynamicError(34, "You can't specify a namespace if the new-name contains a colon");
+        }
+
+        if (nameStr.contains(":")) {
+            newName = new QName(nameStr, nameValue.getNode());
+        } else {
+            newName = new QName(npfx == null ? "" : npfx, nns, nameStr);
+        }
 
         matcher = new ProcessMatch(runtime, this);
         matcher.match(source.read(), getOption(_match));

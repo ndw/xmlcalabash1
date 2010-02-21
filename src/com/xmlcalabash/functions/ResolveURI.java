@@ -1,5 +1,8 @@
 package com.xmlcalabash.functions;
 
+import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.runtime.XCompoundStep;
+import com.xmlcalabash.runtime.XStep;
 import net.sf.saxon.functions.SystemFunction;
 import net.sf.saxon.functions.ExtensionFunctionDefinition;
 import net.sf.saxon.functions.ExtensionFunctionCall;
@@ -7,6 +10,7 @@ import net.sf.saxon.expr.Expression;
 import net.sf.saxon.expr.ExpressionVisitor;
 import net.sf.saxon.expr.StringLiteral;
 import net.sf.saxon.expr.XPathContext;
+import net.sf.saxon.tinytree.TinyDocumentImpl;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.value.StringValue;
 import net.sf.saxon.value.AnyURIValue;
@@ -86,12 +90,25 @@ public class ResolveURI extends ExtensionFunctionDefinition {
             SequenceIterator iter = arguments[0];
             String relativeURI = iter.next().getStringValue();
 
+            XStep step = runtime.getXProcData().getStep();
+            // FIXME: this can't be the best way to do this...
+            if (!(step instanceof XCompoundStep)) {
+                throw XProcException.dynamicError(23);
+            }
+
             String baseURI = null;
             if (arguments.length > 1) {
                 iter = arguments[1];
                 baseURI = iter.next().getStringValue();
             } else {
                 baseURI = runtime.getStaticBaseURI().toASCIIString();
+                try {
+                    // FIXME: TinyDocumentImpl? Surely we can do better than that!
+                    Item item = context.getContextItem();
+                    baseURI = ((TinyDocumentImpl) item).getBaseURI();
+                } catch (Exception e) {
+                    // nop
+                }
             }
 
             String resolvedURI = "";

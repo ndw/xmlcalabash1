@@ -38,6 +38,7 @@ public class ForEach extends DeclareStep {
 
         Output current = new Output(xproc, node);
         current.setPort("#current");
+        current.setSequence(true);
         addOutput(current);
     }
 

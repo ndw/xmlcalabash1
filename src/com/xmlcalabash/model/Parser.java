@@ -37,6 +37,8 @@ import com.xmlcalabash.core.XProcException;
  * @author ndw
  */
 public class Parser {
+    // TODO: Make new QName() values throughout static
+
     private static QName px_name = new QName(XProcConstants.NS_CALABASH_EX,"name");
     private static QName _name = new QName("name");
     private static QName _href = new QName("href");
@@ -653,20 +655,43 @@ public class Parser {
     }
 
     private DataBinding readData(XdmNode node) {
-        checkAttributes(node, new String[] { "href", "wrapper", "content-type" }, false);
+        checkAttributes(node, new String[] { "href", "wrapper", "wrapper-namespace", "wrapper-prefix", "content-type" }, false);
 
         String href = node.getAttributeValue(new QName("href"));
         String wrapstr = node.getAttributeValue(new QName("wrapper"));
+        String wrappfx = node.getAttributeValue(new QName("wrapper-prefix"));
+        String wrapns  = node.getAttributeValue(new QName("wrapper-namespace"));
         String contentType = node.getAttributeValue(new QName("content-type"));
 
+        if (wrappfx != null && wrapns == null) {
+            throw XProcException.dynamicError(34, "You cannot specify a prefix without a namespace.");
+        }
+
+        if (wrapns != null && wrapstr == null) {
+            throw XProcException.dynamicError(34, "You cannot specify a namespace without a wrapper.");
+        }
+
+        if (wrapns != null && wrapstr != null && wrapstr.indexOf(":") >= 0) {
+            throw XProcException.dynamicError(34, "You cannot specify a namespace if the wrapper name contains a colon.");
+        }
+
+        if (wrapns == null && wrapstr != null && wrapstr.indexOf(":") <= 0) {
+            throw XProcException.staticError(25);
+        }
+        
         DataBinding doc = new DataBinding(runtime, node);
         doc.setHref(href); // FIXME: what about making it absolute?
+
         if (wrapstr != null) {
-            if (wrapstr.indexOf(":") <= 0) {
-                throw XProcException.staticError(25);
+            if (wrapstr.indexOf(":") > 0) {
+                doc.setWrapper(new QName(wrapstr, node));
+            } else if (wrappfx != null) {
+                doc.setWrapper(new QName(wrappfx, wrapns, wrapstr));
+            } else {
+                doc.setWrapper(new QName(wrapns, wrapstr));
             }
-            doc.setWrapper(new QName(wrapstr, node));
         }
+
         if (contentType != null) {
             doc.setContentType(contentType);
         }

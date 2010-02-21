@@ -30,9 +30,11 @@ public class XCompoundStep extends XAtomicStep {
         super(runtime, step, parent);
     }
 
+    /*
     public void addVariable(QName name, RuntimeValue value) {
         variables.put(name, value);
     }
+    */
 
     public boolean hasInScopeVariableBinding(QName name) {
         if (variables.containsKey(name) || inScopeOptions.containsKey(name)) {

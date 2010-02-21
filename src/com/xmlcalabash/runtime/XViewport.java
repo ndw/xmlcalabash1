@@ -47,6 +47,12 @@ public class XViewport extends XCompoundStep implements ProcessMatchingNodes {
         // nop;
     }
 
+    public void reset() {
+        super.reset();
+        sequenceLength = 0;
+        sequencePosition = 0;
+    }
+
     public void run() throws SaxonApiException {
         info(step.getNode(), "Running p:viewport " + step.getName());
 
@@ -120,6 +126,13 @@ public class XViewport extends XCompoundStep implements ProcessMatchingNodes {
         inScopeOptions = parent.getInScopeOptions();
         for (Variable var : step.getVariables()) {
             RuntimeValue value = computeValue(var);
+
+            if ("p3".equals(var.getName().getLocalName())) {
+                System.err.println("DEBUG ME1: " + value.getString());
+            }
+
+
+
             inScopeOptions.put(var.getName(), value);
         }
 

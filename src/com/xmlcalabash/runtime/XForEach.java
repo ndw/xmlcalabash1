@@ -47,6 +47,12 @@ public class XForEach extends XCompoundStep {
         // nop;
     }
 
+    public void reset() {
+        super.reset();
+        sequenceLength = 0;
+        sequencePosition = 0;
+    }
+    
     public void run() throws SaxonApiException {
         info(step.getNode(), "Running p:for-each " + step.getName());
 

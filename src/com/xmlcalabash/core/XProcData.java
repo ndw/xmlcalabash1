@@ -29,7 +29,19 @@ public class XProcData {
     }
 
     public void openFrame(XStep step) {
-        stack.push(new StackFrame());
+        int pos = 1;
+        int size = 1;
+
+        if (stack.size() > 0) {
+            pos = stack.peek().iterPos;
+            size = stack.peek().iterSize;
+        }
+
+        StackFrame frame = new StackFrame();
+        frame.iterPos = pos;
+        frame.iterSize = size;
+
+        stack.push(frame);
         stack.peek().step = step;
     }
 

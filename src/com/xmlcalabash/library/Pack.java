@@ -19,9 +19,11 @@
 
 package com.xmlcalabash.library;
 
+import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.util.TreeWriter;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -36,6 +38,8 @@ import com.xmlcalabash.runtime.XAtomicStep;
 public class Pack extends DefaultStep {
     protected static final String logger = "org.xproc.library.identity";
     private static final QName _wrapper = new QName("wrapper");
+    private static final QName _wrapper_prefix = new QName("wrapper-prefix");
+    private static final QName _wrapper_namespace = new QName("wrapper-namespace");
     private ReadablePipe source = null;
     private ReadablePipe alternate = null;
     private WritablePipe result = null;
@@ -67,7 +71,25 @@ public class Pack extends DefaultStep {
     public void run() throws SaxonApiException {
         super.run();
 
-        QName wrapper = getOption(_wrapper).getQName();
+        RuntimeValue wrapperNameValue = getOption(_wrapper);
+        String wrapperNameStr = wrapperNameValue.getString();
+        String wpfx = getOption(_wrapper_prefix, (String) null);
+        String wns = getOption(_wrapper_namespace, (String) null);
+
+        if (wpfx != null && wns == null) {
+            throw XProcException.dynamicError(34, "You can't specify a prefix without a namespace");
+        }
+
+        if (wns != null && wrapperNameStr.contains(":")) {
+            throw XProcException.dynamicError(34, "You can't specify a namespace if the wrapper name contains a colon");
+        }
+
+        QName wrapper = null;
+        if (wrapperNameStr.contains(":")) {
+            wrapper = new QName(wrapperNameStr, wrapperNameValue.getNode());
+        } else {
+            wrapper = new QName(wpfx == null ? "" : wpfx, wns, wrapperNameStr);
+        }
 
         while (source.moreDocuments() || alternate.moreDocuments()) {
             XdmNode sdoc = null;

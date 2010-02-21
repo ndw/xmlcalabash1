@@ -150,6 +150,12 @@ public class Main {
                 pipeline = runtime.use(doc);
             }
 
+            // Special case for running XProc standard library steps directly
+            if (pipeline == null && cmd.stepName != null
+                    && XProcConstants.NS_XPROC.equals(cmd.stepName.getNamespaceURI())) {
+                pipeline = runtime.getStandardLibrary().getPipeline(cmd.stepName);
+            }
+
             if (errors || pipeline == null) {
                 usage();
             }
@@ -219,6 +225,8 @@ public class Main {
             }
 
             String stdio = null;
+
+            // Look for explicit binding to "-"
             for (String port : pipeline.getOutputs()) {
                 String uri = null;
 
@@ -228,7 +236,22 @@ public class Main {
                     uri = config.outputs.get(port);
                 }
 
-                if (uri == null || "-".equals(uri)) {
+                if ("-".equals(uri) && stdio == null) {
+                    stdio = port;
+                }
+            }
+
+            // Look for implicit binding to "-"
+            for (String port : pipeline.getOutputs()) {
+                String uri = null;
+
+                if (cmd.outputs.containsKey(port)) {
+                    uri = cmd.outputs.get(port);
+                } else if (config.outputs.containsKey(port)) {
+                    uri = config.outputs.get(port);
+                }
+
+                if (uri == null) {
                     if (stdio == null) {
                         stdio = port;
                     } else {

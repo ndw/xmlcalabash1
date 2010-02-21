@@ -67,30 +67,6 @@ public class XPipeline extends XCompoundStep {
     public void writeTo(String port, XdmNode node) {
         WritablePipe pipe = outputs.get(port+"|");
         finest(step.getNode(), "writesTo " + pipe + " for " + port);
-
-        // This code causes select attributes not to be ignored when an explicit
-        // binding is provided for a port. The WG decided that that was a bug,
-        // so I've taken it back out.
-        /*
-        Input input = step.getInput(port);
-        if (input.getSelect() != null) {
-            finest(step.getNode(), step.getName() + " selects nodes for " + port);
-
-            Pipe fpipe = new Pipe(runtime);
-            fpipe.write(node);
-
-            try {
-                XSelect xsel = new XSelect(runtime, this, fpipe, input.getSelect(), input.getNode());
-                while (xsel.moreDocuments()) {
-                    pipe.write(xsel.read());
-                }
-            } catch (SaxonApiException sae) {
-                throw new XProcException(sae);
-            }
-        } else {
-            pipe.write(node);
-        }
-        */
         pipe.write(node);
     }
 

@@ -75,7 +75,7 @@ public class XProcRuntime {
     private QName errorCode = null;
     private String errorMessage = null;
     private Hashtable<QName, DeclareStep> declaredSteps = new Hashtable<QName,DeclareStep> ();
-    private boolean explicitDeclarations = false;
+    //private boolean explicitDeclarations = false;
     private DeclareStep pipeline = null;
     private XPipeline xpipeline = null;
     private Vector<Throwable> errors = null;
@@ -86,6 +86,8 @@ public class XProcRuntime {
     private XProcData xprocData = null;
     private Logger log = null;
     private XProcMessageListener msgListener = null;
+    private PipelineLibrary standardLibrary = null;
+    private XLibrary xStandardLibrary = null;
 
     public XProcRuntime(XProcConfiguration config) {
         this.config = config;
@@ -253,12 +255,24 @@ public class XProcRuntime {
         return config.schemaAware;
     }
 
+    public XLibrary getStandardLibrary() {
+        if (xStandardLibrary == null) {
+            xStandardLibrary = new XLibrary(this, standardLibrary);
+
+            if (errorCode != null) {
+                throw new XProcException(errorCode, errorMessage);
+            }
+        }
+
+        return xStandardLibrary;
+    }
+
     private void reset() {
         reported = new Vector<XStep> ();
         errorCode = null;
         errorMessage = null;
         declaredSteps = new Hashtable<QName,DeclareStep> ();
-        explicitDeclarations = false;
+        //explicitDeclarations = false;
         pipeline = null;
         xpipeline = null;
         errors = null;
@@ -278,7 +292,7 @@ public class XProcRuntime {
         parser = new Parser(this);
         try {
             // FIXME: I should *do* something with these libraries, shouldn't I?
-            PipelineLibrary library = parser.loadStandardLibrary();
+            standardLibrary = parser.loadStandardLibrary();
             if (errorCode != null) {
                 throw new XProcException(errorCode, errorMessage);
             }
