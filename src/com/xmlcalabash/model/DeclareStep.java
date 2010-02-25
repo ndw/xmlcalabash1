@@ -19,6 +19,8 @@
 
 package com.xmlcalabash.model;
 
+import com.xmlcalabash.core.XProcData;
+import com.xmlcalabash.runtime.XStep;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.QName;
 import com.xmlcalabash.core.XProcRuntime;
@@ -448,7 +450,11 @@ public class DeclareStep extends CompoundStep {
                 input.addBinding(binding);
             }
         } else if (input.getParameterInput()) {
-            if (input.getBinding().size() > 0) {
+
+            XProcData data = runtime.getXProcData();
+            // If depth==0 then we're on a declare step and you aren't allowed to
+            // provide default bindings for parameter input ports.
+            if (data.getDepth() == 0 && input.getBinding().size() > 0) {
                 throw XProcException.staticError(35);
             }
         }

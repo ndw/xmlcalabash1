@@ -64,6 +64,8 @@ import java.io.IOException;
 public class ValidateWithXSD extends DefaultStep {
     private static final QName _assert_valid = new QName("", "assert-valid");
     private static final QName _mode = new QName("", "mode");
+    private static final QName _use_location_hints = new QName("", "use-location-hints");
+    private static final QName _try_namespaces = new QName("", "try-namespaces");
     private static final Class [] paramTypes = new Class [] {};
     private ReadablePipe source = null;
     private ReadablePipe schemas = null;
@@ -126,16 +128,35 @@ public class ValidateWithXSD extends DefaultStep {
             finer(step.getNode(), "Cannot reset schema cache.");
         }
 
+        XdmNode doc = source.read();
+        String namespace = S9apiUtils.getDocumentElement(doc).getNodeName().getNamespaceURI();
+        boolean tryNamespaces = getOption(_try_namespaces, false) && !"".equals(namespace);
 
         // Populate the URI cache so that URI references in schema documents will find
         // the schemas provided preferentially
         Vector<XdmNode> schemaDocuments = new Vector<XdmNode> ();
         while (schemas.moreDocuments()) {
             XdmNode schemaNode = schemas.read();
-            fine(step.getNode(), "Caching input schema: " + schemaNode.getBaseURI().toASCIIString());
+            String targetNS = schemaNode.getBaseURI().toASCIIString();
+            fine(step.getNode(), "Caching input schema: " + targetNS);
+            if (targetNS.equals(namespace)) {
+                tryNamespaces = false;
+            }
             schemaDocuments.add(schemaNode);
             runtime.getResolver().cache(schemaNode, schemaNode.getBaseURI());
         }
+
+        if (tryNamespaces) {
+            // Need to load one more schema
+            try {
+                XdmNode nsSchemaDoc = runtime.parse(namespace, doc.getBaseURI().toASCIIString(), false);
+                schemaDocuments.add(nsSchemaDoc);
+                runtime.getResolver().cache(nsSchemaDoc, nsSchemaDoc.getBaseURI());
+            } catch (Exception e) {
+                // nevermind
+            }
+        }
+
 
         // FIXME: HACK! Do this the right way
         for (XdmNode schemaNode : schemaDocuments) {
@@ -157,9 +178,11 @@ public class ValidateWithXSD extends DefaultStep {
 
         String mode = getOption(_mode, "strict");
         validator.setLax("lax".equals(mode));
+
+        boolean useHints = getOption(_use_location_hints, false);
+        validator.setUseXsiSchemaLocation(useHints);
         
         try {
-            XdmNode doc = source.read();
             fine(step.getNode(), "Validating: " + doc.getBaseURI().toASCIIString());
             validator.validate(new SAXSource(S9apiUtils.xdmToInputSource(runtime, doc)));
         } catch (SaxonApiException sae) {

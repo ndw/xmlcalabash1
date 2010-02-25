@@ -94,6 +94,7 @@ public class Error extends DefaultStep {
         TreeWriter treeWriter = new TreeWriter(runtime);
         treeWriter.startDocument(step.getNode().getBaseURI());
         treeWriter.addStartElement(c_error);
+        treeWriter.addNamespace(cpfx, cns);
 
         treeWriter.addAttribute(_name, step.getName());
         treeWriter.addAttribute(_type, "p:error");

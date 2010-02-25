@@ -672,14 +672,6 @@ public class Step extends SourceArtifact {
                     input.addBinding(binding);
                 }
             }
-        } else {
-            // nop; this was over-zealous. It's ok to bind from steps,
-            // what's not ok is to bind in declarations.
-            /*
-            if (input.getParameterInput()) {
-                throw XProcException.staticError(35);
-            }
-            */            
         }
 
         boolean catchErrors = false;

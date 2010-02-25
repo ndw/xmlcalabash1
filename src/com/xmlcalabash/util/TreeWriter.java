@@ -207,6 +207,15 @@ public class TreeWriter {
         }
     }
 
+    public void addNamespace(String prefix, String uri) {
+        int nscode = pool.allocateNamespaceCode(prefix, uri);
+        try {
+            receiver.namespace(nscode, 0);
+        } catch (XPathException e) {
+            throw new XProcException(e);
+        }
+    }
+
     public void addAttributes(XdmNode element) {
         XdmSequenceIterator iter = element.axisIterator(Axis.ATTRIBUTE);
         while (iter.hasNext()) {

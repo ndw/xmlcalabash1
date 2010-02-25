@@ -209,7 +209,7 @@ public class Exec extends DefaultStep {
                 } else {
                     queryexpr = "//text()";
                     serializer.setOutputProperty(Serializer.Property.METHOD, "text");
-                    serializer.setOutputProperty(Serializer.Property.OMIT_XML_DECLARATION,"yes");
+                    serializer.setOutputProperty(Serializer.Property.OMIT_XML_DECLARATION, "yes");
                 }
 
                 Processor qtproc = runtime.getProcessor();
@@ -356,26 +356,44 @@ public class Exec extends DefaultStep {
 
                 tree.addSubtree(doc);
             } else {
-                BufferedReader br = new BufferedReader(new InputStreamReader(is));
+                // If we're not wrapping the lines, a buffered reader doesn't work. It can't
+                // tell the difference between a file with a trailing EOL and one without.
                 try {
-                    String line = br.readLine();
-                    while (line != null) {
-                        if (showLines) {
-                            System.err.println(line);
-                        }
-                        if (wrapLines) {
+                    if (wrapLines) {
+                        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+                        String line = br.readLine();
+                        while (line != null) {
+                            if (showLines) {
+                                System.err.println(line);
+                            }
                             tree.addStartElement(c_line);
                             tree.startContent();
                             tree.addText(line);
                             tree.addEndElement();
                             tree.addText("\n");
-                        } else {
-                            tree.addText(line+"\n");
+                            line = br.readLine();
                         }
-                        line = br.readLine();
+                    } else {
+                        InputStreamReader r = new InputStreamReader(is);
+                        char[] buf = new char[1000];
+                        int len = r.read(buf,0,buf.length);
+                        while (len >= 0) {
+                            if (len == 0) {
+                                Thread.sleep(1000);
+                                continue;
+                            }
+                            String s = new String(buf,0,len);
+                            if (showLines) {
+                                System.err.print(s);
+                            }
+                            tree.addText(s);
+                            len = r.read(buf,0,buf.length);
+                        }
                     }
                 } catch (IOException ioe) {
                     throw new XProcException(ioe);
+                } catch (InterruptedException ie) {
+                    // who cares?
                 }
             }
 

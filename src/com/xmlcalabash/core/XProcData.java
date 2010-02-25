@@ -49,6 +49,10 @@ public class XProcData {
         stack.pop();
     }
 
+    public int getDepth() {
+        return stack.size();
+    }
+    
     public XStep getStep() {
         return stack.peek().step;
     }

@@ -1,6 +1,7 @@
 package com.xmlcalabash.runtime;
 
 import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.io.ReadableEmpty;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.Pipe;
@@ -68,7 +69,8 @@ public class XChoose extends XCompoundStep {
             // FIXME: Check that .get(0) works, and that there's no sequence
             Vector<ReadablePipe> xpc = inputs.get("#xpath-context");
             if (xpc.size() == 0) {
-                throw XProcException.staticError(32);
+                // If there's no binding for a p:choose, the default is an empty binding...
+                return new ReadableEmpty();
             }
             ReadablePipe pipe = xpc.get(0);  
             return new Pipe(runtime, pipe.documents());

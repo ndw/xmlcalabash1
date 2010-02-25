@@ -279,6 +279,8 @@ public class XProcRuntime {
         episode = null;
         collections = null;
 
+        xprocData = new XProcData(this);
+
         String phone = System.getProperty("com.xmlcalabash.phonehome");
         if (phone != null && ("0".equals(phone) || "no".equals(phone) || "false".equals(phone))) {
             finest(null, null,"Phonehome suppressed by user.");

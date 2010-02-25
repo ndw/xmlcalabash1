@@ -94,10 +94,12 @@ public class ReadableData implements ReadablePipe {
             String serverBaseContentType = parseContentType(serverContentType);
             String serverCharset = parseCharset(serverContentType);
 
-            /* FIXME:
-            // HACK! HACK! HACK! Just so that the test cases work in the test suite
-            serverContentType = ctype + ";charset=" + charset.toUpperCase() + post;
-            */
+            if (serverCharset != null) {
+                // HACK! Make the content type here consistent with the content type returned
+                // from the http-request tests, just to make the test suite results more
+                // consistent.
+                serverContentType = serverBaseContentType + "; charset=\"" + serverCharset + "\"";
+            }
 
             // If the user specified a charset and the server did not and it's a file: URI,
             // assume the user knows best.
