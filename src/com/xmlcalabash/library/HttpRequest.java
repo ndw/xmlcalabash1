@@ -103,6 +103,7 @@ public class HttpRequest extends DefaultStep {
     private Vector<Header> headers = new Vector<Header> ();
     private String contentType = null;
     private String overrideContentType = null;
+    private String headerContentType = null;
 
     private ReadablePipe source = null;
     private WritablePipe result = null;
@@ -240,7 +241,16 @@ public class HttpRequest extends DefaultStep {
                 }
 
                 if (XProcConstants.c_header.equals(event.getNodeName())) {
-                    headers.add(new Header(event.getAttributeValue(_name), event.getAttributeValue(_value)));
+                    String name = event.getAttributeValue(_name);
+                    if (name == null) {
+                        continue; // this can't happen, right?
+                    }
+                    if (name.toLowerCase().equals("content-type")) {
+                        // We'll deal with the content-type header later
+                        headerContentType = event.getAttributeValue(_value).toLowerCase();
+                    } else {
+                        headers.add(new Header(event.getAttributeValue(_name), event.getAttributeValue(_value)));
+                    }
                 } else if (XProcConstants.c_multipart.equals(event.getNodeName())
                            || XProcConstants.c_body.equals(event.getNodeName())) {
                     body = event;
@@ -257,14 +267,6 @@ public class HttpRequest extends DefaultStep {
             throw XProcException.stepError(5);
         }
 
-        if (body != null && XProcConstants.c_multipart.equals(body.getNodeName())) {
-            processMultipart(lcMethod, body);
-        } else {
-            processSinglepart(lcMethod, body);
-        }
-    }
-
-    private void processSinglepart(String lcMethod, XdmNode body) {
         HttpMethodBase httpResult;
 
         if ("get".equals(lcMethod)) {
@@ -355,218 +357,6 @@ public class HttpRequest extends DefaultStep {
         result.write(resultNode);
     }
 
-    private void processMultipart(String lcMethod, XdmNode multipart) {
-        // The Apache HTTP libraries just don't handle this case...
-        try {
-            String scheme = requestURI.getScheme();
-
-            if (!"http".equals(scheme)) {
-                throw new UnsupportedOperationException("PUT/POST only allowed on http: scheme URIs");
-            }
-
-            String boundary = multipart.getAttributeValue(_boundary);
-
-            if (boundary == null) {
-                throw new XProcException("A boundary value must be specified on c:multipart");
-            }
-
-            if (boundary.startsWith("--")) {
-                throw XProcException.stepError(2);
-            }
-
-            contentType = multipart.getAttributeValue(_content_type);
-            if (contentType == null) {
-                contentType = "multipart/mixed";
-            }
-
-            if (!contentType.startsWith("multipart/")) {
-                throw new UnsupportedOperationException("Multipart content-type must be multipart/...");
-            }
-
-            URL url = requestURI.toURL();
-
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-
-            for (Header header : headers) {
-                String name = header.getName();
-                String value = header.getValue();
-                conn.setRequestProperty(name, value);
-            }
-
-            String q = "\"";
-            if (boundary.contains(q)) {
-                q = "'";
-            }
-            if (boundary.contains(q)) {
-                q = "";
-            }
-
-            conn.setRequestProperty("Content-Type", contentType + "; boundary=" + q + boundary + q);
-            conn.setDoOutput(true);
-            conn.setRequestMethod("post".equals(lcMethod) ? "POST" : "PUT");
-            OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
-
-            for (XdmNode body : new RelevantNodes(runtime, multipart, Axis.CHILD)) {
-                if (!XProcConstants.c_body.equals(body.getNodeName())) {
-                    throw new XProcException("A c:multipart may only contain c:body elements.");
-                }
-
-                String bodyContentType = body.getAttributeValue(_content_type);
-                if (bodyContentType == null) {
-                    throw new XProcException("Content-type on c:body is required.");
-                }
-
-                String bodyId = body.getAttributeValue(_id);
-                String bodyDescription = body.getAttributeValue(_description);
-
-                String bodyCharset = "utf-8"; // FIXME: Is this right? They were all in XML...
-                if (bodyContentType.matches("^.*;[ \t]*charset=([^ \t]+)")) {
-                    bodyCharset = bodyContentType.replaceAll("^.*;[ \t]*charset=([^ \t]+).*$", "$1");
-                }
-
-                if (bodyContentType.contains(";")) {
-                    int pos = bodyContentType.indexOf(";");
-                    bodyContentType = bodyContentType.substring(0, pos);
-                }
-
-                String bodyEncoding = body.getAttributeValue(_encoding);
-                if (bodyEncoding != null && !"base64".equals(bodyEncoding)) {
-                    throw new UnsupportedOperationException("The '" + bodyEncoding + "' encoding is not supported");
-                }
-
-                if (bodyCharset != null) {
-                    bodyContentType += "; charset=" + bodyCharset;
-                }
-
-                wr.write("--" + boundary + "\r\n");
-                wr.write("Content-Type: " + bodyContentType + "\r\n");
-                if (bodyDescription != null) {
-                    wr.write("Content-Description: " + bodyDescription + "\r\n");
-                }
-                if (bodyId != null) {
-                    wr.write("Content-ID: " + bodyId + "\r\n");
-                }
-                if (bodyEncoding != null) {
-                    wr.write("Content-Transfer-Encoding: " + bodyEncoding + "\r\n");
-                }
-                wr.write("\r\n");
-
-                try {
-                    if (xmlContentType(bodyContentType)) {
-                        Serializer serializer = makeSerializer();
-
-                        Vector<XdmNode> content = new Vector<XdmNode> ();
-                        XdmSequenceIterator iter = body.axisIterator(Axis.CHILD);
-                        while (iter.hasNext()) {
-                            XdmNode node = (XdmNode) iter.next();
-                            content.add(node);
-                        }
-
-                        // FIXME: set serializer properties appropriately!
-                        serializer.setOutputWriter(wr);
-                        S9apiUtils.serialize(runtime, content, serializer);
-                    } else {
-                        XdmSequenceIterator iter = body.axisIterator(Axis.CHILD);
-                        while (iter.hasNext()) {
-                            XdmNode node = (XdmNode) iter.next();
-                            if (node.getNodeKind() != XdmNodeKind.TEXT) {
-                                throw XProcException.stepError(28);
-                            }
-                            wr.write(node.getStringValue());
-                        }
-                    }
-
-                    wr.write("\r\n");
-                } catch (IOException ioe) {
-                    throw new XProcException(ioe);
-                } catch (SaxonApiException sae) {
-                    throw new XProcException(sae);
-                }
-            }
-
-            wr.write("--" + boundary + "--\r\n");
-            wr.flush();
-
-            TreeWriter tree = new TreeWriter(runtime);
-            tree.startDocument(requestURI);
-
-            // Execute the method.
-            int statusCode = conn.getResponseCode();
-
-            String contentType = conn.getContentType();
-
-            String charset = "US-ASCII";
-            if (contentType.matches("^.*;[ \t]*charset=([^ \t]+)")) {
-                charset = contentType.replaceAll("^.*;[ \t]*charset=([^ \t]+).*$", "$1");
-            }
-
-            if (overrideContentType != null) {
-                if ((xmlContentType(contentType) && overrideContentType.startsWith("image/"))
-                    || (contentType.startsWith("text/") && overrideContentType.startsWith("image/"))
-                    || (contentType.startsWith("image/") && xmlContentType(overrideContentType))
-                    || (contentType.startsWith("image/") && overrideContentType.startsWith("text/"))
-                    || (contentType.startsWith("multipart/") && !overrideContentType.startsWith("multipart/"))
-                    || (!contentType.startsWith("multipart/") && overrideContentType.startsWith("multipart/"))) {
-                    throw XProcException.stepError(30);
-                }
-
-                contentType = overrideContentType;
-            }
-
-            if (detailed) {
-                tree.addStartElement(XProcConstants.c_response);
-                tree.addAttribute(_status, "" + statusCode);
-                tree.startContent();
-
-                int hcount = 1;
-                String hf = conn.getHeaderField(hcount);
-                while (hf != null) {
-                    tree.addStartElement(XProcConstants.c_header);
-                    tree.addAttribute(_name, conn.getHeaderFieldKey(hcount));
-                    tree.addAttribute(_value, hf);
-                    tree.startContent();
-                    tree.addEndElement();
-
-                    hf = conn.getHeaderField(++hcount);
-                }
-
-                if (statusOnly) {
-                    // Skip reading the result
-                } else {
-                    // Read the response body.
-                    // FIXME: What about real charaset and real boundary in the multipart case!!!
-                    readBodyContent(tree, conn.getInputStream(), contentType, charset, null);
-                }
-
-                tree.addEndElement();
-            } else {
-                if (statusOnly) {
-                    // Skip reading the result
-                } else {
-                    // Read the response body.
-                    readBodyContent(tree, conn.getInputStream(), contentType, charset, null);
-                }
-            }
-
-            wr.close();
-            conn.disconnect();
-
-            tree.endDocument();
-
-            XdmNode resultNode = tree.getResult();
-
-            result.write(resultNode);
-        } catch (URIException ue) {
-            throw new XProcException(ue);
-        } catch (MalformedURLException mue) {
-            throw new XProcException(mue);
-        } catch (IOException ioe) {
-            throw new XProcException(ioe);
-        } catch (SaxonApiException sai) {
-            throw new XProcException(sai);
-        }
-    }
-
     private GetMethod doGet() {
         GetMethod method = new GetMethod(requestURI.toASCIIString());
 
@@ -623,6 +413,14 @@ public class HttpRequest extends DefaultStep {
     }
 
     private void doPutOrPost(EntityEnclosingMethod method, XdmNode body) {
+        if (XProcConstants.c_multipart.equals(body.getNodeName())) {
+            doPutOrPostMultipart(method,body);
+        } else {
+            doPutOrPostSinglepart(method,body);
+        }
+    }
+
+    private void doPutOrPostSinglepart(EntityEnclosingMethod method, XdmNode body) {
         // ATTENTION: This doesn't handle multipart, that's done entirely separately
 
         // Provide custom retry handler is necessary
@@ -630,23 +428,18 @@ public class HttpRequest extends DefaultStep {
                 new DefaultHttpMethodRetryHandler(3, false));
 
         // Check for consistency of content-type
-        String hcontentType = null;
-        for (Header header : headers) {
-            if ("content-type".equals(header.getName().toLowerCase())) {
-                hcontentType = header.getValue().toLowerCase();
-            }
-            method.addRequestHeader(header);
-        }
-
         contentType = body.getAttributeValue(_content_type);
         if (contentType == null) {
             throw new XProcException("Content-type on c:body is required.");
         }
 
-        if (hcontentType != null && !hcontentType.equals(contentType.toLowerCase())) {
+        if (headerContentType != null && !headerContentType.equals(contentType.toLowerCase())) {
             throw XProcException.stepError(20);
         }
 
+        for (Header header : headers) {
+            method.addRequestHeader(header);
+        }
 
         // FIXME: This sucks rocks. I want to write the data to be posted, not provide some way to read it
         String postContent = null;
@@ -685,13 +478,156 @@ public class HttpRequest extends DefaultStep {
                 postContent = writer.toString();
             }
 
-            StringRequestEntity requestEntity = new StringRequestEntity(postContent, contentType,"UTF-8");
+            StringRequestEntity requestEntity = new StringRequestEntity(postContent, contentType, "UTF-8");
             method.setRequestEntity(requestEntity);
 
         } catch (IOException ioe) {
             throw new XProcException(ioe);
         } catch (SaxonApiException sae) {
             throw new XProcException(sae);
+        }
+    }
+
+    private void doPutOrPostMultipart(EntityEnclosingMethod method, XdmNode multipart) {
+        // The Apache HTTP libraries just don't handle this case...we treat it as a "single part"
+        // and build the body ourselves, using the boundaries etc.
+
+        // Provide custom retry handler is necessary
+        method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER,
+                new DefaultHttpMethodRetryHandler(3, false));
+
+        // Check for consistency of content-type
+        contentType = multipart.getAttributeValue(_content_type);
+        if (contentType == null) {
+            contentType = "multipart/mixed";
+        }
+
+        if (headerContentType != null && !headerContentType.equals(contentType.toLowerCase())) {
+            throw XProcException.stepError(20);
+        }
+
+        if (!contentType.startsWith("multipart/")) {
+            throw new UnsupportedOperationException("Multipart content-type must be multipart/...");
+        }
+
+        for (Header header : headers) {
+            method.addRequestHeader(header);
+        }
+
+        String boundary = multipart.getAttributeValue(_boundary);
+
+        if (boundary == null) {
+            throw new XProcException("A boundary value must be specified on c:multipart");
+        }
+
+        if (boundary.startsWith("--")) {
+            throw XProcException.stepError(2);
+        }
+
+        String q = "\"";
+        if (boundary.contains(q)) {
+            q = "'";
+        }
+        if (boundary.contains(q)) {
+            q = "";
+        }
+
+        String multipartContentType = contentType + "; boundary=" + q + boundary + q;
+
+        // FIXME: This sucks rocks. I want to write the data to be posted, not provide some way to read it
+        String postContent = "This is a multipart message.\r\n";
+        try {
+            for (XdmNode body : new RelevantNodes(runtime, multipart, Axis.CHILD)) {
+                if (!XProcConstants.c_body.equals(body.getNodeName())) {
+                    throw new XProcException("A c:multipart may only contain c:body elements.");
+                }
+
+                String bodyContentType = body.getAttributeValue(_content_type);
+                if (bodyContentType == null) {
+                    throw new XProcException("Content-type on c:body is required.");
+                }
+
+                String bodyId = body.getAttributeValue(_id);
+                String bodyDescription = body.getAttributeValue(_description);
+
+                String bodyCharset = "utf-8"; // FIXME: Is this right? They were all in XML...
+                if (bodyContentType.matches("^.*;[ \t]*charset=([^ \t]+)")) {
+                    bodyCharset = bodyContentType.replaceAll("^.*;[ \t]*charset=([^ \t]+).*$", "$1");
+                }
+
+                if (bodyContentType.contains(";")) {
+                    int pos = bodyContentType.indexOf(";");
+                    bodyContentType = bodyContentType.substring(0, pos);
+                }
+
+                String bodyEncoding = body.getAttributeValue(_encoding);
+                if (bodyEncoding != null && !"base64".equals(bodyEncoding)) {
+                    throw new UnsupportedOperationException("The '" + bodyEncoding + "' encoding is not supported");
+                }
+
+                if (bodyCharset != null) {
+                    bodyContentType += "; charset=" + bodyCharset;
+                }
+
+                postContent += "--" + boundary + "\r\n";
+                postContent += "Content-Type: " + bodyContentType + "\r\n";
+                if (bodyDescription != null) {
+                    postContent += "Content-Description: " + bodyDescription + "\r\n";
+                }
+                if (bodyId != null) {
+                    postContent += "Content-ID: " + bodyId + "\r\n";
+                }
+                if (bodyEncoding != null) {
+                    postContent += "Content-Transfer-Encoding: " + bodyEncoding + "\r\n";
+                }
+                postContent += "\r\n";
+
+                try {
+                    if (xmlContentType(bodyContentType)) {
+                        Serializer serializer = makeSerializer();
+
+                        Vector<XdmNode> content = new Vector<XdmNode> ();
+                        XdmSequenceIterator iter = body.axisIterator(Axis.CHILD);
+                        while (iter.hasNext()) {
+                            XdmNode node = (XdmNode) iter.next();
+                            content.add(node);
+                        }
+
+                        // FIXME: set serializer properties appropriately!
+                        StringWriter writer = new StringWriter();
+                        serializer.setOutputWriter(writer);
+                        S9apiUtils.serialize(runtime, content, serializer);
+                        writer.close();
+                        postContent += writer.toString();
+                    } else {
+                        StringWriter writer = new StringWriter();
+                        XdmSequenceIterator iter = body.axisIterator(Axis.CHILD);
+                        while (iter.hasNext()) {
+                            XdmNode node = (XdmNode) iter.next();
+                            if (node.getNodeKind() != XdmNodeKind.TEXT) {
+                                throw XProcException.stepError(28);
+                            }
+                            writer.write(node.getStringValue());
+                        }
+                        writer.close();
+                        postContent += writer.toString();
+                    }
+
+                    postContent += "\r\n";
+                } catch (IOException ioe) {
+                    throw new XProcException(ioe);
+                } catch (SaxonApiException sae) {
+                    throw new XProcException(sae);
+                }
+            }
+
+            postContent += "--" + boundary + "--\r\n";
+
+            StringRequestEntity requestEntity = new StringRequestEntity(postContent, multipartContentType, null);
+            method.setRequestEntity(requestEntity);
+
+        } catch (IOException ioe) {
+            throw new XProcException(ioe);
         }
     }
 
@@ -807,10 +743,10 @@ public class HttpRequest extends DefaultStep {
     }
 
     private void readBodyContent(TreeWriter tree, InputStream bodyStream, HttpMethodBase method) throws SaxonApiException, IOException {
-        readBodyContent(tree, bodyStream, getFullContentType(method), method.getResponseCharSet(), getContentBoundary(method));
-    }
+        String contentType = getFullContentType(method);
+        String charset = method.getResponseCharSet();
+        String boundary = getContentBoundary(method);
 
-    private void readBodyContent(TreeWriter tree, InputStream bodyStream, String contentType, String charset, String boundary) throws SaxonApiException, IOException {
         if (overrideContentType != null) {
             contentType = overrideContentType;
         }
@@ -820,22 +756,7 @@ public class HttpRequest extends DefaultStep {
             tree.addAttribute(_content_type, contentType);
             tree.addAttribute(_boundary, boundary);
             tree.startContent();
-
-            /* I think this is a mistake, the headers come before the multipart...
-            for (Header header : method.getResponseHeaders()) {
-                // FIXME: what about parameters?
-                if (header.getName().toLowerCase().equals("transfer-encoding")) {
-                    // nop;
-                } else {
-                    tree.addStartElement(XProcConstants.c_header);
-                    tree.addAttribute(_name, header.getName());
-                    tree.addAttribute(_value, header.getValue());
-                    tree.startContent();
-                    tree.addEndElement();
-                }
-            }
-            */
-
+            
             readMultipartContent(tree, bodyStream, boundary);
 
             tree.addEndElement();
@@ -996,56 +917,6 @@ public class HttpRequest extends DefaultStep {
               tree.addText("\n"); // FIXME: should we be doing this?
           }
       }
-
-    /*
-    public void readBodyContentPart(TreeWriter tree, BufferedReader reader, String contentType, int contentLength, String charset, String boundary) throws SaxonApiException, IOException {
-        String content = null;
-
-        // FIXME: this must be wrong, contentLength is in bytes not characters for binary, right?
-        if (contentLength >= 0) {
-            char buf[] = new char[contentLength];
-            int pos = 0;
-            int left = contentLength;
-            while (left > 0) {
-                int len = reader.read(buf, pos, left);
-                pos += len;
-                left -= len;
-            }
-
-            String line = reader.readLine();
-            while ("".equals(line)) {
-                line = reader.readLine();
-            }
-
-            if (!boundary.equals(line)) {
-                throw new UnsupportedOperationException("Expected boundary: " + line + " (expected " + boundary + ")");
-            }
-            content = new String(buf,0,contentLength);
-        } else {
-            content = "";
-            String line = reader.readLine();
-            while (!boundary.equals(line)) {
-                content += line + "\n";
-                line = reader.readLine();
-            }
-        }
-
-        if (xmlContentType(contentType)) {
-            // Read it as XML
-            StringReader sreader = new StringReader(content);
-            SAXSource source = new SAXSource(new InputSource(sreader));
-            DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
-            tree.addSubtree(builder.build(source));
-        } else if (textContentType(contentType)) {
-            // Read it as text
-            tree.addText(content);
-        } else {
-            // Read it as binary
-            byte bytes[] = content.getBytes(charset);
-            tree.addText(Base64.encodeBytes(bytes));
-        }
-    }
-    */
 
     private void doFile() {
         // Find the content type
