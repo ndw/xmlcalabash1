@@ -20,6 +20,7 @@
 
 package com.xmlcalabash.io;
 
+import com.xmlcalabash.util.HttpUtils;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.QName;
@@ -248,31 +249,12 @@ public class ReadableData implements ReadablePipe {
     }
 
     private String parseCharset(String contentType) {
-        if (contentType == null) {
-            return null;
+        String charset = HttpUtils.getCharset(contentType);
+
+        if (charset != null) {
+            return charset.toLowerCase();
         }
 
-        int pos = contentType.indexOf(";");
-        if (pos > 0) {
-            String charset = contentType.substring(pos);
-            charset = charset.replaceAll(";\\s+", ";").replaceAll("\\s+;", ";");
-            if (charset.contains(";charset=")) {
-                pos = charset.indexOf(";charset=");
-
-                String ctype = charset.substring(0,pos);
-                String post = "";
-
-                charset = charset.substring(pos+9);
-                pos = charset.indexOf(";");
-                if (pos >= 0) {
-                    post = charset.substring(pos);
-                    charset = charset.substring(0,pos);
-                }
-
-                charset = charset.toLowerCase();
-                return charset;
-            }
-        }
         return null;
     }
 }

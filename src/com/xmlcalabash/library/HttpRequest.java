@@ -19,6 +19,7 @@ package com.xmlcalabash.library;
  * Notice in each file and include the License file at docs/CDDL+GPL.txt.
  */
 
+import com.xmlcalabash.util.HttpUtils;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -550,10 +551,8 @@ public class HttpRequest extends DefaultStep {
                 String bodyId = body.getAttributeValue(_id);
                 String bodyDescription = body.getAttributeValue(_description);
 
-                String bodyCharset = "utf-8"; // FIXME: Is this right? They were all in XML...
-                if (bodyContentType.matches("^.*;[ \t]*charset=([^ \t]+)")) {
-                    bodyCharset = bodyContentType.replaceAll("^.*;[ \t]*charset=([^ \t]+).*$", "$1");
-                }
+                // FIXME: Is utf-8 the right default?
+                String bodyCharset = HttpUtils.getCharset(bodyContentType, "utf-8");
 
                 if (bodyContentType.contains(";")) {
                     int pos = bodyContentType.indexOf(";");
@@ -704,10 +703,12 @@ public class HttpRequest extends DefaultStep {
         return boundary == null ? null : boundary.getValue();
     }
 
+    /*
     private String getContentCharset(HttpMethodBase method) {
         Header contentTypeHeader = method.getResponseHeader("Content-Type");
         return getContentCharset(contentTypeHeader);
     }
+    */
 
     private String getContentCharset(Header contentTypeHeader) {
         if (contentTypeHeader == null) {
@@ -886,7 +887,8 @@ public class HttpRequest extends DefaultStep {
               char buf[] = new char[bufSize];
               int len = reader.read(buf, 0, bufSize);
               while (len >= 0) {
-                  tree.addText(new String(buf,0,len));
+                  String s = new String(buf,0,len);
+                  tree.addText(s);
                   len = reader.read(buf, 0, bufSize);
               }
           } else {
@@ -921,11 +923,13 @@ public class HttpRequest extends DefaultStep {
     private void doFile() {
         // Find the content type
         String contentType = overrideContentType;
-        String charset = "utf-8"; // FIXME: what's the real answer?
 
         if (contentType == null) {
             contentType = "application/octet-stream";
         }
+
+        // FIXME: Is ISO-8859-1 the right default?
+        String charset = HttpUtils.getCharset(contentType, "ISO-8859-1");
 
         TreeWriter tree = new TreeWriter(runtime);
         tree.startDocument(requestURI);

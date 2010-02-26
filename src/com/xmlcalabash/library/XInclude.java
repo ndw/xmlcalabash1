@@ -51,6 +51,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
     private static final QName xi_fallback = new QName("http://www.w3.org/2001/XInclude","fallback");
     private static final QName _fixup_xml_base = new QName("", "fixup-xml-base");
     private static final QName _fixup_xml_lang = new QName("", "fixup-xml-lang");
+    private static final QName _encoding = new QName("", "encoding");
     private ReadablePipe source = null;
     private WritablePipe result = null;
     private Stack<ProcessMatch> matcherStack = new Stack<ProcessMatch> ();
@@ -134,7 +135,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                 if (xpointer != null) {
                     throw new XProcException("XPointer cannot be applied with XInclude parse=text: " + href);
                 }
-                String text = readText(href, node.getBaseURI().toASCIIString());
+                String text = readText(href, node, node.getBaseURI().toASCIIString());
                 if (text == null) {
                     finer(node, "XInclude text parse failed: " + href);
                     fallback(node, href);
@@ -251,7 +252,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
         return selectedNodes;
     }
 
-    public String readText(String href, String base) {
+    public String readText(String href, XdmNode node, String base) {
         finest(null, "XInclude read text: " + href + " (" + base + ")");
 
         URI baseURI = null;
@@ -268,9 +269,20 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
         try {
             URL url = hrefURI.toURL();
             URLConnection conn = url.openConnection();
+            String contentType = conn.getContentType();
+            String charset = HttpUtils.getCharset(contentType);
+
+            if (charset == null && node.getAttributeValue(_encoding) != null) {
+                charset = node.getAttributeValue(_encoding);
+            }
 
             // Get the response
-            BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            BufferedReader rd = null;
+            if (charset == null) {
+                rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            } else {
+                rd = new BufferedReader(new InputStreamReader(conn.getInputStream(), charset));
+            }
 
             String line;
             while ((line = rd.readLine()) != null) {
