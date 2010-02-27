@@ -298,7 +298,6 @@ public class Main {
                 }
             }
         } catch (XProcException err) {
-            /*
             if (err.getErrorCode() != null) {
                 String message = "Pipeline failed: err:" + err.getErrorCode() + ": " + err.getMessage();
                 if (err.getStep() != null) {
@@ -323,18 +322,17 @@ public class Main {
                     err.printStackTrace();
                 }
             }
-            */
+            /*
             if (debug) {
                 err.printStackTrace();
             }
+            */
         } catch (Exception err) {
-            /*
             error(logger, null, "Pipeline failed: " + err.toString(), null);
             if (err.getCause() != null) {
                 Throwable cause = err.getCause();
                 error(logger, null, "Underlying exception: " + cause, null);
             }
-            */
             if (debug) {
                 err.printStackTrace();
             }
@@ -362,7 +360,6 @@ public class Main {
         System.exit(1);
     }
 
-    /*
     private String errorMessage(QName code) {
         InputStream instream = getClass().getResourceAsStream("/etc/error-list.xml");
         if (instream != null) {
@@ -370,7 +367,7 @@ public class Main {
                 SAXSource source = new SAXSource(new InputSource(instream));
                 DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
                 XdmNode doc = builder.build(source);
-                XdmSequenceIterator iter = doc.axisIterator(Axis.DESCENDANT, new QName("error"));
+                XdmSequenceIterator iter = doc.axisIterator(Axis.DESCENDANT, new QName(XProcConstants.NS_XPROC_ERROR,"error"));
                 while (iter.hasNext()) {
                     XdmNode error = (XdmNode) iter.next();
                     if (code.getLocalName().equals(error.getAttributeValue(_code))) {
@@ -383,8 +380,7 @@ public class Main {
         }
         return "Unknown error";
     }
-    */
-    
+
     // ===========================================================
     // Logging methods repeated here so that they don't rely
     // on the XProcRuntime constructor succeeding.
