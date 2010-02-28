@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.net.URI;
 import java.util.Hashtable;
 import java.util.Set;
 import java.util.HashSet;
@@ -42,7 +43,6 @@ import java.util.logging.Logger;
 import java.net.URISyntaxException;
 
 import com.xmlcalabash.runtime.XPipeline;
-import com.xmlcalabash.runtime.XLibrary;
 import com.xmlcalabash.util.URIUtils;
 import com.xmlcalabash.util.ParseArgs;
 import com.xmlcalabash.util.LogOptions;
@@ -138,6 +138,34 @@ public class Main {
 
             if (cmd.pipelineURI != null) {
                 pipeline = runtime.load(cmd.pipelineURI);
+            } else if (cmd.impliedPipeline()) {
+                XdmNode implicitPipeline = cmd.implicitPipeline(runtime);
+
+                if (debug) {
+                    System.err.println("Implicit pipeline:");
+                    Processor qtproc = runtime.getProcessor();
+                    DocumentBuilder builder = qtproc.newDocumentBuilder();
+                    builder.setBaseURI(new URI("http://example.com/"));
+                    XQueryCompiler xqcomp = qtproc.newXQueryCompiler();
+                    XQueryExecutable xqexec = xqcomp.compile(".");
+                    XQueryEvaluator xqeval = xqexec.load();
+                    xqeval.setContextItem(implicitPipeline);
+
+                    Serializer serializer = new Serializer();
+
+                    serializer.setOutputProperty(Serializer.Property.INDENT, "yes");
+                    serializer.setOutputProperty(Serializer.Property.METHOD, "xml");
+
+                    serializer.setOutputStream(System.err);
+
+                    xqeval.setDestination(serializer);
+                    xqeval.run();
+                }
+
+                pipeline=runtime.use(implicitPipeline);
+                
+/*
+                pipeline = cmd.implicitPipeline();
             } else if (cmd.libraryURI != null) {
                 XLibrary library = runtime.loadLibrary(cmd.libraryURI);
                 if (cmd.stepName == null) {
@@ -145,6 +173,7 @@ public class Main {
                 } else {
                     pipeline = library.getPipeline(cmd.stepName);
                 }
+*/
             } else if (config.pipeline != null) {
                 XdmNode doc = config.pipeline.read();
                 pipeline = runtime.use(doc);

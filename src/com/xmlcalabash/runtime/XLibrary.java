@@ -37,6 +37,10 @@ public class XLibrary {
         return getPipeline(name);
     }
 
+    public QName getFirstPipelineType() {
+        return library.firstStep();
+    }
+
     public XPipeline getPipeline(QName stepName) {
         DeclareStep step = library.getDeclaration(stepName);
 
