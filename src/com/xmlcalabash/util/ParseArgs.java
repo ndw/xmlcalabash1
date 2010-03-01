@@ -10,7 +10,9 @@ import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Set;
 import java.util.Vector;
 
 /**
@@ -32,13 +34,11 @@ public class ParseArgs {
 
     public String configFile = null;
     public String logStyle = null;
-    public String processLogFile = null;
     public String entityResolverClass = null;
     public String uriResolverClass = null;
     public QName stepName = null;
     public String pipelineURI = null;
     public Vector<String> libraries = new Vector<String> ();
-    public Hashtable<String, Vector<String>> inputs = new Hashtable<String,Vector<String>> ();
     public Hashtable<String, String> outputs = new Hashtable<String,String> ();
     public Hashtable<String, Hashtable<QName,String>> params = new Hashtable<String, Hashtable<QName,String>> ();
     public Hashtable<QName, String> options = new Hashtable<QName,String> ();
@@ -114,6 +114,11 @@ public class ParseArgs {
                 continue;
             }
 
+            if (arg.equals("--data-input")) {
+                parseDataInput(null, "data-input");
+                continue;
+            }
+
             if (arg.startsWith("-o") || arg.equals("--output")) {
                 parseOutput("o", "output");
                 continue;
@@ -186,6 +191,22 @@ public class ParseArgs {
         }
     }
 
+    public Set<String> getInputPorts() {
+        if (steps.size() != 0) {
+            // If we built a compound pipeline from the command line, then there aren't any pipeline inputs
+            return new HashSet<String>();
+        }
+        return curStep.inputs.keySet();
+    }
+
+    public Vector<String> getInputs(String port) {
+        if (steps.size() != 0) {
+            // If we built a compound pipeline from the command line, then there aren't any pipeline inputs
+            return new Vector<String> ();
+        }
+        return curStep.inputs.get(port);
+    }
+
     public boolean impliedPipeline() {
         return steps.size() > 0 || libraries.size() > 0;
     }
@@ -251,13 +272,24 @@ public class ParseArgs {
                 tree.addStartElement(XProcConstants.p_input);
                 tree.addAttribute(new QName("port"), port);
                 tree.startContent();
+
                 for (String uri : step.inputs.get(port)) {
+                    QName qname = XProcConstants.p_document;
+                    if (uri.startsWith("xml:")) {
+                        uri = uri.substring(4);
+                    } else if (uri.startsWith("data:")) {
+                        qname = XProcConstants.p_data;
+                        uri = uri.substring(5);
+                    } else {
+                        throw new UnsupportedOperationException("Unexpected URI type: " + uri);
+                    }
+                    
                     if ("p:empty".equals(uri)) {
                         tree.addStartElement(XProcConstants.p_empty);
                         tree.startContent();
                         tree.addEndElement();
                     } else {
-                        tree.addStartElement(XProcConstants.p_document);
+                        tree.addStartElement(qname);
                         tree.addAttribute(new QName("href"), uri);
                         tree.startContent();
                         tree.addEndElement();
@@ -418,12 +450,12 @@ public class ParseArgs {
     }
 
     private KeyValuePair parseKeyValue(String shortName, String longName) {
-        String sOpt = "-" + shortName;
+        String sOpt = "-" + (shortName == null ? "" : shortName);
         String lOpt = "--" + longName;
         String opt = null;
         String oarg = arg;
 
-        if (arg.startsWith(sOpt)) {
+        if (shortName != null && arg.startsWith(sOpt)) {
             if (arg.equals(sOpt)) {
                 opt = args[++argpos];
                 arg = null;
@@ -467,7 +499,7 @@ public class ParseArgs {
         String uri = v.value;
         if ("-".equals(uri) || uri.startsWith("http:") || uri.startsWith("https:") || uri.startsWith("file:")
                 || "p:empty".equals(uri)) {
-            curStep.addInput(v.key, uri);
+            curStep.addInput(v.key, uri, "xml");
         } else {
             File f = new File(uri);
             String fn = URIUtils.encode(f.getAbsolutePath());
@@ -475,7 +507,25 @@ public class ParseArgs {
             if ("\\".equals(System.getProperty("file.separator"))) {
                 fn = "/" + fn;
             }
-            curStep.addInput(v.key, "file://" + fn);
+            curStep.addInput(v.key, "file://" + fn, "xml");
+        }
+    }
+
+    private void parseDataInput(String shortName, String longName) {
+        KeyValuePair v = parseKeyValue(shortName, longName);
+
+        String uri = v.value;
+        if ("-".equals(uri) || uri.startsWith("http:") || uri.startsWith("https:") || uri.startsWith("file:")
+                || "p:empty".equals(uri)) {
+            curStep.addInput(v.key, uri, "data");
+        } else {
+            File f = new File(uri);
+            String fn = URIUtils.encode(f.getAbsolutePath());
+            // FIXME: HACK!
+            if ("\\".equals(System.getProperty("file.separator"))) {
+                fn = "/" + fn;
+            }
+            curStep.addInput(v.key, "file://" + fn, "data");
         }
     }
 
@@ -597,12 +647,12 @@ public class ParseArgs {
             this.stepName = name;
         }
 
-        public void addInput(String port, String uri) {
+        public void addInput(String port, String uri, String type) {
             if (!inputs.containsKey(port)) {
                 inputs.put(port, new Vector<String> ());
             }
 
-            inputs.get(port).add(uri);
+            inputs.get(port).add(type + ":" + uri);
         }
 
         public void addOption(QName optname, String value) {

@@ -218,7 +218,7 @@ public class Main {
             }
 
             Set<String> ports = pipeline.getInputs();
-            Set<String> cmdPorts = cmd.inputs.keySet();
+            Set<String> cmdPorts = cmd.getInputPorts();
             Set<String> cfgPorts = config.inputs.keySet();
             HashSet<String> allPorts = new HashSet<String>();
             allPorts.addAll(cmdPorts);
@@ -233,7 +233,13 @@ public class Main {
 
                 if (cmdPorts.contains(port)) {
                     XdmNode doc = null;
-                    for (String uri : cmd.inputs.get(port)) {
+                    for (String uri : cmd.getInputs(port)) {
+                        if (uri.startsWith("xml:")) {
+                            uri = uri.substring(4);
+                        } else {
+                            throw new UnsupportedOperationException("Data inputs are not supported on pipelines");
+                        }
+
                         SAXSource source = null;
                         if ("-".equals(uri)) {
                             source = new SAXSource(new InputSource(System.in));
