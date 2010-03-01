@@ -124,9 +124,19 @@ public class Eval extends DefaultStep {
         Set<String> inputports = pipeline.getInputs();
         Set<String> outputports = pipeline.getOutputs();
 
+        int inputCount = 0;
+        for (String port : inputports) {
+            XInput input = pipeline.getInput(port);
+            if (input.getParameters()) {
+                // nop; it's ok for these to be unbound
+            } else {
+                inputCount++;
+            }
+        }
+
         boolean detailed = getOption(_detailed, false);
 
-        if (!detailed && (inputports.size() > 1 || outputports.size() > 1)) {
+        if (!detailed && (inputCount > 1 || outputports.size() > 1)) {
             throw new XProcException("You must specify detailed='true' to eval pipelines with multiple inputs or outputs");
         }
 
@@ -147,7 +157,7 @@ public class Eval extends DefaultStep {
                 String port = primaryin;
                 XdmNode doc = pipe.read();
                 XdmNode root = S9apiUtils.getDocumentElement(doc);
-                if (cx_document.equals(root.getNodeName())) {
+                if (detailed && cx_document.equals(root.getNodeName())) {
                     port = root.getAttributeValue(_port);
                     // FIXME: support exclude-inline-prefixes
                     boolean seenelem = false;

@@ -23,6 +23,7 @@ public class XInput {
     private String port = null;
     private XdmNode node = null;
     private boolean sequenceOk = false;
+    private boolean isParameters = false;
     private Vector<ReadablePipe> readers = null;
     private WritablePipe writer = null;
     private DocumentSequence documents = null;
@@ -32,6 +33,7 @@ public class XInput {
         node = input.getNode();
         port = input.getPort();
         sequenceOk = input.getSequence();
+        isParameters = input.getParameterInput();
         readers = new Vector<ReadablePipe> ();
     }
 
@@ -60,7 +62,17 @@ public class XInput {
         return writer;
     }
 
+    public boolean getSequence() {
+        return sequenceOk;
+    }
+
+    public boolean getParameters() {
+        return isParameters;
+    }
+
+    /*
     protected DocumentSequence getDocumentSequence() {
         return documents;
     }
+    */
 }
