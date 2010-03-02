@@ -38,9 +38,11 @@ public class XPipeline extends XCompoundStep {
         return step.getDeclaration();
     }
 
+    /*
     public void setPhoneHome(boolean phoneHome) {
         doPhoneHome = phoneHome;
     }
+    */
 
     public void passOption(QName name, RuntimeValue value) {
         if (optionsPassedIn == null) {
