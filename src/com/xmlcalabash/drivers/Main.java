@@ -20,7 +20,6 @@
 package com.xmlcalabash.drivers;
 
 import com.xmlcalabash.io.ReadableData;
-import net.sf.saxon.s9api.*;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcConstants;
@@ -29,6 +28,17 @@ import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.model.Serialization;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritableDocument;
+import net.sf.saxon.s9api.Axis;
+import net.sf.saxon.s9api.DocumentBuilder;
+import net.sf.saxon.s9api.Processor;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.Serializer;
+import net.sf.saxon.s9api.XQueryCompiler;
+import net.sf.saxon.s9api.XQueryEvaluator;
+import net.sf.saxon.s9api.XQueryExecutable;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmSequenceIterator;
 import org.xml.sax.InputSource;
 
 import javax.xml.transform.sax.SAXSource;
