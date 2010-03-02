@@ -6,7 +6,8 @@ Where switches are:
   -a, --schema-aware                   Turn on schema-aware processing
   -b, --binding prefix=uri  	       Specify namespace binding
   -c, --config configfile              Specify a particular configuration file
-  -d, --debug               	       Turn on debugging
+  -d, --data-input port=uri            Bind the specified input port to data
+  -D, --debug               	       Turn on debugging
   -E, --entity-resolver className      Specify a resolver class for URI resolution
   -G, --log-style logstyle             Specify the default style for p:log output
   -i, --input port=uri      	       Bind the specified input port
@@ -18,7 +19,8 @@ Where switches are:
   -U, --uri-resolver className         Specify a resolver class for URI resolution
 
 The -b option may be used to provide namespace bindings for parameter
-and option names passed on the command line.
+and option names passed on the command line. As of 0.9.18 the p:
+prefix is bound to the XProc namespace by default.
 
 The value "-" may be used as the URI for exactly one input binding to
 bind that input port to stdin. The value "-" may be used as the URI to
@@ -27,10 +29,11 @@ bind exactly one output port to stdout.
 If you specify multiple inputs for the same source, they will be
 passed as a sequence of documents.
 
-The default logging style for p:log output is "wrapped". You can specify
-alternate styles of "plain", "directory", or "off" to suppress all p:log
-output. (A default of "off" disables all logging, even if individual
-p:log elements specify an alternate style with cx:logstyle.)
+The default logging style for p:log output is "wrapped". You can
+specify alternate styles of "plain", "directory", or "off" to suppress
+all p:log output. (A default of "off" disables all logging, even if
+individual p:log elements specify an alternate style with
+cx:logstyle.)
 
 If a resolver class is specified with -U, it will be instantiated and
 used as the URIResolver for all URIs accessed by Calabash. If a
