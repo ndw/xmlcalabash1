@@ -71,8 +71,8 @@ public class ParseArgs {
                 continue;
             }
 
-            if (arg.startsWith("-d") || arg.startsWith("--debug")) {
-                debug = parseBoolean("d","debug");
+            if (arg.startsWith("-D") || arg.startsWith("--debug")) {
+                debug = parseBoolean("D","debug");
                 debugExplicit = true;
                 continue;
             }
@@ -114,8 +114,8 @@ public class ParseArgs {
                 continue;
             }
 
-            if (arg.equals("--data-input")) {
-                parseDataInput(null, "data-input");
+            if (arg.startsWith("-d") || arg.equals("--data-input")) {
+                parseDataInput("d", "data-input");
                 continue;
             }
 
@@ -230,11 +230,23 @@ public class ParseArgs {
         tree.startContent();
 
         tree.addStartElement(XProcConstants.p_input);
+        tree.addAttribute(new QName("port"), "source");
+        tree.addAttribute(new QName("sequence"), "true");
+        tree.startContent();
+        tree.addEndElement();
+
+        tree.addStartElement(XProcConstants.p_input);
         tree.addAttribute(new QName("port"), "parameters");
         tree.addAttribute(new QName("kind"), "parameter");
         tree.startContent();
         tree.addEndElement();
-        
+
+        // This is a hack too. If there are no outputs, fake one.
+        // Implicit pipelines default to having a single primary output port names "result"
+        if (outputs.size() == 0) {
+            outputs.put("result", "-");
+        }
+
         String lastStepName = "cmdlineStep" + steps.size();
         for (String port : outputs.keySet()) {
             tree.addStartElement(XProcConstants.p_output);
