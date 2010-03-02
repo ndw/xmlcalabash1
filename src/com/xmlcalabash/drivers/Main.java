@@ -19,6 +19,7 @@
 
 package com.xmlcalabash.drivers;
 
+import com.xmlcalabash.io.ReadableData;
 import net.sf.saxon.s9api.*;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
@@ -236,19 +237,24 @@ public class Main {
                     for (String uri : cmd.getInputs(port)) {
                         if (uri.startsWith("xml:")) {
                             uri = uri.substring(4);
+
+                            SAXSource source = null;
+                            if ("-".equals(uri)) {
+                                source = new SAXSource(new InputSource(System.in));
+                                DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
+                                doc = builder.build(source);
+                            } else {
+                                source = new SAXSource(new InputSource(uri));
+                                doc = runtime.parse(uri, URIUtils.cwdAsURI().toASCIIString());
+                            }
+                        } else if (uri.startsWith("data:")) {
+                            uri = uri.substring(5);
+                            ReadableData rd = new ReadableData(runtime, XProcConstants.c_data, uri, "text/plain");
+                            doc = rd.read();
                         } else {
-                            throw new UnsupportedOperationException("Data inputs are not supported on pipelines");
+                            throw new UnsupportedOperationException("Unexpected input type: " + uri);
                         }
 
-                        SAXSource source = null;
-                        if ("-".equals(uri)) {
-                            source = new SAXSource(new InputSource(System.in));
-                            DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
-                            doc = builder.build(source);
-                        } else {
-                            source = new SAXSource(new InputSource(uri));
-                            doc = runtime.parse(uri, URIUtils.cwdAsURI().toASCIIString());
-                        }
                         pipeline.writeTo(port, doc);
                     }
                 } else {
