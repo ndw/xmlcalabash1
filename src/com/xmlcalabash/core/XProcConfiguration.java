@@ -62,7 +62,6 @@ public class XProcConfiguration {
     public Hashtable<String,Vector<ReadablePipe>> inputs = new Hashtable<String,Vector<ReadablePipe>> ();
     public Hashtable<String,Level> logLevel = new Hashtable<String,Level> ();
     public ReadablePipe pipeline = null;
-    public ReadablePipe library = null;
     public Hashtable<String,String> outputs = new Hashtable<String,String> ();
     public Hashtable<String,Hashtable<QName,String>> params = new Hashtable<String,Hashtable<QName,String>> ();
     public Hashtable<QName,String> options = new Hashtable<QName,String> ();
@@ -210,8 +209,6 @@ public class XProcConfiguration {
                     parseEntityResolver(node);
                 } else if ("input".equals(localName)) {
                     parseInput(node);
-                } else if ("library".equals(localName)) {
-                    parseLibrary(node);
                 } else if ("output".equals(localName)) {
                     parseOutput(node);
                 } else if ("with-option".equals(localName)) {
@@ -347,32 +344,6 @@ public class XProcConfiguration {
         }
 
         return excludeURIs;
-    }
-
-    private void parseLibrary(XdmNode node) {
-        String href = node.getAttributeValue(_href);
-        Vector<XdmValue> docnodes = new Vector<XdmValue> ();
-        boolean sawElement = false;
-
-        for (XdmNode child : new RelevantNodes(null, node, Axis.CHILD)) {
-            if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
-                if (sawElement) {
-                    throw new XProcException("Content of library is not a valid XML document.");
-                }
-                sawElement = true;
-            }
-            docnodes.add(child);
-        }
-
-        if (href != null) {
-            if (docnodes.size() > 0) {
-                throw new XProcException("XProcConfiguration error: href and content on library");
-            }
-            library = new ConfigDocument(href, node.getBaseURI().toASCIIString());
-        } else {
-            HashSet<String> excludeURIs = readExcludeInlinePrefixes(node, node.getAttributeValue(_exclude_inline_prefixes));
-            library = new ConfigDocument(docnodes, excludeURIs);
-        }
     }
 
     private void parsePipeline(XdmNode node) {
@@ -622,7 +593,9 @@ public class XProcConfiguration {
                 try {
                     S9apiUtils.writeXdmValue(cfgProcessor, nodes, dest, node.getBaseURI());
                     doc = dest.getXdmNode();
-                    doc = S9apiUtils.removeNamespaces(cfgProcessor, doc, excludeUris);
+                    if (excludeUris.size() != 0) {
+                        doc = S9apiUtils.removeNamespaces(cfgProcessor, doc, excludeUris);
+                    }
                 } catch (SaxonApiException sae) {
                     throw new XProcException(sae);
                 }
