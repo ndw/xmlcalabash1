@@ -55,6 +55,10 @@ public class ReadableInline implements ReadablePipe {
             }
         }
 
+        if (node == null) {
+            throw XProcException.dynamicError(1);
+        }
+
         try {
             S9apiUtils.writeXdmValue(runtime, nodes, dest, node.getBaseURI());
             XdmNode doc = dest.getXdmNode();
