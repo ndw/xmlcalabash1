@@ -1400,7 +1400,7 @@ public class Parser {
             throw new UnsupportedOperationException("Can't parse " + name + " as a pipeline!");
         }
 
-        checkAttributes(node, new String[] { "name", "select" }, false);
+        checkAttributes(node, new String[] { "name" }, false);
 
         String stepName = checkNCName(node.getAttributeValue(_name));
         String select = node.getAttributeValue(_select);
