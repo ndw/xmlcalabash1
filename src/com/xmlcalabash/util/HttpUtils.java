@@ -13,6 +13,26 @@ public class HttpUtils {
     protected HttpUtils() {
     }
 
+    public static String baseContentType(String contentType) {
+        if (contentType != null && contentType.matches("(^.*)[ \t]*;.*$")) {
+            return contentType.replaceAll("(^.*)[ \t]*;.*$", "$1");
+        } else {
+            return contentType;
+        }
+    }
+
+    public static boolean xmlContentType(String contentType) {
+        String baseType = HttpUtils.baseContentType(contentType);
+        return baseType != null
+                && ("application/xml".equals(baseType)
+                    || "text/xml".equals(baseType)
+                    || baseType.endsWith("+xml"));
+    }
+
+    public static boolean textContentType(String contentType) {
+        return contentType != null && contentType.startsWith("text/");
+    }
+
     public static String getCharset(String contentType, String defaultCharset) {
         String charset = HttpUtils.getCharset(contentType);
         if (charset == null) {

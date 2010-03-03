@@ -731,16 +731,11 @@ public class HttpRequest extends DefaultStep {
     }
 
     private boolean xmlContentType(String contentType) {
-        return contentType != null
-                && ("application/xml".equals(contentType)
-                    || contentType.startsWith("application/xml;")
-                    || "text/xml".equals(contentType)
-                    || contentType.startsWith("text/xml;")
-                    || contentType.endsWith("+xml"));
+        return HttpUtils.xmlContentType(contentType);
     }
 
     private boolean textContentType(String contentType) {
-        return contentType != null && contentType.startsWith("text/");
+        return HttpUtils.textContentType(contentType);
     }
 
     private void readBodyContent(TreeWriter tree, InputStream bodyStream, HttpMethodBase method) throws SaxonApiException, IOException {
