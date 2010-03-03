@@ -190,19 +190,21 @@ public class Main {
                 pipeline = runtime.use(doc);
             }
 
+/*
             // Special case for running XProc standard library steps directly
             if (pipeline == null && cmd.stepName != null
                     && XProcConstants.NS_XPROC.equals(cmd.stepName.getNamespaceURI())) {
                 pipeline = runtime.getStandardLibrary().getPipeline(cmd.stepName);
             }
-
+*/
+            
             if (errors || pipeline == null) {
                 usage();
             }
 
             // Process parameters from the configuration...
             for (String port : config.params.keySet()) {
-                Hashtable<QName,String> hash = cmd.params.get(port);
+                Hashtable<QName,String> hash = config.params.get(port);
                 if ("*".equals(port)) {
                     for (QName name : hash.keySet()) {
                         pipeline.setParameter(name, new RuntimeValue(hash.get(name)));
@@ -215,15 +217,12 @@ public class Main {
             }
 
             // Now process parameters from the command line...
-            for (String port : cmd.params.keySet()) {
-                Hashtable<QName,String> hash = cmd.params.get(port);
-                if ("*".equals(port)) {
-                    for (QName name : hash.keySet()) {
-                        pipeline.setParameter(name, new RuntimeValue(hash.get(name)));
-                    }
-                } else {
-                    for (QName name : hash.keySet()) {
-                        pipeline.setParameter(port, name, new RuntimeValue(hash.get(name)));
+            for (String port : cmd.getParameterPorts()) {
+                for (QName name : cmd.getParameterNames(port)) {
+                    if ("*".equals(port)) {
+                        pipeline.setParameter(name, new RuntimeValue(cmd.getParameter(port, name)));
+                    } else {
+                        pipeline.setParameter(port, name, new RuntimeValue(cmd.getParameter(port,name)));
                     }
                 }
             }
@@ -316,8 +315,8 @@ public class Main {
                 pipeline.passOption(optname, value);
             }
 
-            for (QName optname : cmd.options.keySet()) {
-                RuntimeValue value = new RuntimeValue(cmd.options.get(optname), null, null);
+            for (QName optname : cmd.getOptionNames()) {
+                RuntimeValue value = new RuntimeValue(cmd.getOption(optname), null, null);
                 pipeline.passOption(optname, value);
             }
 

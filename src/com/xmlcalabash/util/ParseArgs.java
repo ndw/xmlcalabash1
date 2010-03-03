@@ -36,13 +36,11 @@ public class ParseArgs {
     public String logStyle = null;
     public String entityResolverClass = null;
     public String uriResolverClass = null;
-    public QName stepName = null;
+    private QName stepName = null;
     public String pipelineURI = null;
-    public Vector<String> libraries = new Vector<String> ();
+    private Vector<String> libraries = new Vector<String> ();
     public Hashtable<String, String> outputs = new Hashtable<String,String> ();
-    public Hashtable<String, Hashtable<QName,String>> params = new Hashtable<String, Hashtable<QName,String>> ();
-    public Hashtable<QName, String> options = new Hashtable<QName,String> ();
-    public Hashtable<String, String> bindings = new Hashtable<String, String> ();
+    private Hashtable<String, String> bindings = new Hashtable<String, String> ();
     private Vector<StepArgs> steps = new Vector<StepArgs> ();
     private StepArgs curStep = new StepArgs();
     private StepArgs lastStep = null;
@@ -205,6 +203,46 @@ public class ParseArgs {
             return new Vector<String> ();
         }
         return curStep.inputs.get(port);
+    }
+
+    public Set<QName> getOptionNames() {
+        if (steps.size() != 0) {
+            // If we built a compound pipeline from the command line, then there aren't any pipeline inputs
+            return new HashSet<QName>();
+        }
+        return curStep.options.keySet();
+    }
+
+    public String getOption(QName name) {
+        if (steps.size() != 0) {
+            // If we built a compound pipeline from the command line, then there aren't any pipeline inputs
+            return null;
+        }
+        return curStep.options.get(name);
+    }
+
+    public Set<String> getParameterPorts() {
+        if (steps.size() != 0) {
+            // If we built a compound pipeline from the command line, then there aren't any pipeline inputs
+            return new HashSet<String>();
+        }
+        return curStep.params.keySet();
+    }
+
+    public Set<QName> getParameterNames(String port) {
+        if (steps.size() != 0) {
+            // If we built a compound pipeline from the command line, then there aren't any pipeline inputs
+            return new HashSet<QName>();
+        }
+        return curStep.params.get(port).keySet();
+    }
+
+    public String getParameter(String port, QName name) {
+        if (steps.size() != 0) {
+            // If we built a compound pipeline from the command line, then there aren't any pipeline inputs
+            return null;
+        }
+        return curStep.params.get(port).get(name);
     }
 
     public boolean impliedPipeline() {
