@@ -56,6 +56,7 @@ import com.xmlcalabash.functions.*;
 import javax.xml.transform.URIResolver;
 import javax.xml.transform.ErrorListener;
 
+import org.apache.commons.httpclient.Cookie;
 import org.xml.sax.EntityResolver;
 
 /**
@@ -88,6 +89,7 @@ public class XProcRuntime {
     private XProcMessageListener msgListener = null;
     private PipelineLibrary standardLibrary = null;
     private XLibrary xStandardLibrary = null;
+    private Hashtable<String,Vector<Cookie>> cookieHash = new Hashtable<String,Vector<Cookie>> ();
 
     public XProcRuntime(XProcConfiguration config) {
         this.config = config;
@@ -278,6 +280,7 @@ public class XProcRuntime {
         errors = null;
         episode = null;
         collections = null;
+        cookieHash = new Hashtable<String,Vector<Cookie>> ();
 
         xprocData = new XProcData(this);
 
@@ -469,6 +472,28 @@ public class XProcRuntime {
             return declaredSteps.get(name);
         } else {
             throw XProcException.staticError(44, "Unexpected step name: " + name);
+        }
+    }
+
+    public void clearCookies(String key) {
+        if (cookieHash.containsKey(key)) {
+            cookieHash.get(key).clear();
+        }
+    }
+
+    public void addCookie(String key, Cookie cookie) {
+        if (!cookieHash.containsKey(key)) {
+            cookieHash.put(key, new Vector<Cookie> ());
+        }
+
+        cookieHash.get(key).add(cookie);
+    }
+
+    public Vector<Cookie> getCookies(String key) {
+        if (cookieHash.containsKey(key)) {
+            return cookieHash.get(key);
+        } else {
+            return new Vector<Cookie> ();
         }
     }
 

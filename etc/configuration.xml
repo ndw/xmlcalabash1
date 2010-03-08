@@ -170,6 +170,12 @@
 		type="ml:insert-document"
 		class-name="com.xmlcalabash.extensions.marklogic.XCCInsertDocument"/>
 
+<implementation type="cx:get-cookies"
+		class-name="com.xmlcalabash.extensions.GetCookies"/>
+
+<implementation type="cx:set-cookies"
+		class-name="com.xmlcalabash.extensions.SetCookies"/>
+
 <!-- Fileutils -->
 
 <implementation type="cxf:info"

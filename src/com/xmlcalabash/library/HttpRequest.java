@@ -42,10 +42,6 @@ import com.xmlcalabash.util.RelevantNodes;
 
 import javax.xml.XMLConstants;
 import javax.xml.transform.sax.SAXSource;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Vector;
 import java.util.List;
 import java.net.URI;
@@ -61,7 +57,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileInputStream;
 
-import org.apache.commons.httpclient.URIException;
+import org.apache.commons.httpclient.Cookie;
+import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.xml.sax.InputSource;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
@@ -77,6 +75,9 @@ import org.apache.commons.httpclient.methods.*;
 public class HttpRequest extends DefaultStep {
     public static final QName c_request = new QName("c", XProcConstants.NS_XPROC_STEP, "request");
     public static final QName cx_timeout = new QName("cx",XProcConstants.NS_CALABASH_EX,"timeout");
+    public static final QName cx_cookies = new QName("cx",XProcConstants.NS_CALABASH_EX,"cookies");
+    public static final QName cx_save_cookies = new QName("cx",XProcConstants.NS_CALABASH_EX,"save-cookies");
+    public static final QName cx_use_cookies = new QName("cx",XProcConstants.NS_CALABASH_EX,"use-cookies");
 
     public static final QName _href = new QName("", "href");
     public static final QName _detailed = new QName("", "detailed");
@@ -179,7 +180,29 @@ public class HttpRequest extends DefaultStep {
             return;
         }
 
+        // What about cookies
+        String saveCookieKey = step.getExtensionAttribute(cx_save_cookies);
+        String useCookieKeys = step.getExtensionAttribute(cx_use_cookies);
+        String cookieKey = step.getExtensionAttribute(cx_cookies);
+
+        if (saveCookieKey == null) {
+            saveCookieKey = cookieKey;
+        }
+
+        if (useCookieKeys == null) {
+            useCookieKeys = cookieKey;
+        }
+
         client = new HttpClient();
+        client.getParams().setCookiePolicy(CookiePolicy.RFC_2109);
+        client.getParams().setParameter("http.protocol.single-cookie-header", true);
+
+        HttpState state = client.getState();
+        for (String key : useCookieKeys.split("\\s+")) {
+            for (Cookie cookie : runtime.getCookies(key)) {
+                state.addCookie(cookie);
+            }
+        }
 
         String timeOutStr = step.getExtensionAttribute(cx_timeout);
         if (timeOutStr != null) {
@@ -290,6 +313,17 @@ public class HttpRequest extends DefaultStep {
         try {
             // Execute the method.
             int statusCode = client.executeMethod(httpResult);
+
+            // Deal with cookies
+            if (saveCookieKey != null) {
+                runtime.clearCookies(saveCookieKey);
+
+                state = client.getState();
+                Cookie[] cookies = state.getCookies();
+                for (Cookie cookie : cookies) {
+                    runtime.addCookie(saveCookieKey, cookie);
+                }
+            }
 
             String contentType = getContentType(httpResult);
             if (overrideContentType != null) {
