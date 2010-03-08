@@ -67,13 +67,14 @@ public class StringReplace extends DefaultStep implements ProcessMatchingNodes {
     public void run() throws SaxonApiException {
         super.run();
 
+        RuntimeValue match = getOption(_match);
         replace = getOption(_replace);
         for (String prefix : replace.getNamespaceBindings().keySet()) {
             rns.put(prefix, replace.getNamespaceBindings().get(prefix));
         }
 
         matcher = new ProcessMatch(runtime, this);
-        matcher.match(source.read(), getOption(_match));
+        matcher.match(source.read(), match);
 
         result.write(matcher.getResult());
     }
