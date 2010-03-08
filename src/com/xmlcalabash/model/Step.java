@@ -36,6 +36,10 @@ import com.xmlcalabash.core.XProcException;
  * @author ndw
  */
 public class Step extends SourceArtifact {
+    private static final QName cx_depend = new QName("cx",XProcConstants.NS_CALABASH_EX,"depend");
+    private static final QName cx_depends = new QName("cx",XProcConstants.NS_CALABASH_EX,"depends");
+    private static final QName cx_dependson = new QName("cx",XProcConstants.NS_CALABASH_EX,"dependson");
+
     protected QName stepType = null;
     protected String stepName = null;
     private boolean anonymous = false;
@@ -885,6 +889,12 @@ public class Step extends SourceArtifact {
         }
         
         runtime.finer(null, node, "Checking step order for " + getName());
+
+        if (getExtensionAttribute(cx_depend) != null
+            || getExtensionAttribute(cx_depends) != null
+            || getExtensionAttribute(cx_dependson) != null) {
+            throw new XProcException("The correct spelling of the depends-on attribute is cx:depends-on.");
+        }
 
         String dependsOn = getExtensionAttribute(XProcConstants.cx_depends_on);
         if (dependsOn != null) {
