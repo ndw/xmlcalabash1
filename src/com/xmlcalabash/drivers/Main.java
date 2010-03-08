@@ -347,6 +347,11 @@ public class Main {
                     wd.write(rpipe.read());
                 }
             }
+
+            if (stdio != null) {
+                // It's just sooo much nicer if there's a newline at the end.
+                System.out.println();
+            }
         } catch (XProcException err) {
             if (err.getErrorCode() != null) {
                 String message = "Pipeline failed: err:" + err.getErrorCode() + ": " + err.getMessage();
