@@ -1,6 +1,22 @@
 package com.xmlcalabash.extensions.marklogic;
 
-import net.sf.saxon.s9api.*;
+import com.marklogic.xcc.ContentSource;
+import com.marklogic.xcc.ContentSourceFactory;
+import com.marklogic.xcc.Request;
+import com.marklogic.xcc.ResultItem;
+import com.marklogic.xcc.ResultSequence;
+import com.marklogic.xcc.Session;
+import com.marklogic.xcc.ValueFactory;
+import com.marklogic.xcc.types.XName;
+import com.marklogic.xcc.types.XSString;
+import com.marklogic.xcc.types.XdmBinary;
+import com.marklogic.xcc.types.XdmDocument;
+import com.marklogic.xcc.types.XdmElement;
+import com.marklogic.xcc.types.XdmVariable;
+import com.xmlcalabash.util.Base64;
+import net.sf.saxon.s9api.DocumentBuilder;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.Configuration;
 import com.xmlcalabash.io.ReadablePipe;
@@ -12,13 +28,9 @@ import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.library.DefaultStep;
 import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.model.RuntimeValue;
-import com.marklogic.xcc.*;
-import com.marklogic.xcc.types.*;
 import com.marklogic.xcc.types.XdmItem;
 
 import javax.xml.transform.sax.SAXSource;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.io.StringReader;
 import java.util.Hashtable;
 
@@ -32,13 +44,15 @@ import org.xml.sax.InputSource;
  * To change this template use File | Settings | File Templates.
  */
 public class XCCAdhocQuery extends DefaultStep {
-    private static final QName _pipeinfo = new QName("","pipeinfo");
     private static final QName _user = new QName("","user");
     private static final QName _password = new QName("","password");
     private static final QName _host = new QName("","host");
     private static final QName _port = new QName("","port");
     private static final QName _contentBase = new QName("","content-base");
     private static final QName _wrapper = new QName("","wrapper");
+    private static final QName _encoding = new QName("encoding");
+    private static final QName c_encoding = new QName("c", XProcConstants.NS_XPROC_STEP, "encoding");
+
     private ReadablePipe source = null;
     private WritablePipe result = null;
     private Hashtable<QName,String> params = new Hashtable<QName, String> ();
@@ -119,6 +133,24 @@ public class XCCAdhocQuery extends DefaultStep {
                 if (item instanceof XdmDocument || item instanceof XdmElement) {
                     XdmNode xccXML = parseString(item.asString());
                     result.write(xccXML);
+                } else if (item instanceof XdmBinary) {
+                    String base64 = Base64.encodeBytes(((XdmBinary) item).asBinaryData());
+                    TreeWriter treeWriter = new TreeWriter(runtime);
+                    treeWriter.startDocument(step.getNode().getBaseURI());
+                    treeWriter.addStartElement(wrapper);
+
+                    if (XProcConstants.NS_XPROC_STEP.equals(wrapper.getNamespaceURI())) {
+                        treeWriter.addAttribute(_encoding, "base64");
+                    } else {
+                        treeWriter.addAttribute(c_encoding, "base64");
+                    }
+
+                    treeWriter.startContent();
+                    treeWriter.addText(base64);
+                    treeWriter.addEndElement();
+                    treeWriter.endDocument();
+                    XdmNode node = treeWriter.getResult();
+                    result.write(node);
                 } else {
                     String text = item.asString();
                     TreeWriter treeWriter = new TreeWriter(runtime);

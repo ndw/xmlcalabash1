@@ -1,5 +1,7 @@
 package com.xmlcalabash.extensions.marklogic;
 
+import com.xmlcalabash.util.Base64;
+import com.xmlcalabash.util.S9apiUtils;
 import net.sf.saxon.s9api.*;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.Configuration;
@@ -34,7 +36,6 @@ import org.xml.sax.InputSource;
  * To change this template use File | Settings | File Templates.
  */
 public class XCCInsertDocument extends DefaultStep {
-    private static final QName _pipeinfo = new QName("","pipeinfo");
     private static final QName _user = new QName("","user");
     private static final QName _password = new QName("","password");
     private static final QName _host = new QName("","host");
@@ -46,6 +47,8 @@ public class XCCInsertDocument extends DefaultStep {
     private static final QName _language = new QName("","language");
     private static final QName _locale = new QName("","locale");
     private static final QName _uri = new QName("","uri");
+    private static final QName _encoding = new QName("encoding");
+
     private ReadablePipe source = null;
     private WritablePipe result = null;
 
@@ -78,39 +81,68 @@ public class XCCInsertDocument extends DefaultStep {
         String password = getOption(_password, "");
         String contentBase = getOption(_contentBase, "");
 
-        XdmNode doc = source.read();
-
-        Serializer serializer = makeSerializer();
-
-        Processor qtproc = runtime.getProcessor();
-        XQueryCompiler xqcomp = qtproc.newXQueryCompiler();
-        XQueryExecutable xqexec = xqcomp.compile(".");
-        XQueryEvaluator xqeval = xqexec.load();
-        xqeval.setContextItem(doc);
-
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        serializer.setOutputStream(stream);
-        xqeval.setDestination(serializer);
-        xqeval.run();
-
-        String xmldoc;
-        try {
-            xmldoc = stream.toString("UTF-8");
-        } catch (UnsupportedEncodingException uee) {
-            // This can't happen...
-            throw new XProcException(uee);
-        }
-
         String format = "xml";
         if (getOption(_format) != null) {
             format = getOption(_format).getString();
         }
-        if (!"xml".equals(format)) {
-            throw new UnsupportedOperationException("Only XML documents are supported today.");
+        if (!"xml".equals(format) && !"text".equals(format) && !"binary".equals(format)) {
+            throw new UnsupportedOperationException("Format must be 'xml', 'text', or 'binary'.");
+        }
+
+        XdmNode doc = source.read();
+        XdmNode root = S9apiUtils.getDocumentElement(doc);
+
+        String docstring = null;
+        byte[] docbinary = null;
+
+        if ("xml".equals(format)) {
+            Serializer serializer = makeSerializer();
+
+            Processor qtproc = runtime.getProcessor();
+            XQueryCompiler xqcomp = qtproc.newXQueryCompiler();
+            XQueryExecutable xqexec = xqcomp.compile(".");
+            XQueryEvaluator xqeval = xqexec.load();
+            xqeval.setContextItem(doc);
+
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            serializer.setOutputStream(stream);
+            xqeval.setDestination(serializer);
+            xqeval.run();
+
+            try {
+                docstring = stream.toString("UTF-8");
+            } catch (UnsupportedEncodingException uee) {
+                // This can't happen...
+                throw new XProcException(uee);
+            }
+        } else if ("text".equals(format)) {
+            docstring = doc.getStringValue();
+        } else {
+            if ("base64".equals(root.getAttributeValue(_encoding))) {
+                docbinary = Base64.decode(doc.getStringValue());
+            } else if (root.getAttributeValue(_encoding) == null) {
+                docstring = root.getStringValue();
+            } else {
+                throw new UnsupportedOperationException("Binary content must be base64 encoded.");
+            }
         }
 
         ContentCreateOptions options = ContentCreateOptions.newXmlInstance();
-        options.setEncoding("UTF-8");
+
+        if ("xml".equals(format)) {
+            options.setFormatXml();
+            options.setEncoding("UTF-8");
+        }
+
+        if ("text".equals(format)) {
+            options.setFormatText();
+            options.setEncoding("UTF-8");
+        }
+
+        if ("binary".equals(format)) {
+            options.setFormatBinary();
+        }
+
         if (getOption(_bufferSize) != null) {
             options.setBufferSize(getOption(_bufferSize).getInt());
         }
@@ -129,7 +161,12 @@ public class XCCInsertDocument extends DefaultStep {
 
         String dburi = getOption(_uri).getString();
 
-        Content content = ContentFactory.newContent(dburi, xmldoc, options);
+        Content content = null;
+        if (docbinary == null) {
+            content = ContentFactory.newContent(dburi, docstring, options);
+        } else {
+            content = ContentFactory.newContent(dburi, docbinary, options);
+        }
 
         ContentSource contentSource;
 
