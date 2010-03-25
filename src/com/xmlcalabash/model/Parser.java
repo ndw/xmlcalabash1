@@ -1204,6 +1204,13 @@ public class Parser {
         step.setXPathVersion(xpathVersion);
 
         HashSet<String> excludeURIs = readExcludeInlinePrefixes(node, node.getAttributeValue(new QName("exclude-inline-prefixes")));
+        if (!declStack.isEmpty()) {
+            DeclareStep parent = declStack.peek();
+            for (String uri : parent.getExcludeInlineNamespaces()) {
+                excludeURIs.add(uri);
+            }
+        }
+
         step.setExcludeInlineNamespaces(excludeURIs);
 
         if (name.equals(XProcConstants.p_pipeline)) {
