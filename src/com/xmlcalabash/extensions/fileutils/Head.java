@@ -85,17 +85,39 @@ public class Head extends DefaultStep {
         try {
             FileReader rdr = new FileReader(file);
             BufferedReader brdr = new BufferedReader(rdr);
+            String line = null;
             int count = 0;
-            String line = brdr.readLine();
-            while (line != null && count < maxCount) {
-                tree.addStartElement(c_line);
-                tree.startContent();
-                tree.addText(line);
-                tree.addEndElement();
-                tree.addText("\n");
-                count++;
+
+            if (maxCount >= 0) {
                 line = brdr.readLine();
+                while (line != null && count < maxCount) {
+                    tree.addStartElement(c_line);
+                    tree.startContent();
+                    tree.addText(line);
+                    tree.addEndElement();
+                    tree.addText("\n");
+                    count++;
+                    line = brdr.readLine();
+                }
+            } else {
+                maxCount = -maxCount;
+                line = "not null";
+                while (line != null && count < maxCount) {
+                    count++;
+                    line = brdr.readLine();
+                }
+
+                line = brdr.readLine();
+                while (line != null) {
+                    tree.addStartElement(c_line);
+                    tree.startContent();
+                    tree.addText(line);
+                    tree.addEndElement();
+                    tree.addText("\n");
+                    line = brdr.readLine();
+                }
             }
+            
             brdr.close();
             rdr.close();
         } catch (FileNotFoundException fnfe) {

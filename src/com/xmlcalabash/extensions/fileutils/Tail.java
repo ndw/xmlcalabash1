@@ -83,6 +83,12 @@ public class Tail extends DefaultStep {
         tree.addStartElement(XProcConstants.c_result);
         tree.startContent();
 
+        boolean tail = true;
+        if (maxCount < 0) {
+            maxCount = -maxCount;
+            tail = false;
+        }
+
         try {
             FileReader rdr = new FileReader(file);
             BufferedReader brdr = new BufferedReader(rdr);
@@ -94,21 +100,30 @@ public class Tail extends DefaultStep {
                 lines.add(line);
 
                 if (count > maxCount) {
-                    lines.remove(0);
+                    line = lines.remove(0);
+                    if (!tail) {
+                        tree.addStartElement(c_line);
+                        tree.startContent();
+                        tree.addText(line);
+                        tree.addEndElement();
+                        tree.addText("\n");
+                    }
                 }
 
                 line = brdr.readLine();
             }
+            brdr.close();
 
-            for (String lline : lines) {
-                tree.addStartElement(c_line);
-                tree.startContent();
-                tree.addText(lline);
-                tree.addEndElement();
-                tree.addText("\n");
+            if (tail) {
+                for (String lline : lines) {
+                    tree.addStartElement(c_line);
+                    tree.startContent();
+                    tree.addText(lline);
+                    tree.addEndElement();
+                    tree.addText("\n");
+                }
             }
 
-            brdr.close();
             rdr.close();
         } catch (FileNotFoundException fnfe) {
             throw new XProcException(fnfe);
