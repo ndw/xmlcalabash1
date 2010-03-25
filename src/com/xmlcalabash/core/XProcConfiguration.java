@@ -47,7 +47,6 @@ public class XProcConfiguration {
     public static final QName _prefix = new QName("", "prefix");
     public static final QName _uri = new QName("", "uri");
     public static final QName _class_name = new QName("", "class-name");
-    public static final QName _step_name = new QName("", "step-name");
     public static final QName _type = new QName("", "type");
     public static final QName _port = new QName("", "port");
     public static final QName _href = new QName("", "href");
