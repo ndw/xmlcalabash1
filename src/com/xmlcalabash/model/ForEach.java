@@ -50,14 +50,6 @@ public class ForEach extends DeclareStep {
         return declaration;
     }
 
-    public void setSelect(String select) {
-        this.select = select;
-    }
-    
-    public String getSelect() {
-        return select;
-    }
-    
     @Override
     public boolean loops() {
         return true;
