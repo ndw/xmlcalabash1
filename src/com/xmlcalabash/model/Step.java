@@ -25,11 +25,14 @@ import java.util.Hashtable;
 import java.util.Vector;
 import java.util.List;
 
+import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmNode;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
+import net.sf.saxon.s9api.XdmNodeKind;
+import net.sf.saxon.s9api.XdmSequenceIterator;
 
 /**
  *
@@ -63,7 +66,7 @@ public class Step extends SourceArtifact {
     public Step(XProcRuntime xproc, XdmNode node, QName type) {
         super(xproc, node);
         stepType = type;
-        stepName = anonymousName();
+        stepName = anonymousName(node);
     }
 
     public Step(XProcRuntime xproc, XdmNode node, QName type, String name) {
@@ -71,7 +74,7 @@ public class Step extends SourceArtifact {
         stepType = type;
         stepName = name;
         if (stepName == null) {
-            stepName = anonymousName();
+            stepName = anonymousName(node);
         }
     }
 
@@ -79,10 +82,26 @@ public class Step extends SourceArtifact {
         return false;
     }
 
-    private synchronized String anonymousName() {
-        stepName = "#ANON." + (anonNames.size() + 1);
+    private synchronized String anonymousName(XdmNode node) {
+        String stepName = recursiveAnonymousName(node);
         anonNames.add(stepName);
         return stepName;
+    }
+
+    private String recursiveAnonymousName(XdmNode node) {
+        if (node.getParent().getNodeKind() == XdmNodeKind.DOCUMENT) {
+            return "!1";
+        } else {
+            XdmSequenceIterator iter = node.axisIterator(Axis.PRECEDING_SIBLING);
+            int count = 1;
+            while (iter.hasNext()) {
+                XdmNode pnode = (XdmNode) iter.next();
+                if (pnode.getNodeKind() == XdmNodeKind.ELEMENT) {
+                    count++;
+                }
+            }
+            return anonymousName(node.getParent()) + "." + count;
+        }
     }
 
     /*
