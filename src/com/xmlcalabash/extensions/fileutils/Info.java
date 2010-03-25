@@ -51,14 +51,9 @@ public class Info extends DefaultStep {
     private static final QName _readable = new QName("readable");
     private static final QName _writable = new QName("writable");
     private static final QName _exists = new QName("exists");
-    private static final QName _absolute = new QName("absolute");
-    private static final QName _directory = new QName("directory");
     private static final QName _hidden = new QName("hidden");
-    private static final QName _file = new QName("file");
     private static final QName _last_modified = new QName("last-modified");
     private static final QName _size = new QName("size");
-    private static final QName _absolute_path = new QName("absolute-path");
-    private static final QName _canonical_path = new QName("canonical-path");
 
     private WritablePipe result = null;
 
@@ -105,10 +100,11 @@ public class Info extends DefaultStep {
             }
 
             tree.addAttribute(_href, uri.toASCIIString());
-            tree.addAttribute(_readable, file.canRead() ? "true" : "false");
-            tree.addAttribute(_writable, file.canWrite() ? "true" : "false");
+
+            if (file.canRead())  { tree.addAttribute(_readable, "true"); }
+            if (file.canWrite()) { tree.addAttribute(_writable, "true"); }
+            if (file.isHidden()) { tree.addAttribute(_hidden, "true"); }
             tree.addAttribute(_size, "" + file.length());
-            tree.addAttribute(_hidden, file.isHidden() ? "true" : "false");
 
             GregorianCalendar cal = new GregorianCalendar();
             cal.setTimeInMillis(file.lastModified());
