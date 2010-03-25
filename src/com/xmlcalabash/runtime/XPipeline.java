@@ -97,11 +97,13 @@ public class XPipeline extends XCompoundStep {
 
     public void run() throws SaxonApiException {
         QName infoName = XProcConstants.p_pipeline;
+        /*
         if (!step.isAnonymous()) {
             infoName = step.getDeclaredType();
         }
+        */
 
-        info(step.getNode(), "Running " + infoName + " " + step.getName());
+        info(null, "Running " + infoName + " " + step.getName());
         if (runtime.getAllowGeneralExpressions()) {
             info(step.getNode(), "Running with the 'general-values' extension enabled.");
         }

@@ -33,7 +33,7 @@ public class XPipelineCall extends XAtomicStep {
 
 
     public void run() throws SaxonApiException {
-        info(step.getNode(), "Running " + step.getType());
+        info(null, "Running " + step.getType());
 
         decl.setup();
 
