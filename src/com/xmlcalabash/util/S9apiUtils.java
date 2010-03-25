@@ -324,10 +324,11 @@ public class S9apiUtils {
         boolean ok = true;
 
         int elemCount = 0;
-        while (iter.hasNext()) {
+        while (ok && iter.hasNext()) {
             XdmNode child = (XdmNode) iter.next();
             if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
                 elemCount++;
+                ok = ok && elemCount == 1;
             } else if (child.getNodeKind() == XdmNodeKind.PROCESSING_INSTRUCTION
                     || child.getNodeKind() == XdmNodeKind.COMMENT) {
                 // that's ok
