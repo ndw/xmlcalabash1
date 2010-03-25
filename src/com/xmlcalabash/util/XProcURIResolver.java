@@ -147,8 +147,11 @@ public class XProcURIResolver implements URIResolver, EntityResolver {
         try {
             return builder.build(source);
         } catch (SaxonApiException sae) {
-            if (sae.getMessage().contains("validation")) {
+            String msg = sae.getMessage();
+            if (msg.contains("validation")) {
                 throw XProcException.stepError(27, sae);
+            } else if (msg.contains("HTTP response code: 403 ")) {
+                throw XProcException.dynamicError(21);
             } else {
                 throw XProcException.dynamicError(11, sae);
             }
