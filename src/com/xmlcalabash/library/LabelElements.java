@@ -132,7 +132,7 @@ public class LabelElements extends DefaultStep implements ProcessMatchingNodes {
             if (attribute.equals(attr.getNodeName())) {
                 found = true;
                 if (replace) {
-                    matcher.addAttribute(attr, computedLabel());
+                    matcher.addAttribute(attr, computedLabel(node));
                 } else {
                     matcher.addAttribute(attr);
                 }
@@ -142,7 +142,7 @@ public class LabelElements extends DefaultStep implements ProcessMatchingNodes {
         }
 
         if (!found) {
-            matcher.addAttribute(attribute, computedLabel());
+            matcher.addAttribute(attribute, computedLabel(node));
         }
 
         return true;
@@ -168,7 +168,7 @@ public class LabelElements extends DefaultStep implements ProcessMatchingNodes {
         throw XProcException.stepError(23);
     }
 
-    private String computedLabel() throws SaxonApiException {
+    private String computedLabel(XdmNode node) throws SaxonApiException {
         XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
         xcomp.declareNamespace("p", XProcConstants.NS_XPROC);
         xcomp.declareVariable(p_index);
@@ -178,8 +178,12 @@ public class LabelElements extends DefaultStep implements ProcessMatchingNodes {
 
         selector.setVariable(p_index,new XdmAtomicValue(count++));
 
+        selector.setContextItem(node);
+
         Iterator<XdmItem> values = selector.iterator();
-        XdmAtomicValue item = (XdmAtomicValue) values.next();
+
+        XdmItem item = values.next();
+
         return item.getStringValue();
     }
 }
