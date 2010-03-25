@@ -198,9 +198,12 @@ public class HttpRequest extends DefaultStep {
         client.getParams().setParameter("http.protocol.single-cookie-header", true);
 
         HttpState state = client.getState();
-        for (String key : useCookieKeys.split("\\s+")) {
-            for (Cookie cookie : runtime.getCookies(key)) {
-                state.addCookie(cookie);
+
+        if (useCookieKeys != null) {
+            for (String key : useCookieKeys.split("\\s+")) {
+                for (Cookie cookie : runtime.getCookies(key)) {
+                    state.addCookie(cookie);
+                }
             }
         }
 
@@ -671,8 +674,8 @@ public class HttpRequest extends DefaultStep {
 
     private String getFullContentType(Header contentTypeHeader) {
         if (contentTypeHeader == null) {
-            // This should never happen
-            return null;
+            // This should never happen, but if it does...
+            return "application/octet-stream";
         }
 
         HeaderElement[] contentTypes = contentTypeHeader.getElements();
@@ -709,7 +712,13 @@ public class HttpRequest extends DefaultStep {
 
     private String getContentType(HttpMethodBase method) {
         Header contentTypeHeader = method.getResponseHeader("Content-Type");
-        return getContentType(contentTypeHeader);
+        String contentType = getContentType(contentTypeHeader);
+        if (contentType == null) {
+            // This should never happen either...
+            return "application/octet-stream";
+        } else {
+            return contentType;
+        }
     }
 
     private String getContentType(Header contentTypeHeader) {
