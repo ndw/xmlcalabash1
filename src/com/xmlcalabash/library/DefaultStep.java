@@ -147,7 +147,13 @@ public class DefaultStep implements XProcStep {
     }
 
     public void run() throws SaxonApiException {
-        info(null, "Running " + step.getName());
+        String type = null;
+        if (XProcConstants.NS_XPROC.equals(step.getType().getNamespaceURI())) {
+            type = step.getType().getLocalName();
+        } else {
+            type = step.getType().getClarkName();
+        }
+        info(null, "Running " + type + " " + step.getName());
         runtime.reportStep(step);
     }
 
