@@ -116,6 +116,9 @@ public class XCompoundStep extends XAtomicStep {
             } else if (XProcConstants.p_viewport.equals(substep.getType())) {
                 XViewport newstep = new XViewport(runtime, substep, this);
                 newstep.instantiate(substep);
+            } else if (XProcConstants.cx_until_unchanged.equals(substep.getType())) {
+                XUntilUnchanged newstep = new XUntilUnchanged(runtime,substep,this);
+                newstep.instantiate(substep);
             } else if (substep.isPipelineCall()) {
                 DeclareStep subdecl = substep.getDeclaration();
                 XPipelineCall newstep = new XPipelineCall(runtime, substep, this);

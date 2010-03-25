@@ -13,6 +13,7 @@ import java.io.InputStream;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.XMLConstants;
 
+import com.xmlcalabash.extensions.UntilUnchanged;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.NamePool;
 import net.sf.saxon.om.NamespaceIterator;
@@ -227,6 +228,12 @@ public class Parser {
             allowVariables = true;
             allowPrimary = XProcConstants.p_declare_step.equals(step.getType()); // Not on p:pipeline
         } else if (XProcConstants.p_for_each.equals(step.getType())) {
+            sig.add(XProcConstants.p_iteration_source);
+            sig.add(XProcConstants.p_output);
+            sig.add(XProcConstants.p_log);
+            allowVariables = true;
+            allowPrimary = true;
+        } else if (XProcConstants.cx_until_unchanged.equals(step.getType())) {
             sig.add(XProcConstants.p_iteration_source);
             sig.add(XProcConstants.p_output);
             sig.add(XProcConstants.p_log);
@@ -1064,6 +1071,8 @@ public class Parser {
             return readTry(node);
         } else if (XProcConstants.p_catch.equals(stepType)) {
             return readCatch(node);
+        } else if (XProcConstants.cx_until_unchanged.equals(stepType)) {
+            return readUntilUnchanged(node);
         }
 
         DeclareStep decl= null;
@@ -1403,13 +1412,36 @@ public class Parser {
         checkAttributes(node, new String[] { "name" }, false);
 
         String stepName = checkNCName(node.getAttributeValue(_name));
-        String select = node.getAttributeValue(_select);
 
         ForEach step = new ForEach(runtime, node, stepName);
 
-        if (select != null) {
-            step.setSelect(select);
+        Vector<XdmNode> rest = readSignature(step);
+
+        if (rest == null) {
+            throw XProcException.staticError(15);
         }
+
+        for (XdmNode substepNode : rest) {
+            Step substep = readStep(substepNode);
+            step.addStep(substep);
+        }
+
+        step.checkPrimaryIO();
+        return step;
+    }
+
+
+    private UntilUnchanged readUntilUnchanged(XdmNode node) {
+        QName name = node.getNodeName();
+        if (!XProcConstants.cx_until_unchanged.equals(name)) {
+            throw new UnsupportedOperationException("Can't parse " + name + " as a cx:until-unchanged!");
+        }
+
+        checkAttributes(node, new String[] { "name" }, false);
+
+        String stepName = checkNCName(node.getAttributeValue(_name));
+
+        UntilUnchanged step = new UntilUnchanged(runtime, node, stepName);
 
         Vector<XdmNode> rest = readSignature(step);
 

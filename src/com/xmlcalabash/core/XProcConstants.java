@@ -77,6 +77,8 @@ public class XProcConstants {
     public static final QName p_documentation = new QName(NS_XPROC, "documentation");
     public static final QName p_pipeinfo = new QName(NS_XPROC, "pipeinfo");
 
+    public static final QName cx_until_unchanged = new QName(NS_CALABASH_EX, "until-unchanged");
+
     public static final QName p_iteration_position = new QName(XProcConstants.NS_XPROC, "iteration-position");
 
     public static final QName p_episode = new QName(XProcConstants.NS_XPROC, "episode");
