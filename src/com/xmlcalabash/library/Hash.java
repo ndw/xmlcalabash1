@@ -17,16 +17,25 @@
  * Notice in each file and include the License file at docs/CDDL+GPL.txt.
  */
 
+/*
+ * HST added support for RFC 2104 HMAC signature, name cx:hmac
+ */
+
 package com.xmlcalabash.library;
 
 import java.util.zip.CRC32;
+import java.util.Hashtable;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
+import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.model.RuntimeValue;
+import com.xmlcalabash.util.Base64;
 import com.xmlcalabash.util.ProcessMatchingNodes;
 import com.xmlcalabash.util.ProcessMatch;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -46,6 +55,10 @@ public class Hash extends DefaultStep implements ProcessMatchingNodes {
     private static final QName _crc = new QName("", "crc");
     private static final QName _md = new QName("", "md");
     private static final QName _sha = new QName("", "sha");
+    private static final QName _hmac = new QName("cx", XProcConstants.NS_CALABASH_EX, "hmac");
+    private static final QName _accessKey = new QName("cx", XProcConstants.NS_CALABASH_EX, "accessKey");
+    private static final String HMAC_SHA1_ALGORITHM = "HmacSHA1";
+    private Hashtable<QName,String> params = new Hashtable<QName, String> ();
     protected static final String logger = "org.xproc.library.hash";
     private ReadablePipe source = null;
     private WritablePipe result = null;
@@ -65,6 +78,10 @@ public class Hash extends DefaultStep implements ProcessMatchingNodes {
 
     public void setOutput(String port, WritablePipe pipe) {
         result = pipe;
+    }
+
+    public void setParameter(QName name, RuntimeValue value) {
+        params.put(name, value.getString());
     }
 
     public void reset() {
@@ -90,6 +107,8 @@ public class Hash extends DefaultStep implements ProcessMatchingNodes {
             hash = md(value, version);
         } else if (_sha.equals(algorithm)) {
             hash = sha(value, version);
+        } else if (_hmac.equals(algorithm)) {
+            hash = hmac(value, params.get(_accessKey));
         } else {
             throw XProcException.dynamicError(36);
         }
@@ -167,6 +186,44 @@ public class Hash extends DefaultStep implements ProcessMatchingNodes {
 
         for (byte b : hash) {
             result = result + Integer.toHexString(b & 0xff);
+        }
+
+        return result;
+    }
+
+    /**
+     * Computes RFC 2104-compliant HMAC signature.
+     * Copied/modified slightly from amazon.webservices.common.Signature
+     * Contributed by Henry Thompson, used with permission
+     * 
+     * @param data
+     *     The data to be signed.
+     * @param key
+     *     The signing key.
+     * @return
+     *     The Base64-encoded RFC 2104-compliant HMAC signature.
+     * @throws
+     *     XProcException exception when signature generation fails
+     */
+    private static String hmac(String data, String key) {
+        String result = "";
+        try {
+            // get an hmac_sha1 key from the raw key bytes
+            SecretKeySpec signingKey = new SecretKeySpec(key.getBytes(), 
+                                                         HMAC_SHA1_ALGORITHM);
+            
+            // get an hmac_sha1 Mac instance and initialize with the signing key
+            Mac mac = Mac.getInstance(HMAC_SHA1_ALGORITHM);
+            mac.init(signingKey);
+            
+            // compute the hmac on input data bytes
+            byte[] rawHmac = mac.doFinal(data.getBytes());
+            
+            // base64-encode the hmac
+	        result = Base64.encodeBytes(rawHmac);
+	        //System.err.println("k: "+data+" + "+key+" = "+rawHmac+" = "+result);
+        } catch (Exception e) {
+    	    throw XProcException.dynamicError(36,"Failed to generate HMAC : " + e.getMessage());
         }
 
         return result;
