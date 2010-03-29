@@ -341,6 +341,34 @@ public class Main {
                 }
 
                 Serialization serial = pipeline.getSerialization(port);
+
+                if (serial == null) {
+                    // Use the configuration options
+                    // FIXME: should each of these be considered separately?
+                    // FIXME: should there be command-line options to override these settings?
+                    serial = new Serialization(runtime, pipeline.getNode()); // The node's a hack
+                    for (String name : config.serializationOptions.keySet()) {
+                        String value = config.serializationOptions.get(name);
+
+                        if ("byte-order-mark".equals(name)) serial.setByteOrderMark("true".equals(value));
+                        if ("escape-uri-attributes".equals(name)) serial.setEscapeURIAttributes("true".equals(value));
+                        if ("include-content-type".equals(name)) serial.setIncludeContentType("true".equals(value));
+                        if ("indent".equals(name)) serial.setIndent("true".equals(value));
+                        if ("omit-xml-declaration".equals(name)) serial.setOmitXMLDeclaration("true".equals(value));
+                        if ("undeclare-prefixes".equals(name)) serial.setUndeclarePrefixes("true".equals(value));
+                        if ("method".equals(name)) serial.setMethod(new QName("", value));
+
+                        // FIXME: if ("cdata-section-elements".equals(name)) serial.setCdataSectionElements();
+                        if ("doctype-public".equals(name)) serial.setDoctypePublic(value);
+                        if ("doctype-system".equals(name)) serial.setDoctypeSystem(value);
+                        if ("encoding".equals(name)) serial.setEncoding(value);
+                        if ("media-type".equals(name)) serial.setMediaType(value);
+                        if ("normalization-form".equals(name)) serial.setNormalizationForm(value);
+                        if ("standalone".equals(name)) serial.setStandalone(value);
+                        if ("version".equals(name)) serial.setVersion(value);
+                    }
+                }
+                
                 WritableDocument wd = new WritableDocument(runtime,uri,serial);
                 ReadablePipe rpipe = pipeline.readFrom(port);
                 while (rpipe.moreDocuments()) {
