@@ -176,8 +176,12 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                         snode = fixup.fixup(snode);
                     }
 
-                    XdmNode ex = expandXIncludes(snode);
-                    matcher.addSubtree(ex);
+                    if (snode.getNodeKind() == XdmNodeKind.ELEMENT) {
+                        XdmNode ex = expandXIncludes(snode);
+                        matcher.addSubtree(ex);
+                    } else {
+                        matcher.addSubtree(snode);
+                    }
                 }
 
                 return false;
