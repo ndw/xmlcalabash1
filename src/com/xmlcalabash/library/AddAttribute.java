@@ -88,7 +88,6 @@ public class AddAttribute extends DefaultStep implements ProcessMatchingNodes {
             throw XProcException.dynamicError(34, "You can't specify a namespace if the attribute name contains a colon");
         }
 
-
         if (attrNameStr.contains(":")) {
             attrName = new QName(attrNameStr, attrNameValue.getNode());
         } else {
@@ -125,48 +124,52 @@ public class AddAttribute extends DefaultStep implements ProcessMatchingNodes {
         // We're going to have to loop through the attributes several times, so let's grab 'em
         Hashtable<QName, String> attrs = new Hashtable<QName, String> ();
 
-        // Put the "new" one in, to start with...
-        attrs.put(attrName, attrValue);
-
         XdmSequenceIterator iter = node.axisIterator(Axis.ATTRIBUTE);
         while (iter.hasNext()) {
             XdmNode child = (XdmNode) iter.next();
             String value =  child.getStringValue();
-            if (child.getNodeName().equals(attrName)) {
-                value = attrValue;
-            }
-            attrs.put(child.getNodeName(), value);
-        }
 
-        // If the requested prefix is already bound to something else, drop it
-        String prefix = attrName.getPrefix();
-        for (QName attr : attrs.keySet()) {
-            if (prefix.equals(attr.getPrefix())
-                    && !attrName.getNamespaceURI().equals(attr.getNamespaceURI())) {
-                prefix = "";
+            if (!child.getNodeName().equals(attrName)) {
+                attrs.put(child.getNodeName(), value);
             }
         }
 
-        // If there isn't a prefix, we have to make one up
-        if ("".equals(prefix)) {
-            int acount = 0;
-            String aprefix = "_0";
-            boolean done = false;
+        QName instanceAttrName = attrName;
 
-            while (!done) {
-                acount++;
-                aprefix = "_" + acount;
-                done = true;
-
-                for (QName attr : attrs.keySet()) {
-                    if (aprefix.equals(attr.getPrefix())) {
-                        done = false;
-                    }
+        if (attrName.getNamespaceURI() != null && !"".equals(attrName.getNamespaceURI())) {
+            // If the requested prefix is already bound to something else, drop it
+            String prefix = attrName.getPrefix();
+            for (QName attr : attrs.keySet()) {
+                if (prefix.equals(attr.getPrefix())
+                        && !attrName.getNamespaceURI().equals(attr.getNamespaceURI())) {
+                    prefix = "";
                 }
             }
 
-            attrName = new QName(aprefix, attrName.getNamespaceURI(), attrName.getLocalName());
+            // If there isn't a prefix, we have to make one up
+            if ("".equals(prefix)) {
+                int acount = 0;
+                String aprefix = "_0";
+                boolean done = false;
+
+                while (!done) {
+                    acount++;
+                    aprefix = "_" + acount;
+                    done = true;
+
+                    for (QName attr : attrs.keySet()) {
+                        if (aprefix.equals(attr.getPrefix())) {
+                            done = false;
+                        }
+                    }
+                }
+
+                instanceAttrName = new QName(aprefix, attrName.getNamespaceURI(), attrName.getLocalName());
+            }
         }
+
+        // Now put the "new" one in, with it's instance-valid QName
+        attrs.put(instanceAttrName, attrValue);
 
         matcher.addStartElement(node);
 
