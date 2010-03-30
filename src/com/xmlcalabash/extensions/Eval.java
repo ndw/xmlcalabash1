@@ -105,15 +105,17 @@ public class Eval extends DefaultStep {
         XdmNode pipedoc = pipeline.read();
         XdmNode piperoot = S9apiUtils.getDocumentElement(pipedoc);
 
+        XProcRuntime innerRuntime = new XProcRuntime(runtime);
+
         QName stepName = getOption(_step, (QName) null);
         XPipeline pipeline = null;
         if (XProcConstants.p_pipeline.equals(piperoot.getNodeName())) {
             if (stepName != null) {
                 throw new XProcException("Step option can only be used when loading a p:library");
             }
-            pipeline = runtime.use(pipedoc);
+            pipeline = innerRuntime.use(pipedoc);
         } else if (XProcConstants.p_library.equals(piperoot.getNodeName())) {
-            XLibrary library = runtime.useLibrary(piperoot);
+            XLibrary library = innerRuntime.useLibrary(piperoot);
             if (stepName == null) {
                 pipeline = library.getFirstPipeline();
             } else {

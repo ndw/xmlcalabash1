@@ -140,6 +140,21 @@ public class XProcRuntime {
         reset();
     }
 
+    public XProcRuntime(XProcRuntime runtime) {
+        processor = runtime.processor;
+        parser = runtime.parser;
+        uriResolver = runtime.uriResolver;
+        config = runtime.config;
+        phoneHome = runtime.phoneHome;
+        staticBaseURI = runtime.staticBaseURI;
+        allowGeneralExpressions = runtime.allowGeneralExpressions;
+        log = runtime.log;
+        msgListener = runtime.msgListener;
+        standardLibrary = runtime.standardLibrary;
+        xStandardLibrary = runtime.xStandardLibrary;
+        cookieHash = runtime.cookieHash;
+    }
+
     public XProcData getXProcData() {
         return xprocData;
     }
