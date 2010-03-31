@@ -82,7 +82,17 @@ public class ProcessMatch extends TreeWriter {
 
             receiver.setPipelineConfiguration(pipe);
             receiver.open();
+
+            // If we start a match at a document, fake a document wrapper so that
+            // a sequence of nodes is returned correctly...
+            if (doc.getNodeKind() != XdmNodeKind.DOCUMENT) {
+                startDocument(doc.getBaseURI());
+            }
             traverse(doc);
+            if (doc.getNodeKind() != XdmNodeKind.DOCUMENT) {
+                endDocument();
+            }
+
             receiver.close();
         } catch (XProcException e) {
             throw e;
