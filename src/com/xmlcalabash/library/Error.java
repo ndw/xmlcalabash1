@@ -103,7 +103,6 @@ public class Error extends DefaultStep {
         treeWriter.addAttribute(_type, "p:error");
         treeWriter.addAttribute(_code, errorCode.toString());
         treeWriter.startContent();
-        treeWriter.addComment(" FIXME: make sure namespace bindings are right. ");
         treeWriter.addSubtree(doc);
         treeWriter.addEndElement();
         treeWriter.endDocument();
