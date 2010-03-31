@@ -91,6 +91,9 @@ public class Error extends DefaultStep {
             errorCode = new QName(cpfx == null ? "" : cpfx, cns, codeNameStr);
         }
 
+        cpfx = errorCode.getPrefix();
+        cns = errorCode.getNamespaceURI();
+
         TreeWriter treeWriter = new TreeWriter(runtime);
         treeWriter.startDocument(step.getNode().getBaseURI());
         treeWriter.addStartElement(c_error);
