@@ -84,8 +84,13 @@ public class Cwd extends ExtensionFunctionDefinition {
                 throw XProcException.dynamicError(23);
             }
 
-            return SingletonIterator.makeIterator(
-                    new AnyURIValue(runtime.getStaticBaseURI().toASCIIString()));
+            // The base URI always ends in '/', but cwd() shouldn't, unless "/" is the base URI!
+            String cwd = runtime.getStaticBaseURI().toASCIIString();
+            if (cwd.endsWith("/") && cwd.length() > 1) {
+                cwd = cwd.substring(0, cwd.length()-1);
+            }
+
+            return SingletonIterator.makeIterator(new AnyURIValue(cwd));
         }
     }
 }
