@@ -109,7 +109,8 @@ public class Eval extends DefaultStep {
 
         QName stepName = getOption(_step, (QName) null);
         XPipeline pipeline = null;
-        if (XProcConstants.p_pipeline.equals(piperoot.getNodeName())) {
+        if (XProcConstants.p_pipeline.equals(piperoot.getNodeName())
+                || XProcConstants.p_declare_step.equals(piperoot.getNodeName())) {
             if (stepName != null) {
                 throw new XProcException("Step option can only be used when loading a p:library");
             }
