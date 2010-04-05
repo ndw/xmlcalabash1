@@ -44,9 +44,7 @@ public class MakeAbsoluteURIs extends DefaultStep implements ProcessMatchingNode
     private static final QName _base_uri = new QName("", "base-uri");
     private ReadablePipe source = null;
     private WritablePipe result = null;
-    private Map<QName, RuntimeValue> inScopeOptions = null;
     private ProcessMatch matcher = null;
-    private String matchPattern = null;
     private URI setBaseURI = null;
 
     /** Creates a new instance of MakeAbsoluteURIs */
@@ -72,9 +70,7 @@ public class MakeAbsoluteURIs extends DefaultStep implements ProcessMatchingNode
 
         XdmNode doc = source.read();
         RuntimeValue base = getOption(_base_uri);
-        if (base == null) {
-            setBaseURI = doc.getBaseURI();
-        } else {
+        if (base != null) {
             setBaseURI = base.getBaseURI().resolve(base.getString());
         }
 
@@ -105,7 +101,9 @@ public class MakeAbsoluteURIs extends DefaultStep implements ProcessMatchingNode
         String value = node.getStringValue();
         value = URIUtils.encode(value);
 
-        String resolved = setBaseURI.resolve(value).toString();
+        URI baseURI = setBaseURI == null ? node.getBaseURI() : setBaseURI;
+
+        String resolved = baseURI.resolve(value).toString();
         matcher.addText(resolved);
         return false;
     }
@@ -130,7 +128,9 @@ public class MakeAbsoluteURIs extends DefaultStep implements ProcessMatchingNode
         String value = node.getStringValue();
         value = URIUtils.encode(value);
 
-        String resolved = setBaseURI.resolve(value).toString();
+        URI baseURI = setBaseURI == null ? node.getBaseURI() : setBaseURI;
+
+        String resolved = baseURI.resolve(value).toString();
         matcher.addAttribute(node, resolved);
     }
 }
