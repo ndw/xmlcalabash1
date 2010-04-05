@@ -80,14 +80,18 @@ public class DirectoryList extends DefaultStep {
         } else {
             path = step.getNode().getBaseURI().resolve(".").toASCIIString();
         }
-        
+
+        runtime.fine(null, step.getNode(), "path: " + path);
+
         RuntimeValue value = getOption(_include_filter);
         if (value != null) {
             inclFilter = value.getString();
+            runtime.fine(null, step.getNode(), "include: " + inclFilter);
         }
         value = getOption(_exclude_filter);
         if (value != null) {
             exclFilter = value.getString();
+            runtime.fine(null, step.getNode(), "exclude: " + exclFilter);
         }
 
         File dir = URIUtils.getFile(path);
@@ -123,12 +127,16 @@ public class DirectoryList extends DefaultStep {
             boolean use = true;
             String filename = file.getName();
 
+            runtime.fine(null, step.getNode(), "name: " + filename);
+
             if (inclFilter != null) {
                 use = filename.matches(inclFilter);
+                runtime.fine(null, step.getNode(), "include: " + use);
             }
 
             if (exclFilter != null) {
                 use = use && !filename.matches(exclFilter);
+                runtime.fine(null, step.getNode(), "exclude: " + !use);
             }
 
             if (use) {
