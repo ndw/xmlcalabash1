@@ -163,6 +163,9 @@ public class NamespaceRename extends DefaultStep implements ProcessMatchingNodes
                 String uri = pool.getURI(nameCode);
 
                 if (from.equals(uri)) {
+                    if ("".equals(pfx)) {
+                        pfx = "_1";
+                    }
                     nameCode = pool.allocate(pfx,to,attr.getNodeName().getLocalName());
                 }
                 matcher.addAttribute(nameCode, typeCode, attr.getStringValue());
