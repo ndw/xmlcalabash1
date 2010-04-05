@@ -36,7 +36,8 @@ import com.xmlcalabash.core.XProcRuntime;
  */
 public class CompoundStep extends Step {
     private Environment inheritedEnv = null;
-    private Hashtable<QName,Variable> variables = new Hashtable<QName,Variable> ();
+    private HashSet<QName> variablesSeen = new HashSet<QName> ();
+    private Vector<Variable> variables = new Vector<Variable> (); // Order matters!!!
     private boolean augmented = false;
     
     /** Creates a new instance of CompoundStep */
@@ -54,15 +55,16 @@ public class CompoundStep extends Step {
     }
 
     public void addVariable(Variable variable) {
-        if (variables.containsKey(variable.getName()) || (getOption(variable.getName()) != null)) {
+        if (variablesSeen.contains(variable.getName()) || (getOption(variable.getName()) != null)) {
             throw XProcException.staticError(4, "Duplicate variable/option name: " + variable.getName());
         }
 
-        variables.put(variable.getName(), variable);
+        variablesSeen.add(variable.getName());
+        variables.add(variable);
     }
 
     public Collection<Variable> getVariables() {
-        return variables.values();
+        return variables;
     }
 
     @Override
