@@ -780,7 +780,13 @@ private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
             if (href != null) {
                 add(input, null, baseURI.resolve(href).toASCIIString());
             } else {
-                XdmNode docroot = S9apiUtils.getDocumentElement(input);
+                XdmNode docroot = null;
+                for (XdmNode node : new RelevantNodes(input,Axis.CHILD,true)) {
+                    if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
+                        docroot = node;
+                    }
+                }
+                
                 if (t_document.equals(docroot.getNodeName())) {
                     href = docroot.getAttributeValue(_href);
                     if (href != null) {
