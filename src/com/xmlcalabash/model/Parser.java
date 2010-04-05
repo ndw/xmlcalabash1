@@ -1142,7 +1142,7 @@ public class Parser {
         QName name = node.getNodeName();
 
         if (!name.equals(XProcConstants.p_declare_step) && !name.equals(XProcConstants.p_pipeline)) {
-            throw XProcException.staticError(59);
+            throw XProcException.staticError(59, "Expected p:declare-step or p:pipeline, got " + name);
         }
 
         checkAttributes(node, new String[] { "type", "name", "version", "psvi-required", "xpath-version", "exclude-inline-prefixes"}, false);
