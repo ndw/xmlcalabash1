@@ -2,7 +2,7 @@
 <project name="calabash" default="default" basedir=".">
   <description>Builds the distribution jar because IntelliJ sucks at it</description>
 
-  <property name="version" value="0.9.19"/>
+  <property name="version" value="0.9.20"/>
   <property name="distrib.dir" value="calabash-${version}"/>
   <property name="build.dir" value="out/production/Calabash"/>
 
