@@ -1398,7 +1398,7 @@ public class Parser {
         if (imported) {
             return importElem;
         }
-
+        
         if (!declStack.isEmpty()) {
             declStack.peek().addImport(importURI.toASCIIString());
         } else {
