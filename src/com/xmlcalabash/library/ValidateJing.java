@@ -20,6 +20,7 @@ package com.xmlcalabash.library;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import com.xmlcalabash.util.Base64;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -46,8 +47,11 @@ import org.iso_relax.verifier.VerifierConfigurationException;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.URI;
 
 /**
  * Created by IntelliJ IDEA.
@@ -60,6 +64,7 @@ public class ValidateJing extends DefaultStep {
     private static final QName _assert_valid = new QName("", "assert-valid");
     private static final QName _dtd_attribute_values = new QName("", "dtd-attribute-values");
     private static final QName _dtd_id_idref_warnings = new QName("", "dtd-id-idref-warnings");
+    private static final QName _encoding = new QName("encoding");
 
     private ReadablePipe source = null;
     private ReadablePipe schemaSource = null;
@@ -122,7 +127,7 @@ public class ValidateJing extends DefaultStep {
             sr = CompactSchemaReader.getInstance();
 
             // Grotesque hack!
-            StringReader srdr = new StringReader(root.getStringValue());
+            StringReader srdr = new StringReader(compactSchema(root));
             schemaInputSource = new InputSource(srdr);
             schemaInputSource.setSystemId(root.getBaseURI().toASCIIString());
         } else {
@@ -150,5 +155,15 @@ public class ValidateJing extends DefaultStep {
         }
 
         result.write(doc); // At the moment, we don't get any augmentation
+    }
+
+    private String compactSchema(XdmNode doc) {
+        if ("base64".equals(doc.getAttributeValue(_encoding))) {
+            byte[] decoded = Base64.decode(doc.getStringValue());
+            String s = new String(decoded);
+            return s;
+        } else {
+            return doc.getStringValue();
+        }
     }
 }
