@@ -53,7 +53,7 @@ public class Wrap extends DefaultStep implements ProcessMatchingNodes {
     private Map<QName, RuntimeValue> inScopeOptions = null;
     private QName wrapper = null;
     private int wrapperCode = 0;
-    private String groupAdjacent = null;
+    private RuntimeValue groupAdjacent = null;
     private Stack<Boolean> inGroup = new Stack<Boolean> ();
 
     /** Creates a new instance of Wrap */
@@ -96,7 +96,7 @@ public class Wrap extends DefaultStep implements ProcessMatchingNodes {
             wrapper = new QName(wpfx == null ? "" : wpfx, wns, wrapperNameStr);
         }
 
-        groupAdjacent = getOption(_group_adjacent, (String) null);
+        groupAdjacent = getOption(_group_adjacent);
 
         inGroup.push(false);
 
@@ -146,7 +146,7 @@ public class Wrap extends DefaultStep implements ProcessMatchingNodes {
         matcher.addStartElement(node);
         matcher.addAttributes(node);
 
-        inGroup.push(false);
+        inGroup.push(false); // processEndElement will pop it! Value doesn't matter!
         return true;
     }
 
@@ -252,7 +252,11 @@ public class Wrap extends DefaultStep implements ProcessMatchingNodes {
     private XdmItem computeGroup(XdmNode node) {
         try {
             XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
-            XPathExecutable xexec = xcomp.compile(groupAdjacent);
+            for (String prefix : groupAdjacent.getNamespaceBindings().keySet()) {
+                xcomp.declareNamespace(prefix, groupAdjacent.getNamespaceBindings().get(prefix));
+            }
+
+            XPathExecutable xexec = xcomp.compile(groupAdjacent.getString());
             XPathSelector selector = xexec.load();
             selector.setContextItem(node);
 
@@ -263,8 +267,7 @@ public class Wrap extends DefaultStep implements ProcessMatchingNodes {
                 return null;
             }
         } catch (SaxonApiException sae) {
-            // WTF?
-            return null;
+            throw new XProcException(sae);
         }
     }
 }
