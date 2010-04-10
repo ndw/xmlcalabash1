@@ -100,7 +100,6 @@ public class Hash extends DefaultStep implements ProcessMatchingNodes {
             version = getOption(_version).getString();
         }
 
-
         if (_crc.equals(algorithm)) {
             hash = crc(value, version);
         } else if (_md.equals(algorithm)) {
