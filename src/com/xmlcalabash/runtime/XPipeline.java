@@ -38,17 +38,30 @@ public class XPipeline extends XCompoundStep {
         return step.getDeclaration();
     }
 
-    /*
-    public void setPhoneHome(boolean phoneHome) {
-        doPhoneHome = phoneHome;
-    }
-    */
-
     public void passOption(QName name, RuntimeValue value) {
         if (optionsPassedIn == null) {
             optionsPassedIn = new Hashtable<QName,RuntimeValue> ();
         }
         optionsPassedIn.put(name,value);
+    }
+
+    public Hashtable<QName,RuntimeValue> getInScopeOptions() {
+        // We make a copy so that what our children do can't effect us
+        Hashtable<QName,RuntimeValue> globals = new Hashtable<QName,RuntimeValue> ();
+        if (inScopeOptions != null) {
+            for (QName name : inScopeOptions.keySet()) {
+                globals.put(name,inScopeOptions.get(name));
+            }
+        }
+
+        // We also need to pass through any options passed in...
+        if (optionsPassedIn != null) {
+            for (QName name : optionsPassedIn.keySet()) {
+                globals.put(name,optionsPassedIn.get(name));
+            }
+        }
+
+        return globals;
     }
 
     public Set<String> getInputs() {
