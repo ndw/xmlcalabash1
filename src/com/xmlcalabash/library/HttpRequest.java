@@ -92,10 +92,11 @@ public class HttpRequest extends DefaultStep {
     public static final QName _value = new QName("", "value");
     public static final QName _id = new QName("", "id");
     public static final QName _description = new QName("", "description");
+    public static final QName _disposition = new QName("", "disposition");
     public static final QName _status = new QName("", "status");
     public static final QName _boundary = new QName("", "boundary");
 
-    private static final int bufSize = 14400; // A multiple of 3, 4, and 75 for base64 line breaking
+    private static final int bufSize = 912 * 8; // A multiple of 3, 4, and 75 for base64 line breaking
 
     private HttpClient client = null;
     private boolean statusOnly = false;
@@ -587,6 +588,7 @@ public class HttpRequest extends DefaultStep {
 
                 String bodyId = body.getAttributeValue(_id);
                 String bodyDescription = body.getAttributeValue(_description);
+                String bodyDisposition = body.getAttributeValue(_disposition);
 
                 // FIXME: Is utf-8 the right default?
                 String bodyCharset = HttpUtils.getCharset(bodyContentType, "utf-8");
@@ -612,6 +614,9 @@ public class HttpRequest extends DefaultStep {
                 }
                 if (bodyId != null) {
                     postContent += "Content-ID: " + bodyId + "\r\n";
+                }
+                if (bodyDisposition != null) {
+                    postContent += "Content-Disposition: " + bodyDisposition + "\r\n";
                 }
                 if (bodyEncoding != null) {
                     postContent += "Content-Transfer-Encoding: " + bodyEncoding + "\r\n";
@@ -939,8 +944,8 @@ public class HttpRequest extends DefaultStep {
                   pos += len;
                   readLen -= len;
                   if (readLen == 0) {
-                      System.err.println("Encoding " + readLen + " bytes (from " + pos + ")");
-                      tree.addText(Base64.encodeBytes(bytes));
+                      String encoded = Base64.encodeBytes(bytes);
+                      tree.addText(encoded);
                       pos = 0;
                       readLen = bufSize;
                   }
