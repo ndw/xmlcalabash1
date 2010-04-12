@@ -116,6 +116,10 @@ public class RuntimeValue {
         return value;
     }
 
+    public boolean hasGeneralValue() {
+        return generalValue != null;
+    }
+
     public XdmValue getValue() {
         if (generalValue == null) {
             throw new XProcException("Unexpexted null value in getValue()");
