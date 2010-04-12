@@ -83,7 +83,7 @@ public class Parameters extends DefaultStep {
             String value = parameters.get(param).getStringValue().getStringValue();
             treeWriter.addStartElement(c_param);
             treeWriter.addAttribute(_name, param.getLocalName());
-            if (param.getNamespaceURI() != null) {
+            if (param.getNamespaceURI() != null && !"".equals(param.getNamespaceURI())) {
                 treeWriter.addAttribute(_namespace, param.getNamespaceURI());
             }
 
@@ -132,7 +132,7 @@ public class Parameters extends DefaultStep {
 
                 }
             } else {
-                    treeWriter.addAttribute(_value, value);
+                treeWriter.addAttribute(_value, value);
                 treeWriter.startContent();
             }
             treeWriter.addEndElement();
