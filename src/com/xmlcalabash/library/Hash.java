@@ -162,7 +162,11 @@ public class Hash extends DefaultStep implements ProcessMatchingNodes {
         String result = "";
 
         for (byte b : hash) {
-            result = result + Integer.toHexString(b & 0xff);
+            String str = Integer.toHexString(b & 0xff);
+            if (str.length() < 2) {
+                str = "0" + str;
+            }
+            result = result + str;
         }
 
         return result;
@@ -184,7 +188,11 @@ public class Hash extends DefaultStep implements ProcessMatchingNodes {
         String result = "";
 
         for (byte b : hash) {
-            result = result + Integer.toHexString(b & 0xff);
+            String str = Integer.toHexString(b & 0xff);
+            if (str.length() < 2) {
+                str = "0" + str;
+            }
+            result = result + str;
         }
 
         return result;
