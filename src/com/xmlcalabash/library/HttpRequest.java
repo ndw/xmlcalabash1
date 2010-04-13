@@ -42,6 +42,7 @@ import com.xmlcalabash.util.RelevantNodes;
 
 import javax.xml.XMLConstants;
 import javax.xml.transform.sax.SAXSource;
+import java.io.UnsupportedEncodingException;
 import java.util.Vector;
 import java.util.List;
 import java.net.URI;
@@ -73,11 +74,12 @@ import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.commons.httpclient.methods.*;
 
 public class HttpRequest extends DefaultStep {
-    public static final QName c_request = new QName("c", XProcConstants.NS_XPROC_STEP, "request");
-    public static final QName cx_timeout = new QName("cx",XProcConstants.NS_CALABASH_EX,"timeout");
-    public static final QName cx_cookies = new QName("cx",XProcConstants.NS_CALABASH_EX,"cookies");
-    public static final QName cx_save_cookies = new QName("cx",XProcConstants.NS_CALABASH_EX,"save-cookies");
-    public static final QName cx_use_cookies = new QName("cx",XProcConstants.NS_CALABASH_EX,"use-cookies");
+    private static final QName c_request = new QName("c", XProcConstants.NS_XPROC_STEP, "request");
+    private static final QName cx_timeout = new QName("cx",XProcConstants.NS_CALABASH_EX,"timeout");
+    private static final QName cx_cookies = new QName("cx",XProcConstants.NS_CALABASH_EX,"cookies");
+    private static final QName cx_save_cookies = new QName("cx",XProcConstants.NS_CALABASH_EX,"save-cookies");
+    private static final QName cx_use_cookies = new QName("cx",XProcConstants.NS_CALABASH_EX,"use-cookies");
+    private static final QName cx_send_binary = new QName("cx", XProcConstants.NS_CALABASH_EX, "send-binary");
 
     public static final QName _href = new QName("", "href");
     public static final QName _detailed = new QName("", "detailed");
@@ -107,6 +109,7 @@ public class HttpRequest extends DefaultStep {
     private String contentType = null;
     private String overrideContentType = null;
     private String headerContentType = null;
+    private boolean encodeBinary = false;
 
     private ReadablePipe source = null;
     private WritablePipe result = null;
@@ -156,6 +159,9 @@ public class HttpRequest extends DefaultStep {
                 }
             }
         }
+
+        String send = step.getExtensionAttribute(cx_send_binary);
+        encodeBinary = !"true".equals(send);
 
         method = start.getAttributeValue(_method);
         statusOnly = "true".equals(start.getAttributeValue(_status_only));
@@ -574,102 +580,119 @@ public class HttpRequest extends DefaultStep {
         String multipartContentType = contentType + "; boundary=" + q + boundary + q;
 
         // FIXME: This sucks rocks. I want to write the data to be posted, not provide some way to read it
-        String postContent = "This is a multipart message.\r\n";
-        try {
-            for (XdmNode body : new RelevantNodes(runtime, multipart, Axis.CHILD)) {
-                if (!XProcConstants.c_body.equals(body.getNodeName())) {
-                    throw new XProcException("A c:multipart may only contain c:body elements.");
-                }
-
-                String bodyContentType = body.getAttributeValue(_content_type);
-                if (bodyContentType == null) {
-                    throw new XProcException("Content-type on c:body is required.");
-                }
-
-                String bodyId = body.getAttributeValue(_id);
-                String bodyDescription = body.getAttributeValue(_description);
-                String bodyDisposition = body.getAttributeValue(_disposition);
-
-                // FIXME: Is utf-8 the right default?
-                String bodyCharset = HttpUtils.getCharset(bodyContentType, "utf-8");
-
-                if (bodyContentType.contains(";")) {
-                    int pos = bodyContentType.indexOf(";");
-                    bodyContentType = bodyContentType.substring(0, pos);
-                }
-
-                String bodyEncoding = body.getAttributeValue(_encoding);
-                if (bodyEncoding != null && !"base64".equals(bodyEncoding)) {
-                    throw new UnsupportedOperationException("The '" + bodyEncoding + "' encoding is not supported");
-                }
-
-                if (bodyCharset != null) {
-                    bodyContentType += "; charset=" + bodyCharset;
-                }
-
-                postContent += "--" + boundary + "\r\n";
-                postContent += "Content-Type: " + bodyContentType + "\r\n";
-                if (bodyDescription != null) {
-                    postContent += "Content-Description: " + bodyDescription + "\r\n";
-                }
-                if (bodyId != null) {
-                    postContent += "Content-ID: " + bodyId + "\r\n";
-                }
-                if (bodyDisposition != null) {
-                    postContent += "Content-Disposition: " + bodyDisposition + "\r\n";
-                }
-                if (bodyEncoding != null) {
-                    postContent += "Content-Transfer-Encoding: " + bodyEncoding + "\r\n";
-                }
-                postContent += "\r\n";
-
-                try {
-                    if (xmlContentType(bodyContentType)) {
-                        Serializer serializer = makeSerializer();
-
-                        Vector<XdmNode> content = new Vector<XdmNode> ();
-                        XdmSequenceIterator iter = body.axisIterator(Axis.CHILD);
-                        while (iter.hasNext()) {
-                            XdmNode node = (XdmNode) iter.next();
-                            content.add(node);
-                        }
-
-                        // FIXME: set serializer properties appropriately!
-                        StringWriter writer = new StringWriter();
-                        serializer.setOutputWriter(writer);
-                        S9apiUtils.serialize(runtime, content, serializer);
-                        writer.close();
-                        postContent += writer.toString();
-                    } else {
-                        StringWriter writer = new StringWriter();
-                        XdmSequenceIterator iter = body.axisIterator(Axis.CHILD);
-                        while (iter.hasNext()) {
-                            XdmNode node = (XdmNode) iter.next();
-                            if (node.getNodeKind() != XdmNodeKind.TEXT) {
-                                throw XProcException.stepError(28);
-                            }
-                            writer.write(node.getStringValue());
-                        }
-                        writer.close();
-                        postContent += writer.toString();
-                    }
-
-                    postContent += "\r\n";
-                } catch (IOException ioe) {
-                    throw new XProcException(ioe);
-                } catch (SaxonApiException sae) {
-                    throw new XProcException(sae);
-                }
+        MessageBytes byteContent = new MessageBytes();
+        byteContent.append("This is a multipart message.\r\n");
+        //String postContent = "This is a multipart message.\r\n";
+        for (XdmNode body : new RelevantNodes(runtime, multipart, Axis.CHILD)) {
+            if (!XProcConstants.c_body.equals(body.getNodeName())) {
+                throw new XProcException("A c:multipart may only contain c:body elements.");
             }
 
-            postContent += "--" + boundary + "--\r\n";
+            String bodyContentType = body.getAttributeValue(_content_type);
+            if (bodyContentType == null) {
+                throw new XProcException("Content-type on c:body is required.");
+            }
 
-            StringRequestEntity requestEntity = new StringRequestEntity(postContent, multipartContentType, null);
-            method.setRequestEntity(requestEntity);
+            String bodyId = body.getAttributeValue(_id);
+            String bodyDescription = body.getAttributeValue(_description);
+            String bodyDisposition = body.getAttributeValue(_disposition);
 
-        } catch (IOException ioe) {
-            throw new XProcException(ioe);
+            String bodyCharset = HttpUtils.getCharset(bodyContentType);
+
+            if (bodyContentType.contains(";")) {
+                int pos = bodyContentType.indexOf(";");
+                bodyContentType = bodyContentType.substring(0, pos);
+            }
+
+            String bodyEncoding = body.getAttributeValue(_encoding);
+            if (bodyEncoding != null && !"base64".equals(bodyEncoding)) {
+                throw new UnsupportedOperationException("The '" + bodyEncoding + "' encoding is not supported");
+            }
+
+            if (bodyCharset != null) {
+                bodyContentType += "; charset=" + bodyCharset;
+            } else {
+                // Is utf-8 the right default? What about the image/ case? 
+                bodyContentType += "; charset=utf-8";
+            }
+
+            //postContent += "--" + boundary + "\r\n";
+            //postContent += "Content-Type: " + bodyContentType + "\r\n";
+            byteContent.append("--" + boundary + "\r\n");
+            byteContent.append("Content-Type: " + bodyContentType + "\r\n");
+
+            if (bodyDescription != null) {
+                //postContent += "Content-Description: " + bodyDescription + "\r\n";
+                byteContent.append("Content-Description: " + bodyDescription + "\r\n");
+            }
+            if (bodyId != null) {
+                //postContent += "Content-ID: " + bodyId + "\r\n";
+                byteContent.append("Content-ID: " + bodyId + "\r\n");
+            }
+            if (bodyDisposition != null) {
+                //postContent += "Content-Disposition: " + bodyDisposition + "\r\n";
+                byteContent.append("Content-Disposition: " + bodyDisposition + "\r\n");
+            }
+            if (bodyEncoding != null) {
+                //postContent += "Content-Transfer-Encoding: " + bodyEncoding + "\r\n";
+                if (encodeBinary) {
+                    byteContent.append("Content-Transfer-Encoding: " + bodyEncoding + "\r\n");
+                }
+            }
+            //postContent += "\r\n";
+            byteContent.append("\r\n");
+
+            try {
+                if (xmlContentType(bodyContentType)) {
+                    Serializer serializer = makeSerializer();
+
+                    Vector<XdmNode> content = new Vector<XdmNode> ();
+                    XdmSequenceIterator iter = body.axisIterator(Axis.CHILD);
+                    while (iter.hasNext()) {
+                        XdmNode node = (XdmNode) iter.next();
+                        content.add(node);
+                    }
+
+                    // FIXME: set serializer properties appropriately!
+                    StringWriter writer = new StringWriter();
+                    serializer.setOutputWriter(writer);
+                    S9apiUtils.serialize(runtime, content, serializer);
+                    writer.close();
+                    //postContent += writer.toString();
+                    byteContent.append(writer.toString());
+                } else if (!encodeBinary && "base64".equals(bodyEncoding)) {
+                    byte[] decoded = Base64.decode(body.getStringValue());
+                    byteContent.append(decoded, decoded.length);
+                } else {
+                    StringWriter writer = new StringWriter();
+                    XdmSequenceIterator iter = body.axisIterator(Axis.CHILD);
+                    while (iter.hasNext()) {
+                        XdmNode node = (XdmNode) iter.next();
+                        if (node.getNodeKind() != XdmNodeKind.TEXT) {
+                            throw XProcException.stepError(28);
+                        }
+                        writer.write(node.getStringValue());
+                    }
+                    writer.close();
+                    //postContent += writer.toString();
+                    byteContent.append(writer.toString());
+                }
+
+                //postContent += "\r\n";
+                byteContent.append("\r\n");
+            } catch (IOException ioe) {
+                throw new XProcException(ioe);
+            } catch (SaxonApiException sae) {
+                throw new XProcException(sae);
+            }
         }
+
+        //postContent += "--" + boundary + "--\r\n";
+        byteContent.append("--" + boundary + "--\r\n");
+
+        ByteArrayRequestEntity requestEntity = new ByteArrayRequestEntity(byteContent.content(), multipartContentType);
+        //StringRequestEntity requestEntity = new StringRequestEntity(postContent, multipartContentType, null);
+        method.setRequestEntity(requestEntity);
     }
 
     private String getFullContentType(HttpMethodBase method) {
@@ -750,13 +773,6 @@ public class HttpRequest extends DefaultStep {
         NameValuePair boundary = contentTypes[0].getParameterByName("boundary");
         return boundary == null ? null : boundary.getValue();
     }
-
-    /*
-    private String getContentCharset(HttpMethodBase method) {
-        Header contentTypeHeader = method.getResponseHeader("Content-Type");
-        return getContentCharset(contentTypeHeader);
-    }
-    */
 
     private String getContentCharset(Header contentTypeHeader) {
         if (contentTypeHeader == null) {
@@ -1005,6 +1021,41 @@ public class HttpRequest extends DefaultStep {
             throw new XProcException(sae);
         } catch (IOException ioe) {
             throw new XProcException(ioe);
+        }
+    }
+
+    private class MessageBytes {
+        int chunkSize = 8192;
+        byte[] byteContent = new byte[chunkSize];
+        int pos = 0;
+
+        public MessageBytes() {
+        }
+
+        public void append(String string) {
+            try {
+                byte[] bytes = string.getBytes("US-ASCII");
+                append(bytes, bytes.length);
+            } catch (UnsupportedEncodingException uee) {
+                // This never happens!
+                throw new XProcException(uee);
+            }
+        }
+
+        public void append(byte[] bytes, int size) {
+            if (pos + bytes.length > byteContent.length) {
+                byte[] newBytes = new byte[byteContent.length + bytes.length + chunkSize];
+                System.arraycopy(byteContent, 0, newBytes, 0, byteContent.length);
+                byteContent = newBytes;
+            }
+            System.arraycopy(bytes, 0, byteContent, pos, bytes.length);
+            pos += bytes.length;
+        }
+
+        public byte[] content() {
+            byte[] bytes = new byte[pos];
+            System.arraycopy(byteContent, 0, bytes, 0, pos);
+            return bytes;
         }
     }
 }
