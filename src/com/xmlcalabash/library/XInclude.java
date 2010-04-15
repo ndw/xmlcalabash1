@@ -98,23 +98,19 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
         matcherStack.push(matcher);
         matcher.match(doc, new RuntimeValue("/|*", step.getNode()));
         XdmNode result = matcher.getResult();
-        matcherStack.pop();
+        matcher = matcherStack.pop();
         return result;
     }
 
     public boolean processStartDocument(XdmNode node) throws SaxonApiException {
         //finest(node, "Start document " + matcherStack.size());
-        if (matcherStack.size() == 1) {
-            matcherStack.peek().startDocument(node.getBaseURI());
-        }
+        matcherStack.peek().startDocument(node.getBaseURI());
         return true;
     }
 
     public void processEndDocument(XdmNode node) throws SaxonApiException {
         //finest(node, "End document " + matcherStack.size());
-        if (matcherStack.size() == 1) {
-            matcherStack.peek().endDocument();
-        }
+        matcherStack.peek().endDocument();
     }
 
     public boolean processStartElement(XdmNode node) throws SaxonApiException {
@@ -159,10 +155,11 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                 if (xpointer == null) {
                     nodes = new Vector<XdmNode> ();
 
-                    // Put all the children of the document in there, so that we can add xml:base to the root...
+                    // Put all the children of the document in there, so that we can add xml:base to the root(s)...
                     XdmSequenceIterator iter = subdoc.axisIterator(Axis.CHILD);
                     while (iter.hasNext()) {
-                        nodes.add((XdmNode) iter.next());
+                        XdmNode child = (XdmNode) iter.next();
+                        nodes.add(child);
                     }
                 } else {
                     String xpath = xpointer.xpathEquivalent();
@@ -368,7 +365,8 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
         public XdmNode fixup(XdmNode node) {
             matcher = new ProcessMatch(runtime, this);
             matcher.match(node, new RuntimeValue("*", step.getNode()));
-            return matcher.getResult();
+            XdmNode fixed = matcher.getResult();
+            return fixed;
         }
 
         public boolean processStartDocument(XdmNode node) throws SaxonApiException {
