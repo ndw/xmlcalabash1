@@ -50,8 +50,9 @@ public class TreeWriter {
     protected NamePool pool = null;
     protected XdmDestination destination = null;
     protected Receiver receiver = null;
-    protected boolean seenRoot = false;
     protected XProcLocationProvider xLocationProvider = null;
+    protected boolean seenRoot = false;
+    protected boolean inDocument = false;
 
     /**
      * Creates a new instance of ProcessMatch
@@ -74,7 +75,12 @@ public class TreeWriter {
         return destination.getXdmNode();
     }
 
+    public boolean inDocument() {
+        return inDocument;
+    }
+
     public void startDocument(URI baseURI) {
+        inDocument = true;
         seenRoot = false;
         try {
             exec = new Executable(controller.getConfiguration());
