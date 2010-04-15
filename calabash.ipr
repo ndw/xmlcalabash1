@@ -264,6 +264,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Calabash.iml" filepath="$PROJECT_DIR$/Calabash.iml" />
       <module fileurl="file://$PROJECT_DIR$/../isorelax/Isorelax.iml" filepath="$PROJECT_DIR$/../isorelax/Isorelax.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../metadata-extractor-2.3.1/Metadata-extractor-2.3.1.iml" filepath="$PROJECT_DIR$/../metadata-extractor-2.3.1/Metadata-extractor-2.3.1.iml" />
       <module fileurl="file://$PROJECT_DIR$/../msv/Msv.iml" filepath="$PROJECT_DIR$/../msv/Msv.iml" />
       <module fileurl="file://$PROJECT_DIR$/../saxon9/Saxon9.iml" filepath="$PROJECT_DIR$/../saxon9/Saxon9.iml" />
       <module fileurl="file://$PROJECT_DIR$/../saxon9.2.0.2/Saxon9.2.0.2.iml" filepath="$PROJECT_DIR$/../saxon9.2.0.2/Saxon9.2.0.2.iml" />

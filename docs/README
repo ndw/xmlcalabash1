@@ -44,6 +44,8 @@ interoperate with other implementations.
     * cx:unzip provides access to the files in a ZIP archive.
     * ml:adhoc-query, ml:invoke-module, and ml:insert-document
       implement Mark Logic Server XCC primitives (incompletely).
+    * cx:metadata-extractor is a thin shell around Drew Noakes metadata
+      extractor library, which you'll need of course.
 
 How do I use it?
 
