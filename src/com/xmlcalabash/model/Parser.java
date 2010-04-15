@@ -278,6 +278,10 @@ public class Parser {
         boolean done = false;
         for (XdmNode node : new RelevantNodes(runtime, step.getNode(), Axis.CHILD)) {
             if (done) {
+                if (node.getNodeKind() == XdmNodeKind.TEXT) {
+                    throw XProcException.staticError(37);
+                }
+                
                 rest.add(node);
                 continue;
             }
@@ -394,7 +398,7 @@ public class Parser {
                 }
             } else {
                 if (node.getNodeKind() == XdmNodeKind.TEXT) {
-                    throw XProcException.dynamicError(37);
+                    throw XProcException.staticError(37);
                 }
                 
                 done = true;
