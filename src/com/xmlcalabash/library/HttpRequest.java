@@ -375,7 +375,9 @@ public class HttpRequest extends DefaultStep {
                 } else {
                     // Read the response body.
                     InputStream bodyStream = httpResult.getResponseBodyAsStream();
-                    readBodyContent(tree, bodyStream, httpResult);
+                    if (bodyStream != null) {
+                        readBodyContent(tree, bodyStream, httpResult);
+                    }
                 }
 
                 tree.addEndElement();
@@ -385,7 +387,11 @@ public class HttpRequest extends DefaultStep {
                 } else {
                     // Read the response body.
                     InputStream bodyStream = httpResult.getResponseBodyAsStream();
-                    readBodyContent(tree, bodyStream, httpResult);
+                    if (bodyStream != null) {
+                        readBodyContent(tree, bodyStream, httpResult);
+                    } else {
+                        throw XProcException.dynamicError(6);
+                    }
                 }
             }
         } catch (Exception e) {
@@ -933,51 +939,51 @@ public class HttpRequest extends DefaultStep {
     }
 
     public void readBodyContentPart(TreeWriter tree, InputStream bodyStream, String contentType, String charset) throws SaxonApiException, IOException {
-          if (xmlContentType(contentType)) {
-              // Read it as XML
-              SAXSource source = new SAXSource(new InputSource(bodyStream));
-              DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
-              tree.addSubtree(builder.build(source));
-          } else if (textContentType(contentType)) {
-              // Read it as text
+        if (xmlContentType(contentType)) {
+            // Read it as XML
+            SAXSource source = new SAXSource(new InputSource(bodyStream));
+            DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
+            tree.addSubtree(builder.build(source));
+        } else if (textContentType(contentType)) {
+            // Read it as text
 
-              InputStreamReader reader = new InputStreamReader(bodyStream, charset);
+            InputStreamReader reader = new InputStreamReader(bodyStream, charset);
 
-              char buf[] = new char[bufSize];
-              int len = reader.read(buf, 0, bufSize);
-              while (len >= 0) {
-                  String s = new String(buf,0,len);
-                  tree.addText(s);
-                  len = reader.read(buf, 0, bufSize);
-              }
-          } else {
-              // Read it as binary
-              byte bytes[] = new byte[bufSize];
-              int pos = 0;
-              int readLen = bufSize;
-              int len = bodyStream.read(bytes, 0, bufSize);
-              while (len >= 0) {
-                  pos += len;
-                  readLen -= len;
-                  if (readLen == 0) {
-                      String encoded = Base64.encodeBytes(bytes);
-                      tree.addText(encoded);
-                      pos = 0;
-                      readLen = bufSize;
-                  }
+            char buf[] = new char[bufSize];
+            int len = reader.read(buf, 0, bufSize);
+            while (len >= 0) {
+                String s = new String(buf,0,len);
+                tree.addText(s);
+                len = reader.read(buf, 0, bufSize);
+            }
+        } else {
+            // Read it as binary
+            byte bytes[] = new byte[bufSize];
+            int pos = 0;
+            int readLen = bufSize;
+            int len = bodyStream.read(bytes, 0, bufSize);
+            while (len >= 0) {
+                pos += len;
+                readLen -= len;
+                if (readLen == 0) {
+                    String encoded = Base64.encodeBytes(bytes);
+                    tree.addText(encoded);
+                    pos = 0;
+                    readLen = bufSize;
+                }
 
-                  len = bodyStream.read(bytes, pos, readLen);
-              }
+                len = bodyStream.read(bytes, pos, readLen);
+            }
 
-              if (pos > 0) {
-                  byte lastBytes[] = new byte[pos];
-                  System.arraycopy(bytes, 0, lastBytes, 0, pos);
-                  tree.addText(Base64.encodeBytes(lastBytes));
-              }
+            if (pos > 0) {
+                byte lastBytes[] = new byte[pos];
+                System.arraycopy(bytes, 0, lastBytes, 0, pos);
+                tree.addText(Base64.encodeBytes(lastBytes));
+            }
 
-              tree.addText("\n"); // FIXME: should we be doing this?
-          }
-      }
+            tree.addText("\n"); // FIXME: should we be doing this?
+        }
+    }
 
     private void doFile() {
         // Find the content type
