@@ -20,6 +20,7 @@
 
 package com.xmlcalabash.util;
 
+import java.net.URI;
 import java.util.Map;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -29,6 +30,7 @@ import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.model.RuntimeValue;
 import net.sf.saxon.event.PipelineConfiguration;
+import net.sf.saxon.instruct.Executable;
 import net.sf.saxon.s9api.*;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.sxpath.XPathEvaluator;
@@ -81,9 +83,10 @@ public class ProcessMatch extends TreeWriter {
             //receiver.setSystemId("http://example.com/");
 
             receiver.setPipelineConfiguration(pipe);
+            receiver.setSystemId(doc.getBaseURI().toASCIIString());
             receiver.open();
 
-            // If we start a match at a document, fake a document wrapper so that
+            // If we start a match at an element, fake a document wrapper so that
             // a sequence of nodes is returned correctly...
             if (doc.getNodeKind() != XdmNodeKind.DOCUMENT) {
                 startDocument(doc.getBaseURI());
@@ -96,6 +99,17 @@ public class ProcessMatch extends TreeWriter {
             receiver.close();
         } catch (XProcException e) {
             throw e;
+        } catch (Exception e) {
+            throw new XProcException(e);
+        }
+    }
+
+    // We've already done a bunch of setup, don't do it again!
+    public void startDocument(URI baseURI) {
+        inDocument = true;
+        seenRoot = false;
+        try {
+            receiver.startDocument(0);
         } catch (Exception e) {
             throw new XProcException(e);
         }
