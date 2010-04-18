@@ -76,11 +76,11 @@ public class WrapSequence extends DefaultStep {
         String wns = getOption(_wrapper_namespace, (String) null);
 
         if (wpfx != null && wns == null) {
-            throw XProcException.dynamicError(34, "You can't specify a prefix without a namespace");
+            throw XProcException.dynamicError(34, step.getNode(), "You can't specify a prefix without a namespace");
         }
 
         if (wns != null && wrapperNameStr.contains(":")) {
-            throw XProcException.dynamicError(34, "You can't specify a namespace if the wrapper name contains a colon");
+            throw XProcException.dynamicError(34, step.getNode(), "You can't specify a namespace if the wrapper name contains a colon");
         }
 
         if (wrapperNameStr.contains(":")) {
@@ -180,11 +180,11 @@ public class WrapSequence extends DefaultStep {
                 item = results.next();
 
                 if (item == null) {
-                    throw new XProcException("The group-adjacent expression returned nothing.");
+                    throw new XProcException(step.getNode(), "The group-adjacent expression returned nothing.");
                 }
 
                 if (results.next() != null) {
-                    throw new XProcException("Didn't expect group-adjacent to return a sequence!");
+                    throw new XProcException(step.getNode(), "Didn't expect group-adjacent to return a sequence!");
                 }
             } catch (XPathException xe) {
                 throw new XProcException(xe);

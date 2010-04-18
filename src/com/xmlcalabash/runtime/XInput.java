@@ -41,6 +41,10 @@ public class XInput {
         return port;
     }
 
+    public XdmNode getNode() {
+        return node;
+    }
+
     public ReadablePipe getReader() {
         if (documents == null) {
             documents = new DocumentSequence(runtime);
@@ -53,7 +57,7 @@ public class XInput {
 
     public WritablePipe getWriter() {
         if (writer != null) {
-            throw new XProcException("Attempt to create two writers for the same input.");
+            throw new XProcException(node, "Attempt to create two writers for the same input.");
         }
         if (documents == null) {
             documents = new DocumentSequence(runtime);
@@ -69,10 +73,4 @@ public class XInput {
     public boolean getParameters() {
         return isParameters;
     }
-
-    /*
-    protected DocumentSequence getDocumentSequence() {
-        return documents;
-    }
-    */
 }

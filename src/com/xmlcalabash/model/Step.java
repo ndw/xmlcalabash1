@@ -215,7 +215,7 @@ public class Step extends SourceArtifact {
         
         for (Input current : inputs) {
             if (current.getPort().equals(input.getPort())) {
-                throw XProcException.staticError(11, "Input port name '" + input.getPort() + "' appears more than once.");
+                throw XProcException.staticError(11, input.getNode(), "Input port name '" + input.getPort() + "' appears more than once.");
             }
         }
         
@@ -240,7 +240,7 @@ public class Step extends SourceArtifact {
 
         for (Output current : outputs) {
             if (current.getPort().equals(output.getPort())) {
-                throw XProcException.staticError(11, "Output port name '" + output.getPort() + "' appears more than once.");
+                throw XProcException.staticError(11, output.getNode(), "Output port name '" + output.getPort() + "' appears more than once.");
             }
         }
 
@@ -603,7 +603,7 @@ public class Step extends SourceArtifact {
     protected void checkDuplicateVars(HashSet<QName> vars) {
         for (Variable var : getVariables()) {
             if (vars.contains(var.getName())) {
-                throw XProcException.staticError(4, "Duplicate variable name: " + var.getName());
+                throw XProcException.staticError(4, getNode(), "Duplicate variable name: " + var.getName());
             } else {
                 vars.add(var.getName());
             }
@@ -812,7 +812,7 @@ public class Step extends SourceArtifact {
                         Step pipeStep = env.visibleStep(pipe.getStep());
                         Step container = pipeStep.parent;
                         if (container == this) {
-                            throw XProcException.staticError(19, "Variable binding to " + pipe.getPort() + " on " + pipe.getStep() + " not allowed.");
+                            throw XProcException.staticError(19, endpoint.getNode(), "Variable binding to " + pipe.getPort() + " on " + pipe.getStep() + " not allowed.");
                         }
                     }
                 }
@@ -912,14 +912,14 @@ public class Step extends SourceArtifact {
         if (getExtensionAttribute(cx_depend) != null
             || getExtensionAttribute(cx_depends) != null
             || getExtensionAttribute(cx_dependson) != null) {
-            throw new XProcException("The correct spelling of the depends-on attribute is cx:depends-on.");
+            throw new XProcException(getNode(), "The correct spelling of the depends-on attribute is cx:depends-on.");
         }
 
         String dependsOn = getExtensionAttribute(XProcConstants.cx_depends_on);
         if (dependsOn != null) {
             Step step = env.visibleStep(dependsOn);
             if (step == null) {
-                throw new XProcException("The value of cx:depends-on must be the name of an in-scope step: " + dependsOn);
+                throw new XProcException(getNode(), "The value of cx:depends-on must be the name of an in-scope step: " + dependsOn);
             }
             addDependency(dependsOn);
         }

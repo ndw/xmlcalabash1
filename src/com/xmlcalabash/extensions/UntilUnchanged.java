@@ -57,7 +57,7 @@ public class UntilUnchanged extends DeclareStep {
 
     public void addOutput(Output output) {
         if (this.output != null) {
-            throw new XProcException("cx:until-unchanged can have only a single output port: " + output.getPort());
+            throw new XProcException(output.getNode(), "cx:until-unchanged can have only a single output port: " + output.getPort());
         }
 
         if (!"#current".equals(output.getPort())) {

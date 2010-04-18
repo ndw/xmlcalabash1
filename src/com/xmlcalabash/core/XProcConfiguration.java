@@ -227,7 +227,7 @@ public class XProcConfiguration {
                 } else if ("serialization".equals(localName)) {
                     parseSerialization(node);
                 } else {
-                    throw new XProcException("Unexpected configuration option: " + localName);
+                    throw new XProcException(doc, "Unexpected configuration option: " + localName);
                 }
             }
         }
@@ -248,7 +248,7 @@ public class XProcConfiguration {
         String value = node.getStringValue().trim();
 
         if (!"true".equals(value) && !"false".equals(value)) {
-            throw new XProcException("Invalid configuration value for schema-aware: "+ value);
+            throw new XProcException(node, "Invalid configuration value for schema-aware: "+ value);
         }
 
         schemaAware = "true".equals(value);
@@ -264,7 +264,7 @@ public class XProcConfiguration {
         String value = node.getStringValue().trim();
         debug = "true".equals(value);
         if (!"true".equals(value) && !"false".equals(value)) {
-            throw new XProcException("Invalid configuration value for debug: "+ value);
+            throw new XProcException(node, "Invalid configuration value for debug: "+ value);
         }
     }
 
@@ -282,7 +282,7 @@ public class XProcConfiguration {
         for (XdmNode child : new RelevantNodes(null, node, Axis.CHILD)) {
             if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
                 if (sawElement) {
-                    throw new XProcException("Invalid configuration value for input '" + port + "': content is not a valid XML document.");
+                    throw new XProcException(node, "Invalid configuration value for input '" + port + "': content is not a valid XML document.");
                 }
                 sawElement = true;
             }
@@ -302,7 +302,7 @@ public class XProcConfiguration {
 
         if (href != null) {
             if (docnodes.size() > 0) {
-                throw new XProcException("Invalid configuration value for input '" + port + "': href and content on input.");
+                throw new XProcException(node, "Invalid configuration value for input '" + port + "': href and content on input.");
             }
 
             documents.add(new ConfigDocument(href, node.getBaseURI().toASCIIString()));
@@ -353,7 +353,7 @@ public class XProcConfiguration {
         for (XdmNode child : new RelevantNodes(null, node, Axis.CHILD)) {
             if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
                 if (sawElement) {
-                    throw new XProcException("Content of pipeline is not a valid XML document.");
+                    throw new XProcException(node, "Content of pipeline is not a valid XML document.");
                 }
                 sawElement = true;
             }
@@ -362,7 +362,7 @@ public class XProcConfiguration {
 
         if (href != null) {
             if (docnodes.size() > 0) {
-                throw new XProcException("XProcConfiguration error: href and content on pipeline");
+                throw new XProcException(node, "XProcConfiguration error: href and content on pipeline");
             }
             pipeline = new ConfigDocument(href, node.getBaseURI().toASCIIString());
         } else {
@@ -377,7 +377,7 @@ public class XProcConfiguration {
 
         for (XdmNode child : new RelevantNodes(null, node, Axis.CHILD)) {
             if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
-                throw new XProcException("Output must be empty.");
+                throw new XProcException(node, "Output must be empty.");
             }
         }
 
@@ -438,7 +438,7 @@ public class XProcConfiguration {
 
         safeMode = "true".equals(value);
         if (!"true".equals(value) && !"false".equals(value)) {
-            throw new XProcException("Unexpected configuration value for safe-mode: "+ value);
+            throw new XProcException(node, "Unexpected configuration value for safe-mode: "+ value);
         }
     }
 
@@ -463,7 +463,7 @@ public class XProcConfiguration {
         String value = node.getAttributeValue(_class_name);
 
         if (nameStr == null || value == null) {
-            throw new XProcException("Unexpected implementation in configuration; must have both type and class-name attributes");
+            throw new XProcException(node, "Unexpected implementation in configuration; must have both type and class-name attributes");
         }
 
         QName name = new QName(nameStr,node);
@@ -497,17 +497,17 @@ public class XProcConfiguration {
                     if ("html".equals(method) || "xhtml".equals(method) || "text".equals(method) || "xml".equals(method)) {
                         serializationOptions.put(name, method);
                     } else {
-                        throw new XProcException("Configuration error: only the xml, xhtml, html, and text serialization methods are supported.");
+                        throw new XProcException(node, "Configuration error: only the xml, xhtml, html, and text serialization methods are supported.");
                     }
                 } else {
-                    throw new XProcException("Configuration error: only the xml, xhtml, html, and text serialization methods are supported.");
+                    throw new XProcException(node, "Configuration error: only the xml, xhtml, html, and text serialization methods are supported.");
                 }
             } else {
                 serializationOptions.put(name, value);
             }
 
             for (XdmNode snode : new RelevantNodes(null, node, Axis.CHILD)) {
-                throw new XProcException("Configuration error: serialization must be empty");
+                throw new XProcException(node, "Configuration error: serialization must be empty");
             }
         }
     }
@@ -533,10 +533,10 @@ public class XProcConfiguration {
                     }
                     options.add(aname.getLocalName());
                 } else {
-                    throw new XProcException("Configuration error: attribute \"" + aname + "\" not allowed on " + node.getNodeName());
+                    throw new XProcException(node, "Configuration error: attribute \"" + aname + "\" not allowed on " + node.getNodeName());
                 }
             } else if (XProcConstants.NS_XPROC.equals(aname.getNamespaceURI())) {
-                throw new XProcException("Configuration error: attribute \"" + aname + "\" not allowed on " + node.getNodeName());
+                throw new XProcException(node, "Configuration error: attribute \"" + aname + "\" not allowed on " + node.getNodeName());
             }
             // Everything else is ok
         }
@@ -546,7 +546,7 @@ public class XProcConfiguration {
 
     private void checkBoolean(XdmNode node, String name, String value) {
         if (value != null && !"true".equals(value) && !"false".equals(value)) {
-            throw new XProcException("Configuration error: " + name + " on serialization must be 'true' or 'false'");
+            throw new XProcException(node, "Configuration error: " + name + " on serialization must be 'true' or 'false'");
         }
     }
 

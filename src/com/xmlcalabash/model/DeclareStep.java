@@ -110,7 +110,7 @@ public class DeclareStep extends CompoundStep {
 
     public void declareStep(QName type, DeclareStep step) {
         if (declaredSteps.containsKey(type)) {
-            throw new XProcException("Duplicate step type");
+            throw new XProcException(step, "Duplicate step type");
         } else {
             declaredSteps.put(type, step);
         }
@@ -450,12 +450,11 @@ public class DeclareStep extends CompoundStep {
                 input.addBinding(binding);
             }
         } else if (input.getParameterInput()) {
-
             XProcData data = runtime.getXProcData();
             // If depth==0 then we're on a declare step and you aren't allowed to
             // provide default bindings for parameter input ports.
             if (data.getDepth() == 0 && input.getBinding().size() > 0) {
-                throw XProcException.staticError(35);
+                throw XProcException.staticError(35, input.getNode(), "You must not specify bindings in this context.");
             }
         }
 

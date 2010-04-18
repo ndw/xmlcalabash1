@@ -58,24 +58,24 @@ public class Move extends DefaultStep {
         URI uri = href.getBaseURI().resolve(href.getString());
         File file;
         if (!"file".equals(uri.getScheme())) {
-            throw new XProcException("Only file: scheme URIs are supported by the delete step.");
+            throw new XProcException(step.getNode(), "Only file: scheme URIs are supported by the delete step.");
         } else {
             file = new File(uri.getPath());
         }
 
         if (!file.exists()) {
-             throw new XProcException("Cannot move: file does not exist: " + file.getAbsolutePath());
+             throw new XProcException(step.getNode(), "Cannot move: file does not exist: " + file.getAbsolutePath());
         }
 
         if (file.isDirectory()) {
-             throw new XProcException("Cannot move: file is a directory: " + file.getAbsolutePath());
+             throw new XProcException(step.getNode(), "Cannot move: file is a directory: " + file.getAbsolutePath());
         }
 
         href = getOption(_target);
         uri = href.getBaseURI().resolve(href.getString());
         File target;
         if (!"file".equals(uri.getScheme())) {
-            throw new XProcException("Only file: scheme URIs are supported by the copy step.");
+            throw new XProcException(step.getNode(), "Only file: scheme URIs are supported by the copy step.");
         } else {
             target = new File(uri.getPath());
         }
@@ -83,7 +83,7 @@ public class Move extends DefaultStep {
         if (target.isDirectory()) {
             target = new File(target, file.getName());
             if (target.isDirectory()) {
-                throw new XProcException("Cannot move: target is a directory: " + target.getAbsolutePath());
+                throw new XProcException(step.getNode(), "Cannot move: target is a directory: " + target.getAbsolutePath());
             }
         }
 
@@ -112,7 +112,7 @@ public class Move extends DefaultStep {
         }
 
         if (!file.delete()) {
-            throw new XProcException("Move failed: could not delete file: " + file.getAbsolutePath());
+            throw new XProcException(step.getNode(), "Move failed: could not delete file: " + file.getAbsolutePath());
         }
 
         tree.addEndElement();

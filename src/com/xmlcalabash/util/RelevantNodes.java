@@ -200,7 +200,7 @@ public class RelevantNodes implements Iterable<XdmNode> {
                     if (sae instanceof XPathException) {
                         XPathException xe = (XPathException) sae;
                         if ("http://www.w3.org/2005/xqt-errors".equals(xe.getErrorCodeNamespace()) && "XPDY0002".equals(xe.getErrorCodeLocalPart())) {
-                            throw XProcException.dynamicError(26,"Expression refers to context when none is available: " + xpath);
+                            throw XProcException.dynamicError(26, element, "Expression refers to context when none is available: " + xpath);
                         } else {
                             throw saue;
                         }
@@ -211,7 +211,7 @@ public class RelevantNodes implements Iterable<XdmNode> {
                 }
             } catch (SaxonApiException sae) {
                 if (S9apiUtils.xpathSyntaxError(sae)) {
-                    throw XProcException.dynamicError(23, sae.getCause().getMessage());
+                    throw XProcException.dynamicError(23, element, sae.getCause().getMessage());
                 } else {
                     throw new XProcException(sae);
                 }

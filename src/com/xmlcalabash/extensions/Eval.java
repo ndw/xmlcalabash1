@@ -68,14 +68,14 @@ public class Eval extends DefaultStep {
             sources.add(pipe);
         } else if ("pipeline".equals(port)) {
             if (pipeline != null) {
-                throw new XProcException("You can't specify more than one pipeline.");
+                throw new XProcException(step.getNode(), "You can't specify more than one pipeline.");
             } else {
                 pipeline = pipe;
             }
         } else if ("options".equals(port)) {
             options.add(pipe);
         } else {
-            throw new XProcException("Unexpected port: " + port);
+            throw new XProcException(step.getNode(), "Unexpected port: " + port);
         }
     }
 
@@ -112,7 +112,7 @@ public class Eval extends DefaultStep {
         if (XProcConstants.p_pipeline.equals(piperoot.getNodeName())
                 || XProcConstants.p_declare_step.equals(piperoot.getNodeName())) {
             if (stepName != null) {
-                throw new XProcException("Step option can only be used when loading a p:library");
+                throw new XProcException(step.getNode(), "Step option can only be used when loading a p:library");
             }
             pipeline = innerRuntime.use(pipedoc);
         } else if (XProcConstants.p_library.equals(piperoot.getNodeName())) {
@@ -140,7 +140,7 @@ public class Eval extends DefaultStep {
         boolean detailed = getOption(_detailed, false);
 
         if (!detailed && (inputCount > 1 || outputports.size() > 1)) {
-            throw new XProcException("You must specify detailed='true' to eval pipelines with multiple inputs or outputs");
+            throw new XProcException(step.getNode(), "You must specify detailed='true' to eval pipelines with multiple inputs or outputs");
         }
 
         DeclareStep decl = pipeline.getDeclareStep();
@@ -183,7 +183,7 @@ public class Eval extends DefaultStep {
                 }
 
                 if (port == null) {
-                    throw new XProcException("You must use cx:document for pipelines with no primary input port");
+                    throw new XProcException(step.getNode(), "You must use cx:document for pipelines with no primary input port");
                 }
 
                 if (!inputs.containsKey(port)) {
@@ -201,7 +201,7 @@ public class Eval extends DefaultStep {
                     pipeline.writeTo(port, node);
                 }
             } else {
-                throw new XProcException("Eval pipeline has no input port named '" + port + "'");
+                throw new XProcException(step.getNode(), "Eval pipeline has no input port named '" + port + "'");
             }
         }
 
@@ -217,13 +217,13 @@ public class Eval extends DefaultStep {
                 XdmNode root = S9apiUtils.getDocumentElement(doc);
 
                 if (!cx_options.equals(root.getNodeName())) {
-                    throw new XProcException("Options port must be a cx:options document.");
+                    throw new XProcException(step.getNode(), "Options port must be a cx:options document.");
                 }
 
                 
                 for (XdmNode opt : new RelevantNodes(runtime, root, Axis.CHILD)) {
                     if (opt.getNodeKind() != XdmNodeKind.ELEMENT || !cx_option.equals(opt.getNodeName())) {
-                        throw new XProcException("A cx:options document must only contain cx:option elements");
+                        throw new XProcException(step.getNode(), "A cx:options document must only contain cx:option elements");
                     }
 
                     String name = opt.getAttributeValue(_name);
@@ -232,7 +232,7 @@ public class Eval extends DefaultStep {
                     String value = opt.getAttributeValue(_value);
 
                     if (name == null || value == null) {
-                        throw new XProcException("A cx:option element must have name and value attributes");
+                        throw new XProcException(step.getNode(), "A cx:option element must have name and value attributes");
                     }
 
                     RuntimeValue runtimeValue = new RuntimeValue(value);

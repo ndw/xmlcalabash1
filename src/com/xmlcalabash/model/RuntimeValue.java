@@ -122,7 +122,7 @@ public class RuntimeValue {
 
     public XdmValue getValue() {
         if (generalValue == null) {
-            throw new XProcException("Unexpexted null value in getValue()");
+            throw new XProcException(node, "Unexpexted null value in getValue()");
         }
         if (generalValue.size() == 1) {
             return generalValue.get(0);
@@ -163,7 +163,7 @@ public class RuntimeValue {
         } else if ("false".equals(value) || "0".equals(value)) {
             return false;
         } else {
-            throw new XProcException("Non boolean string: " + value);
+            throw new XProcException(node, "Non boolean string: " + value);
         }
     }
 

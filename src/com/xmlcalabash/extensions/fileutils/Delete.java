@@ -52,13 +52,13 @@ public class Delete extends DefaultStep {
         URI uri = href.getBaseURI().resolve(href.getString());
         File file;
         if (!"file".equals(uri.getScheme())) {
-            throw new XProcException("Only file: scheme URIs are supported by the delete step.");
+            throw new XProcException(step.getNode(), "Only file: scheme URIs are supported by the delete step.");
         } else {
             file = new File(uri.getPath());
         }
 
         if (!file.exists()) {
-             throw new XProcException("Cannot delete: file does not exist: " + file.getAbsolutePath());
+             throw new XProcException(step.getNode(), "Cannot delete: file does not exist: " + file.getAbsolutePath());
         }
 
         TreeWriter tree = new TreeWriter(runtime);
@@ -69,7 +69,7 @@ public class Delete extends DefaultStep {
         tree.addText(file.toURI().toASCIIString());
 
         if (!file.delete()) {
-            throw new XProcException("Delete failed for: " + file.getAbsolutePath());
+            throw new XProcException(step.getNode(), "Delete failed for: " + file.getAbsolutePath());
         }
 
         tree.addEndElement();

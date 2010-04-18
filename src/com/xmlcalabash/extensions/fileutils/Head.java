@@ -64,17 +64,17 @@ public class Head extends DefaultStep {
         URI uri = href.getBaseURI().resolve(href.getString());
         File file;
         if (!"file".equals(uri.getScheme())) {
-            throw new XProcException("Only file: scheme URIs are supported by the copy step.");
+            throw new XProcException(step.getNode(), "Only file: scheme URIs are supported by the copy step.");
         } else {
             file = new File(uri.getPath());
         }
 
         if (!file.exists()) {
-             throw new XProcException("Cannot read: file does not exist: " + file.getAbsolutePath());
+             throw new XProcException(step.getNode(), "Cannot read: file does not exist: " + file.getAbsolutePath());
         }
 
         if (file.isDirectory()) {
-             throw new XProcException("Cannot read: file is a directory: " + file.getAbsolutePath());
+             throw new XProcException(step.getNode(), "Cannot read: file is a directory: " + file.getAbsolutePath());
         }
 
         TreeWriter tree = new TreeWriter(runtime);

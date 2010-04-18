@@ -53,7 +53,7 @@ public class NamespaceDelete extends DefaultStep {
     public void run() throws SaxonApiException {
         super.run();
 
-        HashSet excludeUris = readPrefixes(step.getNode(), getOption(_prefixes).getString());
+        HashSet<String> excludeUris = readPrefixes(step.getNode(), getOption(_prefixes).getString());
 
         while (source.moreDocuments()) {
             XdmNode doc = source.read();

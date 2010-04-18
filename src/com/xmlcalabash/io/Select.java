@@ -97,7 +97,7 @@ public class Select implements ReadablePipe {
                     try {
                         node = (XdmNode) item;
                     } catch (ClassCastException cce) {
-                        throw new XProcException ("Select matched non-node!?");
+                        throw new XProcException (context, "Select matched non-node!?");
                     }
                     XdmDestination dest = new XdmDestination();
                     S9apiUtils.writeXdmValue(runtime, node, dest, node.getBaseURI());

@@ -131,7 +131,7 @@ public class XQuery extends DefaultStep {
         while (iter.hasNext()) {
             XdmItem item = iter.next();
             if (item.isAtomicValue()) {
-                throw new XProcException("Not expecting atomic values back from XQuery!");
+                throw new XProcException(step.getNode(), "Not expecting atomic values back from XQuery!");
             }
             XdmNode node = (XdmNode) item;
 

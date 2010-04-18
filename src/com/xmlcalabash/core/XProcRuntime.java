@@ -476,7 +476,7 @@ public class XProcRuntime {
 
     public void declareStep(QName name, DeclareStep step) {
         if (declaredSteps.containsKey(name)) {
-            throw new XProcException("Duplicate declaration for " + name);
+            throw new XProcException(step, "Duplicate declaration for " + name);
         } else {
             declaredSteps.put(name, step);
         }
@@ -486,7 +486,7 @@ public class XProcRuntime {
         if (declaredSteps.containsKey(name)) {
             return declaredSteps.get(name);
         } else {
-            throw XProcException.staticError(44, "Unexpected step name: " + name);
+            throw XProcException.staticError(44, null, "Unexpected step name: " + name);
         }
     }
 

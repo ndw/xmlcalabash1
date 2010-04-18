@@ -70,7 +70,7 @@ public abstract class XStep implements XProcRunnable
     public void addInput(XInput input) {
         String port = input.getPort();
         if (inputs.containsKey(port)) {
-            throw new XProcException("Attempt to add output '" + port + "' port to the same step twice.");
+            throw new XProcException(input.getNode(), "Attempt to add output '" + port + "' port to the same step twice.");
         }
         inputs.put(port, input);
     }
@@ -78,7 +78,7 @@ public abstract class XStep implements XProcRunnable
     public void addOutput(XOutput output) {
         String port = output.getPort();
         if (outputs.containsKey(port)) {
-            throw new XProcException("Attempt to add output '" + port + "' port to the same step twice.");
+            throw new XProcException(output.getNode(), "Attempt to add output '" + port + "' port to the same step twice.");
         }
         outputs.put(port, output);
     }
@@ -87,7 +87,7 @@ public abstract class XStep implements XProcRunnable
         if (inputs.containsKey(port)) {
             return inputs.get(port);
         } else {
-            throw new XProcException("Attempt to get non-existant input '" + port + "' port from step.");
+            throw new XProcException(step.getNode(), "Attempt to get non-existant input '" + port + "' port from step.");
         }
     }
 
@@ -99,7 +99,7 @@ public abstract class XStep implements XProcRunnable
                     && step.getStep().getVersion() > 1.0) {
                 return null;
             } else {
-                throw new XProcException("Attempt to get non-existant output '" + port + "' port from step.");
+                throw new XProcException(step.getNode(), "Attempt to get non-existant output '" + port + "' port from step.");
             }
         }
     }
@@ -114,11 +114,11 @@ public abstract class XStep implements XProcRunnable
         }
 
         if (pportCount == 0) {
-            throw new XProcException("Attempt to set parameter but there's no parameter port.");
+            throw new XProcException(step.getNode(), "Attempt to set parameter but there's no parameter port.");
         }
 
         if (pportCount > 1) {
-            throw new XProcException("Attempt to set parameter w/o specifying a port (and there's more than one)");
+            throw new XProcException(step.getNode(), "Attempt to set parameter w/o specifying a port (and there's more than one)");
         }
 
         setParameter(pport, name, value);
@@ -134,7 +134,7 @@ public abstract class XStep implements XProcRunnable
         }
 
         if (pparams.containsKey(name)) {
-            throw new XProcException("Dup parameter");
+            throw new XProcException(step.getNode(), "Duplicate parameter: " + name);
         }
 
         if (XProcConstants.NS_XPROC.equals(name.getNamespaceURI())) {
@@ -159,7 +159,7 @@ public abstract class XStep implements XProcRunnable
 
     public void setOption(QName name, RuntimeValue value) {
         if (options.containsKey(name)) {
-            throw new XProcException("Dup option");
+            throw new XProcException(step.getNode(), "Duplicate option: " + name);
         }
         options.put(name, value);
     }

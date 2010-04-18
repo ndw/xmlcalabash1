@@ -61,24 +61,24 @@ public class Copy extends DefaultStep {
         URI uri = href.getBaseURI().resolve(href.getString());
         File file;
         if (!"file".equals(uri.getScheme())) {
-            throw new XProcException("Only file: scheme URIs are supported by the copy step.");
+            throw new XProcException(step.getNode(), "Only file: scheme URIs are supported by the copy step.");
         } else {
             file = new File(uri.getPath());
         }
 
         if (!file.exists()) {
-             throw new XProcException("Cannot copy: file does not exist: " + file.getAbsolutePath());
+             throw new XProcException(step.getNode(), "Cannot copy: file does not exist: " + file.getAbsolutePath());
         }
 
         if (file.isDirectory()) {
-             throw new XProcException("Cannot copy: file is a directory: " + file.getAbsolutePath());
+             throw new XProcException(step.getNode(), "Cannot copy: file is a directory: " + file.getAbsolutePath());
         }
 
         href = getOption(_target);
         uri = href.getBaseURI().resolve(href.getString());
         File target;
         if (!"file".equals(uri.getScheme())) {
-            throw new XProcException("Only file: scheme URIs are supported by the copy step.");
+            throw new XProcException(step.getNode(), "Only file: scheme URIs are supported by the copy step.");
         } else {
             target = new File(uri.getPath());
         }
@@ -86,7 +86,7 @@ public class Copy extends DefaultStep {
         if (target.isDirectory()) {
             target = new File(target, file.getName());
             if (target.isDirectory()) {
-                throw new XProcException("Cannot copy: target is a directory: " + target.getAbsolutePath());
+                throw new XProcException(step.getNode(), "Cannot copy: target is a directory: " + target.getAbsolutePath());
             }
         }
 

@@ -175,28 +175,10 @@ public class Main {
 
                 pipeline=runtime.use(implicitPipeline);
                 
-/*
-                pipeline = cmd.implicitPipeline();
-            } else if (cmd.libraryURI != null) {
-                XLibrary library = runtime.loadLibrary(cmd.libraryURI);
-                if (cmd.stepName == null) {
-                    pipeline = library.getFirstPipeline();
-                } else {
-                    pipeline = library.getPipeline(cmd.stepName);
-                }
-*/
             } else if (config.pipeline != null) {
                 XdmNode doc = config.pipeline.read();
                 pipeline = runtime.use(doc);
             }
-
-/*
-            // Special case for running XProc standard library steps directly
-            if (pipeline == null && cmd.stepName != null
-                    && XProcConstants.NS_XPROC.equals(cmd.stepName.getNamespaceURI())) {
-                pipeline = runtime.getStandardLibrary().getPipeline(cmd.stepName);
-            }
-*/
             
             if (errors || pipeline == null) {
                 usage();
@@ -392,7 +374,7 @@ public class Main {
                 cause = cause.getCause();
             }
 
-            if (err.getCause() != null) {
+            if (cause != null) {
                 error(logger, null, "Underlying exception: " + cause, null);
             }
 

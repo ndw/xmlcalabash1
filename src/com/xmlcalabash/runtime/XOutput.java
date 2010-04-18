@@ -39,6 +39,10 @@ public class XOutput {
         documents.setLogger(log);
     }
 
+    public XdmNode getNode() {
+        return node;
+    }
+
     public String getPort() {
         return port;
     }
@@ -55,7 +59,7 @@ public class XOutput {
 
     public WritablePipe getWriter() {
         if (writer != null) {
-            throw new XProcException("Attempt to create two writers for the same output.");
+            throw new XProcException(node, "Attempt to create two writers for the same output.");
         }
         if (inputWriter != null) {
             writer = inputWriter;

@@ -53,7 +53,7 @@ public class Touch extends DefaultStep {
         URI uri = href.getBaseURI().resolve(href.getString());
         File file;
         if (!"file".equals(uri.getScheme())) {
-            throw new XProcException("Only file: scheme URIs are supported by the touch step.");
+            throw new XProcException(step.getNode(), "Only file: scheme URIs are supported by the touch step.");
         } else {
             file = new File(uri.getPath());
         }

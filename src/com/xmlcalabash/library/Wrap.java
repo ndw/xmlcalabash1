@@ -83,11 +83,11 @@ public class Wrap extends DefaultStep implements ProcessMatchingNodes {
         String wns = getOption(_wrapper_namespace, (String) null);
 
         if (wpfx != null && wns == null) {
-            throw XProcException.dynamicError(34, "You can't specify a prefix without a namespace");
+            throw XProcException.dynamicError(34, step.getNode(), "You can't specify a prefix without a namespace");
         }
 
         if (wns != null && wrapperNameStr.contains(":")) {
-            throw XProcException.dynamicError(34, "You can't specify a namespace if the wrapper name contains a colon");
+            throw XProcException.dynamicError(34, step.getNode(), "You can't specify a namespace if the wrapper name contains a colon");
         }
 
         if (wrapperNameStr.contains(":")) {

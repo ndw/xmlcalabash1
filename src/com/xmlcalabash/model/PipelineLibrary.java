@@ -50,7 +50,7 @@ public class PipelineLibrary extends Step {
         }
 
         if (declaredSteps.contains(type)) {
-            throw new XProcException("You aren't allowed to do this");
+            throw new XProcException(step.getNode(), "You aren't allowed to do this");
         }
 
         steps.add(step);

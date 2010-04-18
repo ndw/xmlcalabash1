@@ -112,7 +112,7 @@ public class XSelect implements ReadablePipe {
 
         } catch (SaxonApiException sae) {
             if (S9apiUtils.xpathSyntaxError(sae)) {
-                throw XProcException.dynamicError(23, "Invalid XPath expression: '" + select + "'.");
+                throw XProcException.dynamicError(23, context, "Invalid XPath expression: '" + select + "'.");
             } else {
                 throw new XProcException(sae);
             }

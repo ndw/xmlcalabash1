@@ -184,7 +184,7 @@ public class ValidateWithSCH extends DefaultStep {
                 if (sae instanceof XPathException) {
                     XPathException xe = (XPathException) sae;
                     if ("http://www.w3.org/2005/xqt-errors".equals(xe.getErrorCodeNamespace()) && "XPDY0002".equals(xe.getErrorCodeLocalPart())) {
-                        throw XProcException.dynamicError(26,"Expression refers to context when none is available: " + xpath);
+                        throw XProcException.dynamicError(26, step.getNode(), "Expression refers to context when none is available: " + xpath);
                     } else {
                         throw saue;
                     }
@@ -206,7 +206,7 @@ public class ValidateWithSCH extends DefaultStep {
             if ("iso_schematron_skeleton_for_saxon.xsl".equals(href)) {
                 return new SAXSource(new InputSource(skeleton));
             } else {
-                throw new XProcException("Failed to resolve " + href + " from JAR file.");
+                throw new XProcException(step.getNode(), "Failed to resolve " + href + " from JAR file.");
             }
         }
     }

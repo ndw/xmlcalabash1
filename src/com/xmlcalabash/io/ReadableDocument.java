@@ -158,7 +158,7 @@ public class ReadableDocument implements ReadablePipe {
                         if (nodes.size() == 1) {
                             doc = nodes.get(0);
                         } else if (nodes.size() != 0) {
-                            throw new XProcException("XPointer matches more than one node!?");
+                            throw new XProcException(node, "XPointer matches more than one node!?");
                         }
                     }
 

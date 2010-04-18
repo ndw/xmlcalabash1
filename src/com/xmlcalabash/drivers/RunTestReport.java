@@ -671,7 +671,7 @@ private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
 
         public XProcTest(XdmNode root) {
             if (!t_test.equals(root.getNodeName())) {
-                throw new XProcException("Test must have t:test as root element.");
+                throw new XProcException(root, "Test must have t:test as root element.");
             }
 
             if (root.getAttributeValue(_error) != null) {
@@ -719,7 +719,7 @@ private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
                     continue;
                 }
 
-                throw new XProcException("Not a valid test: " + node.getNodeName());
+                throw new XProcException(pipeline, "Not a valid test: " + node.getNodeName());
             }
         }
 

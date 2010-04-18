@@ -32,9 +32,11 @@ public class XRootStep extends XCompoundStep {
         return new Hashtable<QName,RuntimeValue> ();
     }
 
+/*
     public void addVariable(QName name, RuntimeValue value) {
         throw new XProcException("The root step can't have getVariables!");
     }
+*/
 
     public RuntimeValue getVariable(QName name) {
         throw new XProcException("The root step doesn't have getVariables!");
@@ -44,10 +46,12 @@ public class XRootStep extends XCompoundStep {
         throw new XProcException("No in-scope binding for " + portName + " on " + stepName);
     }
 
+/*
     public void instantiate(DeclareStep step) {
         throw new XProcException("The root step can't be instantiated!");
     }
-
+*/
+    
     public void run() {
         throw new XProcException("The root step can't be run!");
     }

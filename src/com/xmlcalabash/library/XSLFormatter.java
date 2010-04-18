@@ -51,7 +51,7 @@ public class XSLFormatter extends DefaultStep {
 
     public void setParameter(QName name, RuntimeValue value) {
         if (!"".equals(name.getNamespaceURI())) {
-            throw new XProcException("The p:xsl-formatter parameters are in no namespace: " + name + " (" + name.getNamespaceURI() + ")");
+            throw new XProcException(step.getNode(), "The p:xsl-formatter parameters are in no namespace: " + name + " (" + name.getNamespaceURI() + ")");
         }
         options.setProperty(name.getLocalName(), value.getString());
     }
@@ -70,7 +70,7 @@ public class XSLFormatter extends DefaultStep {
         if (href.startsWith("file:/")) {
             output = href.substring(5);
         } else {
-            throw new XProcException("Don't know how to write p:xsl-formatter output to " + href);
+            throw new XProcException(step.getNode(), "Don't know how to write p:xsl-formatter output to " + href);
         }
 
         String outputFormat = null;
@@ -81,7 +81,7 @@ public class XSLFormatter extends DefaultStep {
         } else if ("application/afp".equals(contentType)) {
             outputFormat = "AFP";
         } else {
-            throw new XProcException("Unsupported content-type on p:xsl-formatter: " + contentType);
+            throw new XProcException(step.getNode(), "Unsupported content-type on p:xsl-formatter: " + contentType);
         }
 
         FormatterImpl xep = null;

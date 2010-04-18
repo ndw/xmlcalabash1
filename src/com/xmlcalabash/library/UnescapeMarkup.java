@@ -99,7 +99,7 @@ public class UnescapeMarkup extends DefaultStep {
             }
             escapedContent = decodeBase64(doc, charset);
         } else if (encoding != null) {
-            throw new XProcException("Unexpected encoding: " + encoding);
+            throw new XProcException(step.getNode(), "Unexpected encoding: " + encoding);
         } else {
             escapedContent = extractText(doc);
         }

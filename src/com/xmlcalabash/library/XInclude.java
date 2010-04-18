@@ -129,7 +129,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
 
             if ("text".equals(parse)) {
                 if (xpointer != null) {
-                    throw new XProcException("XPointer cannot be applied with XInclude parse=text: " + href);
+                    throw new XProcException(step.getNode(), "XPointer cannot be applied with XInclude parse=text: " + href);
                 }
                 String text = readText(href, node, node.getBaseURI().toASCIIString());
                 if (text == null) {
@@ -242,7 +242,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                 try {
                     node = (XdmNode) item;
                 } catch (ClassCastException cce) {
-                    throw new XProcException ("XInclude pointer matched non-node item?");
+                    throw new XProcException (step.getNode(), "XInclude pointer matched non-node item?");
                 }
                 selectedNodes.add(node);
             }
@@ -332,14 +332,14 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
         }
 
         if (!valid) {
-            throw new XProcException("XInclude element must contain exactly one xi:fallback element.");
+            throw new XProcException(step.getNode(), "XInclude element must contain exactly one xi:fallback element.");
         }
 
         if (fallback == null) {
             if (mostRecentException != null) {
-                throw new XProcException("XInclude resource error (" + href + ") and no fallback provided.", mostRecentException);
+                throw new XProcException(step.getNode(), "XInclude resource error (" + href + ") and no fallback provided.", mostRecentException);
             } else {
-                throw new XProcException("XInclude resource error (" + href + ") and no fallback provided.");
+                throw new XProcException(step.getNode(), "XInclude resource error (" + href + ") and no fallback provided.");
             }
         }
 
@@ -409,7 +409,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
         }
 
         public void processAttribute(XdmNode node) throws SaxonApiException {
-            throw new XProcException("This can't happen!?");
+            throw new XProcException(node, "This can't happen!?");
         }
 
         public void processEndElement(XdmNode node) throws SaxonApiException {
@@ -417,15 +417,15 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
         }
 
         public void processText(XdmNode node) throws SaxonApiException {
-            throw new XProcException("This can't happen!?");
+            throw new XProcException(node, "This can't happen!?");
         }
 
         public void processComment(XdmNode node) throws SaxonApiException {
-            throw new XProcException("This can't happen!?");
+            throw new XProcException(node, "This can't happen!?");
         }
 
         public void processPI(XdmNode node) throws SaxonApiException {
-            throw new XProcException("This can't happen!?");
+            throw new XProcException(node, "This can't happen!?");
         }
 
         private String getLang(XdmNode node) {

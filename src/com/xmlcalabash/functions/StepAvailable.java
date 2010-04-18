@@ -107,7 +107,7 @@ public class StepAvailable extends ExtensionFunctionDefinition {
                      staticContext.getNamespaceResolver());
             } catch (XPathException e) {
                 // FIXME: bad formatting
-                throw new XProcException("Invalid step name. " + e.getMessage() + "XTDE1390");
+                throw new XProcException(step.getNode(), "Invalid step name. " + e.getMessage() + "XTDE1390");
             }
 
             boolean value = false;

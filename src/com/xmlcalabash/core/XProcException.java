@@ -48,11 +48,17 @@ public class XProcException extends RuntimeException {
     public XProcException(String message) {
         super(message);
     }
-
+    
     /** Creates a new instance of XProcException */
     public XProcException(Step step, String message) {
         super(message);
         this.step = step;
+    }
+
+    /** Creates a new instance of XProcException */
+    public XProcException(XdmNode node, String message) {
+        super(message);
+        this.node = node;
     }
 
     /** Creates a new instance of XProcException */
@@ -74,6 +80,12 @@ public class XProcException extends RuntimeException {
     /** Creates a new instance of XProcException */
     public XProcException(XdmNode node, Throwable cause) {
         super(cause);
+        this.node = node;
+    }
+
+    /** Creates a new instance of XProcException */
+    public XProcException(XdmNode node, String message, Throwable cause) {
+        super(message, cause);
         this.node = node;
     }
 
@@ -146,6 +158,10 @@ public class XProcException extends RuntimeException {
 
     public static XProcException dynamicError(int errno, String message) {
         return new XProcException(XProcConstants.dynamicError(errno), message);
+    }
+
+    public static XProcException dynamicError(int errno, XdmNode node, String message) {
+        return new XProcException(XProcConstants.dynamicError(errno), node, message);
     }
 
     public static XProcException dynamicError(int errno, XdmNode node, Exception except, String message) {

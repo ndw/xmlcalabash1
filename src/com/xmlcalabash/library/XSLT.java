@@ -109,7 +109,7 @@ public class XSLT extends DefaultStep {
 
         XdmNode stylesheet = stylesheetPipe.read();
         if (stylesheet == null) {
-            throw XProcException.dynamicError(6, "No stylesheet provided.");
+            throw XProcException.dynamicError(6, step.getNode(), "No stylesheet provided.");
         }
 
         Vector<XdmNode> defaultCollection = new Vector<XdmNode> ();

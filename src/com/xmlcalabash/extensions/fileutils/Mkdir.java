@@ -52,7 +52,7 @@ public class Mkdir extends DefaultStep {
         URI uri = href.getBaseURI().resolve(href.getString());
         File file;
         if (!"file".equals(uri.getScheme())) {
-            throw new XProcException("Only file: scheme URIs are supported by the mkdir step.");
+            throw new XProcException(step.getNode(), "Only file: scheme URIs are supported by the mkdir step.");
         } else {
             file = new File(uri.getPath());
         }
@@ -67,9 +67,9 @@ public class Mkdir extends DefaultStep {
         if (file.exists() && file.isDirectory()) {
             // nop
         } else if (file.exists()) {
-             throw new XProcException("Cannot mkdir: file exists: " + file.getAbsolutePath());
+             throw new XProcException(step.getNode(), "Cannot mkdir: file exists: " + file.getAbsolutePath());
         } else if (!file.mkdirs()) {
-            throw new XProcException("Mkdir failed for: " + file.getAbsolutePath());
+            throw new XProcException(step.getNode(), "Mkdir failed for: " + file.getAbsolutePath());
         }
 
         tree.addEndElement();

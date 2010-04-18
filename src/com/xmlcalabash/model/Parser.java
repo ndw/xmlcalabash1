@@ -279,7 +279,7 @@ public class Parser {
         for (XdmNode node : new RelevantNodes(runtime, step.getNode(), Axis.CHILD)) {
             if (done) {
                 if (node.getNodeKind() == XdmNodeKind.TEXT) {
-                    throw XProcException.staticError(37);
+                    throw XProcException.staticError(37, node, "Unexpected text: " + node.getStringValue());
                 }
                 
                 rest.add(node);
@@ -297,18 +297,18 @@ public class Parser {
 
                     if (input.getPrimarySet() && input.getPrimary()) {
                         if (!allowPrimary) {
-                            throw XProcException.staticError(8);
+                            throw XProcException.staticError(8, node, "The \"primary\" attribute is not allowed in this context.");
                         }
 
                         if (input.getParameterInput()) {
                             primaryParamInputCount++;
                             if (primaryParamInputCount > 1) {
-                                throw XProcException.staticError(30);
+                                throw XProcException.staticError(30, node, "You cannot have more than one primary parameter input port.");
                             }
                         } else {
                             primaryDocInputCount++;
                             if (primaryDocInputCount > 1) {
-                                throw XProcException.staticError(30);
+                                throw XProcException.staticError(30, node, "You cannot have more than one primary input port.");
                             }
                         }
                     }
@@ -324,11 +324,11 @@ public class Parser {
 
                     if (output.getPrimarySet() && output.getPrimary()) {
                         if (!allowPrimary) {
-                            throw new XProcException("You can't set primary on p:output here");
+                            throw XProcException.staticError(8, node, "The \"primary\" attribute is not allowed in this context.");
                         }
                         primaryOutputCount++;
                         if (primaryOutputCount > 1) {
-                            throw XProcException.staticError(14);
+                            throw XProcException.staticError(14, node, "You cannot have more than one primary output port.");
                         }
                     }
 
@@ -358,11 +358,11 @@ public class Parser {
                     if (XProcConstants.p_pipeline.equals(step.getType())
                             || XProcConstants.p_declare_step.equals(step.getType())) {
                         if (XProcConstants.p_with_option.equals(nodeName)) {
-                            throw new XProcException("you can't use p:with-option here");
+                            throw XProcException.staticError(44, node, "Can't use p:with-option here.");
                         }
                     } else {
                         if (XProcConstants.p_option.equals(nodeName)) {
-                            throw new XProcException("you can't use p:option here");
+                            throw XProcException.staticError(44, node, "Can't use p:option here.");
                         }
                     }
 
@@ -377,10 +377,10 @@ public class Parser {
                 } else if (XProcConstants.p_log.equals(nodeName)) {
                     Log log = readLog(node);
                     if (log.getPort() == null) {
-                        throw XProcException.staticError(26, "A p:log must specify a port.");
+                        throw XProcException.staticError(26, node, "A p:log must specify a port.");
                     }
                     if (log.getPort() != null && loggers.containsKey(log.getPort())) {
-                        throw XProcException.staticError(26, "A p:log was specified more than once for the same port: " + log.getPort());
+                        throw XProcException.staticError(26, node, "A p:log was specified more than once for the same port: " + log.getPort());
                     }
                     loggers.put(log.getPort(), log);
                 } else if (XProcConstants.p_import.equals(nodeName)) {
@@ -389,7 +389,7 @@ public class Parser {
                     Serialization ser = readSerialization(node);
                     String port = ser.getPort();
                     if (port == null || serializations.containsKey(port)) {
-                        throw XProcException.staticError(39, "A p:serialization must specify a port and can only be specified once.");
+                        throw XProcException.staticError(39, node, "A p:serialization must specify a port and can only be specified once.");
                     }
 
                     serializations.put(port, ser);
@@ -398,7 +398,7 @@ public class Parser {
                 }
             } else {
                 if (node.getNodeKind() == XdmNodeKind.TEXT) {
-                    throw XProcException.staticError(37);
+                    throw XProcException.staticError(37, node, "Unexpected text: " + node.getStringValue());
                 }
                 
                 done = true;
@@ -457,7 +457,7 @@ public class Parser {
         
             if (serializations.size() != 0) {
                 // We know this is true here and now because p:pipeline can't have defaulted inputs/outputs
-                throw XProcException.staticError(39, "A p:serialization specifies a non-existant port.");
+                throw XProcException.staticError(39, step.getNode(), "A p:serialization specifies a non-existant port.");
             }
         }
 
@@ -472,7 +472,7 @@ public class Parser {
 
         if (vars) {
             if (!allowVariables) {
-                throw new XProcException("Variables are not allowed here");
+                throw XProcException.staticError(44, step.getNode(), "Variables are not allowed here");
             }
 
             // p:declare-step/p:pipeline is a special case, see readDeclareStep
@@ -509,7 +509,7 @@ public class Parser {
         String select = node.getAttributeValue(new QName("select"));
 
         if (port == null && XProcConstants.p_input.equals(node.getNodeName())) {
-            throw XProcException.staticError(38, "You must specify a port name for all p:input ports.");
+            throw XProcException.staticError(38, node, "You must specify a port name for all p:input ports.");
         }
 
         if (kind == null) {
@@ -549,7 +549,7 @@ public class Parser {
             sequence = "false";
             primary = "true";
         } else if (port == null) {
-            throw XProcException.staticError(12);
+            throw XProcException.staticError(44, node, "No port name specified on input.");
         }
 
         Input input = new Input(runtime, node);
@@ -585,7 +585,7 @@ public class Parser {
         String port = checkNCName(node.getAttributeValue(new QName("port")));
 
         if (port == null) {
-            throw XProcException.staticError(38, "You must specify a port name for all p:output ports.");
+            throw XProcException.staticError(38, node, "You must specify a port name for all p:output ports.");
         }
 
         String primary = node.getAttributeValue(new QName("primary"));
@@ -675,19 +675,19 @@ public class Parser {
         String contentType = node.getAttributeValue(new QName("content-type"));
 
         if (wrappfx != null && wrapns == null) {
-            throw XProcException.dynamicError(34, "You cannot specify a prefix without a namespace.");
+            throw XProcException.dynamicError(34, node, "You cannot specify a prefix without a namespace.");
         }
 
         if (wrapns != null && wrapstr == null) {
-            throw XProcException.dynamicError(34, "You cannot specify a namespace without a wrapper.");
+            throw XProcException.dynamicError(34, node, "You cannot specify a namespace without a wrapper.");
         }
 
         if (wrapns != null && wrapstr != null && wrapstr.indexOf(":") >= 0) {
-            throw XProcException.dynamicError(34, "You cannot specify a namespace if the wrapper name contains a colon.");
+            throw XProcException.dynamicError(34, node, "You cannot specify a namespace if the wrapper name contains a colon.");
         }
 
         if (wrapns == null && wrapstr != null && wrapstr.indexOf(":") <= 0) {
-            throw XProcException.staticError(25);
+            throw XProcException.dynamicError(25, node, "FIXME: what error is this?");
         }
         
         DataBinding doc = new DataBinding(runtime, node);
@@ -806,11 +806,11 @@ public class Parser {
         }
         
         if (XProcConstants.NS_XPROC.equals(oname.getNamespaceURI())) {
-            throw XProcException.staticError(28);
+            throw XProcException.staticError(28, node, "You cannot specify an option in the p: namespace.");
         }
 
         if (required != null && !"false".equals(required) && !"true".equals(required)) {
-            throw new XProcException("The required attribute must be 'true' or 'false'.");
+            throw XProcException.staticError(19, node, "The required attribute must be 'true' or 'false'.");
         }
         
         Option option = new Option(runtime, node);
@@ -854,7 +854,7 @@ public class Parser {
         QName oname = new QName(name, node);
 
         if (XProcConstants.NS_XPROC.equals(oname.getNamespaceURI())) {
-            throw XProcException.staticError(28);
+            throw XProcException.staticError(28, node, "You cannot specify a variable in the p: namespace.");
         }
 
         Variable variable = new Variable(runtime, node);
@@ -894,7 +894,7 @@ public class Parser {
                             nsbinding.addExcludedNamespace(n.getNamespaceURI());
                         } catch (IllegalArgumentException iae) {
                             // Bad prefix
-                            throw XProcException.staticError(51);
+                            throw XProcException.staticError(51, node, "Unbound prefix in except-prefixes: " + pfx);
                         }
                     }
                 }
@@ -903,7 +903,7 @@ public class Parser {
                 ((ComputableValue) endpoint).addNamespaceBinding(nsbinding);
 
                 for (XdmNode tnode : new RelevantNodes(runtime, snode, Axis.CHILD)) {
-                    throw new XProcException("p:namespaces must be empty");
+                    throw XProcException.staticError(44, snode, "p:namespaces must be empty");
                 }
             } else {
                 Binding binding = readBinding(snode);
@@ -1016,7 +1016,7 @@ public class Parser {
         serial.setVersion(value);
 
         for (XdmNode snode : new RelevantNodes(runtime, node, Axis.CHILD)) {
-            throw new XProcException("serialization must be empty");
+            throw XProcException.staticError(44, node, "p:serialization must be empty.");
         }
 
         return serial;
@@ -1045,7 +1045,7 @@ public class Parser {
         checkExtensionAttributes(node, log);
 
         for (XdmNode snode : new RelevantNodes(runtime, node, Axis.CHILD)) {
-            throw new XProcException("log must be empty");
+            throw XProcException.staticError(44, node, "p:log must be empty");
         }
         
         return log;
@@ -1083,7 +1083,11 @@ public class Parser {
         if (declStack.isEmpty()) {
             decl = runtime.getBuiltinDeclaration(stepType);
         } else {
-            decl = declStack.peek().getStepDeclaration(stepType);
+            try {
+                decl = declStack.peek().getStepDeclaration(stepType);
+            } catch (Exception ex) {
+                throw new XProcException(node, ex.getMessage(), ex);
+            }
         }
 
         if (decl == null) {
@@ -1101,7 +1105,7 @@ public class Parser {
         boolean pStep = XProcConstants.NS_XPROC.equals(node.getNodeName().getNamespaceURI());
 
         if (pStep && node.getAttributeValue(p_use_when) != null) {
-            throw new XProcException("You can't use p:use-when on a p: step.");
+            throw XProcException.staticError(44, node, "You can't use p:use-when on a p: step.");
         }
 
         // Store extension attributes and convert any option shortcut attributes into options
@@ -1137,7 +1141,7 @@ public class Parser {
             } else {
                 message += " " + rest.get(0).getNodeName() + " not allowed.";
             }
-            throw new XProcException(message);
+            throw XProcException.staticError(44, rest.get(0), message);
         }
         return step;
     }
@@ -1146,7 +1150,7 @@ public class Parser {
         QName name = node.getNodeName();
 
         if (!name.equals(XProcConstants.p_declare_step) && !name.equals(XProcConstants.p_pipeline)) {
-            throw XProcException.staticError(59, "Expected p:declare-step or p:pipeline, got " + name);
+            throw XProcException.staticError(59, node, "Expected p:declare-step or p:pipeline, got " + name);
         }
 
         checkAttributes(node, new String[] { "type", "name", "version", "psvi-required", "xpath-version", "exclude-inline-prefixes"}, false);
@@ -1159,19 +1163,19 @@ public class Parser {
             type = TypeUtils.generateUniqueType();
         } else {
             if (typeName.indexOf(":") <= 0) {
-                throw XProcException.staticError(25);
+                throw XProcException.staticError(25, node, "Type must be in a namespace.");
             }
             type = new QName(typeName, node);
 
             if (!loadingStandardLibrary && XProcConstants.NS_XPROC.equals(type.getNamespaceURI())) {
-                throw XProcException.staticError(25);
+                throw XProcException.staticError(25, node, "Type cannot be in the p: namespace.");
             }
         }
 
         if (XProcConstants.NS_XPROC.equals(type.getNamespaceURI())) {
             // If declStack is empty, then this is ok. It's also OK if we're reading from an XProc library
             if (declStack.size() != 0) {
-                throw new XProcException("Additional steps must not be declared in the XProc namespace.");
+                throw XProcException.staticError(25, node, "Additional steps must not be declared in the XProc namespace.");
             }
         }
 
@@ -1185,7 +1189,7 @@ public class Parser {
         if ("1.0".equals(xpathVersion)) {
             // FIXME: Warn about v2!
         } else if (xpathVersion != null && !"2.0".equals(xpathVersion)) {
-            throw XProcException.dynamicError(27, "XPath version must be 1.0 or 2.0.");
+            throw XProcException.dynamicError(27, node, "XPath version must be 1.0 or 2.0.");
         }
 
         // Store extension attributes and convert any option shortcut attributes into options
@@ -1196,7 +1200,7 @@ public class Parser {
                         && !"version".equals(aname.getLocalName())
                         && !"psvi-required".equals(aname.getLocalName()) && !"xpath-version".equals(aname.getLocalName())
                         && !"exclude-inline-prefixes".equals(aname.getLocalName())) {
-                    throw new XProcException("Attribute not allowed: " + aname.getLocalName());
+                    throw XProcException.staticError(44, node, "Attribute not allowed: " + aname.getLocalName());
                 }
             } else {
                 step.addExtensionAttribute(attr);
@@ -1298,7 +1302,7 @@ public class Parser {
         }
 
         if (parent == null) {
-            throw XProcException.staticError(62);
+            throw XProcException.staticError(62, node, "Version attribute is required.");
         } else {
             return inheritedVersion(parent);
         }
@@ -1366,12 +1370,6 @@ public class Parser {
         Import importElem = new Import(runtime, node);
         importElem.setHref(importURI);
 
-        if (XProcConstants.STANDARD_XPROC_LIBRARY_1_0.equals(importURI.toASCIIString())
-            || importURI.toASCIIString().matches(XProcConstants.STANDARD_XPROC_LIBRARY_REGEX)) {
-            // Don't bother downloading the library, just throw the error.
-            throw XProcException.staticError(36);
-        }
-
         XdmNode doc;
         try {
             if (importURI.toASCIIString().equals(XProcConstants.CALABASH_EXTENSION_LIBRARY_1_0)) {
@@ -1429,7 +1427,7 @@ public class Parser {
         Vector<XdmNode> rest = readSignature(step);
 
         if (rest == null) {
-            throw XProcException.staticError(15);
+            throw XProcException.staticError(15, node, "A p:for-each must contain a subpipeline.");
         }
 
         for (XdmNode substepNode : rest) {
@@ -1457,7 +1455,7 @@ public class Parser {
         Vector<XdmNode> rest = readSignature(step);
 
         if (rest == null) {
-            throw XProcException.staticError(15);
+            throw XProcException.staticError(15, node, "A cx:until-unchanged must contain a subpipeline.");
         }
 
         for (XdmNode substepNode : rest) {
@@ -1486,7 +1484,7 @@ public class Parser {
         Vector<XdmNode> rest = readSignature(step);
 
         if (rest == null) {
-            throw XProcException.staticError(15);
+            throw XProcException.staticError(15, node, "A p:viewport must contain a subpipeline.");
         }
 
         for (XdmNode substepNode : rest) {
@@ -1507,7 +1505,7 @@ public class Parser {
         Vector<XdmNode> rest = readSignature(step);
 
         if (rest == null) {
-            throw XProcException.staticError(15);
+            throw XProcException.staticError(15, node, "A p:choose must contain at least one p:when.");
         }
 
         for (XdmNode child : rest) {
@@ -1538,7 +1536,7 @@ public class Parser {
         Vector<XdmNode> rest = readSignature(step);
 
         if (rest == null) {
-            throw XProcException.staticError(15);
+            throw XProcException.staticError(15, node, "A p:when must contain a subpipeline.");
         }
 
         for (XdmNode substepNode : rest) {
@@ -1560,7 +1558,7 @@ public class Parser {
         Vector<XdmNode> rest = readSignature(step);
 
         if (rest == null) {
-            throw XProcException.staticError(15);
+            throw XProcException.staticError(15, node, "A p:otherwise must contain a subpipeline.");
         }
 
         for (XdmNode substepNode : rest) {
@@ -1582,7 +1580,7 @@ public class Parser {
         Vector<XdmNode> rest = readSignature(step);
 
         if (rest == null) {
-            throw XProcException.staticError(15);
+            throw XProcException.staticError(15, node, "A p:group must contain a subpipeline.");
         }
 
         for (XdmNode substepNode : rest) {
@@ -1604,7 +1602,7 @@ public class Parser {
         Vector<XdmNode> rest = readSignature(step);
 
         if (rest == null) {
-            throw XProcException.staticError(15);
+            throw XProcException.staticError(15, node, "A p:try must contain a subpipeline.");
         }
 
         for (XdmNode substepNode : rest) {
@@ -1633,7 +1631,7 @@ public class Parser {
         step.addInput(input);
 
         if (rest == null) {
-            throw XProcException.staticError(15);
+            throw XProcException.staticError(15, node, "A p:catch must contain a subpipeline.");
         }
 
         for (XdmNode substepNode : rest) {

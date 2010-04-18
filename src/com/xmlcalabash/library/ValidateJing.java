@@ -146,7 +146,7 @@ public class ValidateJing extends DefaultStep {
                     }
                 }
             } else {
-                throw new XProcException("Error loading schema");
+                throw new XProcException(step.getNode(), "Error loading schema");
             }
         } catch (SAXException e) {
             throw new XProcException("SAX Exception", e);

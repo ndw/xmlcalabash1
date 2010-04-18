@@ -119,7 +119,7 @@ public class XAtomicStep extends XStep {
             }
             pipe = step.getBinding(step.getName(), "error");
         } else {
-            throw new XProcException("Don't know how to handle binding " + binding.getBindingType());
+            throw new XProcException(binding.getNode(), "Unknown binding type: " + binding.getBindingType());
         }
 
         pipe.setReader(step);
@@ -208,7 +208,7 @@ public class XAtomicStep extends XStep {
                     if (!primaryParamPort) {
                         String port = p.getPort();
                         if (port == null) {
-                            throw XProcException.staticError(34);
+                            throw XProcException.staticError(34, step.getNode(), "No parameter input port.");
                         }
                         xstep.setParameter(p.getPort(), p.getName(), computeValue(p));
                     } else {
@@ -232,14 +232,14 @@ public class XAtomicStep extends XStep {
                                     QName aname = attr.getNodeName();
                                     if ("".equals(aname.getNamespaceURI())
                                         || XProcConstants.NS_XPROC.equals(aname.getNamespaceURI())) {
-                                        throw XProcException.dynamicError(14, "Attribute not allowed");
+                                        throw XProcException.dynamicError(14, step.getNode(), "Attribute not allowed");
                                     }
                                 }
 
                                 for (XdmNode child : new RelevantNodes(runtime, docelem, Axis.CHILD)) {
                                     if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
                                         if (!child.getNodeName().equals(XProcConstants.c_param)) {
-                                            throw XProcException.dynamicError(18, "Element not allowed: " + child.getNodeName());
+                                            throw XProcException.dynamicError(18, step.getNode(), "Element not allowed: " + child.getNodeName());
                                         }
                                         parseParameterNode(xstep,child);
                                     }
@@ -247,7 +247,7 @@ public class XAtomicStep extends XStep {
                             } else if (XProcConstants.c_param.equals(docelem.getNodeName())) {
                                 parseParameterNode(xstep,docelem);
                             } else {
-                                throw new XProcException(docelem.getNodeName() + " found where c:param or c:param-set expected");
+                                throw new XProcException(step.getNode(), docelem.getNodeName() + " found where c:param or c:param-set expected");
                             }
                         }
                     }
@@ -337,7 +337,7 @@ public class XAtomicStep extends XStep {
             }
 
             if (totalDocs != 1 && !input.getSequence()) {
-                throw XProcException.dynamicError(6, totalDocs + " documents appear on the '" + port + "' port.");
+                throw XProcException.dynamicError(6, step.getNode(), totalDocs + " documents appear on the '" + port + "' port.");
             }
         }
 
@@ -504,7 +504,7 @@ public class XAtomicStep extends XStep {
         for (XdmNode child : new RelevantNodes(runtime, pnode, Axis.CHILD)) {
             if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
                if (!child.getNodeName().equals(cx_item)) {
-                    throw XProcException.dynamicError(18, "Element not allowed: " + child.getNodeName());
+                    throw XProcException.dynamicError(18, step.getNode(), "Element not allowed: " + child.getNodeName());
                 }
 
                 String type = child.getAttributeValue(_type);
@@ -580,7 +580,7 @@ public class XAtomicStep extends XStep {
                 QName binding = new QName(nsbinding.getBinding(), nsbinding.getNode());
                 RuntimeValue nsv = globals.get(binding);
                 if (nsv == null) {
-                    throw new XProcException("No in-scope option or variable named: " + binding);
+                    throw new XProcException(var.getNode(), "No in-scope option or variable named: " + binding);
                 }
 
                 localBindings = nsv.getNamespaceBindings();
@@ -678,7 +678,7 @@ public class XAtomicStep extends XStep {
             if (sae instanceof XPathException) {
                 XPathException xe = (XPathException) sae;
                 if ("http://www.w3.org/2005/xqt-errors".equals(xe.getErrorCodeNamespace()) && "XPDY0002".equals(xe.getErrorCodeLocalPart())) {
-                    throw XProcException.dynamicError(26,"The expression for $" + var.getName() + " refers to the context item.");
+                    throw XProcException.dynamicError(26, step.getNode(), "The expression for $" + var.getName() + " refers to the context item.");
                 } else {
                     throw saue;
                 }
@@ -735,7 +735,7 @@ public class XAtomicStep extends XStep {
                 if (t instanceof XPathException) {
                     XPathException xe = (XPathException) t;
                     if (xe.getMessage().contains("Undeclared (or unbound?) variable")) {
-                        throw XProcException.dynamicError(26, xe.getMessage());
+                        throw XProcException.dynamicError(26, step.getNode(), xe.getMessage());
                     }
                 }
                 throw sae;
@@ -767,7 +767,7 @@ public class XAtomicStep extends XStep {
                 if (sae instanceof XPathException) {
                     XPathException xe = (XPathException) sae;
                     if ("http://www.w3.org/2005/xqt-errors".equals(xe.getErrorCodeNamespace()) && "XPDY0002".equals(xe.getErrorCodeLocalPart())) {
-                        throw XProcException.dynamicError(26,"Expression refers to context when none is available: " + xpath);
+                        throw XProcException.dynamicError(26, step.getNode(), "Expression refers to context when none is available: " + xpath);
                     } else {
                         throw saue;
                     }
@@ -778,7 +778,7 @@ public class XAtomicStep extends XStep {
             }
         } catch (SaxonApiException sae) {
             if (S9apiUtils.xpathSyntaxError(sae)) {
-                throw XProcException.dynamicError(23, sae.getCause().getMessage());
+                throw XProcException.dynamicError(23, step.getNode(), sae.getCause().getMessage());
             } else {
                 throw new XProcException(sae);
             }
