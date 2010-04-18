@@ -108,7 +108,7 @@ public class XAtomicStep extends XStep {
         } else if (binding.getBindingType() == Binding.DOCUMENT_BINDING) {
             DocumentBinding dbinding = (DocumentBinding) binding;
             String filemask = dbinding.getExtensionAttribute(cx_filemask);
-            pipe = new ReadableDocument(runtime, dbinding.getHref(), dbinding.getNode().getBaseURI().toASCIIString(), filemask);
+            pipe = new ReadableDocument(runtime, dbinding.getNode(), dbinding.getHref(), dbinding.getNode().getBaseURI().toASCIIString(), filemask);
         } else if (binding.getBindingType() == Binding.DATA_BINDING) {
             DataBinding dbinding = (DataBinding) binding;
             pipe = new ReadableData(runtime, dbinding.getWrapper(), dbinding.getHref(), dbinding.getContentType());
