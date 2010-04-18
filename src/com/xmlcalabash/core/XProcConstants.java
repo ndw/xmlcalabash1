@@ -126,17 +126,17 @@ public class XProcConstants {
 
     public static QName staticError(int errno) {
         String localName = String.format("XS%04d", errno);
-        return new QName(NS_XPROC_ERROR, localName);
+        return new QName("err", NS_XPROC_ERROR, localName);
     }
 
     public static QName dynamicError(int errno) {
         String localName = String.format("XD%04d", errno);
-        return new QName(NS_XPROC_ERROR, localName);
+        return new QName("err", NS_XPROC_ERROR, localName);
 
     }
 
     public static QName stepError(int errno) {
         String localName = String.format("XC%04d", errno);
-        return new QName(NS_XPROC_ERROR, localName);
+        return new QName("err", NS_XPROC_ERROR, localName);
     }
 }
