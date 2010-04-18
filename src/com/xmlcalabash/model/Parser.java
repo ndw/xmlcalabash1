@@ -190,7 +190,7 @@ public class Parser {
 
             if (XProcConstants.NS_CALABASH_EX.equals(substep.getDeclaredType().getNamespaceURI())
                     && (substep.getDeclaredType().getLocalName().startsWith("anonymousType"))) {
-                throw XProcException.staticError(53);
+                throw XProcException.staticError(53, node, "No type attribute on imported pipeline.");
             }
 
             if (substep instanceof DeclareStep) {
@@ -394,7 +394,7 @@ public class Parser {
 
                     serializations.put(port, ser);
                 } else {
-                    throw XProcException.staticError(44, "Unexpected element: " + nodeName);
+                    throw XProcException.staticError(44, node, "Unexpected element: " + nodeName);
                 }
             } else {
                 if (node.getNodeKind() == XdmNodeKind.TEXT) {
@@ -621,7 +621,7 @@ public class Parser {
         } else if (XProcConstants.p_data.equals(nodeName)) {
             binding = readData(node);
         } else {
-            throw new IllegalArgumentException("Unexpected in input: " + nodeName);
+            throw XProcException.staticError(44, node, "Unexpected in input: " + nodeName);
         }
 
         return binding;
@@ -782,7 +782,7 @@ public class Parser {
                 }
 
                 if (!found) {
-                    throw new XProcException(XProcConstants.staticError(57), "No binding for '" + pfx + ":'");
+                    throw new XProcException(XProcConstants.staticError(57), node, "No binding for '" + pfx + ":'");
                 }
             }
         }
@@ -909,7 +909,7 @@ public class Parser {
                 Binding binding = readBinding(snode);
                 if (binding != null) {
                     if (XProcConstants.p_option.equals(node.getNodeName())) {
-                        throw XProcException.staticError(44, "No bindings allowed.");
+                        throw XProcException.staticError(44, node, "No bindings allowed.");
                     }
                     endpoint.addBinding(binding);
                 }
@@ -1087,7 +1087,7 @@ public class Parser {
         }
 
         if (decl == null) {
-            throw XProcException.staticError(44, "Not a step: " + stepType);
+            throw XProcException.staticError(44, node, "Not a step: " + stepType);
         }
 
         // Must be an atomic step in a subpipeline
@@ -1381,7 +1381,7 @@ public class Parser {
             }
         } catch (XProcException xe) {
             if (XProcConstants.dynamicError(11).equals(xe.getErrorCode())) {
-                throw XProcException.staticError(52);
+                throw XProcException.staticError(52, node, xe.getCause(), "Cannot import: " + importURI.toASCIIString());
             } else {
                 throw xe;
             }

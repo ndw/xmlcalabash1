@@ -706,7 +706,7 @@ public class Step extends SourceArtifact {
                     Step fromstep = env.visibleStep(pipe.getStep());
 
                     if (fromstep == null) {
-                        throw XProcException.staticError(22);
+                        throw XProcException.staticError(22,binding.getNode(),"No step named \"" + pipe.getStep() + "\" is visible here.");
                     }
 
                     if ("error".equals(pipe.getPort()) && XProcConstants.p_catch.equals(fromstep.getType())) {
@@ -717,7 +717,7 @@ public class Step extends SourceArtifact {
                             // Nevermind, it's ok to bind to unknown ports in this case
                             input.setSequence(true);
                         } else {
-                            error("Unreadable port: " + pipe.getPort() + " on " + pipe.getStep(), XProcConstants.staticError(22));
+                            error(binding.getNode(),"No port named \"" + pipe.getPort() + "\" on step named \"" + pipe.getStep() + "\"", XProcConstants.staticError(22));
                             valid = false;
                         }
                     }
