@@ -74,9 +74,9 @@ public class XProcRuntime {
     private boolean phoneHome = true;
     private Thread phoneHomeThread = null;
     private QName errorCode = null;
+    private XdmNode errorNode = null;
     private String errorMessage = null;
     private Hashtable<QName, DeclareStep> declaredSteps = new Hashtable<QName,DeclareStep> ();
-    //private boolean explicitDeclarations = false;
     private DeclareStep pipeline = null;
     private XPipeline xpipeline = null;
     private Vector<Throwable> errors = null;
@@ -352,7 +352,7 @@ public class XProcRuntime {
         phoneHome(decl);
 
         if (errorCode != null) {
-            throw new XProcException(errorCode, errorMessage);
+            throw new XProcException(errorCode, errorNode, errorMessage);
         }
 
         xpipeline = new XPipeline(this, pipeline, root);
@@ -551,6 +551,7 @@ public class XProcRuntime {
     public void error(XProcRunnable step, XdmNode node, String message, QName code) {
         if (errorCode == null) {
             errorCode = code;
+            errorNode = node;
             errorMessage = message;
         }
 
