@@ -39,12 +39,12 @@ import java.util.Vector;
  * @author ndw
  */
 public class ReadableDocument implements ReadablePipe {
-    private Logger logger = Logger.getLogger(this.getClass().getName());
     private int pos = 0;
     private DocumentSequence documents = null;
     private String base = null;
     private String uri = null;
     private XProcRuntime runtime = null;
+    private XdmNode node = null;
     private boolean readDoc = false;
     private Step reader = null;
     private Pattern pattern = null;
@@ -56,8 +56,9 @@ public class ReadableDocument implements ReadablePipe {
     }
 
     /** Creates a new instance of ReadableDocument */
-    public ReadableDocument(XProcRuntime runtime, String uri, String base, String mask) {
+    public ReadableDocument(XProcRuntime runtime, XdmNode node, String uri, String base, String mask) {
         this.runtime = runtime;
+        this.node = node;
         this.uri = uri;
         this.base = base;
 
@@ -163,10 +164,8 @@ public class ReadableDocument implements ReadablePipe {
 
                     documents.add(doc);
                 }
-            } catch (XProcException xe) {
-                throw XProcException.dynamicError(11,xe);
-            } catch (IOException ioe) {
-                throw new XProcException(ioe);
+            } catch (Exception except) {
+                throw XProcException.dynamicError(11, node, except, "Could not read: " + uri);
             }
         }
     }
