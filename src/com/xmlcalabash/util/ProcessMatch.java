@@ -21,7 +21,6 @@
 package com.xmlcalabash.util;
 
 import java.net.URI;
-import java.util.Map;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Vector;
@@ -30,8 +29,12 @@ import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.model.RuntimeValue;
 import net.sf.saxon.event.PipelineConfiguration;
-import net.sf.saxon.instruct.Executable;
-import net.sf.saxon.s9api.*;
+import net.sf.saxon.s9api.Axis;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XdmDestination;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmNodeKind;
+import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.sxpath.XPathEvaluator;
 import net.sf.saxon.sxpath.XPathExpression;
@@ -50,10 +53,8 @@ public class ProcessMatch extends TreeWriter {
     public static final int SAW_PI = 8;
     public static final int SAW_COMMENT = 16;
     private ProcessMatchingNodes processor = null;
-    private Map<QName, RuntimeValue> inScopeVars = null;
     private int saw = 0;
     private XPathExpression matcher = null;
-    private XProcRuntime runtime = null;
     private Configuration saxonConfig = null;
     private int count;
 
@@ -68,6 +69,8 @@ public class ProcessMatch extends TreeWriter {
     }
 
     public void match(XdmNode doc, RuntimeValue match) {
+        XdmNode node = match.getNode();
+
         try {
             XPathEvaluator xeval = new XPathEvaluator(saxonConfig);
             NamespaceResolver resolver = new MatchingNamespaceResolver(match.getNamespaceBindings());
@@ -79,8 +82,6 @@ public class ProcessMatch extends TreeWriter {
             receiver = destination.getReceiver(saxonConfig);
             PipelineConfiguration pipe = controller.makePipelineConfiguration();
             pipe.setLocationProvider(xLocationProvider);
-
-            //receiver.setSystemId("http://example.com/");
 
             receiver.setPipelineConfiguration(pipe);
             receiver.setSystemId(doc.getBaseURI().toASCIIString());
@@ -100,7 +101,11 @@ public class ProcessMatch extends TreeWriter {
         } catch (XProcException e) {
             throw e;
         } catch (Exception e) {
-            throw new XProcException(e);
+            if (e.getMessage() != null && e.getMessage().contains("syntax error")) {
+                throw XProcException.dynamicError(23,node,e,"Syntax error in match pattern: \"" + match.getString() + "\"");
+            } else {
+                throw new XProcException(node, e);
+            }
         }
     }
 
@@ -137,10 +142,6 @@ public class ProcessMatch extends TreeWriter {
 
     public XdmNode getResult() {
         return destination.getXdmNode();
-    }
-
-    public int saw() {
-        return saw;
     }
 
     public boolean matches(XdmNode node) {
@@ -306,7 +307,6 @@ public class ProcessMatch extends TreeWriter {
     }
 
     private class MatchingNamespaceResolver implements NamespaceResolver {
-        private String defaultNamespace = "";
         private Hashtable<String,String> ns = new Hashtable<String,String> ();
 
         public MatchingNamespaceResolver(Hashtable<String,String> bindings) {
@@ -321,7 +321,7 @@ public class ProcessMatch extends TreeWriter {
             return ns.get(prefix);
         }
 
-        public Iterator iteratePrefixes() {
+        public Iterator<String> iteratePrefixes() {
             Vector<String> p = new Vector<String> ();
             for (String pfx : ns.keySet()) {
                 p.add(pfx);
