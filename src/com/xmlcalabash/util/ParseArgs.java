@@ -627,7 +627,7 @@ public class ParseArgs {
                 throw new XProcException("Unbound prefix \"" + prefix + "\": " + v.key + "=" + v.value);
             }
             uri = bindings.get(prefix);
-            qname = new QName(uri, name.substring(cpos+1), prefix);
+            qname = new QName(prefix, uri, name.substring(cpos+1));
         } else {
             qname = new QName("", name);
         }
