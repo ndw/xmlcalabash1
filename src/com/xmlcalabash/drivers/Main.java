@@ -382,34 +382,23 @@ public class Main {
             }
         } catch (XProcException err) {
             if (err.getErrorCode() != null) {
-                String message = "Pipeline failed: err:" + err.getErrorCode() + ": " + err.getMessage();
-                if (err.getStep() != null) {
-                    message += "  at " + err.getStep();
-                }
-                message += "  " + errorMessage(err.getErrorCode());
-                error(logger, null, message, err.getErrorCode());
-                if (err.getCause() != null) {
-                    Throwable cause = err.getCause();
-                    error(logger, null, "Underlying exception: " + cause, null);
-                }
-                if (debug) {
-                    err.printStackTrace();
-                }
+                error(logger, null, errorMessage(err.getErrorCode()), err.getErrorCode());
             } else {
-                error(logger, null, "Pipeline failed: " + err.toString(), null);
-                if (err.getCause() != null) {
-                    Throwable cause = err.getCause();
-                    error(logger, null, "Underlying exception: " + cause, null);
-                }
-                if (debug) {
-                    err.printStackTrace();
-                }
+                error(logger, null, err.toString(), null);
             }
-            /*
+
+            Throwable cause = err.getCause();
+            while (cause != null && cause instanceof XProcException) {
+                cause = cause.getCause();
+            }
+
+            if (err.getCause() != null) {
+                error(logger, null, "Underlying exception: " + cause, null);
+            }
+
             if (debug) {
                 err.printStackTrace();
             }
-            */
         } catch (Exception err) {
             error(logger, null, "Pipeline failed: " + err.toString(), null);
             if (err.getCause() != null) {
