@@ -19,8 +19,13 @@
 
 package com.xmlcalabash.core;
 
+import com.xmlcalabash.util.URIUtils;
 import net.sf.saxon.s9api.QName;
 import com.xmlcalabash.model.Step;
+import net.sf.saxon.s9api.XdmNode;
+
+import javax.xml.transform.SourceLocator;
+import java.net.URI;
 
 /**
  *
@@ -32,7 +37,8 @@ public class XProcException extends RuntimeException {
 
     private QName error = null;
     private Step step = null;
-    
+    private XdmNode node = null;
+
     /** Creates a new instance of XProcException */
     public XProcException() {
         super();
@@ -64,7 +70,13 @@ public class XProcException extends RuntimeException {
     public XProcException(Throwable cause) {
         super(cause);
     }
-    
+
+    /** Creates a new instance of XProcException */
+    public XProcException(XdmNode node, Throwable cause) {
+        super(cause);
+        this.node = node;
+    }
+
     public XProcException(QName errorCode) {
     	super(errorCode.getLocalName());
         error = errorCode;
@@ -87,6 +99,18 @@ public class XProcException extends RuntimeException {
         this.step = step;
     }
 
+    public XProcException(QName errorCode, XdmNode node, Throwable cause, String message) {
+        super(message,cause);
+        error = errorCode;
+        this.node = node;
+    }
+
+    public XProcException(QName errorCode, XdmNode node, String message) {
+        super(message);
+        error = errorCode;
+        this.node = node;
+    }
+
     public XProcException(QName errorCode, Throwable cause) {
         super("XProc error err:" + errorCode.getLocalName(), cause);
         error = errorCode;
@@ -98,6 +122,14 @@ public class XProcException extends RuntimeException {
 
     public static XProcException staticError(int errno, String message) {
         return new XProcException(XProcConstants.staticError(errno), message);
+    }
+
+    public static XProcException staticError(int errno, XdmNode node, String message) {
+        return new XProcException(XProcConstants.staticError(errno), node, message);
+    }
+
+    public static XProcException staticError(int errno, XdmNode node, Throwable cause, String message) {
+        return new XProcException(XProcConstants.staticError(errno), node, cause, message);
     }
 
     public static XProcException staticError(int errno, Exception except) {
@@ -114,6 +146,10 @@ public class XProcException extends RuntimeException {
 
     public static XProcException dynamicError(int errno, String message) {
         return new XProcException(XProcConstants.dynamicError(errno), message);
+    }
+
+    public static XProcException dynamicError(int errno, XdmNode node, Exception except, String message) {
+        return new XProcException(XProcConstants.dynamicError(errno), node, except, message);
     }
 
     public static XProcException dynamicError(Step step, int errno, String message) {
@@ -142,5 +178,43 @@ public class XProcException extends RuntimeException {
 
     public Step getStep() {
         return step;
+    }
+
+    public SourceLocator getLocator() {
+        XdmNode locNode = null;
+        if (step != null) locNode = step.getNode();
+        if (node != null) locNode = node;
+        return new ExceptionLocation(locNode);
+    }
+
+    private class ExceptionLocation implements SourceLocator {
+        private int line = -1;
+        private int col = -1;
+        private String systemId = null;
+
+        public ExceptionLocation(XdmNode node) {
+            if (node != null) {
+                URI cwd = URIUtils.cwdAsURI();
+                systemId = cwd.relativize(node.getBaseURI()).toASCIIString();
+                line = node.getLineNumber();
+                col = node.getColumnNumber();
+            }
+        }
+
+        public String getPublicId() {
+            return null;
+        }
+
+        public String getSystemId() {
+            return systemId;
+        }
+
+        public int getLineNumber() {
+            return line;
+        }
+
+        public int getColumnNumber() {
+            return col;
+        }
     }
 }
