@@ -10,6 +10,7 @@ import net.sf.saxon.trans.XPathException;
 
 import javax.xml.transform.SourceLocator;
 import javax.xml.transform.TransformerException;
+import java.net.URI;
 import java.util.logging.Logger;
 
 /**
@@ -29,11 +30,13 @@ public class DefaultXProcMessageListener implements XProcMessageListener {
         } else {
             log = defaultLogger;
         }
+
         log.severe(message(step, node, message, code));
     }
 
     public void error(Throwable exception) {
         StructuredQName qCode = null;
+        SourceLocator loc = null;
         String message = "";
 
         if (exception instanceof XPathException) {
@@ -41,7 +44,6 @@ public class DefaultXProcMessageListener implements XProcMessageListener {
         }
 
         if (exception instanceof TransformerException) {
-            SourceLocator loc = null;
             TransformerException tx = (TransformerException) exception;
             if (qCode == null && tx.getException() instanceof XPathException) {
                 qCode = ((XPathException) tx.getException()).getErrorCodeQName();
@@ -62,40 +64,34 @@ public class DefaultXProcMessageListener implements XProcMessageListener {
                     }
                 }
             }
-
-            if (loc != null) {
-                if (loc.getSystemId() != null && !"".equals(loc.getSystemId())) {
-                    message = message + loc.getSystemId() + ":";
-                }
-                if (loc.getLineNumber() != -1) {
-                    message = message + loc.getLineNumber() + ":";
-                }
-                if (loc.getColumnNumber() != -1) {
-                    message = message + loc.getColumnNumber() + ":";
-                }
-            }
-
-            if (qCode != null) {
-                message = message + qCode.getDisplayName() + ":";
-            }
         }
 
         if (exception instanceof XProcException) {
             XProcException err = (XProcException) exception;
+            loc = err.getLocator();
             if (err.getErrorCode() != null) {
                 QName n = err.getErrorCode();
                 qCode = new StructuredQName(n.getPrefix(),n.getNamespaceURI(),n.getLocalName());
             }
-
-            if (qCode != null) {
-                message = qCode.getDisplayName() + ":";
-            } else {
-                message = "Error:";
-            }
-
             if (err.getStep() != null) {
                 message = message + err.getStep() + ":";
             }
+        }
+
+        if (loc != null) {
+            if (loc.getSystemId() != null && !"".equals(loc.getSystemId())) {
+                message = message + loc.getSystemId() + ":";
+            }
+            if (loc.getLineNumber() != -1) {
+                message = message + loc.getLineNumber() + ":";
+            }
+            if (loc.getColumnNumber() != -1) {
+                message = message + loc.getColumnNumber() + ":";
+            }
+        }
+
+        if (qCode != null) {
+            message = message + qCode.getDisplayName() + ":";
         }
 
         log.severe(message + exception.getMessage());
@@ -151,15 +147,24 @@ public class DefaultXProcMessageListener implements XProcMessageListener {
     }
 
     private String message(XProcRunnable step, XdmNode node, String message, QName code) {
-        String baseURI = "(unknown URI)";
-        int lineNumber = -1;
-
+        String prefix = "";
         if (node != null) {
-            baseURI = node.getBaseURI().toASCIIString();
-            lineNumber = node.getLineNumber();
-            return baseURI + ":" + lineNumber + ": " + message;
-        } else {
-            return message;
+            URI cwd = URIUtils.cwdAsURI();
+            String systemId = cwd.relativize(node.getBaseURI()).toASCIIString();
+            int line = node.getLineNumber();
+            int col = node.getColumnNumber();
+
+            if (systemId != null && !"".equals(systemId)) {
+                prefix = prefix + systemId + ":";
+            }
+            if (line != -1) {
+                prefix = prefix + line + ":";
+            }
+            if (col != -1) {
+                prefix = prefix + col + ":";
+            }
         }
+
+        return prefix + message;
     }
 }
