@@ -49,7 +49,7 @@ public class Option extends EndPoint implements ComputableValue {
     public QName getName() {
         return name;
     }
-    
+
     public void setType(String type, XdmNode node) {
         this.type = type;
         typeNode = node;
