@@ -155,7 +155,15 @@
 <implementation type="cx:nvdl"
 		class-name="com.xmlcalabash.extensions.NVDL"/>
 
+<implementation type="pxp:nvdl"
+                xmlns:pxp="http://exproc.org/proposed/steps"
+		class-name="com.xmlcalabash.extensions.NVDL"/>
+
 <implementation type="cx:unzip"
+		class-name="com.xmlcalabash.extensions.Unzip"/>
+
+<implementation type="pxp:unzip"
+                xmlns:pxp="http://exproc.org/proposed/steps"
 		class-name="com.xmlcalabash.extensions.Unzip"/>
 
 <implementation type="cx:uri-info"
