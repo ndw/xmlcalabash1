@@ -208,7 +208,7 @@ public class XPipeline extends XCompoundStep {
                 value = optionsPassedIn.get(name);
             } else {
                 if (option.getRequired() && option.getSelect() == null) {
-                    throw XProcException.staticError(18);
+                    throw XProcException.staticError(18, option.getNode(), "No value provided for required option \"" + option.getName() + "\"");
                 }
 
                 if (option.getSelect() == null) {
