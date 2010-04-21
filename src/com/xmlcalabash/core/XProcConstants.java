@@ -36,12 +36,8 @@ public class XProcConstants {
     public static final String NS_XMLSCHEMA = "http://www.w3.org/2001/XMLSchema";
     public static final String NS_CALABASH_CONFIG = "http://xmlcalabash.com/ns/configuration";
     public static final String NS_EXPROC_CONFIG = "http://exproc.org/ns/configuration";
-    public static final String NS_EXPROC_PFUNCTIONS = "http://exproc.org/proposed/functions";
     public static final String NS_EXPROC_FUNCTIONS = "http://exproc.org/standard/functions";
-    public static final String NS_XQT_ERRORS = "http://www.w3.org/2005/xqt-errors";
 
-    public static final String STANDARD_XPROC_LIBRARY_REGEX = "^http://www.w3.org/\\d\\d\\d\\d/xproc-.*$";
-    public static final String STANDARD_XPROC_LIBRARY_1_0 = "http://www.w3.org/2008/xproc-1.0.xpl";
     public static final String CALABASH_EXTENSION_LIBRARY_1_0 = "http://xmlcalabash.com/extension/steps/library-1.0.xpl";
 
     public static final QName p_pipeline = new QName(NS_XPROC,"pipeline");
