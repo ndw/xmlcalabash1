@@ -31,6 +31,7 @@ import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.Base64;
 import com.xmlcalabash.core.XProcRuntime;
+import java.net.URLConnection;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.QName;
@@ -43,6 +44,8 @@ import net.sf.saxon.s9api.Serializer;
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
+import java.io.OutputStream;
+import java.net.URL;
 
 /**
  *
@@ -129,16 +132,22 @@ public class Store extends DefaultStep {
         xqeval.setContextItem(doc);
 
         try {
-            File output = new File(href);
+            OutputStream outstr;
+            if(href.getScheme().equals("file")) {
+                File output = new File(href);
 
-            File path = new File(output.getParent());
-            if (!path.isDirectory()) {
-                if (!path.mkdirs()) {
-                    throw XProcException.stepError(50);
+                File path = new File(output.getParent());
+                if (!path.isDirectory()) {
+                    if (!path.mkdirs()) {
+                        throw XProcException.stepError(50);
+                    }
                 }
+                outstr = new FileOutputStream(output);
+            } else {
+                final URLConnection conn = href.toURL().openConnection();
+                conn.setDoOutput(true);
+                outstr = conn.getOutputStream();
             }
-
-            FileOutputStream outstr = new FileOutputStream(output);
             serializer.setOutputStream(outstr);
             xqeval.setDestination(serializer);
             xqeval.run();
