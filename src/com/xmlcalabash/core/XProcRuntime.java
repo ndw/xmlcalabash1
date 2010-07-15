@@ -241,7 +241,9 @@ public class XProcRuntime {
     }
 
     public String getLanguage() {
-        return Locale.getDefault().toString();
+        // Translate _ to - for compatibility with xml:lang
+        return Locale.getDefault().toString().replace('_', '-');
+
     }
 
     public String getProductName() {
