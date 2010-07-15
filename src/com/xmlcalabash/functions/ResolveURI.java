@@ -111,17 +111,15 @@ public class ResolveURI extends ExtensionFunctionDefinition {
                 }
             }
 
-            String resolvedURI = "";
-
+            // Michael Kay's done the heavy lifting and made the method public, so let's just
+            // do that!
             try {
-                URI uri = new URI(baseURI);
-                resolvedURI = uri.resolve(relativeURI).toASCIIString();
+                URI abs = net.sf.saxon.functions.ResolveURI.makeAbsolute(relativeURI, baseURI);
+                String resolvedURI = abs.toASCIIString();
+                return SingletonIterator.makeIterator(new AnyURIValue(resolvedURI));
             } catch (URISyntaxException use) {
-                // FIXME: what should we do here?
+                throw new XProcException(use);
             }
-
-            return SingletonIterator.makeIterator(
-                    new AnyURIValue(resolvedURI));
         }
     }
 }
