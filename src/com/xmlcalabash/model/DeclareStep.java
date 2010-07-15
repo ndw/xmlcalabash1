@@ -47,6 +47,13 @@ public class DeclareStep extends CompoundStep {
     private Vector<XdmNode> rest = null;
     private HashSet<String> excludedInlineNamespaces = null;
 
+    // If a pipeline contains both import statements and inlined step declarations
+    // then we have to be careful not to parse declared steps twice (we will have
+    // parsed the imported ones, but not the inlined ones. This flag keeps track
+    // of whether we've parsed the body of a step declaration or not.
+    // FIXME: Maybe this should be managed by the parser not the DeclareStep?
+    private boolean bodyParsed = false;
+
     /** Creates a new instance of DeclareStep */
     public DeclareStep(XProcRuntime xproc, XdmNode node, String name) {
         super(xproc, node, XProcConstants.p_declare_step, name);
@@ -58,6 +65,14 @@ public class DeclareStep extends CompoundStep {
 
     protected Vector<XdmNode> getXmlContent() {
         return rest;
+    }
+
+    public boolean getBodyParsed() {
+        return bodyParsed;
+    }
+
+    public void setBodyParsed(boolean parsed) {
+        bodyParsed = parsed;
     }
 
     public void setPsviRequired(boolean psvi) {

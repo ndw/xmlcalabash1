@@ -1317,6 +1317,8 @@ public class Parser {
     }
 
     private void parseDeclareStepBody(DeclareStep step) {
+        step.setBodyParsed(true);
+
         Vector<XdmNode> rest = step.getXmlContent();
 
         declStack.push(step);
@@ -1348,11 +1350,7 @@ public class Parser {
         }
 
         for (DeclareStep subdecl : step.declaredSteps.values()) {
-            // This seems like an odd test, I bet it could be done better. If we import a library
-            // then by the time we get here, we've already parsed the body of the types imported
-            // in the library and we don't want to parse them again. But if we've also got inline
-            // decls, we do want to parse them...
-            if (subdecl.getNode().getBaseURI().equals(step.getNode().getBaseURI())) {
+            if (!subdecl.getBodyParsed()) {
                 parseDeclareStepBody(subdecl);
             }
         }
