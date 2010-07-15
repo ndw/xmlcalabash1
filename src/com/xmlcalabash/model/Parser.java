@@ -632,7 +632,15 @@ public class Parser {
         
         String step = checkNCName(node.getAttributeValue(new QName("step")));
         String port = checkNCName(node.getAttributeValue(new QName("port")));
-        
+
+        if (step == null || port == null) {
+            if (step == null) {
+                throw XProcException.staticError(38, node, "Missing step attribute.");
+            } else {
+                throw XProcException.staticError(38, node, "Missing port attribute.");
+            }
+        }
+
         PipeNameBinding pipe = new PipeNameBinding(runtime, node);
 
         pipe.setStep(step);
