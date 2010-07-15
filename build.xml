@@ -25,7 +25,7 @@
     </copy>
   </target>
 
-  <target name="jar" depends="update-output">
+  <target name="jar" depends="update-output,compile">
     <jar destfile="calabash.jar">
       <manifest>
 	<attribute name="Built-By" value="Norman Walsh"/>
