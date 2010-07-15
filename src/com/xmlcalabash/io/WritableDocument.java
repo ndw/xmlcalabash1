@@ -21,10 +21,7 @@ package com.xmlcalabash.io;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileNotFoundException;
-import java.util.logging.Logger;
+import java.net.URLConnection;
 
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.Processor;
@@ -38,7 +35,9 @@ import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.model.Serialization;
 import com.xmlcalabash.model.Step;
-import com.xmlcalabash.util.URIUtils;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URL;
 
 /**
  *
@@ -129,22 +128,38 @@ public class WritableDocument implements WritablePipe {
                 }
                 // What about omit?
             }
+
             serializer.setOutputProperty(Serializer.Property.UNDECLARE_PREFIXES, serial.getUndeclarePrefixes() ? "yes" : "no");
             if (serial.getVersion() != null) {
                 serializer.setOutputProperty(Serializer.Property.VERSION, serial.getVersion());
             }
 
+            OutputStream ostream = null;
             if (uri == null) {
                 serializer.setOutputStream(System.out);
             } else {
-                File file = URIUtils.getFile(uri);
-                runtime.finest(null, null, "Attempt to write file: " + uri);
-                FileOutputStream fos = new FileOutputStream(file);
-                serializer.setOutputStream(fos);
+                try {
+                    runtime.finest(null, null, "Attempt to write: " + uri);
+                    URL url = new URL(uri);
+                    final URLConnection conn = url.openConnection();
+                    conn.setDoOutput(true);
+                    ostream = conn.getOutputStream();
+                    serializer.setOutputStream(ostream);
+                } catch (IOException ex) {
+                    runtime.error(ex);
+                }
             }
 
             xqeval.setDestination(serializer);
             xqeval.run();
+
+            if (ostream != null) {
+                try {
+                    ostream.close();
+                } catch (IOException ex) {
+                    throw new XProcException(ex);
+                }
+            }
 
             if (uri == null && runtime.getDebug()) {
                 System.out.println("\n--<document boundary>--------------------------------------------------------------------------");
@@ -155,8 +170,6 @@ public class WritableDocument implements WritablePipe {
         } catch (SaxonApiException sae) {
             sae.printStackTrace();
             throw new XProcException(sae);
-        } catch (FileNotFoundException fnfe) {
-            throw new XProcException(fnfe);
         }
 
         if (writer != null) {
