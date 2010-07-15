@@ -183,6 +183,14 @@ public class XProcRuntime {
         return uriResolver;
     }
 
+    public XProcMessageListener getMessageListener() {
+      return msgListener;
+    }
+
+    public void setMessageListener(XProcMessageListener listener) {
+      msgListener = listener;
+    }
+    
     public void setCollection(URI href, Vector<XdmNode> docs) {
         if (collections == null) {
             collections = new Hashtable<String,Vector<XdmNode>> ();
