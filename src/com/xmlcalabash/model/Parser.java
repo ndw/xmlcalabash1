@@ -1112,10 +1112,6 @@ public class Parser {
 
         boolean pStep = XProcConstants.NS_XPROC.equals(node.getNodeName().getNamespaceURI());
 
-        if (pStep && node.getAttributeValue(p_use_when) != null) {
-            throw XProcException.staticError(44, node, "You can't use p:use-when on a p: step.");
-        }
-
         // Store extension attributes and convert any option shortcut attributes into options
         for (XdmNode attr : new RelevantNodes(runtime, node, Axis.ATTRIBUTE)) {
             QName aname = attr.getNodeName();
@@ -1205,7 +1201,7 @@ public class Parser {
             QName aname = attr.getNodeName();
             if (XMLConstants.NULL_NS_URI.equals(aname.getNamespaceURI())) {
                 if (!"type".equals(aname.getLocalName()) && !"name".equals(aname.getLocalName())
-                        && !"version".equals(aname.getLocalName())
+                        && !"version".equals(aname.getLocalName()) && !"use-when".equals(aname.getLocalName())
                         && !"psvi-required".equals(aname.getLocalName()) && !"xpath-version".equals(aname.getLocalName())
                         && !"exclude-inline-prefixes".equals(aname.getLocalName())) {
                     throw XProcException.staticError(44, node, "Attribute not allowed: " + aname.getLocalName());
@@ -1666,6 +1662,15 @@ public class Parser {
 
         for (XdmNode attr : new RelevantNodes(runtime, node, Axis.ATTRIBUTE)) {
             QName aname = attr.getNodeName();
+
+            // The use-when attribute is always ok
+            if ((XProcConstants.NS_XPROC.equals(node.getNodeName().getNamespaceURI())
+                    && aname.equals(_use_when))
+                || (!XProcConstants.NS_XPROC.equals(node.getNodeName().getNamespaceURI())
+                    && aname.equals(p_use_when))) {
+                continue;
+            }
+
             if ("".equals(aname.getNamespaceURI())) {
                 if (hash.contains(aname.getLocalName())) {
                 // ok
