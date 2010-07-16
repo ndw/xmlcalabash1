@@ -11,6 +11,7 @@
       <info>
         <appname>XML Calabash</appname>
         <appversion><xsl:value-of select="$version.label"/></appversion>
+        <appsubpath>xmlcalabash-<xsl:value-of select="$version.label"/></appsubpath>
         <authors>
           <author name="Norman Walsh" email="ndw@nwalsh.com"/>
         </authors>
