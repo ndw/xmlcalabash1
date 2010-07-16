@@ -86,7 +86,7 @@ public class XProcData {
         // can read them. Note, however, that errors raised in a p:catch are NOT
         // part of the parent p:try but rather the grandparent.
         int pos = stack.size() - 1;
-        if (XProcConstants.p_catch.equals(stack.peek().step.getType())) {
+        if (stack.size() > 0 && XProcConstants.p_catch.equals(stack.peek().step.getType())) {
             pos = pos - 2;
         }
         while (pos >= 0 && !tryGroup(stack.get(pos).step)) {
