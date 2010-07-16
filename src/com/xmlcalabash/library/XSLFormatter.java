@@ -18,6 +18,7 @@ import java.io.OutputStream;
 import java.io.FileOutputStream;
 import java.io.BufferedOutputStream;
 
+import com.xmlcalabash.util.URIUtils;
 import org.xml.sax.InputSource;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -68,7 +69,7 @@ public class XSLFormatter extends DefaultStep {
         String output = null;
 
         if (href.startsWith("file:/")) {
-            output = href.substring(5);
+            output = URIUtils.getFile(href).getPath();
         } else {
             throw new XProcException(step.getNode(), "Don't know how to write p:xsl-formatter output to " + href);
         }
