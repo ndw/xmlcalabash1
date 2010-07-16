@@ -69,7 +69,7 @@
   <target name="dist" depends="init,distrib">
     <delete file="${dist.dir}/install.xml"/>
 
-    <xslt in="installer/install-proto.xsl" style="installer/install-proto.xsl"
+    <xslt in="etc/install-proto.xsl" style="etc/install-proto.xsl"
           out="${dist.dir}/install.xml">
       <param name="version.label" expression="${version}"/>
     </xslt>
