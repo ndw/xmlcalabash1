@@ -827,7 +827,7 @@ public class Parser {
         option.setSelect(select);
         option.setType(type, node);
 
-        readNamespaceBindings(option, node);
+        readNamespaceBindings(option, node, select);
 
         return option;
     }
@@ -848,7 +848,7 @@ public class Parser {
         parameter.setName(new QName(name, node));
         parameter.setSelect(select);
 
-        readNamespaceBindings(parameter, node);
+        readNamespaceBindings(parameter, node, select);
 
         return parameter;
     }
@@ -869,12 +869,12 @@ public class Parser {
         variable.setName(oname);
         variable.setSelect(select);
 
-        readNamespaceBindings(variable, node);
+        readNamespaceBindings(variable, node, select);
 
         return variable;
     }
 
-    private void readNamespaceBindings(EndPoint endpoint, XdmNode node) {
+    private void readNamespaceBindings(EndPoint endpoint, XdmNode node, String select) {
         boolean hadNamespaceBinding = false;
         for (XdmNode snode : new RelevantNodes(runtime, node, Axis.CHILD)) {
             QName nodeName = snode.getNodeName();
@@ -925,6 +925,10 @@ public class Parser {
         }
 
         if (!hadNamespaceBinding) {
+            if (select != null && select.matches("^\\$[a-zA-Z_][-a-zA-Z0-9_]*$")) {
+                String varname = select.substring(1);
+                // FIXME: need to work out the nsbindings later
+            }
             // Hack: Rely on the fact that getVariables don't have binding, element, or except-prefixes attributes...
             NamespaceBinding nsbinding = new NamespaceBinding(runtime, node);
             ((ComputableValue) endpoint).addNamespaceBinding(nsbinding);
