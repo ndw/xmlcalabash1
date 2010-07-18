@@ -102,8 +102,13 @@ public class Try  extends DeclareStep {
                 outputs.put(output.getPort(), output);
             }
 
-             Catch p_catch = (Catch) subpipeline.get(1);
-             // there aren't any inputs here
+            Catch p_catch = (Catch) subpipeline.get(1);
+            // there aren't any inputs here FIXME: Really?
+
+            if (p_catch.outputs().size() != outputs.size()) {
+                valid = false;
+                runtime.error(null, p_group.getNode(), "The p:group and p:catch in a p:try must declare the same outputs", XProcConstants.staticError(9));
+            }
 
             for (Output output : p_catch.outputs()) {
                 if (outputs.containsKey(output.getPort())) {
@@ -118,22 +123,22 @@ public class Try  extends DeclareStep {
                     } else {
                         if (s1output.getPrimary() != output.getPrimary()) {
                             valid = false;
-                            runtime.error(null, p_group.getNode(), "Output port " + output.getPort() + " has different primary status.", XProcConstants.staticError(7));
+                            runtime.error(null, p_group.getNode(), "Output port " + output.getPort() + " has different primary status.", XProcConstants.staticError(9));
                         }
                         if (s1output.getSequence() != output.getSequence()) {
                             valid = false;
-                            runtime.error(null, p_group.getNode(), "Output port " + output.getPort() + " has different sequence status.", XProcConstants.staticError(7));
+                            runtime.error(null, p_group.getNode(), "Output port " + output.getPort() + " has different sequence status.", XProcConstants.staticError(9));
                         }
                     }
                 } else {
                     valid = false;
-                    runtime.error(null, p_group.getNode(), "Output port " + output.getPort() + " is extra.", XProcConstants.staticError(7));
+                    runtime.error(null, p_group.getNode(), "Output port " + output.getPort() + " is extra.", XProcConstants.staticError(9));
                 }
             }
             for (String port : outputs.keySet()) {
                 if (!port.endsWith("|") && p_group.getOutput(port) == null) {
                     valid = false;
-                    runtime.error(null, p_group.getNode(), "Output port " + port + " missing.", XProcConstants.staticError(7));
+                    runtime.error(null, p_group.getNode(), "Output port " + port + " missing.", XProcConstants.staticError(9));
                 }
             }
         } else {
