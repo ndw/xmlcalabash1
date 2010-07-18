@@ -87,6 +87,6 @@ public class DocumentSequence {
     }
 
     public String toString() {
-        return "[document-sequence #" + id + "]";
+        return "[document-sequence #" + id + " (" + documents.size() + " docs)]";
     }
 }
