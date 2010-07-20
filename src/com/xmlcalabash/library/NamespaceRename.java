@@ -122,19 +122,34 @@ public class NamespaceRename extends DefaultStep implements ProcessMatchingNodes
             matcher.addStartElement(nameCode, typeCode, inscopeNS);
         } else {
             if (inscopeNS.length > 0) {
-                newNS = new int[inscopeNS.length];
+                int countNS = 0;
+
+                for (int pos = 0; pos < inscopeNS.length; pos++) {
+                    int ns = inscopeNS[pos];
+                    String uri = pool.getURIFromNamespaceCode(ns);
+                    if (!from.equals(uri) || !"".equals(to)) {
+                        countNS++;
+                    }
+                }
+
+                newNS = new int[countNS];
+                int newPos = 0;
                 for (int pos = 0; pos < inscopeNS.length; pos++) {
                     int ns = inscopeNS[pos];
                     String pfx = pool.getPrefixFromNamespaceCode(ns);
                     String uri = pool.getURIFromNamespaceCode(ns);
                     if (from.equals(uri)) {
-                        int newns = pool.getNamespaceCode(pfx,to);
-                        if (newns < 0) {
-                            newns = pool.allocateNamespaceCode(pfx,to);
+                        if ("".equals(to)) {
+                            // Nevermind, we're throwing the namespace away
+                        } else {
+                            int newns = pool.getNamespaceCode(pfx,to);
+                            if (newns < 0) {
+                                newns = pool.allocateNamespaceCode(pfx,to);
+                            }
+                            newNS[newPos++] = newns;
                         }
-                        newNS[pos] = newns;
                     } else {
-                        newNS[pos] = ns;
+                        newNS[newPos++] = ns;
                     }
                 }
             }
@@ -145,6 +160,10 @@ public class NamespaceRename extends DefaultStep implements ProcessMatchingNodes
             String uri = pool.getURI(nameCode);
 
             if (from.equals(uri)) {
+                if ("".equals(to)) {
+                    pfx = "";
+                }
+
                 nameCode = pool.allocate(pfx,to,node.getNodeName().getLocalName());
             }
 
