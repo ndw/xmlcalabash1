@@ -23,6 +23,7 @@ package com.xmlcalabash.util;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
 import net.sf.saxon.Controller;
+import net.sf.saxon.event.NamespaceReducer;
 import net.sf.saxon.expr.StaticContext;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.event.PipelineConfiguration;
@@ -86,6 +87,7 @@ public class TreeWriter {
             exec = new Executable(controller.getConfiguration());
             destination = new XdmDestination();
             receiver = destination.getReceiver(controller.getConfiguration());
+            receiver = new NamespaceReducer(receiver);
             
             PipelineConfiguration pipe = controller.makePipelineConfiguration();
             pipe.setLocationProvider(xLocationProvider);

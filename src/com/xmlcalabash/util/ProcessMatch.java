@@ -28,6 +28,7 @@ import java.util.Vector;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.model.RuntimeValue;
+import net.sf.saxon.event.NamespaceReducer;
 import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -80,6 +81,7 @@ public class ProcessMatch extends TreeWriter {
 
             destination = new XdmDestination();
             receiver = destination.getReceiver(saxonConfig);
+            receiver = new NamespaceReducer(receiver);
             PipelineConfiguration pipe = controller.makePipelineConfiguration();
             pipe.setLocationProvider(xLocationProvider);
 
