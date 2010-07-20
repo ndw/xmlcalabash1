@@ -1,5 +1,7 @@
 package com.xmlcalabash.util;
 
+import net.sf.saxon.query.ModuleURIResolver;
+import net.sf.saxon.trans.XPathException;
 import org.xml.sax.InputSource;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.SAXException;
@@ -11,6 +13,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.stream.StreamSource;
 
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.Processor;
@@ -40,6 +43,7 @@ public class XProcURIResolver implements URIResolver, EntityResolver {
     private XProcRuntime runtime = null;
     private Hashtable<String,XdmNode> cache = new Hashtable<String,XdmNode> ();
     private Logger logger = Logger.getLogger(this.getClass().getName());
+    private static boolean useCache = true; // FIXME: this is supposed to be temporary!
 
     public XProcURIResolver(XProcRuntime runtime) {
         this.runtime = runtime;
@@ -60,7 +64,9 @@ public class XProcURIResolver implements URIResolver, EntityResolver {
         // attribute, that becomes the base URI of the document.
 
         URI docURI = baseURI.resolve(root.getBaseURI());
-        cache.put(docURI.toASCIIString(), doc);
+        if (useCache) {
+            cache.put(docURI.toASCIIString(), doc);
+        }
     }
 
     public Source resolve(String href, String base) throws TransformerException {
