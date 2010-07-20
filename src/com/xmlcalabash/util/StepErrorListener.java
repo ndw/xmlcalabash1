@@ -1,8 +1,7 @@
 package com.xmlcalabash.util;
 
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.om.StructuredQName;
+import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.QName;
 
 import javax.xml.transform.TransformerException;
@@ -11,9 +10,9 @@ import javax.xml.transform.ErrorListener;
 
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcConstants;
+import net.sf.saxon.trans.XPathException;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 
 /**
  * Created by IntelliJ IDEA.
