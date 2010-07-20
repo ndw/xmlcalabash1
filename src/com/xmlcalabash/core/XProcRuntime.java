@@ -54,7 +54,6 @@ import com.xmlcalabash.runtime.*;
 import com.xmlcalabash.functions.*;
 
 import javax.xml.transform.URIResolver;
-import javax.xml.transform.ErrorListener;
 
 import org.apache.commons.httpclient.Cookie;
 import org.xml.sax.EntityResolver;
