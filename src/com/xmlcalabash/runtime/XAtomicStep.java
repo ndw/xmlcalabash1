@@ -745,10 +745,11 @@ public class XAtomicStep extends XStep {
 
             for (QName varname : boundOpts.keySet()) {
                 XdmValue value = null;
-                if (runtime.getAllowGeneralExpressions()) {
-                    value = boundOpts.get(varname).getValue();
+                RuntimeValue rval = boundOpts.get(varname);
+                if (runtime.getAllowGeneralExpressions() && rval.hasGeneralValue()) {
+                    value = rval.getValue();
                 } else {
-                    value = boundOpts.get(varname).getUntypedAtomic(runtime);
+                    value = rval.getUntypedAtomic(runtime);
                 }
                 selector.setVariable(varname,value);
             }
