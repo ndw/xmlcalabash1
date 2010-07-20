@@ -266,9 +266,7 @@
       <module fileurl="file://$PROJECT_DIR$/../isorelax/Isorelax.iml" filepath="$PROJECT_DIR$/../isorelax/Isorelax.iml" />
       <module fileurl="file://$PROJECT_DIR$/../metadata-extractor-2.3.1/Metadata-extractor-2.3.1.iml" filepath="$PROJECT_DIR$/../metadata-extractor-2.3.1/Metadata-extractor-2.3.1.iml" />
       <module fileurl="file://$PROJECT_DIR$/../msv/Msv.iml" filepath="$PROJECT_DIR$/../msv/Msv.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../saxon9/Saxon9.iml" filepath="$PROJECT_DIR$/../saxon9/Saxon9.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../saxon9.2.0.2/Saxon9.2.0.2.iml" filepath="$PROJECT_DIR$/../saxon9.2.0.2/Saxon9.2.0.2.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../saxon9.2.0.3/Saxon9.2.0.3.iml" filepath="$PROJECT_DIR$/../saxon9.2.0.3/Saxon9.2.0.3.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../saxon-9.2.1.1j/Saxon-9.2.1.1j.iml" filepath="$PROJECT_DIR$/../saxon-9.2.1.1j/Saxon-9.2.1.1j.iml" />
       <module fileurl="file://$PROJECT_DIR$/../xmlresolver/Xmlresolver.iml" filepath="$PROJECT_DIR$/../xmlresolver/Xmlresolver.iml" />
     </modules>
   </component>
@@ -379,13 +377,6 @@
       <JAVADOC />
       <SOURCES />
     </library>
-    <library name="HTTPClient">
-      <CLASSES>
-        <root url="jar:///share/java/apache-httpclient/commons-httpclient-3.1/commons-httpclient-3.1.jar!/" />
-      </CLASSES>
-      <JAVADOC />
-      <SOURCES />
-    </library>
     <library name="Logging">
       <CLASSES>
         <root url="jar:///share/java/apache-logging/commons-logging-1.1.1/commons-logging-api-1.1.1.jar!/" />
@@ -450,20 +441,6 @@
       <JAVADOC />
       <SOURCES />
     </library>
-    <library name="SaxonHE">
-      <CLASSES>
-        <root url="jar:///share/java/saxonhe-9.2.0.2j/saxon9he.jar!/" />
-      </CLASSES>
-      <JAVADOC />
-      <SOURCES />
-    </library>
-    <library name="SaxonEE 9.2.0.2">
-      <CLASSES>
-        <root url="jar:///share/java/saxonee-9.2.0.2j/saxon9ee.jar!/" />
-      </CLASSES>
-      <JAVADOC />
-      <SOURCES />
-    </library>
     <library name="StAX">
       <CLASSES>
         <root url="jar:///share/java/stax-api-1.0.1.jar!/" />
@@ -479,9 +456,25 @@
       <JAVADOC />
       <SOURCES />
     </library>
-    <library name="SaxonEE 9.2.0.4">
+    <library name="SaxonEE 9.2.1.1j">
       <CLASSES>
-        <root url="jar:///share/java/saxonee-9.2.0.4j/saxon9ee.jar!/" />
+        <root url="jar:///share/java/saxonee-9.2.1.1j/saxon9ee.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="HttpClient4">
+      <CLASSES>
+        <root url="jar:///share/java/apache-httpclient/httpcomponents-core-4.0.1/lib/httpcore-4.0.1.jar!/" />
+        <root url="jar:///share/java/apache-httpclient/httpcomponents-client-4.0.1/lib/httpmime-4.0.1.jar!/" />
+        <root url="jar:///share/java/apache-httpclient/httpcomponents-client-4.0.1/lib/httpclient-4.0.1.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="HttpClient">
+      <CLASSES>
+        <root url="jar:///share/java/apache-httpclient/commons-httpclient-3.1/commons-httpclient-3.1.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES />

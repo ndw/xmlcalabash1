@@ -27,7 +27,7 @@ import net.sf.saxon.s9api.QName;
  * @author ndw
  */
 public class XProcConstants {
-    public static final String XPROC_VERSION = "0.9.21";
+    public static final String XPROC_VERSION = "0.9.22";
     public static final String NS_XPROC = "http://www.w3.org/ns/xproc";
     public static final String NS_XPROC_ERROR = "http://www.w3.org/ns/xproc-error";
     public static final String NS_XPROC_ERROR_EX = "http://xproc.org/ns/errors";
