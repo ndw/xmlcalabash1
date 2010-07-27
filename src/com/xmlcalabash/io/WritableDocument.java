@@ -19,6 +19,7 @@
 
 package com.xmlcalabash.io;
 
+import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLConnection;
@@ -139,14 +140,27 @@ public class WritableDocument implements WritablePipe {
                 serializer.setOutputStream(System.out);
             } else {
                 try {
-                    runtime.finest(null, null, "Attempt to write: " + uri);
-                    URL url = new URL(uri);
-                    final URLConnection conn = url.openConnection();
-                    conn.setDoOutput(true);
-                    ostream = conn.getOutputStream();
-                    serializer.setOutputStream(ostream);
+                    // Attempt to handle both the case where we're writing to a URI scheme that
+                    // supports writing (like FTP?) and the case where we're writing to a file
+                    // (which apparently *isn't* a scheme we can write to, WTF?)
+                    URI ouri = new URI(uri);
+
+                    if ("file".equals(ouri.getScheme())) {
+                        runtime.finest(null, null, "Attempt to write file: " + uri);
+                        File file = new File(ouri.toURL().getFile());
+                        serializer.setOutputFile(file);
+                    } else {
+                        runtime.finest(null, null, "Attempt to write: " + uri);
+                        URL url = new URL(uri);
+                        final URLConnection conn = url.openConnection();
+                        conn.setDoOutput(true);
+                        ostream = conn.getOutputStream();
+                        serializer.setOutputStream(ostream);
+                    }
                 } catch (IOException ex) {
                     runtime.error(ex);
+                } catch (URISyntaxException use) {
+                    runtime.error(use);
                 }
             }
 
