@@ -5,8 +5,8 @@ What is XML Calabash?
 XML Calabash is an implementation of XProc: An XML Pipeline Language,
 http://www.w3.org/TR/xproc/
 
-This is an early, beta release. It passes most of the tests in the
-XProc Test Suite but is known to be incomplete.
+This is a beta release. It passes all but a few of the tests in the
+XProc Test Suite and is believed to be otherwise complete.
 
 Prerequisites
 
@@ -14,7 +14,8 @@ XML Calabash is built with Java 1.5 on top of Saxon. To run it, you'll
 need:
 
     * Java 1.5 or later,
-    * Saxon 9.2.0.3 or later
+    * Saxon 9.2.1.1 or later (Any 9.2.x.y release might work, but
+      I'm currently using 9.2.1.1)
     * Apache HTTP Client (and Apache Commons logging and codec),
       if you want to use p:http-request
     * Saxon EE, if you want to use p:validate-with-xml-schema
@@ -24,6 +25,15 @@ need:
       with the p:unescape-markup step
     * RenderX's XEP, if you want to use the p:xsl-formatter step.
       (You may possibly need the XEP developers kit in addition to XEP.)
+
+Several of these libraries are included in the lib/ directory as a
+convenience. Whether I should do this, or not, and whether I should
+provide more libraries this way are all open questions in my mind.
+
+Starting with version 0.9.22, I'm using IzPack to build an installer.
+If you want to build the sources with Ant, you'll need the IzPack jar.
+(Someday I'll see if I can make that dependency conditional in
+build.xml)
 
 (Note: dependency on commercial applications for core XProc steps is a
 temporary expediency. Eventually, I'll integrate support for open
