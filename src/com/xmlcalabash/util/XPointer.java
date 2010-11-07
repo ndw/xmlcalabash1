@@ -139,11 +139,19 @@ public class XPointer {
 
     private String parse(String xpointer) {
         if (xpointer.matches("^[\\w:]+\\s*\\(.*")) {
-            Pattern scheme = Pattern.compile("^([\\w+:]+)\\s*\\((.*?[^^])\\)\\s*(.*)$");
+            Pattern scheme = Pattern.compile("^([\\w+:]+)\\s*(\\(.*)$");
             Matcher matcher = scheme.matcher(xpointer);
             if (matcher.matches()) { // scheme(data) ...
                 QName name = schemeName(matcher.group(1));
                 String data = cleanup(matcher.group(2));
+                int dataend = indexOfEnd(data);
+
+                if (dataend < 0) {
+                    throw new XProcException("Unparseable XPointer: " + xpointer);
+                }
+
+                String rest = data.substring(dataend);
+                data = data.substring(1, dataend-1);     // 1 because we want to skip the initial "("
 
                 if (_xmlns.equals(name)) {
                     parts.add(new XPointerXmlnsScheme(name, data));
@@ -154,7 +162,7 @@ public class XPointer {
                 } else {
                     parts.add(new XPointerScheme(name, data));
                 }
-                String rest = matcher.group(3);
+
                 if ("".equals(rest)) {
                     rest = null;
                 }
@@ -206,6 +214,31 @@ public class XPointer {
         }
 
         throw new XProcException("Scheme name without bound prefix: " + name);
+    }
+
+    private int indexOfEnd(String data) {
+        int depth = 0;
+        int pos = 0;
+        boolean done = false;
+        while (pos < data.length() && !done) {
+            String s = data.substring(pos, pos+1);
+
+            done = (")".equals(s) && depth == 0);
+
+            if ("(".equals(s)) {
+                depth++;
+            } else if (")".equals(s)) {
+                depth--;
+            }
+
+            pos++;
+        }
+
+        if (depth != 0) {
+            return -1;
+        } else {
+            return pos;
+        }
     }
 
     private String cleanup(String data) {
