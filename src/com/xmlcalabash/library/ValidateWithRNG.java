@@ -21,15 +21,20 @@
 package com.xmlcalabash.library;
 
 import java.io.IOException;
+import java.net.URI;
+
+import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.util.TreeWriter;
 import org.iso_relax.verifier.VerifierFactory;
 import org.iso_relax.verifier.Verifier;
 import org.iso_relax.verifier.Schema;
 import org.iso_relax.verifier.VerifierConfigurationException;
+import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import net.sf.saxon.s9api.QName;
@@ -37,6 +42,7 @@ import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 
 import com.xmlcalabash.runtime.XAtomicStep;
+import org.xml.sax.SAXParseException;
 
 /**
  *
@@ -49,6 +55,7 @@ public class ValidateWithRNG extends DefaultStep {
     private ReadablePipe source = null;
     private ReadablePipe schema = null;
     private WritablePipe result = null;
+    private URI docBaseURI = null;
 
     /** Creates a new instance of Delete */
     public ValidateWithRNG(XProcRuntime runtime, XAtomicStep step) {
@@ -88,8 +95,10 @@ public class ValidateWithRNG extends DefaultStep {
 
             Schema docSchema = vfactory.compileSchema(schemaSource);
             verifier = docSchema.newVerifier();
+            verifier.setErrorHandler(new RNGErrorHandler());
 
             doc = source.read();
+            docBaseURI = doc.getBaseURI();
 
             if (verifier != null && !verifier.verify(S9apiUtils.xdmToInputSource(runtime, doc))) {
                 throw new XProcException(XProcException.err_E0001, "Document is not valid");
@@ -108,6 +117,33 @@ public class ValidateWithRNG extends DefaultStep {
         } catch (IOException ioe) {
             ioe.printStackTrace();
             throw new XProcException(ioe);
+        }
+    }
+
+    class RNGErrorHandler implements ErrorHandler {
+        public void fatalError(SAXParseException e) throws SAXException {
+            error(e);
+        }
+
+        public void error(SAXParseException e) throws SAXException {
+            TreeWriter treeWriter = new TreeWriter(runtime);
+            treeWriter.startDocument(docBaseURI);
+            treeWriter.addStartElement(XProcConstants.c_error);
+            treeWriter.startContent();
+
+            treeWriter.addText(e.toString());
+
+            treeWriter.addEndElement();
+            treeWriter.endDocument();
+
+            step.reportError(treeWriter.getResult());
+
+            System.err.println(e);
+            throw e;
+        }
+
+        public void warning( SAXParseException e ) {
+            // ignore warnings
         }
     }
 }
