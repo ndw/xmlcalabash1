@@ -85,6 +85,9 @@ public class Parameters extends DefaultStep {
             treeWriter.addAttribute(_name, param.getLocalName());
             if (param.getNamespaceURI() != null && !"".equals(param.getNamespaceURI())) {
                 treeWriter.addAttribute(_namespace, param.getNamespaceURI());
+            } else {
+                // I'm not really sure about this...
+                treeWriter.addAttribute(_namespace, "");
             }
 
             if (runtime.getAllowGeneralExpressions()) {
@@ -92,10 +95,8 @@ public class Parameters extends DefaultStep {
                 XdmAtomicValue atom = null;
                 if (xdmvalue.size() == 1) {
                     XdmItem item = xdmvalue.itemAt(0);
-                    System.err.println("Item: " + item);
                     if (item.isAtomicValue()) {
                         atom = (XdmAtomicValue) item;
-                        System.err.println("Atom: " + atom);
                     }
                 }
 
