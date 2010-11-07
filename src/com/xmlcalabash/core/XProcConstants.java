@@ -72,6 +72,8 @@ public class XProcConstants {
     public static final QName p_serialization = new QName(NS_XPROC,"serialization");
     public static final QName p_documentation = new QName(NS_XPROC, "documentation");
     public static final QName p_pipeinfo = new QName(NS_XPROC, "pipeinfo");
+    public static final QName p_in_scope_names = new QName(NS_XPROC, "in-scope-names");
+    public static final QName p_document_template = new QName(NS_XPROC, "document-template");
 
     public static final QName cx_until_unchanged = new QName(NS_CALABASH_EX, "until-unchanged");
 
