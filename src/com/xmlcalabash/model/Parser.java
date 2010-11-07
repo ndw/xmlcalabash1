@@ -49,6 +49,7 @@ public class Parser {
     private static QName err_XS0063 = new QName(XProcConstants.NS_XPROC_ERROR, "XS0063");
     private static QName p_use_when = new QName(XProcConstants.NS_XPROC, "use-when");
     private static QName _use_when = new QName("use-when");
+    private static QName _exclude_inline_prefixes = new QName("exclude-inline-prefixes");
 
     private XProcRuntime runtime = null;
     private Stack<DeclareStep> declStack = null;
@@ -165,7 +166,7 @@ public class Parser {
         PipelineLibrary library = new PipelineLibrary(runtime, node);
 
         if (XProcConstants.p_library.equals(node.getNodeName())) {
-            checkAttributes(node, new String[] { "xpath-version", "psvi-required", "version"}, false);
+            checkAttributes(node, new String[] { "xpath-version", "psvi-required", "version", "exclude-inline-prefixes"}, false);
 
             library.setVersion(inheritedVersion(node));
 
@@ -752,7 +753,7 @@ public class Parser {
             inline.addNode(child);
         }
 
-        HashSet<String> excludeURIs = readExcludeInlinePrefixes(node, node.getAttributeValue(new QName("exclude-inline-prefixes")));
+        HashSet<String> excludeURIs = readExcludeInlinePrefixes(node, node.getAttributeValue(_exclude_inline_prefixes));
         if (!declStack.isEmpty()) {
             DeclareStep parent = declStack.peek();
             for (String uri : parent.getExcludeInlineNamespaces()) {
@@ -1219,11 +1220,21 @@ public class Parser {
         step.setPsviRequired(psviRequired);
         step.setXPathVersion(xpathVersion);
 
-        HashSet<String> excludeURIs = readExcludeInlinePrefixes(node, node.getAttributeValue(new QName("exclude-inline-prefixes")));
+        HashSet<String> excludeURIs = readExcludeInlinePrefixes(node, node.getAttributeValue(_exclude_inline_prefixes));
         if (!declStack.isEmpty()) {
             DeclareStep parent = declStack.peek();
             for (String uri : parent.getExcludeInlineNamespaces()) {
                 excludeURIs.add(uri);
+            }
+        }
+        // Special case: if your parent is a p:library, get the exclusions from there too...
+        if (node.getParent() != null) {
+            XdmNode parent = node.getParent();
+            if (XProcConstants.p_library.equals(parent.getNodeName()) && parent.getAttributeValue(_exclude_inline_prefixes) != null) {
+                HashSet<String> pexcl = readExcludeInlinePrefixes(parent, parent.getAttributeValue(_exclude_inline_prefixes));
+                for (String uri : pexcl) {
+                    excludeURIs.add(uri);
+                }
             }
         }
 
