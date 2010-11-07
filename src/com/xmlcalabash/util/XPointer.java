@@ -143,7 +143,7 @@ public class XPointer {
             Matcher matcher = scheme.matcher(xpointer);
             if (matcher.matches()) { // scheme(data) ...
                 QName name = schemeName(matcher.group(1));
-                String data = cleanup(matcher.group(2));
+                String data = matcher.group(2);
                 int dataend = indexOfEnd(data);
 
                 if (dataend < 0) {
@@ -152,6 +152,8 @@ public class XPointer {
 
                 String rest = data.substring(dataend);
                 data = data.substring(1, dataend-1);     // 1 because we want to skip the initial "("
+
+                data = cleanup(data);
 
                 if (_xmlns.equals(name)) {
                     parts.add(new XPointerXmlnsScheme(name, data));
@@ -217,6 +219,9 @@ public class XPointer {
     }
 
     private int indexOfEnd(String data) {
+        // Make sure we don't get fooled by ^^, ^(, or ^)
+        data = data.replaceAll("\\^[\\(\\)]", "xx");
+
         int depth = 0;
         int pos = 0;
         boolean done = false;
@@ -226,7 +231,9 @@ public class XPointer {
             done = (")".equals(s) && depth == 0);
 
             if ("(".equals(s)) {
-                depth++;
+                if (pos == 0 || !"^".equals(data.substring(pos-1,pos))) {
+                    depth++;
+                }
             } else if (")".equals(s)) {
                 depth--;
             }
@@ -242,9 +249,7 @@ public class XPointer {
     }
 
     private String cleanup(String data) {
-        String repl = data.replaceAll("\\^\\(", "(");
-        repl = repl.replaceAll("\\^\\)", ")");
-        repl = repl.replaceAll("\\^\\^", "^");
+        String repl = data.replaceAll("\\^([\\(\\)\\^])", "$1");
         return repl;
     }
 
