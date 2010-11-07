@@ -21,6 +21,7 @@ package com.xmlcalabash.library;
  */
 
 import com.xmlcalabash.util.Base64;
+import com.xmlcalabash.util.TreeWriter;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -38,17 +39,12 @@ import com.thaiopensource.validate.prop.rng.RngProperty;
 import com.thaiopensource.validate.auto.AutoSchemaReader;
 import com.thaiopensource.validate.rng.CompactSchemaReader;
 import com.thaiopensource.xml.sax.ErrorHandlerImpl;
-import com.thaiopensource.util.OptionParser;
 import com.thaiopensource.util.PropertyMapBuilder;
-import org.iso_relax.verifier.VerifierFactory;
-import org.iso_relax.verifier.Verifier;
-import org.iso_relax.verifier.Schema;
-import org.iso_relax.verifier.VerifierConfigurationException;
+import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
@@ -69,6 +65,7 @@ public class ValidateJing extends DefaultStep {
     private ReadablePipe source = null;
     private ReadablePipe schemaSource = null;
     private WritablePipe result = null;
+    private URI docBaseURI = null;
 
     /** Creates a new instance of Delete */
     public ValidateJing(XProcRuntime runtime, XAtomicStep step) {
@@ -99,7 +96,7 @@ public class ValidateJing extends DefaultStep {
         boolean checkIdRefs = getOption(_dtd_id_idref_warnings,false);
         boolean dtdAugment  = getOption(_dtd_attribute_values,false);
 
-        ErrorHandlerImpl eh = new ErrorHandlerImpl(System.out);
+        ErrorHandler eh = new RNGErrorHandler();
         PropertyMapBuilder properties = new PropertyMapBuilder();
         properties.put(ValidateProperty.ERROR_HANDLER, eh);
 
@@ -110,6 +107,8 @@ public class ValidateJing extends DefaultStep {
         XdmNode doc = source.read();
         XdmNode schema = schemaSource.read();
         XdmNode root = S9apiUtils.getDocumentElement(schema);
+
+        docBaseURI = doc.getBaseURI();
 
         SchemaReader sr = null;
 
@@ -164,6 +163,33 @@ public class ValidateJing extends DefaultStep {
             return s;
         } else {
             return doc.getStringValue();
+        }
+    }
+
+    class RNGErrorHandler implements ErrorHandler {
+        public void fatalError(SAXParseException e) throws SAXException {
+            error(e);
+        }
+
+        public void error(SAXParseException e) throws SAXException {
+            TreeWriter treeWriter = new TreeWriter(runtime);
+            treeWriter.startDocument(docBaseURI);
+            treeWriter.addStartElement(XProcConstants.c_error);
+            treeWriter.startContent();
+
+            treeWriter.addText(e.toString());
+
+            treeWriter.addEndElement();
+            treeWriter.endDocument();
+
+            step.reportError(treeWriter.getResult());
+
+            System.err.println(e);
+            throw e;
+        }
+
+        public void warning( SAXParseException e ) {
+            // ignore warnings
         }
     }
 }
