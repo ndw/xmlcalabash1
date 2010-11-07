@@ -375,6 +375,13 @@ public class XAtomicStep extends XStep {
         xstep.reset();
         computeParameters(xstep);
 
+        // HACK HACK HACK!
+        if (XProcConstants.p_in_scope_names.equals(step.getType())) {
+            for (QName name : inScopeOptions.keySet()) {
+                xstep.setParameter(name, inScopeOptions.get(name));
+            }
+        }
+        
         // Make sure we do this *after* calculating any option/parameter values...
         XProcData data = runtime.getXProcData();
         data.openFrame(this);
