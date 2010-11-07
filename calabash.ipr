@@ -316,10 +316,10 @@
     </library>
     <library name="JUnit">
       <CLASSES>
-        <root url="jar:///share/java/junit/junit-4.4.jar!/" />
+        <root url="jar:///share/java/junit4.8.1/junit-4.8.1.jar!/" />
       </CLASSES>
       <JAVADOC>
-        <root url="file:///share/java/junit4.4/javadoc" />
+        <root url="file:///share/java/junit4.8.1/javadoc" />
       </JAVADOC>
       <SOURCES />
     </library>
