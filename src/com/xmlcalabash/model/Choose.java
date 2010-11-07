@@ -134,10 +134,6 @@ public class Choose extends DeclareStep {
                                 valid = false;
                                 error("Input port " + input.getPort() + " has different primary status.", XProcConstants.staticError(7));
                             }
-                            if (s1input.getSequence() != input.getSequence()) {
-                                valid = false;
-                                error("Input port " + input.getPort() + " has different sequence status.", XProcConstants.staticError(7));
-                            }
                         }
                     } else {
                         valid = false;
@@ -164,10 +160,6 @@ public class Choose extends DeclareStep {
                             if (s1output.getPrimary() != output.getPrimary()) {
                                 valid = false;
                                 error("Output port " + output.getPort() + " has different primary status.", XProcConstants.staticError(7));
-                            }
-                            if (s1output.getSequence() != output.getSequence()) {
-                                valid = false;
-                                error("Output port " + output.getPort() + " has different sequence status.", XProcConstants.staticError(7));
                             }
                         }
                     } else {
