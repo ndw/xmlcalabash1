@@ -113,10 +113,6 @@ public class Try  extends DeclareStep {
             for (Output output : p_catch.outputs()) {
                 if (outputs.containsKey(output.getPort())) {
                     Output s1output = outputs.get(output.getPort());
-                    Output groupOut = getOutput(output.getPort());
-
-                    // If any of the outputs can be a sequence, then the choose out can be a sequence
-                    groupOut.setSequence(groupOut.getSequence() || output.getSequence());
 
                     if (output.getPort().endsWith("|") || output.getPort().startsWith("!")) {
                         // assume it's ok
@@ -124,10 +120,6 @@ public class Try  extends DeclareStep {
                         if (s1output.getPrimary() != output.getPrimary()) {
                             valid = false;
                             runtime.error(null, p_group.getNode(), "Output port " + output.getPort() + " has different primary status.", XProcConstants.staticError(9));
-                        }
-                        if (s1output.getSequence() != output.getSequence()) {
-                            valid = false;
-                            runtime.error(null, p_group.getNode(), "Output port " + output.getPort() + " has different sequence status.", XProcConstants.staticError(9));
                         }
                     }
                 } else {
