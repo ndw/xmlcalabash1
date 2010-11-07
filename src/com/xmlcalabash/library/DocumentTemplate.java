@@ -198,7 +198,7 @@ public class DocumentTemplate extends DefaultStep implements ProcessMatchingNode
         while (state != END) {
             int pos = value.indexOf("{");
             int cpos = value.indexOf("}");
-            if (pos < 0 || cpos < pos) {
+            if (pos < 0 || ((cpos < pos) && (cpos >= 0))) {
                 pos = cpos;
             }
 
