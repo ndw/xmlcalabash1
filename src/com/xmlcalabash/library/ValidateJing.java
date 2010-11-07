@@ -147,6 +147,10 @@ public class ValidateJing extends DefaultStep {
             } else {
                 throw new XProcException(step.getNode(), "Error loading schema");
             }
+        } catch (SAXParseException e) {
+            if (assertValid) {
+                throw XProcException.stepError(53);
+            }
         } catch (SAXException e) {
             throw new XProcException("SAX Exception", e);
         } catch (IOException e) {
@@ -183,8 +187,6 @@ public class ValidateJing extends DefaultStep {
             treeWriter.endDocument();
 
             step.reportError(treeWriter.getResult());
-
-            System.err.println(e);
             throw e;
         }
 

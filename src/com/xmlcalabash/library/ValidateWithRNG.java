@@ -138,7 +138,6 @@ public class ValidateWithRNG extends DefaultStep {
 
             step.reportError(treeWriter.getResult());
 
-            System.err.println(e);
             throw e;
         }
 
