@@ -338,4 +338,16 @@
       <p:option name="href" required="true" cx:type="xsd:anyURI"/>
       <p:option name="content-type" cx:type="xsd:string"/>
    </p:declare-step>
+
+   <p:declare-step type="p:in-scope-names" xml:id="in-scope-names">
+     <p:output port="result" primary="false"/>
+   </p:declare-step>
+
+   <p:declare-step type="p:document-template" xml:id="document-template">
+     <p:input port="template"/>
+     <p:input port="source" sequence="true" primary="true"/>
+     <p:input port="parameters" kind="parameter"/>
+     <p:output port="result"/>
+   </p:declare-step>
+
 </p:library>

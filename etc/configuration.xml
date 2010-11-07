@@ -132,6 +132,12 @@
 <implementation type="p:xinclude"
 		class-name="com.xmlcalabash.library.XInclude"/>
 
+<implementation type="p:in-scope-names"
+		class-name="com.xmlcalabash.library.InScopeNames"/>
+
+<implementation type="p:document-template"
+		class-name="com.xmlcalabash.library.DocumentTemplate"/>
+
 <!-- my own -->
 
 <implementation type="cx:collection-manager"
