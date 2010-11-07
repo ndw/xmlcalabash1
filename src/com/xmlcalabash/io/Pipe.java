@@ -46,12 +46,14 @@ public class Pipe implements ReadablePipe, WritablePipe {
     public Pipe(XProcRuntime xproc) {
         runtime = xproc;
         documents = new DocumentSequence(xproc);
+        documents.addReader();
         id = idCounter++;
     }
 
     public Pipe(XProcRuntime xproc, DocumentSequence seq) {
         runtime = xproc;
         documents = seq;
+        seq.addReader();
         id = ++idCounter;
     }
 

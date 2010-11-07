@@ -24,11 +24,21 @@ public class DocumentSequence {
     private static int idCounter = 0;
     private int id = 0;
     private PipeLogger outputlog = null;
+    private int readerCount = 0;
 
     public DocumentSequence(XProcRuntime xproc) {
         runtime = xproc;
         id = idCounter++;
         //runtime.finest(logger, null, "Created document-sequence #" + id);
+    }
+
+    public void addReader() {
+        readerCount++;
+        //System.err.println(this + ": " + readerCount);
+    }
+
+    public int getReaderCount() {
+        return readerCount;
     }
 
     public void setLogger(Log log) {
@@ -64,6 +74,7 @@ public class DocumentSequence {
     }
 
     public void close() {
+        readerCount--;
         closed = true;
         if (outputlog != null) {
             outputlog.stopLogging();
