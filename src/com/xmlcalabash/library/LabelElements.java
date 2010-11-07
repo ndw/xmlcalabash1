@@ -57,12 +57,10 @@ public class LabelElements extends DefaultStep implements ProcessMatchingNodes {
     private static final QName p_index = new QName("p", XProcConstants.NS_XPROC, "index");
     private ReadablePipe source = null;
     private WritablePipe result = null;
-    private Map<QName, RuntimeValue> inScopeOptions = null;
     private ProcessMatch matcher = null;
     private QName attribute = null;
     private String label = null;
     private boolean replace = true;
-    private String matchPattern = null;
     private int count = 1;
 
     /** Creates a new instance of LabelElements */
