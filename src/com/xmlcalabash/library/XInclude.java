@@ -52,12 +52,16 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
     private static final QName _fixup_xml_base = new QName("", "fixup-xml-base");
     private static final QName _fixup_xml_lang = new QName("", "fixup-xml-lang");
     private static final QName _encoding = new QName("", "encoding");
+    private static final QName _href = new QName("", "href");
+    private static final QName _parse = new QName("", "parse");
+    private static final QName _xpointer = new QName("", "xpointer");
+
     private ReadablePipe source = null;
     private WritablePipe result = null;
     private Stack<ProcessMatch> matcherStack = new Stack<ProcessMatch> ();
+    private Stack<String> inside = new Stack<String> ();
     private boolean fixupBase = false;
     private boolean fixupLang = false;
-    private HashSet<String> seenURIs = new HashSet<String> ();
     private Exception mostRecentException = null;
 
     /**
@@ -117,9 +121,9 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
         //finest(node, "Start element " + node.getNodeName());
         ProcessMatch matcher = matcherStack.peek();
         if (xi_include.equals(node.getNodeName())) {
-            String href = node.getAttributeValue(new QName("","href"));
-            String parse = node.getAttributeValue(new QName("","parse"));
-            String xptr = node.getAttributeValue(new QName("","xpointer"));
+            String href = node.getAttributeValue(_href);
+            String parse = node.getAttributeValue(_parse);
+            String xptr = node.getAttributeValue(_xpointer);
             XPointer xpointer = null;
             XdmNode subdoc = null;
 
@@ -143,6 +147,16 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                 return false;
             } else {
                 subdoc = readXML(href, node.getBaseURI().toASCIIString());
+
+                String iuri = subdoc.getBaseURI().toASCIIString();
+                if (xptr != null) {
+                    iuri += "#" + xptr;
+                }
+
+                if (inside.contains(iuri)) {
+                    throw XProcException.stepError(29,"XInclude document includes itself: " + href);
+                }
+
                 if (subdoc == null) {
                     finer(node, "XInclude parse failed: " + href);
                     fallback(node, href);
@@ -174,8 +188,10 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                     }
 
                     if (snode.getNodeKind() == XdmNodeKind.ELEMENT || snode.getNodeKind() == XdmNodeKind.DOCUMENT) {
+                        inside.push(iuri);
                         XdmNode ex = expandXIncludes(snode);
                         matcher.addSubtree(ex);
+                        inside.pop();
                     } else {
                         matcher.addSubtree(snode);
                     }
@@ -301,15 +317,9 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
 
     public XdmNode readXML(String href, String base) {
         finest(null, "XInclude read XML: " + href + " (" + base + ")");
+
         try {
             XdmNode doc = runtime.parse(href, base);
-
-            String uri = doc.getBaseURI().toASCIIString();
-            if (seenURIs.contains(uri)) {
-                throw XProcException.stepError(29,"XInclude document includes itself: " + href);
-            }
-            seenURIs.add(uri);
-
             return doc;
         } catch (Exception e) {
             finest(null, "XInclude read XML failed");
