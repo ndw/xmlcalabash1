@@ -53,6 +53,7 @@ public class WritableDocument implements WritablePipe {
     private Serialization serial = null;
     private boolean writeSeqOk = false;
     private Step writer = null;
+    private OutputStream ostream = null;
 
     /** Creates a new instance of ReadableDocument */
     public WritableDocument(XProcRuntime xproc, String uri, Serialization serial) {
@@ -65,8 +66,22 @@ public class WritableDocument implements WritablePipe {
         } else {
             this.serial = serial;
         }
+    }
+
+    public WritableDocument(XProcRuntime xproc, String uri, Serialization serial, OutputStream out) {
+        this.runtime = xproc;
+        this.uri = uri;
+        this.ostream = out;
+
+        if (serial == null) {
+            this.serial = new Serialization(xproc, null);
+            this.serial.setIndent(xproc.getDebug()); // indent stdio by default when debugging
+        } else {
+            this.serial = serial;
+        }
 
     }
+
 
     public void canWriteSequence(boolean sequence) {
         writeSeqOk = sequence;
@@ -135,8 +150,9 @@ public class WritableDocument implements WritablePipe {
                 serializer.setOutputProperty(Serializer.Property.VERSION, serial.getVersion());
             }
 
-            OutputStream ostream = null;
-            if (uri == null) {
+            if (ostream != null) {
+                serializer.setOutputStream(ostream);
+            } else if (uri == null) {
                 serializer.setOutputStream(System.out);
             } else {
                 try {

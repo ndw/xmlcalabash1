@@ -42,6 +42,8 @@ import net.sf.saxon.s9api.XdmSequenceIterator;
 import org.xml.sax.InputSource;
 
 import javax.xml.transform.sax.SAXSource;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.BufferedReader;
@@ -350,8 +352,14 @@ public class Main {
                         if ("version".equals(name)) serial.setVersion(value);
                     }
                 }
-                
-                WritableDocument wd = new WritableDocument(runtime,uri,serial);
+
+                // I wonder if there's a better way...
+                String filename = uri;
+                URI furi = new URI(uri);
+                filename = furi.getPath();
+
+                FileOutputStream outfile = new FileOutputStream(filename);
+                WritableDocument wd = new WritableDocument(runtime,filename,serial,outfile);
                 ReadablePipe rpipe = pipeline.readFrom(port);
                 while (rpipe.moreDocuments()) {
                     wd.write(rpipe.read());
