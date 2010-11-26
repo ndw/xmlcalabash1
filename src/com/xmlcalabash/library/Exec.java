@@ -149,7 +149,7 @@ public class Exec extends DefaultStep {
         }
 
         String slash = System.getProperty("file.separator");
-        
+
         if (command == null || "".equals(command)) {
             throw XProcException.stepError(33);
         }
