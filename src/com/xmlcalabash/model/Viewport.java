@@ -100,6 +100,10 @@ public class Viewport extends DeclareStep {
             valid = false;
         }
 
+        if (outputs.size() == 1) {
+            error(node, "A viewport step must have a primary output", XProcConstants.staticError(6));
+        }
+
         if (!super.valid()) {
             valid = false;
         }
