@@ -181,6 +181,32 @@ public class TreeWriter {
             seenRoot = true;
         }
 
+        // If the newName has no prefix, then make sure we don't pass along some other
+        // binding for the default namespace...
+        if ("".equals(newName.getPrefix())) {
+            int newLen = 0;
+            for (int pos = 0; pos < inscopeNS.length; pos++) {
+                int nscode = inscopeNS[pos];
+                String pfx = pool.getPrefixFromNamespaceCode(nscode);
+                if (!"".equals(pfx)) {
+                    newLen++;
+                }
+                //System.err.println("NSCode=" + nscode + " pfx=" + pool.getPrefixFromNamespaceCode(nscode) + " uri=" + pool.getURIFromNamespaceCode(nscode));
+            }
+            if (newLen != inscopeNS.length) {
+                int newCodes[] = new int[newLen];
+                int npos = 0;
+                for (int pos = 0; pos < inscopeNS.length; pos++) {
+                    int nscode = inscopeNS[pos];
+                    String pfx = pool.getPrefixFromNamespaceCode(nscode);
+                    if (!"".equals(pfx)) {
+                        newCodes[npos++] = nscode;
+                    }
+                }
+                inscopeNS = newCodes;
+            }
+        }
+        
         URI nodeBaseURI = node.getBaseURI();
         receiver.setSystemId(nodeBaseURI.toASCIIString());
         addStartElement(nameCode, typeCode, inscopeNS);
