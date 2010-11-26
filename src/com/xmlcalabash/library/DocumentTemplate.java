@@ -96,6 +96,10 @@ public class DocumentTemplate extends DefaultStep implements ProcessMatchingNode
     public void run() throws SaxonApiException {
         super.run();
 
+        if (source.documentCount() > 1) {
+            throw XProcException.stepError(68);
+        }
+
         context = source.read();
 
         matcher = new ProcessMatch(runtime, this);
