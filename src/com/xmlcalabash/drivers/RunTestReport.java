@@ -730,10 +730,6 @@ private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
                 throw new IllegalArgumentException("Each input and output must specify a port");
             }
 
-            if (t_input.equals(input.getNodeName()) && inputs.containsKey(port)) {
-                throw new IllegalArgumentException("Attempt to redefine input port: " + port);
-            }
-
             if (t_output.equals(input.getNodeName()) && outputs.containsKey(port)) {
                 throw new IllegalArgumentException("Attempt to redefine output port: " + port);
             }
