@@ -354,12 +354,16 @@ public class Main {
                 }
 
                 // I wonder if there's a better way...
-                String filename = uri;
-                URI furi = new URI(uri);
-                filename = furi.getPath();
+                WritableDocument wd = null;
+                if (uri != null) {
+                    URI furi = new URI(uri);
+                    String filename = furi.getPath();
+                    FileOutputStream outfile = new FileOutputStream(filename);
+                    wd = new WritableDocument(runtime,filename,serial,outfile);
+                } else {
+                    wd = new WritableDocument(runtime,uri,serial);
+                }
 
-                FileOutputStream outfile = new FileOutputStream(filename);
-                WritableDocument wd = new WritableDocument(runtime,filename,serial,outfile);
                 ReadablePipe rpipe = pipeline.readFrom(port);
                 while (rpipe.moreDocuments()) {
                     wd.write(rpipe.read());
