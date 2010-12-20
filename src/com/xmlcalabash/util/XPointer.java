@@ -228,15 +228,13 @@ public class XPointer {
         while (pos < data.length() && !done) {
             String s = data.substring(pos, pos+1);
 
-            done = (")".equals(s) && depth == 0);
-
             if ("(".equals(s)) {
-                if (pos == 0 || !"^".equals(data.substring(pos-1,pos))) {
-                    depth++;
-                }
+                depth++;
             } else if (")".equals(s)) {
                 depth--;
             }
+
+            done = (")".equals(s) && depth == 0);
 
             pos++;
         }
