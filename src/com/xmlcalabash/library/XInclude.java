@@ -148,20 +148,22 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
             } else {
                 subdoc = readXML(href, node.getBaseURI().toASCIIString());
 
-                String iuri = subdoc.getBaseURI().toASCIIString();
-                if (xptr != null) {
-                    iuri += "#" + xptr;
-                }
-
-                if (inside.contains(iuri)) {
-                    throw XProcException.stepError(29,"XInclude document includes itself: " + href);
-                }
+                String iuri = null;
 
                 if (subdoc == null) {
                     finer(node, "XInclude parse failed: " + href);
                     fallback(node, href);
                     return false;
                 } else {
+                    iuri = subdoc.getBaseURI().toASCIIString();
+                    if (xptr != null) {
+                        iuri += "#" + xptr;
+                    }
+
+                    if (inside.contains(iuri)) {
+                        throw XProcException.stepError(29,"XInclude document includes itself: " + href);
+                    }
+
                     finer(node, "XInclude parse: " + href);
                 }
 
