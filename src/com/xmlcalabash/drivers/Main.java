@@ -406,8 +406,8 @@ public class Main {
     }
 
     private void usage() throws IOException {
-        System.out.println("Calabash version " + XProcConstants.XPROC_VERSION + ", an XProc processor");
-        System.out.println("Copyright (c) 2007-2009 Norman Walsh");
+        System.out.println("XML Calabash version " + XProcConstants.XPROC_VERSION + ", an XProc processor");
+        System.out.println("Copyright (c) 2007-2010 Norman Walsh");
         System.out.println("See http://xmlcalabash.com/");
         System.out.println("");
 
