@@ -24,11 +24,16 @@ import java.io.UnsupportedEncodingException;
 
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
+import com.xmlcalabash.util.HttpUtils;
+import com.xmlcalabash.util.JSONtoXML;
 import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.util.Base64;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 import org.xml.sax.InputSource;
 import org.ccil.cowan.tagsoup.Parser;
 import net.sf.saxon.s9api.*;
@@ -76,6 +81,10 @@ public class UnescapeMarkup extends DefaultStep {
     public void run() throws SaxonApiException {
         super.run();
 
+        String contentType = getOption(_content_type, "application/xml");
+        String defCharset = HttpUtils.getCharset(contentType);
+        contentType = HttpUtils.baseContentType(contentType);
+
         if (getOption(_namespace) != null) {
             namespace = getOption(_namespace).getString();
         }
@@ -86,7 +95,9 @@ public class UnescapeMarkup extends DefaultStep {
         }
 
         String charset = null;
-        if (getOption(_charset) != null) {
+        if (getOption(_charset) == null) {
+            charset = defCharset;
+        } else {
             charset = getOption(_charset).getString();
         }
 
@@ -117,7 +128,6 @@ public class UnescapeMarkup extends DefaultStep {
         tree.addAttributes(child);
         tree.startContent();
 
-        String contentType = getOption(_content_type, "application/xml");
         if ("text/html".equals(contentType)) {
             XdmNode tagDoc = tagSoup(escapedContent);
             if (namespace == null) {
@@ -125,6 +135,10 @@ public class UnescapeMarkup extends DefaultStep {
             } else {
                 remapDefaultNamespace(tree, tagDoc);
             }
+        } else if ("application/json".equals(contentType)) {
+            JSONTokener jt = new JSONTokener(escapedContent);
+            XdmNode jsonDoc = JSONtoXML.convert(runtime.getProcessor(), jt);
+            tree.addSubtree(jsonDoc);
         } else if (!"application/xml".equals(contentType)) {
             throw XProcException.stepError(51);
         } else {
