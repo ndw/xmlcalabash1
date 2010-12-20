@@ -92,6 +92,10 @@ public class Store extends DefaultStep {
 
         XdmNode doc = source.read();
 
+        if (doc == null || source.moreDocuments()) {
+            throw XProcException.dynamicError(6);
+        }
+
         if (hrefOpt != null) {
             href = hrefOpt.getBaseURI().resolve(hrefOpt.getString());
         } else {
