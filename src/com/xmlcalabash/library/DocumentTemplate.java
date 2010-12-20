@@ -61,9 +61,10 @@ public class DocumentTemplate extends DefaultStep implements ProcessMatchingNode
     private XdmNode context = null;
 
     private static final int START = 0;
-    private static final int SAWOPEN = 1;
-    private static final int SAWCLOSED = 2;
-    private static final int END = 3;
+    private static final int XPATHMODE = 1;
+    private static final int SQUOTEMODE = 2;
+    private static final int DQUOTEMODE = 3;
+    private static final int END = 4;
 
     /** Creates a new instance of LabelElements */
     public DocumentTemplate(XProcRuntime runtime, XAtomicStep step) {
@@ -199,78 +200,85 @@ public class DocumentTemplate extends DefaultStep implements ProcessMatchingNode
             nsbindings.put(nspfx,nsuri);
         }
 
-        while (state != END) {
-            int pos = value.indexOf("{");
-            int cpos = value.indexOf("}");
-            if (pos < 0 || ((cpos < pos) && (cpos >= 0))) {
-                pos = cpos;
-            }
-
-            if (pos >= 0) {
-                ch = value.substring(pos,pos+1);
-                ptext += value.substring(0, pos);
-                value = value.substring(pos+1);
-            } else {
-                ch = "";
-            }
+        String peek = "";
+        int pos = 0;
+        while (pos < value.length()) {
+            ch = value.substring(pos,pos+1);
 
             switch (state) {
                 case START:
-                    if (pos < 0) {
-                        if (!"".equals(ptext)) {
-                            items.add(new XdmAtomicValue(ptext));
-                        }
-                        state = END;
+                    if (pos+1 < value.length()) {
+                        peek = value.substring(pos+1,pos+2);
                     } else {
-                        if ("{".equals(ch)) {
-                            if (value.startsWith("{")) {
-                                ptext += "{";
-                                value = value.substring(1);
-                            } else {
-                                state = SAWOPEN;
-                                if (!"".equals(ptext)) {
-                                    items.add(new XdmAtomicValue(ptext));
-                                }
+                        peek = "";
+                    }
+
+                    if ("{".equals(ch)) {
+                        if ("{".equals(peek)) {
+                            ptext += "{";
+                            pos++;
+                        } else {
+                            if (!"".equals(ptext)) {
+                                items.add(new XdmAtomicValue(ptext));
                                 ptext = "";
                             }
-                        } else {
-                            if (value.startsWith("}")) {
-                                ptext += "}";
-                                value = value.substring(1);
-                            } else {
-                                throw XProcException.dynamicError(67,"Mismatched curly braces in parsed value.");
-                            }
+                            state = XPATHMODE;
                         }
-                    }
-                    break;
-                case SAWOPEN:
-                    if (pos < 0) {
-                        throw XProcException.dynamicError(67,"Mismatched curly braces in parsed value.");
-                    }
-                    if ("{".equals(ch)) {
-                        if (value.startsWith("{")) {
-                            ptext += "{";
-                            value = value.substring(1);
+                    } else if ("}".equals(ch)) {
+                        if ("}".equals(peek)) {
+                            ptext += "}";
+                            pos++;
                         } else {
-                            throw XProcException.dynamicError(67,"Mismatched curly braces in parsed value.");
+                            throw XProcException.stepError(67);
                         }
                     } else {
-                        if (value.startsWith("}")) {
-                            ptext += "}";
-                            value = value.substring(1);
-                        } else {
-                            items.addAll(evaluateXPath(context, nsbindings, ptext, params));
-                            ptext = "";
-                            state = START;
-                        }
+                        ptext += ch;
                     }
                     break;
-                case END:
+                case XPATHMODE:
+                    if ("{".equals(ch)) {
+                        throw XProcException.stepError(67);
+                    } else if ("'".equals(ch)) {
+                        ptext += "'";
+                        state = SQUOTEMODE;
+                    } else if ("\"".equals(ch)) {
+                        ptext += "\"";
+                        state = DQUOTEMODE;
+                    } else if ("}".equals(ch)) {
+                        items.addAll(evaluateXPath(context, nsbindings, ptext, params));
+                        ptext = "";
+                        state = START;
+                    } else {
+                        ptext += ch;
+                    }
                     break;
-                default:
-                    throw new XProcException("This can't happen");
+                case SQUOTEMODE:
+                    if ("'".equals(ch)) {
+                        ptext += "'";
+                        state = XPATHMODE;
+                    } else {
+                        ptext += ch;
+                    }
+                    break;
+                case DQUOTEMODE:
+                    if (("\"").equals(ch)) {
+                        ptext += "\"";
+                        state = XPATHMODE;
+                    } else {
+                        ptext += ch;
+                    }
+                    break;
             }
 
+            pos++;
+        }
+
+        if (state != START) {
+            throw XProcException.stepError(67);
+        }
+
+        if (!"".equals(ptext)) {
+            items.add(new XdmAtomicValue(ptext));
         }
 
         return items;
