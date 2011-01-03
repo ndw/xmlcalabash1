@@ -12,7 +12,7 @@ import net.sf.saxon.trans.XPathException;
  * Time: 4:35:36 PM
  * To change this template use File | Settings | File Templates.
  */
-public class DocumentSequenceIterator implements LastPositionFinder {
+public class DocumentSequenceIterator implements SequenceIterator, LastPositionFinder {
     int position = 0;
     int last = 0;
     Item item = null;

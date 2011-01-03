@@ -1,14 +1,13 @@
 package com.xmlcalabash.functions;
 
 import com.xmlcalabash.core.XProcException;
-import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.runtime.XCompoundStep;
 import com.xmlcalabash.runtime.XStep;
-import net.sf.saxon.functions.ExtensionFunctionDefinition;
-import net.sf.saxon.functions.ExtensionFunctionCall;
+import net.sf.saxon.lib.ExtensionFunctionCall;
+import net.sf.saxon.lib.ExtensionFunctionDefinition;
 import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.om.SequenceIterator;
-import net.sf.saxon.om.SingletonIterator;
+import net.sf.saxon.tree.iter.SingletonIterator;
 import net.sf.saxon.value.SequenceType;
 import net.sf.saxon.value.AnyURIValue;
 import net.sf.saxon.expr.XPathContext;
@@ -84,12 +83,9 @@ public class Cwd extends ExtensionFunctionDefinition {
                 throw XProcException.dynamicError(23);
             }
 
-            // The base URI always ends in '/', but cwd() shouldn't, unless "/" is the base URI!
+            // In 0.9.20, I removed the trailing slash from cwd().
+            // The community didn't like that, so I put it back.
             String cwd = runtime.getStaticBaseURI().toASCIIString();
-            if (cwd.endsWith("/") && cwd.length() > 1) {
-                cwd = cwd.substring(0, cwd.length()-1);
-            }
-
             return SingletonIterator.makeIterator(new AnyURIValue(cwd));
         }
     }

@@ -24,18 +24,21 @@ import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
 import net.sf.saxon.Controller;
 import net.sf.saxon.event.NamespaceReducer;
-import net.sf.saxon.expr.StaticContext;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.event.PipelineConfiguration;
-import net.sf.saxon.event.LocationProvider;
-import net.sf.saxon.s9api.*;
+import net.sf.saxon.expr.instruct.Executable;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.NamePool;
-import net.sf.saxon.om.NamespaceIterator;
 import net.sf.saxon.om.StandardNames;
+import net.sf.saxon.s9api.Axis;
+import net.sf.saxon.s9api.Processor;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.XdmDestination;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmNodeKind;
+import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.instruct.Executable;
-import net.sf.saxon.instruct.LocationMap;
+import net.sf.saxon.tree.iter.NamespaceIterator;
 
 import java.net.URI;
 

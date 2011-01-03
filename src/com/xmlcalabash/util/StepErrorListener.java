@@ -68,7 +68,9 @@ public class StepErrorListener implements ErrorListener {
 
         StructuredQName qCode = null;
         if (exception instanceof XPathException) {
-            qCode = ((XPathException) exception).getErrorCodeQName();
+            XPathException xxx = (XPathException) exception;
+            qCode = xxx.getErrorCodeQName();
+            //qCode = ((XPathException) exception).getErrorCodeQName();
         }
         if (qCode == null && exception.getException() instanceof XPathException) {
             qCode = ((XPathException) exception.getException()).getErrorCodeQName();

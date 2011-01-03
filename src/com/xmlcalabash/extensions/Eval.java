@@ -24,9 +24,6 @@ import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.XdmValue;
-import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.om.NamePool;
-import net.sf.saxon.om.NamespaceIterator;
 
 import java.util.Hashtable;
 import java.util.Vector;

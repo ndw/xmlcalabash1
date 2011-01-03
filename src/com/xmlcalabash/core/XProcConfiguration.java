@@ -1,11 +1,18 @@
 package com.xmlcalabash.core;
 
-import net.sf.saxon.s9api.*;
-import net.sf.saxon.Configuration;
+import net.sf.saxon.s9api.Axis;
+import net.sf.saxon.s9api.DocumentBuilder;
+import net.sf.saxon.s9api.Processor;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XdmDestination;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmNodeKind;
+import net.sf.saxon.s9api.XdmValue;
+import net.sf.saxon.tree.iter.NamespaceIterator;
 import net.sf.saxon.value.Whitespace;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.NamePool;
-import net.sf.saxon.om.NamespaceIterator;
 
 import java.util.Hashtable;
 import java.util.Vector;
@@ -16,23 +23,16 @@ import java.net.URISyntaxException;
 import java.io.InputStream;
 import java.io.File;
 
-import com.xmlcalabash.core.XProcConstants;
-import com.xmlcalabash.core.XProcException;
-import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.ReadablePipe;
-import com.xmlcalabash.io.ReadableDocument;
-import com.xmlcalabash.io.ReadableInline;
 import com.xmlcalabash.io.DocumentSequence;
 import com.xmlcalabash.util.URIUtils;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.RelevantNodes;
 import com.xmlcalabash.util.LogOptions;
 import com.xmlcalabash.model.Step;
-import com.xmlcalabash.model.Serialization;
 
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.Source;
-import javax.xml.transform.TransformerException;
 
 import org.xml.sax.InputSource;
 

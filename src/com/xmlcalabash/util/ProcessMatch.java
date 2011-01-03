@@ -147,8 +147,8 @@ public class ProcessMatch extends TreeWriter {
     }
 
     public boolean matches(XdmNode node) {
-        XPathDynamicContext context = matcher.createDynamicContext(node.getUnderlyingNode());
         try {
+            XPathDynamicContext context = matcher.createDynamicContext(node.getUnderlyingNode());
             return matcher.effectiveBooleanValue(context);
         } catch (XPathException sae) {
             return false;

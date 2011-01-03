@@ -21,7 +21,6 @@
 package com.xmlcalabash.util;
 
 import com.xmlcalabash.core.XProcException;
-
 import java.io.UnsupportedEncodingException;
 import java.io.File;
 import java.net.URI;

@@ -9,11 +9,11 @@ import com.xmlcalabash.library.DefaultStep;
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.util.S9apiUtils;
 import net.sf.saxon.om.NamePool;
-import net.sf.saxon.om.NamespaceIterator;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.tree.iter.NamespaceIterator;
 
 import java.util.HashSet;
 

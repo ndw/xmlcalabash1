@@ -23,26 +23,40 @@ package com.xmlcalabash.util;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.NamePool;
-import net.sf.saxon.om.NamespaceIterator;
+import net.sf.saxon.s9api.Axis;
+import net.sf.saxon.s9api.Destination;
+import net.sf.saxon.s9api.Processor;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.Serializer;
+import net.sf.saxon.s9api.XPathCompiler;
+import net.sf.saxon.s9api.XPathExecutable;
+import net.sf.saxon.s9api.XPathSelector;
+import net.sf.saxon.s9api.XQueryCompiler;
+import net.sf.saxon.s9api.XQueryEvaluator;
+import net.sf.saxon.s9api.XQueryExecutable;
+import net.sf.saxon.s9api.XdmAtomicValue;
+import net.sf.saxon.s9api.XdmItem;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmNodeKind;
+import net.sf.saxon.s9api.XdmSequenceIterator;
+import net.sf.saxon.s9api.XdmValue;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.event.TreeReceiver;
 import net.sf.saxon.event.NamespaceReducer;
 import net.sf.saxon.event.PipelineConfiguration;
-import net.sf.saxon.s9api.*;
 import net.sf.saxon.Configuration;
 import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.core.XProcException;
-import com.xmlcalabash.core.XProcConstants;
 
 import java.util.Iterator;
 import java.util.Vector;
-import java.util.Hashtable;
 import java.util.HashSet;
 import java.net.URI;
 import java.io.StringWriter;
 import java.io.StringReader;
 
+import net.sf.saxon.tree.iter.NamespaceIterator;
 import org.xml.sax.InputSource;
 
 /**
@@ -119,7 +133,7 @@ public class S9apiUtils {
 
     public static XdmNode getDocumentElement(XdmNode doc) {
         if (doc.getNodeKind() == XdmNodeKind.DOCUMENT) {
-            for (XdmNode node : new RelevantNodes(doc,Axis.CHILD,true)) {
+            for (XdmNode node : new RelevantNodes(doc, Axis.CHILD,true)) {
                 if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
                     return node; // There can be only one, this is an XML document
                 }

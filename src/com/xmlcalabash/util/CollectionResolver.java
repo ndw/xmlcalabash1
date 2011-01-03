@@ -1,11 +1,10 @@
 package com.xmlcalabash.util;
 
-import net.sf.saxon.CollectionURIResolver;
+import net.sf.saxon.lib.CollectionURIResolver;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.om.Item;
-import net.sf.saxon.om.ArrayIterator;
 import net.sf.saxon.s9api.XdmNode;
 
 import java.util.Vector;
@@ -14,6 +13,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import com.xmlcalabash.core.XProcRuntime;
+import net.sf.saxon.tree.iter.ArrayIterator;
 
 /**
  * Created by IntelliJ IDEA.

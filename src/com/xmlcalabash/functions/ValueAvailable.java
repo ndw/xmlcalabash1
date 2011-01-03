@@ -1,24 +1,23 @@
 package com.xmlcalabash.functions;
 
-import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.runtime.XCompoundStep;
-import net.sf.saxon.functions.SystemFunction;
-import net.sf.saxon.functions.ExtensionFunctionDefinition;
-import net.sf.saxon.functions.ExtensionFunctionCall;
-import net.sf.saxon.expr.*;
+import net.sf.saxon.expr.Expression;
+import net.sf.saxon.expr.StaticContext;
+import net.sf.saxon.expr.XPathContext;
+import net.sf.saxon.lib.ExtensionFunctionCall;
+import net.sf.saxon.lib.ExtensionFunctionDefinition;
+import net.sf.saxon.om.Item;
+import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.tree.iter.SingletonIterator;
 import net.sf.saxon.value.BooleanValue;
 import net.sf.saxon.value.SequenceType;
-import net.sf.saxon.om.*;
 import net.sf.saxon.s9api.QName;
-import net.sf.saxon.type.BuiltInAtomicType;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.runtime.XStep;
-import com.xmlcalabash.runtime.XPipeline;
-import com.xmlcalabash.model.DeclareStep;
-import com.xmlcalabash.model.RuntimeValue;
 
 import java.util.Hashtable;
 

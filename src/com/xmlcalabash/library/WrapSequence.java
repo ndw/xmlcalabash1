@@ -136,46 +136,47 @@ public class WrapSequence extends DefaultStep {
             XdmNode node = source.read();
             pos++;
 
-            XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
-            for (String prefix : groupAdjacent.getNamespaceBindings().keySet()) {
-                xcomp.declareNamespace(prefix, groupAdjacent.getNamespaceBindings().get(prefix));
-            }
-
-            XPathExecutable xexec = xcomp.compile(groupAdjacent.getString());
-
-            // From Michael Kay: http://markmail.org/message/vkb2vaq2miylgndu
-            //
-            // Underneath the s9api XPathExecutable is a net.sf.saxon.sxpath.XPathExpression.
-
-            XPathExpression xexpr = xexec.getUnderlyingExpression();
-
-            // Call createDynamicContext() on this to get an XPathDynamicContext object;
-
-            XPathDynamicContext xdc = xexpr.createDynamicContext(node.getUnderlyingNode());
-
-            // call getXPathContextObject() on that to get the underlying XPathContext.
-
-            XPathContext xc = xdc.getXPathContextObject();
-
-            // Then call XPathContext.setCurrentIterator()
-            // to supply a SequenceIterator whose current() and position() methods return
-            // the context item and position respectively. If there's any risk that the
-            // expression will call the last() method, then it's simplest to make your
-            // iterator's getProperties() return LAST_POSITION_FINDER, and implement the
-            // LastPositionFinder interface, in which case last() will be implemented by
-            // calling the iterator's getLastPosition() method. (Otherwise last() is
-            // implemented by calling getAnother() to clone the iterator and calling next()
-            // on the clone until the end of the sequence is reached).
-
-            xsi.setPosition(pos);
-            xsi.setItem(node.getUnderlyingNode());
-            xc.setCurrentIterator(xsi);
-
-            // Then evaluate the expression by calling iterate() on the
-            // net.sf.saxon.sxpath.XPathExpression object.
-
             Item item = null;
+
             try {
+                XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
+                for (String prefix : groupAdjacent.getNamespaceBindings().keySet()) {
+                    xcomp.declareNamespace(prefix, groupAdjacent.getNamespaceBindings().get(prefix));
+                }
+
+                XPathExecutable xexec = xcomp.compile(groupAdjacent.getString());
+
+                // From Michael Kay: http://markmail.org/message/vkb2vaq2miylgndu
+                //
+                // Underneath the s9api XPathExecutable is a net.sf.saxon.sxpath.XPathExpression.
+
+                XPathExpression xexpr = xexec.getUnderlyingExpression();
+
+                // Call createDynamicContext() on this to get an XPathDynamicContext object;
+
+                XPathDynamicContext xdc = xexpr.createDynamicContext(node.getUnderlyingNode());
+
+                // call getXPathContextObject() on that to get the underlying XPathContext.
+
+                XPathContext xc = xdc.getXPathContextObject();
+
+                // Then call XPathContext.setCurrentIterator()
+                // to supply a SequenceIterator whose current() and position() methods return
+                // the context item and position respectively. If there's any risk that the
+                // expression will call the last() method, then it's simplest to make your
+                // iterator's getProperties() return LAST_POSITION_FINDER, and implement the
+                // LastPositionFinder interface, in which case last() will be implemented by
+                // calling the iterator's getLastPosition() method. (Otherwise last() is
+                // implemented by calling getAnother() to clone the iterator and calling next()
+                // on the clone until the end of the sequence is reached).
+
+                xsi.setPosition(pos);
+                xsi.setItem(node.getUnderlyingNode());
+                xc.setCurrentIterator(xsi);
+
+                // Then evaluate the expression by calling iterate() on the
+                // net.sf.saxon.sxpath.XPathExpression object.
+
                 SequenceIterator results = xexpr.iterate(xdc);
                 item = results.next();
 

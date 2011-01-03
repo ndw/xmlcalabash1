@@ -31,15 +31,19 @@ import com.xmlcalabash.util.Base64;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
-import org.json.JSONException;
-import org.json.JSONObject;
+import net.sf.saxon.s9api.Axis;
+import net.sf.saxon.s9api.DocumentBuilder;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmNodeKind;
+import net.sf.saxon.s9api.XdmSequenceIterator;
+import net.sf.saxon.tree.iter.NamespaceIterator;
 import org.json.JSONTokener;
 import org.xml.sax.InputSource;
 import org.ccil.cowan.tagsoup.Parser;
-import net.sf.saxon.s9api.*;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.NamePool;
-import net.sf.saxon.om.NamespaceIterator;
 
 import javax.xml.transform.sax.SAXSource;
 
