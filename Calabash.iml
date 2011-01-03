@@ -8,7 +8,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="Saxon-9.2.1.1j" />
+    <orderEntry type="module" module-name="Saxon-9.3.0.4" />
     <orderEntry type="library" name="JUnit" level="project" />
     <orderEntry type="module" module-name="Msv" />
     <orderEntry type="module" module-name="Isorelax" />
@@ -27,8 +27,8 @@
     <orderEntry type="library" name="XQJ" level="project" />
     <orderEntry type="library" name="XMLUnit" level="project" />
     <orderEntry type="module" module-name="Metadata-extractor-2.3.1" />
-    <orderEntry type="library" name="SaxonEE 9.2.1.1j" level="project" />
     <orderEntry type="library" name="HttpClient" level="project" />
+    <orderEntry type="library" name="SaxonEE 9.3.0.4" level="project" />
   </component>
 </module>
 
