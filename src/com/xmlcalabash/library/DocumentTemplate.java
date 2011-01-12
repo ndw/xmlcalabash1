@@ -180,7 +180,9 @@ public class DocumentTemplate extends DefaultStep implements ProcessMatchingNode
 
         // FIXME: Surely there's a better way to do this?
         XdmNode parent = node.getParent();
-        while (parent != null && parent.getNodeKind() != XdmNodeKind.ELEMENT) {
+        while (parent != null
+                && parent.getNodeKind() != XdmNodeKind.ELEMENT
+                && parent.getNodeKind() != XdmNodeKind.DOCUMENT) {
             parent = parent.getParent();
         }
 
