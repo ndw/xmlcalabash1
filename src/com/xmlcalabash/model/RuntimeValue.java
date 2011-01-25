@@ -22,15 +22,22 @@ package com.xmlcalabash.model;
 import java.net.URI;
 import java.util.Hashtable;
 import java.util.Vector;
-import java.util.Iterator;
 
-import net.sf.saxon.s9api.*;
+import net.sf.saxon.lib.NamespaceConstant;
+import net.sf.saxon.s9api.Axis;
+import net.sf.saxon.s9api.ItemTypeFactory;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XdmAtomicValue;
+import net.sf.saxon.s9api.XdmItem;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmSequenceIterator;
+import net.sf.saxon.s9api.XdmValue;
+import net.sf.saxon.s9api.ItemType;
 import net.sf.saxon.value.StringValue;
-import net.sf.saxon.om.NamespaceConstant;
-import net.sf.saxon.trans.XPathException;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.util.S9apiUtils;
+
 
 /**
  *
