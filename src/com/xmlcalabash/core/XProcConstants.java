@@ -22,12 +22,16 @@ package com.xmlcalabash.core;
 import javax.xml.XMLConstants;
 import net.sf.saxon.s9api.QName;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
 /**
  *
  * @author ndw
  */
 public class XProcConstants {
-    public static final String XPROC_VERSION = "0.9.30";
+    public static final String XPROC_VERSION = initializeVersion();
     public static final String NS_XPROC = "http://www.w3.org/ns/xproc";
     public static final String NS_XPROC_ERROR = "http://www.w3.org/ns/xproc-error";
     public static final String NS_XPROC_ERROR_EX = "http://xproc.org/ns/errors";
@@ -120,6 +124,27 @@ public class XProcConstants {
 
     /** Creates a new instance of XProcConstants */
     protected XProcConstants() {
+    }
+
+    private static String initializeVersion() {
+        Properties config = new Properties();
+        InputStream stream = null;
+        try {
+            stream = XProcConstants.class.getResourceAsStream("/etc/version.properties");
+            if (stream == null) {
+                throw new UnsupportedOperationException("JAR file doesn't contain version.properties file!?");
+            }
+            config.load(stream);
+            String major = config.getProperty("version.major");
+            String minor = config.getProperty("version.minor");
+            String release = config.getProperty("version.release");
+            if (major == null || minor == null || release == null) {
+                throw new UnsupportedOperationException("Invalid version.properties in JAR file!?");
+            }
+            return major + "." + minor + "." + release;
+        } catch (IOException ioe) {
+            throw new UnsupportedOperationException("No version.properties in JAR file!?");
+        }
     }
 
     public static QName staticError(int errno) {
