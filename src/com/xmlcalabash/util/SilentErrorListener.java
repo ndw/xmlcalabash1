@@ -1,6 +1,6 @@
 package com.xmlcalabash.util;
 
-import net.sf.saxon.StandardErrorListener;
+import net.sf.saxon.lib.StandardErrorListener;
 
 import javax.xml.transform.TransformerException;
 

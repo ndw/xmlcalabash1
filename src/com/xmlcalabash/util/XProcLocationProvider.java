@@ -1,11 +1,7 @@
 package com.xmlcalabash.util;
 
 import net.sf.saxon.event.SourceLocationProvider;
-import net.sf.saxon.instruct.LocationMap;
-
 import java.util.Hashtable;
-import java.net.URI;
-import java.math.BigInteger;
 
 /**
  * Created by IntelliJ IDEA.
