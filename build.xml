@@ -2,7 +2,8 @@
 <project name="calabash" default="default" basedir=".">
   <description>Builds the distribution jar because IntelliJ sucks at it</description>
 
-  <property file="version.properties"/>
+  <property file="etc/vendor.properties"/>
+  <property file="etc/version.properties"/>
 
   <property name="version" value="${version.major}.${version.minor}.${version.release}"/>
   <property name="dist.dir" value="dist"/>
@@ -20,6 +21,10 @@
     </fileset>
   </path>
 
+  <pathconvert property="run.classpath" refid="build.classpath" pathsep=" ">
+    <map from="${basedir}/" to=""/>
+  </pathconvert>
+
   <target name="default" depends="jar"/>
 
   <target name="init"/>
@@ -32,13 +37,15 @@
     </copy>
   </target>
 
-  <target name="jar" depends="update-output,compile">
+  <target name="jar" depends="compile">
     <jar destfile="calabash.jar">
       <manifest>
-	<attribute name="Built-By" value="Norman Walsh"/>
-	<attribute name="Implementation-Vendor" value="Norman Walsh"/>
-	<attribute name="Implementation-Title" value="XML Calabash"/>
+	<attribute name="Built-By" value="${built.by}"/>
+	<attribute name="Implementation-Vendor" value="${implementation.vendor}"/>
+	<attribute name="Implementation-Title" value="${implementation.title}"/>
 	<attribute name="Implementation-Version" value="${version}"/>
+        <attribute name="Main-Class" value="com.xmlcalabash.drivers.Main"/>
+        <attribute name="Class-Path" value="${run.classpath}"/>
       </manifest>
 
       <fileset dir="${build.dir}"/>
@@ -47,22 +54,21 @@
 
   <target name="clean" depends="init">
     <delete dir="${build.dir}"/>
+    <delete dir="${dist.dir}"/>
   </target>
 
-  <target name="compile" depends="init">
+  <target name="distclean" depends="init">
+    <delete dir="${dist.dir}"/>
+  </target>
+
+  <target name="compile" depends="init,update-output">
     <mkdir dir="${build.dir}"/>
     <javac destdir="${build.dir}"
 	   classpathref="build.classpath"
            includeantruntime="false">
       <src path="src"/>
-      <!-- Requires DeltaXML jars -->
-      <exclude name="com/xmlcalabash/extensions/DeltaXML.java"/>
-      <!-- Requires MarkLogic XCC jars -->
-      <exclude name="com/xmlcalabash/extensions/marklogic/**.java"/>
-      <!-- Requires SaxonSA -->
-      <exclude name="com/xmlcalabash/library/ValidateWithXSD.java"/>
-      <!-- Requires RenderX XEP -->
-      <exclude name="com/xmlcalabash/library/XSLFormatter.java"/>
+      <!-- Only for debugging -->
+      <exclude name="com/xmlcalabash/drivers/SaxonProblem.java"/>
     </javac>
   </target>
 
@@ -75,11 +81,11 @@
     </xslt>
 
     <echo file="${install.dir}/calabash">#!/bin/sh
-java -Xmx1024m -cp %INSTALL_PATH/lib/calabash.jar:%INSTALL_PATH/lib/commons-codec-1.3.jar:%INSTALL_PATH/lib/commons-logging-1.1.1.jar:%INSTALL_PATH/lib/commons-httpclient-3.1.jar:%INSTALL_PATH/lib/saxon9he.jar com.xmlcalabash.drivers.Main $*
+java -Xmx1024m -jar %INSTALL_PATH/calabash.jar $*
     </echo>
 
     <echo file="${install.dir}/calabash.bat">
-@java -Xmx1024m -cp "%INSTALL_PATH\lib\calabash.jar;%INSTALL_PATH\lib\commons-codec-1.3.jar;%INSTALL_PATH\lib\commons-logging-1.1.1.jar;%INSTALL_PATH\lib\commons-httpclient-3.1.jar;%INSTALL_PATH\lib\saxon9he.jar" com.xmlcalabash.drivers.Main %*
+@java -Xmx1024m -jar "%INSTALL_PATH\calabash.jar" %*
     </echo>
 
     <izpack input="${dist.dir}/install.xml"
@@ -104,14 +110,30 @@ java -Xmx1024m -cp %INSTALL_PATH/lib/calabash.jar:%INSTALL_PATH/lib/commons-code
     <copy todir="${install.dir}">
       <fileset file="docs/README"/>
     </copy>
+    <jar destfile="${install.dir}/calabash.jar">
+      <manifest>
+        <attribute name="Built-By" value="${built.by}"/>
+        <attribute name="Implementation-Vendor" value="${implementation.vendor}"/>
+        <attribute name="Implementation-Title" value="${implementation.title}"/>
+        <attribute name="Implementation-Version" value="${version}"/>
+        <attribute name="Main-Class" value="com.xmlcalabash.drivers.Main"/>
+        <attribute name="Class-Path" value="${run.classpath}"/>
+      </manifest>
+
+      <fileset dir="${build.dir}"/>
+    </jar>
+
     <copy todir="${install.dir}/lib">
-      <fileset file="calabash.jar"/>
       <fileset file="lib/commons*.jar"/>
       <fileset file="lib/saxon9he.jar"/>
     </copy>
+
     <copy todir="${install.dir}/xpl">
-      <fileset file="xpl/**xpl"/>
+      <fileset file="xpl/**xpl">
+        <exclude name="submit-test-report.xpl"/>
+      </fileset>
     </copy>
+
     <copy todir="${install.dir}/schemas">
       <fileset file="schemas/**"/>
     </copy>
@@ -122,5 +144,4 @@ java -Xmx1024m -cp %INSTALL_PATH/lib/calabash.jar:%INSTALL_PATH/lib/commons-code
          basedir="${dist.dir}"
          includes="calabash-${version}/**"/>
   </target>
-
 </project>
