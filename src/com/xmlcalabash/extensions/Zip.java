@@ -1,12 +1,11 @@
 package com.xmlcalabash.extensions;
 
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileInputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
@@ -16,36 +15,30 @@ import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.Hashtable;
 import java.util.TimeZone;
-import java.util.Calendar;
+import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 import java.util.zip.Deflater;
-import java.text.SimpleDateFormat;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
-import javax.xml.transform.sax.SAXSource;
 
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.util.TreeWriter;
-import com.xmlcalabash.util.Base64;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.RelevantNodes;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.Pipe;
-import org.xml.sax.InputSource;
 import com.xmlcalabash.library.DefaultStep;
 import com.xmlcalabash.library.HttpRequest;
 import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.model.RuntimeValue;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.XdmNodeKind;
@@ -312,6 +305,8 @@ public class Zip extends DefaultStep {
                 }
             }
 
+            CRC32 crc = new CRC32();
+            
             for (String name : zipManifest.keySet()) {
                 FileToZip file = zipManifest.get(name);
                 ZipEntry ze = new ZipEntry(name);
@@ -320,11 +315,36 @@ public class Zip extends DefaultStep {
                 }
                 ze.setMethod(file.getMethod());
                 outZip.setLevel(file.getLevel());
-
-                outZip.putNextEntry(ze);
-
+                
                 URI uri = zipManifest.get(name).getHref();
                 String href = uri.toASCIIString();
+                
+                if(ze.getMethod() == ZipEntry.STORED) {
+                    // FIXME: Using a boas is risky here, it will fail for huge files; but who STOREs a huge file?
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    if (srcManifest.containsKey(uri.toString())) {
+                        XdmNode doc = srcManifest.get(href);
+                        Serializer serializer = new Serializer();
+                        serializer.setOutputStream(baos);
+                        S9apiUtils.serialize(runtime, doc, serializer);
+                    } else {
+                        URLConnection connection = uri.toURL().openConnection();
+                        InputStream stream = connection.getInputStream();
+                        int read = stream.read(buffer, 0, bufsize);
+                        while (read>0){
+                            baos.write(buffer,0,read);
+                            read = stream.read(buffer, 0, bufsize);
+                        }
+                        stream.close();
+                    }
+                    byte[] bytes =  baos.toByteArray();
+                    ze.setSize(bytes.length);
+                    crc.reset();
+                    crc.update(bytes);
+                    ze.setCrc(crc.getValue());
+                }
+
+                outZip.putNextEntry(ze);
 
                 if (srcManifest.containsKey(href)) {
                     XdmNode doc = srcManifest.get(href);
