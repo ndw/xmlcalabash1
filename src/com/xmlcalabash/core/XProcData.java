@@ -54,7 +54,11 @@ public class XProcData {
     }
     
     public XStep getStep() {
-        return stack.peek().step;
+        if (stack.size() == 0) {
+            return null;
+        } else {
+            return stack.peek().step;
+        }
     }
 
     public void setIterationPosition(int pos) {

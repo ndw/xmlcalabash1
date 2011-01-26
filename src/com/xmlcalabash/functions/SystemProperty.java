@@ -69,7 +69,8 @@ public class SystemProperty extends ExtensionFunctionDefinition {
 
              XStep step = runtime.getXProcData().getStep();
              // FIXME: this can't be the best way to do this...
-             if (!(step instanceof XCompoundStep)) {
+             // FIXME: And what, exactly, is this even supposed to be doing!?
+             if (step != null && !(step instanceof XCompoundStep)) {
                  throw XProcException.dynamicError(23);
              }
 
