@@ -339,10 +339,17 @@
       <p:option name="content-type" cx:type="xsd:string"/>
    </p:declare-step>
 
+   <!-- Introduced by http://www.w3.org/TR/xproc-template/ -->
    <p:declare-step type="p:in-scope-names" xml:id="in-scope-names">
      <p:output port="result" primary="false"/>
    </p:declare-step>
-
+   <p:declare-step type="p:template" xml:id="template">
+     <p:input port="template"/>
+     <p:input port="source" sequence="true" primary="true"/>
+     <p:input port="parameters" kind="parameter"/>
+     <p:output port="result"/>
+   </p:declare-step>
+   <!-- DEPRECATED -->
    <p:declare-step type="p:document-template" xml:id="document-template">
      <p:input port="template"/>
      <p:input port="source" sequence="true" primary="true"/>

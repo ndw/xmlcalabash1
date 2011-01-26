@@ -135,8 +135,12 @@
 <implementation type="p:in-scope-names"
 		class-name="com.xmlcalabash.library.InScopeNames"/>
 
+<implementation type="p:template"
+		class-name="com.xmlcalabash.library.Template"/>
+
+<!-- DEPRECATED -->
 <implementation type="p:document-template"
-		class-name="com.xmlcalabash.library.DocumentTemplate"/>
+		class-name="com.xmlcalabash.library.Template"/>
 
 <!-- my own -->
 

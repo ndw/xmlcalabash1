@@ -19,6 +19,7 @@
 
 package com.xmlcalabash.library;
 
+import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.ReadablePipe;
@@ -41,12 +42,13 @@ import net.sf.saxon.tree.iter.NamespaceIterator;
 
 import java.util.Hashtable;
 import java.util.Vector;
+import java.util.logging.Level;
 
 /**
  *
  * @author ndw
  */
-public class DocumentTemplate extends DefaultStep implements ProcessMatchingNodes {
+public class Template extends DefaultStep implements ProcessMatchingNodes {
     private ReadablePipe source = null;
     private ReadablePipe template = null;
     private WritablePipe result = null;
@@ -61,7 +63,7 @@ public class DocumentTemplate extends DefaultStep implements ProcessMatchingNode
     private static final int END = 4;
 
     /** Creates a new instance of LabelElements */
-    public DocumentTemplate(XProcRuntime runtime, XAtomicStep step) {
+    public Template(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }
 
@@ -89,6 +91,10 @@ public class DocumentTemplate extends DefaultStep implements ProcessMatchingNode
     }
 
     public void run() throws SaxonApiException {
+        if (step.getNode().getNodeName().equals(XProcConstants.p_document_template)) {
+            runtime.fine(this, step.getNode(), "The template step should be named p:template, the name p:document-template is deprecated.");
+        }
+
         super.run();
 
         if (source.documentCount() > 1) {
