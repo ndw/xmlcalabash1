@@ -957,6 +957,9 @@ public class Step extends SourceArtifact {
             }
         }
 
+        // HACK! This should all be refactored so that this isn't necessary!
+        checkVariables();
+
         // Update step dependencies and find roots...
         Vector<Step> roots = new Vector<Step> ();
         for (Step step : subpipeline) {
@@ -1040,7 +1043,11 @@ public class Step extends SourceArtifact {
 
         return valid;
     }
-    
+
+    public void checkVariables() {
+        // nop; CompoundStep overrides this...
+    }
+
     public boolean valid() {
         boolean valid = validParams();
         

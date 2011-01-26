@@ -208,7 +208,20 @@ public class CompoundStep extends Step {
 
         return null;
     }
-    
+
+    @Override
+    public void checkVariables() {
+        for (Variable variable : variables) {
+            for (Binding binding : variable.getBinding()) {
+                if (binding.getBindingType() == Binding.PIPE_NAME_BINDING) {
+                    PipeNameBinding pipe = (PipeNameBinding) binding;
+                    runtime.finer(null, node, getName() + " variable depends on " + pipe.getStep());
+                    addDependency(pipe.getStep());
+                }
+            }
+        }
+    }
+
     protected boolean checkBinding(Input input) {
         boolean valid = true;
 
