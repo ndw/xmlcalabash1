@@ -2,8 +2,8 @@
 <project name="calabash" default="default" basedir=".">
   <description>Builds the distribution jar because IntelliJ sucks at it</description>
 
-  <property file="etc/vendor.properties"/>
-  <property file="etc/version.properties"/>
+  <property file="resources/etc/vendor.properties"/>
+  <property file="resources/etc/version.properties"/>
 
   <property name="version" value="${version.major}.${version.minor}.${version.release}"/>
   <property name="dist.dir" value="dist"/>
@@ -31,7 +31,7 @@
 
   <target name="update-output">
     <copy todir="${build.dir}/etc">
-      <fileset dir="etc">
+      <fileset dir="resources/etc">
         <exclude name="install-proto.xsl"/>
       </fileset>
     </copy>
@@ -75,7 +75,7 @@
   <target name="dist" depends="init,distrib">
     <delete file="${dist.dir}/install.xml"/>
 
-    <xslt in="etc/install-proto.xsl" style="etc/install-proto.xsl"
+    <xslt in="resources/etc/install-proto.xsl" style="resources/etc/install-proto.xsl"
           out="${dist.dir}/install.xml">
       <param name="version.label" expression="${version}"/>
     </xslt>
