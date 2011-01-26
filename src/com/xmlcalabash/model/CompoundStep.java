@@ -215,8 +215,17 @@ public class CompoundStep extends Step {
             for (Binding binding : variable.getBinding()) {
                 if (binding.getBindingType() == Binding.PIPE_NAME_BINDING) {
                     PipeNameBinding pipe = (PipeNameBinding) binding;
-                    runtime.finer(null, node, getName() + " variable depends on " + pipe.getStep());
-                    addDependency(pipe.getStep());
+                    String name = pipe.getStep();
+                    boolean ancestor = false;
+                    Step step = this;
+                    while (step != null && !ancestor) {
+                        ancestor = name.equals(step.getName());
+                        step = step.parent;
+                    }
+                    if (!ancestor) {
+                        runtime.finer(null, node, getName() + " variable depends on " + pipe.getStep());
+                        addDependency(pipe.getStep());
+                    }
                 }
             }
         }
