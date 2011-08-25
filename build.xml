@@ -81,7 +81,7 @@
     </xslt>
 
     <echo file="${install.dir}/calabash">#!/bin/sh
-java -Xmx1024m -jar %INSTALL_PATH/calabash.jar $*
+java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
     </echo>
 
     <echo file="${install.dir}/calabash.bat">
