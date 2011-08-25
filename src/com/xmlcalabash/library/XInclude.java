@@ -295,6 +295,10 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                 charset = node.getAttributeValue(_encoding);
             }
 
+            if (charset == null) {
+                charset = "utf-8";
+            }
+
             // Get the response
             BufferedReader rd = null;
             if (charset == null) {
