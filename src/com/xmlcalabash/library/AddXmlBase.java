@@ -97,7 +97,7 @@ public class AddXmlBase extends DefaultStep implements ProcessMatchingNodes {
     }
 
     public boolean processStartElement(XdmNode node) throws SaxonApiException {
-        String xmlBase = node.getBaseURI().toASCIIString();
+        String xmlBase = node.getBaseURI().normalize().toASCIIString();
         boolean addXmlBase = all || baseURIStack.size() == 0;
         if (!addXmlBase) {
             addXmlBase = !baseURIStack.peek().equals(node.getBaseURI());
