@@ -138,6 +138,11 @@ public class XPointer {
     }
 
     private String parse(String xpointer) {
+        // FIXME: Hack! Is this acceptable?
+        if (xpointer.startsWith("/") && !xpointer.contains("(")) {
+            xpointer = "element(" + xpointer + ")";
+        }
+
         if (xpointer.matches("^[\\w:]+\\s*\\(.*")) {
             Pattern scheme = Pattern.compile("^([\\w+:]+)\\s*(\\(.*)$");
             Matcher matcher = scheme.matcher(xpointer);
