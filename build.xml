@@ -27,7 +27,9 @@
 
   <target name="default" depends="jar"/>
 
-  <target name="init"/>
+  <target name="init">
+    <mkdir dir="${build.dir}"/>
+  </target>
 
   <target name="update-output">
     <copy todir="${build.dir}/etc">
@@ -61,14 +63,58 @@
     <delete dir="${dist.dir}"/>
   </target>
 
-  <target name="compile" depends="init,update-output">
-    <mkdir dir="${build.dir}"/>
+  <target name="compile" depends="init,optional-features,update-output">
     <javac destdir="${build.dir}"
 	   classpathref="build.classpath"
            includeantruntime="false">
       <src path="src"/>
+      <!-- Optional features -->
+      <exclude name="com/xmlcalabash/extensions/MetadataExtractor.java"/>
+      <exclude name="com/xmlcalabash/library/XSLFormatter.java"/>
+      <exclude name="com/xmlcalabash/extensions/DeltaXML.java"/>
       <!-- Only for debugging -->
       <exclude name="com/xmlcalabash/drivers/SaxonProblem.java"/>
+    </javac>
+  </target>
+
+  <target name="optional-features" depends="compile-MetadataException,compile-XEP,compile-DeltaXML"/>
+
+  <available classname="com.drew.metadata.MetadataException" property="MetadataException.present">
+    <classpath refid="build.classpath"/>
+  </available>
+
+  <target name="compile-MetadataException" depends="init" if="MetadataException.present">
+    <javac destdir="${build.dir}"
+	   classpathref="build.classpath"
+           includeantruntime="false">
+      <src path="src"/>
+      <include name="com/xmlcalabash/extensions/MetadataExtractor.java"/>
+    </javac>
+  </target>
+
+  <available classname="com.deltaxml.core.DXPConfiguration" property="DeltaXML.present">
+    <classpath refid="build.classpath"/>
+  </available>
+
+  <target name="compile-DeltaXML" depends="init" if="DeltaXML.present">
+    <javac destdir="${build.dir}"
+	   classpathref="build.classpath"
+           includeantruntime="false">
+      <src path="src"/>
+      <include name="com/xmlcalabash/extensions/DeltaXML.java"/>
+    </javac>
+  </target>
+
+  <available classname="com.renderx.xep.FormatterImpl" property="XEP.present">
+    <classpath refid="build.classpath"/>
+  </available>
+
+  <target name="compile-XEP" depends="init" if="XEP.present">
+    <javac destdir="${build.dir}"
+	   classpathref="build.classpath"
+           includeantruntime="false">
+      <src path="src"/>
+      <include name="com/xmlcalabash/library/XSLFormatter.java"/>
     </javac>
   </target>
 
