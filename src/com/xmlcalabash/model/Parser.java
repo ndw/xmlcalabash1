@@ -846,7 +846,14 @@ public class Parser {
 
         Parameter parameter = new Parameter(runtime, node);
         parameter.setPort(port);
-        parameter.setName(new QName(name, node));
+
+        // If the name contains a colon, get the namespace from the node, otherwise it's in no namespace
+        if (name.contains(":")) {
+            parameter.setName(new QName(name, node));
+        } else {
+            parameter.setName(new QName("", name));
+        }
+
         parameter.setSelect(select);
 
         readNamespaceBindings(parameter, node, select);
