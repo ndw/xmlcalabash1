@@ -91,8 +91,15 @@ public class WritableDocument implements WritablePipe {
         throw new UnsupportedOperationException("You can't resetWriter a WritableDocument");
     }
 
-    public void close() {
-        // nop;
+    public void close()
+    {
+        if (ostream != null) {
+           try {
+              ostream.close();
+           } catch (IOException ex) {
+              throw new RuntimeException(ex.getMessage(),ex);
+           }
+        }
     }
 
     public void setWriter(Step step) {
@@ -182,14 +189,6 @@ public class WritableDocument implements WritablePipe {
 
             xqeval.setDestination(serializer);
             xqeval.run();
-
-            if (ostream != null) {
-                try {
-                    ostream.close();
-                } catch (IOException ex) {
-                    throw new XProcException(ex);
-                }
-            }
 
             if (uri == null && runtime.getDebug()) {
                 System.out.println("\n--<document boundary>--------------------------------------------------------------------------");

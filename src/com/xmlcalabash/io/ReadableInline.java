@@ -19,6 +19,7 @@
 
 package com.xmlcalabash.io;
 
+import java.net.URI;
 import java.util.Vector;
 import java.util.HashSet;
 import java.util.logging.Logger;
