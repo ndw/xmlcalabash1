@@ -368,6 +368,10 @@ public class Main {
                 while (rpipe.moreDocuments()) {
                     wd.write(rpipe.read());
                 }
+
+                if (uri!=null) {
+                   wd.close();
+                }
             }
 
             if (stdio != null) {
