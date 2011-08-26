@@ -52,6 +52,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by IntelliJ IDEA.
@@ -664,7 +666,8 @@ public class XAtomicStep extends XStep {
             }
         }
 
-        Vector<XdmItem> results = evaluateXPath(doc, nsBindings, var.getSelect(), globals);
+        String select = var.getSelect();
+        Vector<XdmItem> results = evaluateXPath(doc, nsBindings, select, globals);
         String value = "";
 
         try {
@@ -705,6 +708,43 @@ public class XAtomicStep extends XStep {
                 TypeUtils.checkLiteral(value, type);
             } else if (type.contains(":")) {
                 TypeUtils.checkType(runtime, value, var.getTypeAsQName(), var.getNode());
+            }
+        }
+
+        // Section 5.7.5 Namespaces on variables, options, and parameters
+        //
+        // If the select attribute was used to specify the value and it consisted of a single VariableReference
+        // (per [XPath 1.0] or [XPath 2.0], as appropriate), then the namespace bindings from the referenced
+        // option or variable are used.
+        Pattern varrefpat = Pattern.compile("^\\s*\\$(\\S+)\\s*$");
+        Matcher varref = varrefpat.matcher(select);
+        if (varref.matches()) {
+            String varrefstr = varref.group(1);
+            QName varname = null;
+            if (varrefstr.contains(":")) {
+                String vpfx = varrefstr.substring(0, varrefstr.indexOf(":"));
+                String vlocal = varrefstr.substring(varrefstr.indexOf(":")+1);
+                String vns = nsBindings.get(vpfx);
+                varname = new QName(vpfx, vns, vlocal);
+            } else {
+                varname = new QName("", varrefstr);
+            }
+            RuntimeValue val = globals.get(varname);
+            nsBindings = val.getNamespaceBindings();
+        }
+
+        // Section 5.7.5 Namespaces on variables, options, and parameters
+        //
+        // If the select attribute was used to specify the value and it evaluated to a node-set, then the in-scope
+        // namespaces from the first node in the selected node-set (or, if it's not an element, its parent) are used.
+        if (results.size() > 0 && results.get(0) instanceof XdmNode) {
+            XdmNode node = (XdmNode) results.get(0);
+            nsBindings.clear();
+
+            XdmSequenceIterator nsIter = node.axisIterator(Axis.NAMESPACE);
+            while (nsIter.hasNext()) {
+                XdmNode ns = (XdmNode) nsIter.next();
+                nsBindings.put((ns.getNodeName()==null ? "" : ns.getNodeName().getLocalName()),ns.getStringValue());
             }
         }
 
