@@ -1440,6 +1440,7 @@ public class Parser {
         String stepName = checkNCName(node.getAttributeValue(_name));
 
         ForEach step = new ForEach(runtime, node, stepName);
+        checkExtensionAttributes(node, step);
 
         Vector<XdmNode> rest = readSignature(step);
 
@@ -1496,6 +1497,8 @@ public class Parser {
         RuntimeValue match = new RuntimeValue(node.getAttributeValue(new QName("match")), node);
 
         Viewport step = new Viewport(runtime, node, stepName);
+        checkExtensionAttributes(node, step);
+
         step.setMatch(match);
 
         Vector<XdmNode> rest = readSignature(step);
@@ -1518,6 +1521,7 @@ public class Parser {
         String stepName = checkNCName(node.getAttributeValue(_name));
 
         Choose step = new Choose(runtime, node, stepName);
+        checkExtensionAttributes(node, step);
 
         Vector<XdmNode> rest = readSignature(step);
 
@@ -1593,6 +1597,7 @@ public class Parser {
         String stepName = checkNCName(node.getAttributeValue(_name));
 
         Group step = new Group(runtime, node, stepName);
+        checkExtensionAttributes(node, step);
 
         Vector<XdmNode> rest = readSignature(step);
 
@@ -1615,6 +1620,7 @@ public class Parser {
         String stepName = checkNCName(node.getAttributeValue(_name));
 
         Try step = new Try(runtime, node, stepName);
+        checkExtensionAttributes(node, step);
 
         Vector<XdmNode> rest = readSignature(step);
 
