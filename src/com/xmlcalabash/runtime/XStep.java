@@ -168,6 +168,10 @@ public abstract class XStep implements XProcRunnable
         options.clear();
     }
 
+    public void clearParameters() {
+        parameters.clear();
+    }
+
     public Set<QName> getParameters() {
         return getParameters("*");
     }

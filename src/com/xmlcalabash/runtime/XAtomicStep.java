@@ -269,6 +269,8 @@ public class XAtomicStep extends XStep {
         }
 
         clearOptions();
+
+        clearParameters();
     }
 
     public void run() throws SaxonApiException {
