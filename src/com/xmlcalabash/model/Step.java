@@ -924,7 +924,6 @@ public class Step extends SourceArtifact {
             addDependency(dependsOn);
         }
 
-        
         for (Input input : inputs) {
             for (Binding binding : input.getBinding()) {
                 if (binding.getBindingType() == Binding.PIPE_NAME_BINDING) {
