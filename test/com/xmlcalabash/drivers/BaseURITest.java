@@ -13,8 +13,8 @@ import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.Configuration;
-import net.sf.saxon.OutputURIResolver;
-import net.sf.saxon.CollectionURIResolver;
+import net.sf.saxon.lib.OutputURIResolver;
+import net.sf.saxon.lib.CollectionURIResolver;
 
 import java.io.IOException;
 import java.io.StringReader;
