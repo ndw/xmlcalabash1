@@ -1,5 +1,0 @@
-#!/bin/bash
-
-`dirname $0`/runtests "$@"
-
-cat /tmp/calabash.report.xml
