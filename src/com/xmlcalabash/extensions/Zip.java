@@ -171,7 +171,7 @@ public class Zip extends DefaultStep {
         tree.startContent();
 
         try {
-            URL url = zipFile.toURL();
+            URL url = zipFile.toURI().toURL();
             URLConnection connection = url.openConnection();
             InputStream stream = connection.getInputStream();
 
