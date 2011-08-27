@@ -72,12 +72,49 @@
       <exclude name="com/xmlcalabash/extensions/MetadataExtractor.java"/>
       <exclude name="com/xmlcalabash/library/XSLFormatter.java"/>
       <exclude name="com/xmlcalabash/extensions/DeltaXML.java"/>
+      <exclude name="com/xmlcalabash/extensions/xmlunit/Compare.java"/>
+      <exclude name="com/xmlcalabash/extensions/marklogic/XCCAdhocQuery.java"/>
+      <exclude name="com/xmlcalabash/extensions/marklogic/XCCInsertDocument.java"/>
+      <exclude name="com/xmlcalabash/extensions/marklogic/XCCInvokeModule.java"/>
+
       <!-- Only for debugging -->
       <exclude name="com/xmlcalabash/drivers/SaxonProblem.java"/>
     </javac>
   </target>
 
-  <target name="optional-features" depends="compile-MetadataException,compile-XEP,compile-DeltaXML"/>
+  <target name="optional-features" depends="compile-MetadataException,compile-XEP,compile-DeltaXML,
+                                            compile-XMLUnit,compile-XCC"/>
+
+  <condition property="XMLUnit.present">
+    <and>
+      <available classname="org.custommonkey.xmlunit.XMLAssert"/>
+      <available classname="junit.framework.AssertionFailedError"/>
+    </and>
+  </condition>
+
+  <target name="compile-XMLUnit" depends="init" if="XMLUnit.present">
+    <javac destdir="${build.dir}"
+	   classpathref="build.classpath"
+           includeantruntime="false">
+      <src path="src"/>
+      <include name="com/xmlcalabash/extensions/xmlunit/Compare.java"/>
+    </javac>
+  </target>
+
+  <available classname="com.marklogic.xcc.ContentSource" property="MarkLogicXCC.present">
+    <classpath refid="build.classpath"/>
+  </available>
+
+  <target name="compile-XCC" depends="init" if="MarkLogicXCC.present">
+    <javac destdir="${build.dir}"
+	   classpathref="build.classpath"
+           includeantruntime="false">
+      <src path="src"/>
+      <include name="com/xmlcalabash/extensions/marklogic/XCCAdhocQuery.java"/>
+      <include name="com/xmlcalabash/extensions/marklogic/XCCInsertDocument.java"/>
+      <include name="com/xmlcalabash/extensions/marklogic/XCCInvokeModule.java"/>
+    </javac>
+  </target>
 
   <available classname="com.drew.metadata.MetadataException" property="MetadataException.present">
     <classpath refid="build.classpath"/>
@@ -190,4 +227,37 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
          basedir="${dist.dir}"
          includes="calabash-${version}/**"/>
   </target>
+
+  <target name="test-report" depends="jar">
+    <echo>Generating test report...this may take a few minutes...</echo>
+    <java fork="true" classname="com.xmlcalabash.drivers.RunTestReport"
+          output="test/report.xml" error="test/errors.txt">
+      <classpath>
+        <pathelement location="calabash.jar"/>
+        <fileset dir="lib">
+          <include name="**/*.jar"/>
+        </fileset>
+      </classpath>
+      <jvmarg value="-Xmx1024m"/>
+      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
+      <arg value="-D"/>
+      <arg value="-a"/>
+      <arg value="http://tests.xproc.org/tests/required/test-suite.xml"/>
+      <arg value="http://tests.xproc.org/tests/serialization/test-suite.xml"/>
+      <arg value="http://tests.xproc.org/tests/optional/test-suite.xml"/>
+      <arg value="http://tests.xproc.org/tests/extension/test-suite.xml"/>
+    </java>
+  </target>
+
+  <target name="test-suite" depends="test-report">
+    <echo>Formatting test-suite report...</echo>
+    <java fork="true" classname="net.sf.saxon.Transform">
+      <classpath refid="build.classpath"/>
+      <arg value="-o:test/report.html"/>
+      <arg value="-s:test/report.xml"/>
+      <arg value="-xsl:resources/format-report.xsl"/>
+    </java>
+    <echo>Test suite-suite report is in test/report.html</echo>
+  </target>
+
 </project>
