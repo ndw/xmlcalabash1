@@ -96,7 +96,7 @@ public class RunTestReport {
     }
 
     public static void main(String[] args) throws SaxonApiException, IOException, URISyntaxException {
-        String usage = "RunTests [-D] [-d directory] test.xml";
+        String usage = "RunTests [-D] [-d directory] [-a] test.xml";
         Vector<String> tests = new Vector<String> ();
 
         for (int pos = 0; pos < args.length; pos++) {
