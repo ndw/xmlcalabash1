@@ -15,6 +15,7 @@ import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.NamePool;
 
 import java.util.Hashtable;
+import java.util.Properties;
 import java.util.Vector;
 import java.util.HashSet;
 import java.util.logging.Level;
@@ -100,9 +101,17 @@ public class XProcConfiguration {
     public XProcConfiguration(boolean schemaAware) {
         cfgProcessor = new Processor(schemaAware);
         boolean sa = cfgProcessor.isSchemaAware();
+
+        /*
+        Properties prop = System.getProperties();
+        System.err.println(prop.getProperty("java.class.path", null));
+        System.err.println(cfgProcessor.getUnderlyingConfiguration().getClass().getName());
+        */
+
         if (schemaAware && !sa) {
             System.err.println("Failed to obtain schema-aware processor.");
         }
+
         loadConfiguration();
     }
 
