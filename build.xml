@@ -6,9 +6,17 @@
   <property file="resources/etc/version.properties"/>
 
   <property name="version" value="${version.major}.${version.minor}.${version.release}"/>
+  <property name="lib.dir" value="lib"/> <!-- so I can point to a directory containing commercial jars -->
   <property name="dist.dir" value="dist"/>
   <property name="install.dir" value="${dist.dir}/calabash-${version}"/>
   <property name="build.dir" value="out/production/Calabash"/>
+  <property name="license.dir" value="/Users/ndw/java"/> <!-- where my Saxon EE license lives -->
+  <property name="tests.root" value="http://tests.xproc.org"/>
+  <property name="test.report" value="test/report.xml"/>
+  <property name="test.errors" value="test/errors.txt"/>
+  <property name="test.format" value="test/report.html"/>
+  <property name="submit.username" value="calabash"/>
+  <property name="submit.password" value=""/>
 
   <property name="izpack.dir" value="/Applications/IzPack"/>
   <taskdef name="izpack"
@@ -16,8 +24,15 @@
            classname="com.izforge.izpack.ant.IzPackTask"/>
 
   <path id="build.classpath">
-    <fileset dir="lib">
-      <include name="**/*.jar"/>
+    <fileset dir="${lib.dir}">
+      <include name="*.jar"/>
+    </fileset>
+  </path>
+
+  <path id="full.classpath">
+    <pathelement location="${license.dir}"/>
+    <fileset dir="${lib.dir}">
+      <include name="*.jar"/>
     </fileset>
   </path>
 
@@ -228,36 +243,49 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
          includes="calabash-${version}/**"/>
   </target>
 
-  <target name="test-report" depends="jar">
-    <echo>Generating test report...this may take a few minutes...</echo>
+  <target name="test-suite" depends="jar">
+    <echo>Running test-suite...this may take a few minutes...</echo>
+    <echo>  Sending report to ${test.report}; errors to ${test.errors}</echo>
     <java fork="true" classname="com.xmlcalabash.drivers.RunTestReport"
-          output="test/report.xml" error="test/errors.txt">
+          output="${test.report}" error="${test.errors}">
       <classpath>
         <pathelement location="calabash.jar"/>
-        <fileset dir="lib">
-          <include name="**/*.jar"/>
-        </fileset>
+        <path refid="full.classpath"/>
       </classpath>
       <jvmarg value="-Xmx1024m"/>
       <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
       <arg value="-D"/>
       <arg value="-a"/>
-      <arg value="http://tests.xproc.org/tests/required/test-suite.xml"/>
-      <arg value="http://tests.xproc.org/tests/serialization/test-suite.xml"/>
-      <arg value="http://tests.xproc.org/tests/optional/test-suite.xml"/>
-      <arg value="http://tests.xproc.org/tests/extension/test-suite.xml"/>
+      <arg value="${tests.root}/tests/required/test-suite.xml"/>
+      <arg value="${tests.root}/tests/serialization/test-suite.xml"/>
+      <arg value="${tests.root}/tests/optional/test-suite.xml"/>
+      <arg value="${tests.root}/tests/extension/test-suite.xml"/>
     </java>
   </target>
 
-  <target name="test-suite" depends="test-report">
-    <echo>Formatting test-suite report...</echo>
+  <target name="report" depends="test-suite">
     <java fork="true" classname="net.sf.saxon.Transform">
-      <classpath refid="build.classpath"/>
-      <arg value="-o:test/report.html"/>
-      <arg value="-s:test/report.xml"/>
+      <classpath refid="full.classpath"/>
+      <arg value="-o:${test.format}"/>
+      <arg value="-s:${test.report}"/>
       <arg value="-xsl:resources/format-report.xsl"/>
     </java>
-    <echo>Test suite-suite report is in test/report.html</echo>
+    <echo>Report is in ${test.format}</echo>
+  </target>
+
+  <target name="publish-report" depends="test-suite">
+    <java fork="true" classname="com.xmlcalabash.drivers.Main">
+      <classpath>
+        <pathelement location="calabash.jar"/>
+        <path refid="full.classpath"/>
+      </classpath>
+      <jvmarg value="-Xmx1024m"/>
+      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
+      <arg value="-isource=${test.report}"/>
+      <arg value="xpl/submit-test-report.xpl"/>
+      <arg value="username=${submit.username}"/>
+      <arg value="password=${submit.password}"/>
+    </java>
   </target>
 
 </project>
