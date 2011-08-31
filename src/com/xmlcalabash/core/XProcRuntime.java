@@ -20,9 +20,24 @@
 
 package com.xmlcalabash.core;
 
+import com.xmlcalabash.functions.BaseURI;
+import com.xmlcalabash.functions.Cwd;
+import com.xmlcalabash.functions.IterationPosition;
+import com.xmlcalabash.functions.IterationSize;
+import com.xmlcalabash.functions.ResolveURI;
+import com.xmlcalabash.functions.StepAvailable;
+import com.xmlcalabash.functions.SystemProperty;
+import com.xmlcalabash.functions.ValueAvailable;
+import com.xmlcalabash.functions.VersionAvailable;
+import com.xmlcalabash.functions.XPathVersionAvailable;
+import com.xmlcalabash.runtime.XLibrary;
+import com.xmlcalabash.runtime.XPipeline;
+import com.xmlcalabash.runtime.XRootStep;
+import com.xmlcalabash.runtime.XStep;
 import com.xmlcalabash.util.DefaultXProcMessageListener;
 import com.xmlcalabash.util.StepErrorListener;
 import net.sf.saxon.Configuration;
+import net.sf.saxon.lib.ExtensionFunctionDefinition;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmNode;
@@ -49,9 +64,6 @@ import java.net.URL;
 import java.net.URI;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-
-import com.xmlcalabash.runtime.*;
-import com.xmlcalabash.functions.*;
 
 import javax.xml.transform.URIResolver;
 
@@ -135,6 +147,18 @@ public class XProcRuntime {
         saxonConfig.setErrorListener(errListener);
 
         allowGeneralExpressions = config.extensionValues;
+
+        for (String className : config.extensionFunctions) {
+            try {
+                ExtensionFunctionDefinition def = (ExtensionFunctionDefinition) Class.forName(className).newInstance();
+                fine(null, null, "Instantiated: " + className);
+                processor.registerExtensionFunction(def);
+            } catch (NoClassDefFoundError ncdfe) {
+                fine(null, null, "Failed to instantiate extension function: " + className);
+            } catch (Exception e) {
+                fine(null, null, "Failed to instantiate extension function: " + className);
+            }
+        }
 
         reset();
     }
