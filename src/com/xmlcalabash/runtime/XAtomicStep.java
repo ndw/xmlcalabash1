@@ -67,7 +67,6 @@ public class XAtomicStep extends XStep {
     private final static QName _namespace = new QName("", "namespace");
     private final static QName _value = new QName("", "value");
     private final static QName _type = new QName("", "type");
-    private final static QName cx_filemask = new QName("cx", XProcConstants.NS_CALABASH_EX,"filemask");
     private final static QName cx_item = new QName("cx", XProcConstants.NS_CALABASH_EX, "item");
 
     protected Hashtable<String, Vector<ReadablePipe>> inputs = new Hashtable<String, Vector<ReadablePipe>> ();
@@ -109,11 +108,10 @@ public class XAtomicStep extends XStep {
             pipe = new ReadableDocument(runtime);
         } else if (binding.getBindingType() == Binding.DOCUMENT_BINDING) {
             DocumentBinding dbinding = (DocumentBinding) binding;
-            String filemask = dbinding.getExtensionAttribute(cx_filemask);
-            pipe = new ReadableDocument(runtime, dbinding.getNode(), dbinding.getHref(), dbinding.getNode().getBaseURI().toASCIIString(), filemask);
+            pipe = runtime.getConfigurer().getXMLCalabashConfigurer().makeReadableDocument(runtime, dbinding);
         } else if (binding.getBindingType() == Binding.DATA_BINDING) {
             DataBinding dbinding = (DataBinding) binding;
-            pipe = new ReadableData(runtime, dbinding.getWrapper(), dbinding.getHref(), dbinding.getContentType());
+            pipe = runtime.getConfigurer().getXMLCalabashConfigurer().makeReadableData(runtime, dbinding);
         } else if (binding.getBindingType() == Binding.ERROR_BINDING) {
             XCompoundStep step = parent;
             while (! (step instanceof XCatch)) {

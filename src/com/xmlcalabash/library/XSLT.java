@@ -166,6 +166,8 @@ public class XSLT extends DefaultStep {
         Processor processor = runtime.getProcessor();
         Configuration config = processor.getUnderlyingConfiguration();
 
+        runtime.getConfigurer().getSaxonConfigurer().configXSLT(config);
+
         OutputURIResolver uriResolver = config.getOutputURIResolver();
         CollectionURIResolver collectionResolver = config.getCollectionURIResolver();
 

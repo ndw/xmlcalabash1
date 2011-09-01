@@ -111,6 +111,8 @@ public class ValidateWithXSD extends DefaultStep {
 
         Configuration config = runtime.getProcessor().getUnderlyingConfiguration();
 
+        runtime.getConfigurer().getSaxonConfigurer().configXSD(config);
+
         // Saxon 9.2.0.4j introduces a clearSchemaCache method on Configuration.
         // Call it if it's available.
         try {
@@ -209,6 +211,8 @@ public class ValidateWithXSD extends DefaultStep {
 
         try {
             SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+
+            runtime.getConfigurer().getJaxpConfigurer().configSchemaFactory(factory);
 
             XdmNode schemaNode = schemaDocuments.get(0);
             InputSource is = S9apiUtils.xdmToInputSource(runtime, schemaNode);

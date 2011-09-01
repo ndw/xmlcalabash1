@@ -63,20 +63,15 @@ public class Load extends DefaultStep {
     public void run() throws SaxonApiException {
         super.run();
 
-        RuntimeValue href = getOption(_href);
-        String baseURI = href.getBaseURI().toASCIIString();
-
-        if (runtime.getSafeMode() && baseURI.startsWith("file:")) {
-            throw XProcException.dynamicError(21);
-        }
-
-        boolean validate = getOption(_dtd_validate, false);
         try {
-            XdmNode doc = runtime.parse(href.getString(), baseURI, validate);
+            XdmNode doc = runtime.getConfigurer().getXMLCalabashConfigurer().loadDocument(this);
             result.write(doc);
         } catch (XProcException e) {
             e.printStackTrace();
             if (err_XD0011.equals(e.getErrorCode())) {
+                RuntimeValue href = getOption(_href);
+                String baseURI = href.getBaseURI().toASCIIString();
+                boolean validate = getOption(_dtd_validate, false);
                 throw XProcException.stepError(11, "Could not load " + href.getString() + " (" + baseURI + ") dtd-validate=" + validate);
             }
             throw e;

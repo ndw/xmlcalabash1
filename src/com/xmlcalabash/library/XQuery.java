@@ -104,6 +104,8 @@ public class XQuery extends DefaultStep {
 
         Configuration config = runtime.getProcessor().getUnderlyingConfiguration();
 
+        runtime.getConfigurer().getSaxonConfigurer().configXQuery(config);
+
         CollectionURIResolver collectionResolver = config.getCollectionURIResolver();
 
         config.setCollectionURIResolver(new CollectionResolver(runtime, defaultCollection, collectionResolver));

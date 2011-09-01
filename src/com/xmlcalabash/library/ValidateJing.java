@@ -20,6 +20,7 @@ package com.xmlcalabash.library;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import com.xmlcalabash.config.JingConfigurer;
 import com.xmlcalabash.util.Base64;
 import com.xmlcalabash.util.TreeWriter;
 import net.sf.saxon.s9api.QName;
@@ -120,9 +121,11 @@ public class ValidateJing extends DefaultStep {
         }
 
         InputSource schemaInputSource = null;
+        JingConfigurer configurer = runtime.getConfigurer().getJingConfigurer();
 
         if (compact) {
             // Compact syntax
+            configurer.configRNC(properties);
             sr = CompactSchemaReader.getInstance();
 
             // Grotesque hack!
@@ -131,6 +134,7 @@ public class ValidateJing extends DefaultStep {
             schemaInputSource.setSystemId(root.getBaseURI().toASCIIString());
         } else {
             // XML syntax
+            configurer.configRNG(properties);
             sr = new AutoSchemaReader();
             schemaInputSource = S9apiUtils.xdmToInputSource(runtime, schema);
         }
