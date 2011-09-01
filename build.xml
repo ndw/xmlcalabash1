@@ -85,13 +85,24 @@
       <src path="src"/>
       <!-- Optional features -->
       <exclude name="com/xmlcalabash/extensions/MetadataExtractor.java"/>
-      <exclude name="com/xmlcalabash/library/XSLFormatter.java"/>
       <exclude name="com/xmlcalabash/extensions/DeltaXML.java"/>
       <exclude name="com/xmlcalabash/extensions/xmlunit/Compare.java"/>
       <exclude name="com/xmlcalabash/extensions/marklogic/XCCAdhocQuery.java"/>
       <exclude name="com/xmlcalabash/extensions/marklogic/XCCInsertDocument.java"/>
       <exclude name="com/xmlcalabash/extensions/marklogic/XCCInvokeModule.java"/>
+      <exclude name="com/xmlcalabash/util/FoXEP.java"/>
 
+      <!-- Only for debugging -->
+      <exclude name="com/xmlcalabash/drivers/SaxonProblem.java"/>
+    </javac>
+  </target>
+
+  <!-- this target won't work unless you have all the optional/commercial jars -->
+  <target name="compile-everything" depends="init,update-output">
+    <javac destdir="${build.dir}"
+	   classpathref="build.classpath"
+           includeantruntime="false">
+      <src path="src"/>
       <!-- Only for debugging -->
       <exclude name="com/xmlcalabash/drivers/SaxonProblem.java"/>
     </javac>
@@ -166,11 +177,11 @@
 	   classpathref="build.classpath"
            includeantruntime="false">
       <src path="src"/>
-      <include name="com/xmlcalabash/library/XSLFormatter.java"/>
+      <include name="com/xmlcalabash/util/FoXEP.java"/>
     </javac>
   </target>
 
-  <target name="dist" depends="init,distrib">
+  <target name="dist" depends="init,compile-everything,distrib">
     <delete file="${dist.dir}/install.xml"/>
 
     <xslt in="resources/etc/install-proto.xsl" style="resources/etc/install-proto.xsl"
