@@ -71,7 +71,7 @@
 </p:declare-step>
 
 <p:declare-step type="ml:adhoc-query">
-  <p:input port="source" sequence="true" primary="true"/>
+  <p:input port="source"/>
   <p:input port="parameters" kind="parameter"/>
   <p:output port="result" sequence="true"/>
   <p:option name="host"/>
