@@ -74,6 +74,7 @@ public class XProcConfiguration {
     public Hashtable<String,String> serializationOptions = new Hashtable<String,String>();
     public LogOptions logOpt = LogOptions.WRAPPED;
     public Vector<String> extensionFunctions = new Vector<String>();
+    public String foProcessor = null;
 
     public boolean extensionValues = false;
     
@@ -239,6 +240,8 @@ public class XProcConfiguration {
                     parseSerialization(node);
                 } else if ("extension-function".equals(localName)) {
                     parseExtensionFunction(node);
+                } else if ("fo-processor".equals(localName)) {
+                    parseFoProcessor(node);
                 } else {
                     throw new XProcException(doc, "Unexpected configuration option: " + localName);
                 }
@@ -289,6 +292,11 @@ public class XProcConfiguration {
     private void parseExtensionFunction(XdmNode node) {
         String value = node.getAttributeValue(_class_name);
         extensionFunctions.add(value);
+    }
+
+    private void parseFoProcessor(XdmNode node) {
+        String value = node.getAttributeValue(_class_name);
+        foProcessor = value;
     }
 
     private void parseInput(XdmNode node) {
