@@ -91,6 +91,7 @@
       <exclude name="com/xmlcalabash/extensions/marklogic/XCCInsertDocument.java"/>
       <exclude name="com/xmlcalabash/extensions/marklogic/XCCInvokeModule.java"/>
       <exclude name="com/xmlcalabash/util/FoXEP.java"/>
+      <exclude name="com/xmlcalabash/util/FoFOP.java"/>
 
       <!-- Only for debugging -->
       <exclude name="com/xmlcalabash/drivers/SaxonProblem.java"/>
@@ -100,21 +101,34 @@
   <!-- this target won't work unless you have all the optional/commercial jars -->
   <target name="compile-everything" depends="init,update-output">
     <javac destdir="${build.dir}"
-	   classpathref="build.classpath"
            includeantruntime="false">
+      <classpath>
+        <!-- Yes, I know these are explicit. This target is really only for me. -->
+        <fileset dir="lib">
+          <include name="*.jar"/>
+        </fileset>
+        <fileset dir="libpriv">
+          <include name="*.jar"/>
+        </fileset>
+      </classpath>
       <src path="src"/>
+      <!-- <compilerarg value="-Xlint:unchecked"/> -->
       <!-- Only for debugging -->
       <exclude name="com/xmlcalabash/drivers/SaxonProblem.java"/>
     </javac>
   </target>
 
-  <target name="optional-features" depends="compile-MetadataException,compile-XEP,compile-DeltaXML,
-                                            compile-XMLUnit,compile-XCC"/>
+  <target name="optional-features" depends="compile-MetadataException,compile-XEP,compile-FOP,
+                                            compile-DeltaXML,compile-XMLUnit,compile-XCC"/>
 
   <condition property="XMLUnit.present">
     <and>
-      <available classname="org.custommonkey.xmlunit.XMLAssert"/>
-      <available classname="junit.framework.AssertionFailedError"/>
+      <available classname="org.custommonkey.xmlunit.XMLAssert">
+        <classpath refid="build.classpath"/>
+      </available>
+      <available classname="junit.framework.AssertionFailedError">
+        <classpath refid="build.classpath"/>
+      </available>
     </and>
   </condition>
 
@@ -178,6 +192,33 @@
            includeantruntime="false">
       <src path="src"/>
       <include name="com/xmlcalabash/util/FoXEP.java"/>
+    </javac>
+  </target>
+
+  <condition property="FOP.present">
+    <!-- It probably requires more than these, but if you've got all these... -->
+    <and>
+      <available classname="org.apache.fop.apps.Fop">
+        <classpath refid="build.classpath"/>
+      </available>
+      <available classname="org.apache.fop.apps.FopFactory">
+        <classpath refid="build.classpath"/>
+      </available>
+      <available classname="org.apache.fop.apps.MimeConstants">
+        <classpath refid="build.classpath"/>
+      </available>
+      <available classname="org.apache.xmlgraphics.util.MimeConstants">
+        <classpath refid="build.classpath"/>
+      </available>
+    </and>
+  </condition>
+
+  <target name="compile-FOP" depends="init" if="FOP.present">
+    <javac destdir="${build.dir}"
+	   classpathref="build.classpath"
+           includeantruntime="false">
+      <src path="src"/>
+      <include name="com/xmlcalabash/util/FoFOP.java"/>
     </javac>
   </target>
 
