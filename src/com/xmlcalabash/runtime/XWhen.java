@@ -1,12 +1,15 @@
 package com.xmlcalabash.runtime;
 
+import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.*;
 import net.sf.saxon.s9api.*;
+import net.sf.saxon.trans.XPathException;
 
+import java.math.BigDecimal;
 import java.util.Vector;
 import java.util.Hashtable;
 
@@ -34,23 +37,16 @@ public class XWhen extends XCompoundStep {
         if (reader.moreDocuments() || inputs.get("#xpath-context").size() > 1) {
             throw XProcException.dynamicError(5);
         }
-        
-        Vector<XdmItem> results = evaluateXPath(doc, nsbinding.getNamespaceBindings(), testExpr, globals);
 
-        if (results.size() > 1) {
-            return true;
-        }
-        if (results.size() == 0) {
-            return false;
+        // Surround testExpr with "boolean()" to force the EBV.
+        Vector<XdmItem> results = evaluateXPath(doc, nsbinding.getNamespaceBindings(), "boolean(" + testExpr + ")", globals);
+
+        if (results.size() != 1) {
+            throw new XProcException("Attempt to compute EBV in p:when did not return a singleton!?");
         }
 
-        XdmItem item = results.get(0);
-
-        if (item.isAtomicValue()) {
-            return ((XdmAtomicValue) item).getBooleanValue();
-        } else {
-            return true;
-        }
+        XdmAtomicValue value = (XdmAtomicValue) results.get(0);
+        return value.getBooleanValue();
     }
 
     protected void copyInputs() throws SaxonApiException {

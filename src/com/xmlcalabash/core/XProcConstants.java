@@ -118,9 +118,13 @@ public class XProcConstants {
     public static final QName xs_QName = new QName("xs", NS_XMLSCHEMA, "QName");
     public static final QName xs_untypedAtomic = new QName("xs", NS_XMLSCHEMA, "untypedAtomic");
     public static final QName xs_string = new QName("xs", NS_XMLSCHEMA, "string");
+    public static final QName xs_anyURI = new QName("xs", NS_XMLSCHEMA, "anyURI");
     public static final QName xs_NCName = new QName("xs", NS_XMLSCHEMA, "NCName");
     public static final QName xs_boolean = new QName("xs", NS_XMLSCHEMA, "boolean");
     public static final QName xs_decimal = new QName("xs", NS_XMLSCHEMA, "decimal");
+    public static final QName xs_double = new QName("xs", NS_XMLSCHEMA, "double");
+    public static final QName xs_integer = new QName("xs", NS_XMLSCHEMA, "integer");
+    public static final QName xs_float = new QName("xs", NS_XMLSCHEMA, "float");
 
 
     /** Creates a new instance of XProcConstants */
