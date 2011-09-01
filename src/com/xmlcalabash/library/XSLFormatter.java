@@ -68,7 +68,6 @@ public class XSLFormatter extends DefaultStep {
         if (runtime.getConfiguration().foProcessor != null) {
             foClasses.add(runtime.getConfiguration().foProcessor);
         }
-        foClasses.add("com.xmlcalabash.util.FoXEP");
         foClasses.add("com.xmlcalabash.util.FoFOP");
 
         FoProcessor provider = null;
@@ -106,8 +105,7 @@ public class XSLFormatter extends DefaultStep {
         try {
             try {
                 out = new BufferedOutputStream(new FileOutputStream(output));
-                InputSource doc = S9apiUtils.xdmToInputSource(runtime, source.read());
-                provider.format(doc,out,contentType);
+                provider.format(source.read(),out,contentType);
             } catch (XProcException e) {
                 throw e;
             } catch (Exception e) {

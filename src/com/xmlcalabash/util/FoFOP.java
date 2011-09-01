@@ -4,6 +4,7 @@ import com.xmlcalabash.config.FoProcessor;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.runtime.XStep;
+import net.sf.saxon.s9api.XdmNode;
 import org.apache.fop.apps.FOUserAgent;
 import org.apache.fop.apps.Fop;
 import org.apache.fop.apps.FopFactory;
@@ -26,16 +27,19 @@ import java.util.Properties;
  * To change this template use File | Settings | File Templates.
  */
 public class FoFOP implements FoProcessor {
+    XProcRuntime runtime = null;
     FopFactory fopFactory = null;
     XStep step = null;
     URIResolver resolver = null;
 
     public void initialize(XProcRuntime runtime, XStep step, Properties options) {
-        fopFactory = FopFactory.newInstance();
+        this.runtime = runtime;
         this.step = step;
+
+        fopFactory = FopFactory.newInstance();
         resolver = runtime.getResolver();
     }
-    public void format(InputSource fodoc, OutputStream out, String contentType) {
+    public void format(XdmNode doc, OutputStream out, String contentType) {
         String outputFormat = null;
         if (contentType == null || "application/pdf".equalsIgnoreCase(contentType)) {
             outputFormat = MimeConstants.MIME_PDF; // "PDF";
@@ -52,6 +56,7 @@ public class FoFOP implements FoProcessor {
         }
 
         try {
+            InputSource fodoc = S9apiUtils.xdmToInputSource(runtime, doc);
             SAXSource source = new SAXSource(fodoc);
             if (resolver != null) {
                 fopFactory.setURIResolver(resolver);

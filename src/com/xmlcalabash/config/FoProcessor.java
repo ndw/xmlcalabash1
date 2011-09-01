@@ -5,7 +5,7 @@ import com.xmlcalabash.runtime.XStep;
 import java.io.OutputStream;
 import java.util.Properties;
 
-import org.xml.sax.InputSource;
+import net.sf.saxon.s9api.XdmNode;
 
 /**
  * Created by IntelliJ IDEA.
@@ -16,5 +16,5 @@ import org.xml.sax.InputSource;
  */
 public interface FoProcessor {
     public void initialize(XProcRuntime runtime, XStep step, Properties options);
-    public void format(InputSource fodoc, OutputStream out, String contentType);
+    public void format(XdmNode doc, OutputStream out, String contentType);
 }
