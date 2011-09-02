@@ -716,7 +716,7 @@ public class XAtomicStep extends XStep {
         // If the select attribute was used to specify the value and it consisted of a single VariableReference
         // (per [XPath 1.0] or [XPath 2.0], as appropriate), then the namespace bindings from the referenced
         // option or variable are used.
-        Pattern varrefpat = Pattern.compile("^\\s*\\$(\\S+)\\s*$");
+        Pattern varrefpat = Pattern.compile("^\\s*\\$([^\\s=]+)\\s*$");
         Matcher varref = varrefpat.matcher(select);
         if (varref.matches()) {
             String varrefstr = varref.group(1);
