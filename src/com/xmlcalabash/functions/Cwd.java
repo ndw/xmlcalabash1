@@ -40,14 +40,18 @@ import com.xmlcalabash.core.XProcRuntime;
 
 public class Cwd extends ExtensionFunctionDefinition {
     private static StructuredQName funcname = new StructuredQName("exf", XProcConstants.NS_EXPROC_FUNCTIONS,"cwd");
-    private XProcRuntime runtime = null;
+    private ThreadLocal tl_runtime = new ThreadLocal() {
+        protected synchronized Object initialValue() {
+            return null;
+        }
+    };
 
     protected Cwd() {
         // you can't call this one
     }
 
     public Cwd(XProcRuntime runtime) {
-        this.runtime = runtime;
+        tl_runtime.set(runtime);
     }
 
     public StructuredQName getFunctionQName() {
@@ -77,6 +81,7 @@ public class Cwd extends ExtensionFunctionDefinition {
     private class CwdCall extends ExtensionFunctionCall {
         public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
 
+            XProcRuntime runtime = (XProcRuntime) tl_runtime.get();
             XStep step = runtime.getXProcData().getStep();
             // FIXME: this can't be the best way to do this...
             if (!(step instanceof XCompoundStep)) {

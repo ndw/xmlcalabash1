@@ -43,15 +43,19 @@ import com.xmlcalabash.model.DeclareStep;
  */
 
 public class StepAvailable extends ExtensionFunctionDefinition {
-    private XProcRuntime runtime;
     private static StructuredQName funcname = new StructuredQName("p", XProcConstants.NS_XPROC, "step-available");
+    private ThreadLocal tl_runtime = new ThreadLocal() {
+        protected synchronized Object initialValue() {
+            return null;
+        }
+    };
 
     protected StepAvailable() {
         // you can't call this one
     }
 
     public StepAvailable(XProcRuntime runtime) {
-        this.runtime = runtime;
+        tl_runtime.set(runtime);
     }
 
     public StructuredQName getFunctionQName() {
@@ -88,6 +92,7 @@ public class StepAvailable extends ExtensionFunctionDefinition {
         public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
             StructuredQName stepName = null;
 
+            XProcRuntime runtime = (XProcRuntime) tl_runtime.get();
             XStep step = runtime.getXProcData().getStep();
             // FIXME: this can't be the best way to do this...
             if (!(step instanceof XCompoundStep)) {

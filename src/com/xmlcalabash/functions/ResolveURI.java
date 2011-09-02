@@ -44,14 +44,18 @@ import java.net.URISyntaxException;
 
 public class ResolveURI extends ExtensionFunctionDefinition {
     private static StructuredQName funcname = new StructuredQName("p", XProcConstants.NS_XPROC, "resolve-uri");
-    private XProcRuntime runtime = null;
+    private ThreadLocal tl_runtime = new ThreadLocal() {
+        protected synchronized Object initialValue() {
+            return null;
+        }
+    };
 
     protected ResolveURI() {
         // you can't call this one
     }
 
     public ResolveURI(XProcRuntime runtime) {
-        this.runtime = runtime;
+        tl_runtime.set(runtime);
     }
 
     public StructuredQName getFunctionQName() {
@@ -87,6 +91,7 @@ public class ResolveURI extends ExtensionFunctionDefinition {
             SequenceIterator iter = arguments[0];
             String relativeURI = iter.next().getStringValue();
 
+            XProcRuntime runtime = (XProcRuntime) tl_runtime.get();
             XStep step = runtime.getXProcData().getStep();
             // FIXME: this can't be the best way to do this...
             if (!(step instanceof XCompoundStep)) {

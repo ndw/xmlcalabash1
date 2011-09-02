@@ -40,54 +40,59 @@ import com.xmlcalabash.core.XProcRuntime;
 
 public class XPathVersionAvailable extends ExtensionFunctionDefinition {
     private static StructuredQName funcname = new StructuredQName("p", XProcConstants.NS_XPROC, "xpath-version-available");
-    private XProcRuntime runtime = null;
+    private ThreadLocal tl_runtime = new ThreadLocal() {
+        protected synchronized Object initialValue() {
+            return null;
+        }
+    };
 
-     protected XPathVersionAvailable() {
-         // you can't call this one
-     }
+    protected XPathVersionAvailable() {
+        // you can't call this one
+    }
 
-     public XPathVersionAvailable(XProcRuntime runtime) {
-         this.runtime = runtime;
-     }
+    public XPathVersionAvailable(XProcRuntime runtime) {
+        tl_runtime.set(runtime);
+    }
 
-     public StructuredQName getFunctionQName() {
-         return funcname;
-     }
+    public StructuredQName getFunctionQName() {
+        return funcname;
+    }
 
-     public int getMinimumNumberOfArguments() {
-         return 1;
-     }
+    public int getMinimumNumberOfArguments() {
+        return 1;
+    }
 
-     public int getMaximumNumberOfArguments() {
-         return 1;
-     }
+    public int getMaximumNumberOfArguments() {
+        return 1;
+    }
 
-     public SequenceType[] getArgumentTypes() {
-         return new SequenceType[]{SequenceType.SINGLE_DOUBLE};
-     }
+    public SequenceType[] getArgumentTypes() {
+        return new SequenceType[]{SequenceType.SINGLE_DOUBLE};
+    }
 
-     public SequenceType getResultType(SequenceType[] suppliedArgumentTypes) {
-         return SequenceType.SINGLE_BOOLEAN;
-     }
+    public SequenceType getResultType(SequenceType[] suppliedArgumentTypes) {
+        return SequenceType.SINGLE_BOOLEAN;
+    }
 
-     public ExtensionFunctionCall makeCallExpression() {
-         return new SystemPropertyCall();
-     }
+    public ExtensionFunctionCall makeCallExpression() {
+        return new SystemPropertyCall();
+    }
 
-     private class SystemPropertyCall extends ExtensionFunctionCall {
-         public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
-             SequenceIterator iter = arguments[0];
+    private class SystemPropertyCall extends ExtensionFunctionCall {
+        public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
+            SequenceIterator iter = arguments[0];
 
-             XStep step = runtime.getXProcData().getStep();
-             // FIXME: this can't be the best way to do this...
-             if (!(step instanceof XCompoundStep)) {
-                 throw XProcException.dynamicError(23);
-             }
+            XProcRuntime runtime = (XProcRuntime) tl_runtime.get();
+            XStep step = runtime.getXProcData().getStep();
+            // FIXME: this can't be the best way to do this...
+            if (!(step instanceof XCompoundStep)) {
+                throw XProcException.dynamicError(23);
+            }
 
-             DoubleValue value = (DoubleValue) iter.next();
-             double reqVer = value.getDoubleValue();
+            DoubleValue value = (DoubleValue) iter.next();
+            double reqVer = value.getDoubleValue();
 
-             return SingletonIterator.makeIterator((reqVer == 1.0 || reqVer == 2.0) ? BooleanValue.TRUE : BooleanValue.FALSE);
-         }
-     }
+            return SingletonIterator.makeIterator((reqVer == 1.0 || reqVer == 2.0) ? BooleanValue.TRUE : BooleanValue.FALSE);
+        }
+    }
 }

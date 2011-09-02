@@ -40,14 +40,18 @@ import com.xmlcalabash.core.XProcRuntime;
 
 public class BaseURI extends ExtensionFunctionDefinition {
     private static StructuredQName funcname = new StructuredQName("p", XProcConstants.NS_XPROC,"base-uri");
-    private XProcRuntime runtime = null;
+    private ThreadLocal tl_runtime = new ThreadLocal() {
+        protected synchronized Object initialValue() {
+            return null;
+        }
+    };
 
     protected BaseURI() {
         // you can't call this one
     }
 
     public BaseURI(XProcRuntime runtime) {
-        this.runtime = runtime;
+        tl_runtime.set(runtime);
     }
 
     public StructuredQName getFunctionQName() {
@@ -82,6 +86,7 @@ public class BaseURI extends ExtensionFunctionDefinition {
         public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
             String baseURI = null;
 
+            XProcRuntime runtime = (XProcRuntime) tl_runtime.get();
             XStep step = runtime.getXProcData().getStep();
             // FIXME: this can't be the best way to do this...
             if (!(step instanceof XCompoundStep)) {
