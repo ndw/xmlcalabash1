@@ -92,6 +92,7 @@
       <exclude name="com/xmlcalabash/extensions/marklogic/XCCInvokeModule.java"/>
       <exclude name="com/xmlcalabash/util/FoXEP.java"/>
       <exclude name="com/xmlcalabash/util/FoFOP.java"/>
+      <exclude name="com/xmlcalabash/util/FoAH.java"/>
 
       <!-- Only for debugging -->
       <exclude name="com/xmlcalabash/drivers/SaxonProblem.java"/>
@@ -119,7 +120,7 @@
   </target>
 
   <target name="optional-features" depends="compile-MetadataException,compile-XEP,compile-FOP,
-                                            compile-DeltaXML,compile-XMLUnit,compile-XCC"/>
+                                            compile-AHFO,compile-DeltaXML,compile-XMLUnit,compile-XCC"/>
 
   <condition property="XMLUnit.present">
     <and>
@@ -219,6 +220,19 @@
            includeantruntime="false">
       <src path="src"/>
       <include name="com/xmlcalabash/util/FoFOP.java"/>
+    </javac>
+  </target>
+  
+  <available classname="jp.co.antenna.XfoJavaCtl" property="AHFO.present">
+    <classpath refid="build.classpath"/>
+  </available>
+  
+  <target name="compile-AHFO" depends="init" if="AHFO.present">
+    <javac destdir="${build.dir}"
+      classpathref="build.classpath"
+      includeantruntime="false">
+      <src path="src"/>
+      <include name="com/xmlcalabash/util/FoAH.java"/>
     </javac>
   </target>
 
