@@ -25,7 +25,7 @@ public class DefaultXMLCalabashConfigurer implements XMLCalabashConfigurer {
     private static final QName _href = new QName("href");
     private static final QName _dtd_validate = new QName("dtd-validate");
     private final static QName cx_filemask = new QName("cx", XProcConstants.NS_CALABASH_EX,"filemask");
-    private XProcRuntime runtime = null;
+    protected XProcRuntime runtime = null;
 
     public DefaultXMLCalabashConfigurer(XProcRuntime runtime) {
         this.runtime = runtime;
