@@ -4,6 +4,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.XMLReaderFactory;
 
 import javax.xml.transform.URIResolver;
 import javax.xml.transform.Source;
@@ -134,6 +135,16 @@ public class XProcURIResolver implements URIResolver, EntityResolver {
             try {
                 URI baseURI = new URI(base);
                 source = new SAXSource(new InputSource(baseURI.resolve(href).toASCIIString()));
+                XMLReader reader = ((SAXSource) source).getXMLReader();
+                if (reader == null) {
+                    try {
+                        reader = XMLReaderFactory.createXMLReader();
+                        ((SAXSource) source).setXMLReader(reader);
+                        reader.setEntityResolver(this);
+                    } catch (SAXException se) {
+                        // nop?
+                    }
+                }
             } catch (URISyntaxException use) {
                 throw new XProcException(use);
             }
