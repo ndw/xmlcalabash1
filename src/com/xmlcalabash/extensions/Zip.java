@@ -117,7 +117,13 @@ public class Zip extends DefaultStep {
             srcManifest.put(root.getBaseURI().toASCIIString(), doc);
         }
 
-        File zipFile = new File(zipFn);
+        File zipFile = null;
+        try {
+            zipFile = new File(new URI(zipFn));
+        } catch (URISyntaxException e) {
+            throw new XProcException(e);
+        }
+
         File zipParent = zipFile.getParentFile();
         File zipTemp = null;
         ZipFile inZip = null;
