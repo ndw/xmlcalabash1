@@ -100,6 +100,9 @@ public class ValidateJing extends DefaultStep {
         ErrorHandler eh = new RNGErrorHandler();
         PropertyMapBuilder properties = new PropertyMapBuilder();
         properties.put(ValidateProperty.ERROR_HANDLER, eh);
+        properties.put(ValidateProperty.URI_RESOLVER, runtime.getResolver());
+        properties.put(ValidateProperty.ENTITY_RESOLVER, runtime.getResolver());
+
 
         if (checkIdRefs) {
             RngProperty.CHECK_ID_IDREF.add(properties);
