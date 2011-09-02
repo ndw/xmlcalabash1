@@ -205,7 +205,9 @@ public class Parser {
             DeclareStep step = library.getDeclaration(type);
             parseDeclareStepBody(step);
         }
-        
+
+        checkExtensionAttributes(node, library);
+
         return library;
     }
 
@@ -577,6 +579,8 @@ public class Parser {
             }
         }
 
+        checkExtensionAttributes(node, input);
+
         return input;
     }
 
@@ -603,7 +607,9 @@ public class Parser {
                 output.addBinding(binding);
             }
         }
-        
+
+        checkExtensionAttributes(node, output);
+
         return output;
     }
     
@@ -624,6 +630,8 @@ public class Parser {
         } else {
             throw XProcException.staticError(44, node, "Unexpected in input: " + nodeName);
         }
+
+        checkExtensionAttributes(node, binding);
 
         return binding;
     }
@@ -653,6 +661,8 @@ public class Parser {
             XdmNode snode = iter.next();
             throw new IllegalArgumentException("Unexpected in pipe: " + snode.getNodeName());
         }
+
+        checkExtensionAttributes(node, pipe);
 
         return pipe;
     }
@@ -720,6 +730,8 @@ public class Parser {
             throw new IllegalArgumentException("Unexpected in document: " + snode.getNodeName());
         }
 
+        checkExtensionAttributes(node, doc);
+
         return doc;
     }
 
@@ -731,7 +743,9 @@ public class Parser {
         for (XdmNode snode : new RelevantNodes(runtime, node, Axis.CHILD)) {
             throw new IllegalArgumentException("Unexpected in empty: " + snode.getNodeName());
         }
-        
+
+        checkExtensionAttributes(node, empty);
+
         return empty;
     }
     
@@ -761,6 +775,8 @@ public class Parser {
             }
         }
         
+        checkExtensionAttributes(node, inline);
+
         inline.excludeNamespaces(excludeURIs);
 
         return inline;
@@ -830,6 +846,8 @@ public class Parser {
 
         readNamespaceBindings(option, node, select);
 
+        checkExtensionAttributes(node, option);
+
         return option;
     }
 
@@ -858,6 +876,8 @@ public class Parser {
 
         readNamespaceBindings(parameter, node, select);
 
+        checkExtensionAttributes(node, parameter);
+
         return parameter;
     }
 
@@ -878,6 +898,8 @@ public class Parser {
         variable.setSelect(select);
 
         readNamespaceBindings(variable, node, select);
+
+        checkExtensionAttributes(node, variable);
 
         return variable;
     }
@@ -1039,6 +1061,8 @@ public class Parser {
             throw XProcException.staticError(44, node, "p:serialization must be empty.");
         }
 
+        checkExtensionAttributes(node, serial);
+
         return serial;
     }
 
@@ -1067,7 +1091,9 @@ public class Parser {
         for (XdmNode snode : new RelevantNodes(runtime, node, Axis.CHILD)) {
             throw XProcException.staticError(44, node, "p:log must be empty");
         }
-        
+
+        checkExtensionAttributes(node, log);
+
         return log;
     }
 
@@ -1159,6 +1185,7 @@ public class Parser {
             }
             throw XProcException.staticError(44, rest.get(0), message);
         }
+
         return step;
     }
 
@@ -1432,6 +1459,7 @@ public class Parser {
         }
 
         importElem.setRoot(root);
+        checkExtensionAttributes(node, importElem);
 
         return importElem;
     }
@@ -1476,6 +1504,7 @@ public class Parser {
         String stepName = checkNCName(node.getAttributeValue(_name));
 
         UntilUnchanged step = new UntilUnchanged(runtime, node, stepName);
+        checkExtensionAttributes(node, step);
 
         Vector<XdmNode> rest = readSignature(step);
 
@@ -1559,6 +1588,7 @@ public class Parser {
         String testExpr = node.getAttributeValue(new QName("test"));
 
         When step = new When(runtime, node, stepName);
+        checkExtensionAttributes(node, step);
         step.setTest(testExpr);
 
         Vector<XdmNode> rest = readSignature(step);
@@ -1582,6 +1612,7 @@ public class Parser {
         String stepName = checkNCName(node.getAttributeValue(px_name));
 
         Otherwise step = new Otherwise(runtime, node, stepName);
+        checkExtensionAttributes(node, step);
 
         Vector<XdmNode> rest = readSignature(step);
 
@@ -1650,6 +1681,7 @@ public class Parser {
         String stepName = checkNCName(node.getAttributeValue(_name));
 
         Catch step = new Catch(runtime, node, stepName);
+        checkExtensionAttributes(node, step);
 
         Vector<XdmNode> rest = readSignature(step);
 
