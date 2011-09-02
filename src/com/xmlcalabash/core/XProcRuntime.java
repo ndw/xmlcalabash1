@@ -81,9 +81,6 @@ public class XProcRuntime {
     private XProcURIResolver uriResolver = null;
     private XProcConfiguration config = null;
     private Vector<XStep> reported = new Vector<XStep> ();
-    private String phoneHomeURL = "http://xproc.org/cgi-bin/phonehome";
-    private boolean phoneHome = true;
-    private Thread phoneHomeThread = null;
     private QName errorCode = null;
     private XdmNode errorNode = null;
     private String errorMessage = null;
@@ -168,7 +165,6 @@ public class XProcRuntime {
         parser = runtime.parser;
         uriResolver = runtime.uriResolver;
         config = runtime.config;
-        phoneHome = runtime.phoneHome;
         staticBaseURI = runtime.staticBaseURI;
         allowGeneralExpressions = runtime.allowGeneralExpressions;
         log = runtime.log;
@@ -180,10 +176,6 @@ public class XProcRuntime {
 
     public XProcData getXProcData() {
         return xprocData;
-    }
-
-    public void setPhoneHome(boolean phoneHome) {
-        this.phoneHome = phoneHome;
     }
 
     public boolean getDebug() {
@@ -332,16 +324,6 @@ public class XProcRuntime {
 
         xprocData = new XProcData(this);
 
-        String phone = System.getProperty("com.xmlcalabash.phonehome");
-        if (phone != null && ("0".equals(phone) || "no".equals(phone) || "false".equals(phone))) {
-            finest(null, null,"Phonehome suppressed by user.");
-            phoneHome = false;
-        }
-
-        if (phoneHomeURL == null) {
-            phoneHome = false;
-        }
-
         parser = new Parser(this);
         try {
             // FIXME: I should *do* something with these libraries, shouldn't I?
@@ -382,8 +364,6 @@ public class XProcRuntime {
         DeclareStep decl = pipeline.getDeclaration();
         decl.setup();
 
-        phoneHome(decl);
-
         if (errorCode != null) {
             throw new XProcException(errorCode, errorNode, errorMessage);
         }
@@ -420,8 +400,6 @@ public class XProcRuntime {
         XRootStep root = new XRootStep(this);
         DeclareStep decl = pipeline.getDeclaration();
         decl.setup();
-
-        phoneHome(decl);
 
         if (errorCode != null) {
             throw new XProcException(errorCode, errorMessage);
@@ -625,166 +603,5 @@ public class XProcRuntime {
     }
 
     public void finish(XPipeline pipe) {
-        int seconds = 0;
-        try {
-            while (phoneHomeThread != null && phoneHomeThread.isAlive()) {
-                phoneHomeThread.join(1000);
-                seconds++;
-                if (seconds == 4) {
-                    warning(null, null, "Please wait...sending statistics to xproc.org");
-                }
-            }
-        } catch(InterruptedException ie) {
-            // I don't care
-        }
-
-        if (phoneHome) {
-            PhoneHome phone = new PhoneHome(this, reported);
-            phoneHomeThread = new Thread(phone);
-            phoneHomeThread.start();
-        }
-
-        seconds = 0;
-        try {
-            while (phoneHomeThread != null && phoneHomeThread.isAlive()) {
-                phoneHomeThread.join(1000);
-                seconds++;
-                if (seconds == 4) {
-                    warning(null, null, "Please wait...sending statistics to xproc.org");
-                }
-            }
-        } catch(InterruptedException ie) {
-            // I don't care
-        }
-    }
-
-    public void phoneHome(DeclareStep decl) {
-        if (phoneHome) {
-            PhoneHome phone = new PhoneHome(this, decl);
-            phoneHomeThread = new Thread(phone);
-            phoneHomeThread.start();
-        }
-    }
-
-    public void phoneHome(Exception ex) {
-        // We only get here if something went ``wrong; so the earlier thread might still be running
-        int seconds = 0;
-        try {
-            while (phoneHomeThread != null && phoneHomeThread.isAlive()) {
-                phoneHomeThread.join(1000);
-                seconds++;
-                if (seconds == 4) {
-                    warning(null, null, "Please wait...sending statistics to xproc.org");
-                }
-                if (seconds > 16) {
-                    // Give up.
-                    break;
-                }
-            }
-        } catch(InterruptedException ie) {
-            // I don't care
-        }
-
-        if (phoneHome) {
-            PhoneHome phone = new PhoneHome(this, ex);
-            phoneHomeThread = new Thread(phone);
-            phoneHomeThread.start();
-        }
-    }
-
-    private class PhoneHome implements Runnable {
-        private Throwable ex = null;
-        private DeclareStep step = null;
-        private XProcRuntime runtime = null;
-        private Vector<XStep> reported = null;
-
-        public PhoneHome(XProcRuntime runtime, DeclareStep decl) {
-            this.runtime = runtime;
-            step = decl;
-        }
-
-        public PhoneHome(XProcRuntime runtime, Vector<XStep> reported) {
-            this.runtime = runtime;
-            this.reported = reported;
-        }
-
-        public PhoneHome(XProcRuntime runtime, Throwable ex) {
-            this.runtime = runtime;
-            this.ex = ex;
-        }
-
-        public void run() {
-            String email = System.getProperty("com.xmlcalabash.phonehome.email");
-
-            try {
-                URL url = new URL(phoneHomeURL);
-                URLConnection conn = url.openConnection();
-                conn.setDoOutput(true);
-                PrintStream pr = new PrintStream(conn.getOutputStream());
-
-                //String fn = "/tmp/phonehome-pipeline.xml";
-                String gi = "pipeline-report";
-                if (reported != null) {
-                    gi = "runtime-report";
-                    //fn = "/tmp/phonehome-report.xml";
-                }
-                if (ex != null) {
-                    gi = "error-report";
-                    //fn = "/tmp/phonehome-error.xml";
-                }
-
-                //PrintStream pr = new PrintStream(new File(fn));
-
-                pr.println("<" + gi + " xmlns='http://xmlcalabash.com/ns/phonehome'>");
-                if (email != null) {
-                    pr.println("<email>" + email + "</email>");
-                }
-                pr.println("<general-value-extension>" + runtime.allowGeneralExpressions + "</general-value-extension>");
-                pr.println("<version>" + getXProcVersion() + "</version>");
-                pr.println("<product-name>" + getProductName() + "</product-name>");
-                pr.println("<product-version>" + getProductVersion() + "</product-version>");
-                pr.println("<episode>" + getEpisode() + "</episode>");
-
-                if (ex != null) {
-                    while (ex != null) {
-                        pr.println("<failure>" + ex + "</failure>");
-                        ex = ex.getCause();
-                    }
-                }
-
-                if (step != null) {
-                    Reporter reporter = new Reporter(runtime, pr);
-                    reporter.report(step);
-                }
-
-                if (reported != null) {
-                    pr.println("<steps>");
-                    for (XStep step: reported) {
-                        DeclareStep dstep = step.getDeclareStep();
-                        if (dstep != null) {
-                            pr.println("  <step type='" + dstep.getDeclaredType().getClarkName() + "'/>");
-                        } else {
-                            pr.println("  <step className='" + step.getClass().getName() + "'/>");
-                        }
-                    }
-                    pr.println("</steps>");
-                }
-                
-                pr.println("</" + gi + ">");
-                pr.flush();
-
-                // Get the response
-                BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                String line;
-                while ((line = rd.readLine()) != null) {
-                    //System.err.println("R: " + line);
-                }
-                rd.close();
-
-                pr.close();
-            } catch (Exception e) {
-                finest(null, null,"Failed to phone home: " + e);
-            }
-        }
     }
 }

@@ -112,8 +112,6 @@ public class XLibrary {
 
         XPipeline xpipeline = new XPipeline(runtime, step, root);
 
-        runtime.phoneHome(xpipeline.getDeclareStep());
-
         if (runtime.getErrorCode() != null) {
             throw new XProcException(runtime.getErrorCode(), runtime.getErrorMessage());
         }

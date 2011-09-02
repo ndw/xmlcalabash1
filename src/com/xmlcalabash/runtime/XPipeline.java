@@ -135,11 +135,9 @@ public class XPipeline extends XCompoundStep {
         try {
             doRun();
         } catch (XProcException ex) {
-            runtime.phoneHome(ex);
             runtime.error(ex);
             throw ex;
         } catch (SaxonApiException ex) {
-            runtime.phoneHome(ex);
             runtime.error(ex);
             throw ex;
         }
