@@ -130,8 +130,7 @@ public class StepAvailable extends ExtensionFunctionDefinition {
 
             if (decl != null) {
                 if (decl.isAtomic()) {
-                    String className = runtime.getConfiguration().implementationClass(decl.getDeclaredType());
-                    value = (className != null);
+                    value = runtime.getConfiguration().isStepAvailable(decl.getDeclaredType());
                 } else {
                     value = true;
                 }

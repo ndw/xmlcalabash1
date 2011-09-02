@@ -274,32 +274,7 @@ public class XAtomicStep extends XStep {
     }
 
     public void run() throws SaxonApiException {
-        String className = runtime.getConfiguration().implementationClass(step.getType());
-        if (className == null) {
-            throw new UnsupportedOperationException("Misconfigured. No 'class' in configuration for " + step.getType());
-        }
-
-        // FIXME: This isn't really very secure...
-        if (runtime.getSafeMode() && !className.startsWith("com.xmlcalabash.")) {
-            throw XProcException.dynamicError(21);
-        }
-
-        XProcStep xstep = null;
-
-        try {
-            Constructor constructor = Class.forName(className).getConstructor(XProcRuntime.class, this.getClass());
-            xstep = (XProcStep) constructor.newInstance(runtime,this);
-        } catch (NoSuchMethodException nsme) {
-            throw new UnsupportedOperationException("No such method: " + className, nsme);
-        } catch (ClassNotFoundException cfne) {
-            throw new UnsupportedOperationException("Class not found: " + className, cfne);
-        } catch (InstantiationException ie) {
-            throw new UnsupportedOperationException("Instantiation error", ie);
-        } catch (IllegalAccessException iae) {
-            throw new UnsupportedOperationException("Illegal access error", iae);
-        } catch (InvocationTargetException ite) {
-            throw new UnsupportedOperationException("Invocation target exception", ite);
-        }
+        XProcStep xstep = runtime.getConfiguration().newStep(runtime, this);
 
         // If there's more than one reader, collapse them all into a single reader
         for (String port : inputs.keySet()) {
