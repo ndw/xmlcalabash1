@@ -137,11 +137,11 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                 }
                 String text = readText(href, node, node.getBaseURI().toASCIIString());
                 if (text == null) {
-                    finer(node, "XInclude text parse failed: " + href);
+                    finest(node, "XInclude text parse failed: " + href);
                     fallback(node, href);
                     return false;
                 } else {
-                    finer(node, "XInclude text parse: " + href);
+                    finest(node, "XInclude text parse: " + href);
                 }
                 matcher.addText(text);
                 return false;
@@ -151,7 +151,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                 String iuri = null;
 
                 if (subdoc == null) {
-                    finer(node, "XInclude parse failed: " + href);
+                    finest(node, "XInclude parse failed: " + href);
                     fallback(node, href);
                     return false;
                 } else {
@@ -164,7 +164,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                         throw XProcException.stepError(29,"XInclude document includes itself: " + href);
                     }
 
-                    finer(node, "XInclude parse: " + href);
+                    finest(node, "XInclude parse: " + href);
                 }
 
                 Vector<XdmNode> nodes = null;

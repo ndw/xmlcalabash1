@@ -148,12 +148,12 @@ public class XProcRuntime {
         for (String className : config.extensionFunctions) {
             try {
                 ExtensionFunctionDefinition def = (ExtensionFunctionDefinition) Class.forName(className).newInstance();
-                fine(null, null, "Instantiated: " + className);
+                finer(null, null, "Instantiated: " + className);
                 processor.registerExtensionFunction(def);
             } catch (NoClassDefFoundError ncdfe) {
-                fine(null, null, "Failed to instantiate extension function: " + className);
+                finer(null, null, "Failed to instantiate extension function: " + className);
             } catch (Exception e) {
-                fine(null, null, "Failed to instantiate extension function: " + className);
+                finer(null, null, "Failed to instantiate extension function: " + className);
             }
         }
 

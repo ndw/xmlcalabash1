@@ -107,7 +107,7 @@ public class ValidateWithXSD extends DefaultStep {
     }
 
     public void validateWithSaxonSA(SchemaManager manager) throws SaxonApiException {
-        info(step.getNode(), "Validating with Saxon");
+        fine(step.getNode(), "Validating with Saxon");
 
         Configuration config = runtime.getProcessor().getUnderlyingConfiguration();
 
@@ -116,16 +116,16 @@ public class ValidateWithXSD extends DefaultStep {
         try {
             Method clearSchemaCache = config.getClass().getMethod("clearSchemaCache", paramTypes);
             clearSchemaCache.invoke(config);
-            finer(step.getNode(), "Cleared schema cache.");
+            finest(step.getNode(), "Cleared schema cache.");
         } catch (NoSuchMethodException nsme) {
             // nop; oh, well
-            finer(step.getNode(), "Cannot reset schema cache.");
+            finest(step.getNode(), "Cannot reset schema cache.");
         } catch (IllegalAccessException nsme) {
             // nop; oh, well
-            finer(step.getNode(), "Cannot reset schema cache.");
+            finest(step.getNode(), "Cannot reset schema cache.");
         } catch (InvocationTargetException nsme) {
             // nop; oh, well
-            finer(step.getNode(), "Cannot reset schema cache.");
+            finest(step.getNode(), "Cannot reset schema cache.");
         }
 
         XdmNode doc = source.read();
@@ -138,7 +138,7 @@ public class ValidateWithXSD extends DefaultStep {
         while (schemas.moreDocuments()) {
             XdmNode schemaNode = schemas.read();
             String targetNS = schemaNode.getBaseURI().toASCIIString();
-            fine(step.getNode(), "Caching input schema: " + targetNS);
+            finer(step.getNode(), "Caching input schema: " + targetNS);
             if (targetNS.equals(namespace)) {
                 tryNamespaces = false;
             }
@@ -183,7 +183,7 @@ public class ValidateWithXSD extends DefaultStep {
         validator.setUseXsiSchemaLocation(useHints);
         
         try {
-            fine(step.getNode(), "Validating: " + doc.getBaseURI().toASCIIString());
+            finer(step.getNode(), "Validating: " + doc.getBaseURI().toASCIIString());
             validator.validate(new SAXSource(S9apiUtils.xdmToInputSource(runtime, doc)));
         } catch (SaxonApiException sae) {
             if (getOption(_assert_valid,false)) {
@@ -196,7 +196,7 @@ public class ValidateWithXSD extends DefaultStep {
     }
 
     private void validateWithXerces() throws SaxonApiException {
-        info(step.getNode(), "Validating with Xerces");
+        fine(step.getNode(), "Validating with Xerces");
 
         Vector<XdmNode> schemaDocuments = new Vector<XdmNode> ();
         while (schemas.moreDocuments()) {

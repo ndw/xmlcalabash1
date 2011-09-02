@@ -620,7 +620,7 @@ public class Step extends SourceArtifact {
     protected boolean checkBinding(Input input) {
         boolean valid = true;
 
-        runtime.finer(null, node, "Check bindings for " + input.getPort() + " on " + getName());
+        runtime.finest(null, node, "Check bindings for " + input.getPort() + " on " + getName());
         
         if (input.getBinding().size() == 0) {
             if (input.getParameterInput()) {
@@ -768,7 +768,7 @@ public class Step extends SourceArtifact {
     protected boolean checkOptionBinding(EndPoint endpoint, boolean defEmpty) {
         boolean valid = true;
 
-        runtime.finer(null, node, "Check bindings for " + endpoint + " on " + getName());
+        runtime.finest(null, node, "Check bindings for " + endpoint + " on " + getName());
 
         if (endpoint.getBinding().size() == 0) {
             Port port = env.getDefaultReadablePort();
@@ -907,7 +907,7 @@ public class Step extends SourceArtifact {
             }
         }
         
-        runtime.finer(null, node, "Checking step order for " + getName());
+        runtime.finest(null, node, "Checking step order for " + getName());
 
         if (getExtensionAttribute(cx_depend) != null
             || getExtensionAttribute(cx_depends) != null
@@ -928,7 +928,7 @@ public class Step extends SourceArtifact {
             for (Binding binding : input.getBinding()) {
                 if (binding.getBindingType() == Binding.PIPE_NAME_BINDING) {
                     PipeNameBinding pipe = (PipeNameBinding) binding;
-                    runtime.finer(null, node, getName() + " input " + input.getPort() + " depends on " + pipe.getStep());
+                    runtime.finest(null, node, getName() + " input " + input.getPort() + " depends on " + pipe.getStep());
                     addDependency(pipe.getStep());
                 }
             }
@@ -940,7 +940,7 @@ public class Step extends SourceArtifact {
             for (Binding binding : param.getBinding()) {
                 if (binding.getBindingType() == Binding.PIPE_NAME_BINDING) {
                     PipeNameBinding pipe = (PipeNameBinding) binding;
-                    runtime.finer(null, node, getName() + " param depends on " + pipe.getStep());
+                    runtime.finest(null, node, getName() + " param depends on " + pipe.getStep());
                     addDependency(pipe.getStep());
                 }
             }
@@ -950,7 +950,7 @@ public class Step extends SourceArtifact {
             for (Binding binding : option.getBinding()) {
                 if (binding.getBindingType() == Binding.PIPE_NAME_BINDING) {
                     PipeNameBinding pipe = (PipeNameBinding) binding;
-                    runtime.finer(null, node, getName() + " option depends on " + pipe.getStep());
+                    runtime.finest(null, node, getName() + " option depends on " + pipe.getStep());
                     addDependency(pipe.getStep());
                 }
             }
@@ -966,7 +966,7 @@ public class Step extends SourceArtifact {
             boolean root = true;
             for (String stepName : deps) {
                 if (!stepName.equals(getName())) {
-                    runtime.finer(null, node, getName() + " step " + step.getName() + " depends on " + stepName);
+                    runtime.finest(null, node, getName() + " step " + step.getName() + " depends on " + stepName);
                     addDependency(stepName);
                 }
                 if (containsStep(stepName)) {
@@ -974,7 +974,7 @@ public class Step extends SourceArtifact {
                 }
             }
             if (root) {
-                runtime.finer(null, node, "==> " + step.getName() + " is a graph root of " + getName());
+                runtime.finest(null, node, "==> " + step.getName() + " is a graph root of " + getName());
                 roots.add(step);
                 step.depth = 0;
             }
@@ -993,17 +993,17 @@ public class Step extends SourceArtifact {
                     for (Step root : roots) {
                         for (Step step : subpipeline) {
                             if (step.dependsOn(root.getName())) {
-                                runtime.finer(null, node, "XProcStep " + step.getName() + " depends on " + root.getName() + "(step.depth="+step.depth+", depth="+depth+")");
+                                runtime.finest(null, node, "XProcStep " + step.getName() + " depends on " + root.getName() + "(step.depth="+step.depth+", depth="+depth+")");
                                 if ((step.depth < 0) || (depth >= step.depth)) {
                                     step.depth = depth;
-                                    runtime.finer(null, node, step.getName() + " gets depth " + depth);
+                                    runtime.finest(null, node, step.getName() + " gets depth " + depth);
                                     nextWave.add(step);
                                 } else {
                                     noloops = false;
                                     error("Loop in subpipeline: " + step.getName() + " points back to " + root.getName(), XProcConstants.staticError(1));
                                 }
                             } else {
-                                runtime.finer(null, node, "XProcStep " + step.getName() + " does not depend on " + root.getName());
+                                runtime.finest(null, node, "XProcStep " + step.getName() + " does not depend on " + root.getName());
                             }
                         }
                     }
@@ -1104,7 +1104,7 @@ public class Step extends SourceArtifact {
             Input dinput = declInputs.get(portName);
             Input input = getInput(portName);
             if (input == null) {
-                runtime.finer(null, node, "Added " + portName + " input to " + getName());
+                runtime.finest(null, node, "Added " + portName + " input to " + getName());
                 input = new Input(runtime, node);
                 input.setPort(portName);
                 input.setParameterInput(dinput.getParameterInput());
@@ -1131,7 +1131,7 @@ public class Step extends SourceArtifact {
             Output doutput = declOutputs.get(portName);
             Output output = getOutput(portName);
             if (output == null) {
-                runtime.finer(null, node, "Added " + portName + " output to " + getName());
+                runtime.finest(null, node, "Added " + portName + " output to " + getName());
                 output = new Output(runtime, node);
                 output.setPort(portName);
                 output.setSequence(doutput.getSequence());
@@ -1177,22 +1177,22 @@ public class Step extends SourceArtifact {
 
     public void patchPipeBindings() {
         for (Input input : inputs) {
-            //runtime.finer(null, node, "Patch " + input.getPort() + " on " + getName());
+            //runtime.finest(null, node, "Patch " + input.getPort() + " on " + getName());
             patchInputBindings(input);
         }
 
         for (Parameter param : params) {
-            //runtime.finer(null, node, "Patch " + input.getPort() + " on " + getName());
+            //runtime.finest(null, node, "Patch " + input.getPort() + " on " + getName());
             patchInputBindings(param);
         }
 
         for (Option option : options) {
-            //runtime.finer(null, node, "Patch " + input.getPort() + " on " + getName());
+            //runtime.finest(null, node, "Patch " + input.getPort() + " on " + getName());
             patchInputBindings(option);
         }
 
         for (Variable var : getVariables()) {
-            //runtime.finer(null, node, "Patch " + input.getPort() + " on " + getName());
+            //runtime.finest(null, node, "Patch " + input.getPort() + " on " + getName());
             patchInputBindings(var);
         }
 
@@ -1214,7 +1214,7 @@ public class Step extends SourceArtifact {
                 pipe.setOutput(source);
                 pipe.setInput(endpoint);
                 
-                //runtime.finer(null, node, "Patching " + pipename + " : " + pipe + " " + endpoint + " to " + source);
+                //runtime.finest(null, node, "Patching " + pipename + " : " + pipe + " " + endpoint + " to " + source);
                     
                 bindings.set(bpos, pipe);
                 if (source != null) {

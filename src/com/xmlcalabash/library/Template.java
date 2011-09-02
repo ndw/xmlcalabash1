@@ -92,7 +92,7 @@ public class Template extends DefaultStep implements ProcessMatchingNodes {
 
     public void run() throws SaxonApiException {
         if (step.getNode().getNodeName().equals(XProcConstants.p_document_template)) {
-            runtime.fine(this, step.getNode(), "The template step should be named p:template, the name p:document-template is deprecated.");
+            runtime.finer(this, step.getNode(), "The template step should be named p:template, the name p:document-template is deprecated.");
         }
 
         super.run();

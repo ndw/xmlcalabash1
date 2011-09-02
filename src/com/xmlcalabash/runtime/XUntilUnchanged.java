@@ -62,7 +62,7 @@ public class XUntilUnchanged extends XCompoundStep {
     }
 
     public void run() throws SaxonApiException {
-        info(null, "Running cx:until-unchanged " + step.getName());
+        fine(null, "Running cx:until-unchanged " + step.getName());
 
         XProcData data = runtime.getXProcData();
         data.openFrame(this);

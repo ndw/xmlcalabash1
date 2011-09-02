@@ -223,7 +223,7 @@ public class CompoundStep extends Step {
                         step = step.parent;
                     }
                     if (!ancestor) {
-                        runtime.finer(null, node, getName() + " variable depends on " + pipe.getStep());
+                        runtime.finest(null, node, getName() + " variable depends on " + pipe.getStep());
                         addDependency(pipe.getStep());
                     }
                 }

@@ -153,7 +153,7 @@ public class DefaultStep implements XProcStep {
         } else {
             type = step.getType().getClarkName();
         }
-        info(null, "Running " + type + " " + step.getName());
+        fine(null, "Running " + type + " " + step.getName());
         runtime.reportStep(step);
     }
 

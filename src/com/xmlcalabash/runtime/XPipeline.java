@@ -123,9 +123,9 @@ public class XPipeline extends XCompoundStep {
         }
         */
 
-        info(null, "Running " + infoName + " " + step.getName());
+        fine(null, "Running " + infoName + " " + step.getName());
         if (runtime.getAllowGeneralExpressions()) {
-            info(step.getNode(), "Running with the 'general-values' extension enabled.");
+            fine(step.getNode(), "Running with the 'general-values' extension enabled.");
         }
 
         XProcData data = runtime.getXProcData();

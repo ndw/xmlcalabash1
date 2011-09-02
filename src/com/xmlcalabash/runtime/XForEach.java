@@ -54,7 +54,7 @@ public class XForEach extends XCompoundStep {
     }
     
     public void run() throws SaxonApiException {
-        info(null, "Running p:for-each " + step.getName());
+        fine(null, "Running p:for-each " + step.getName());
 
         XProcData data = runtime.getXProcData();
         data.openFrame(this);

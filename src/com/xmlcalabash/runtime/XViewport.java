@@ -54,7 +54,7 @@ public class XViewport extends XCompoundStep implements ProcessMatchingNodes {
     }
 
     public void run() throws SaxonApiException {
-        info(null, "Running p:viewport " + step.getName());
+        fine(null, "Running p:viewport " + step.getName());
 
         XProcData data = runtime.getXProcData();
         data.openFrame(this);

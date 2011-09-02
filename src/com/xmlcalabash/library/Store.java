@@ -102,7 +102,7 @@ public class Store extends DefaultStep {
             href = doc.getBaseURI();
         }
 
-        fine(hrefOpt.getNode(), "Storing to \"" + href + "\".");
+        finer(hrefOpt.getNode(), "Storing to \"" + href + "\".");
 
         String decode = step.getExtensionAttribute(cx_decode);
         XdmNode root = S9apiUtils.getDocumentElement(doc);

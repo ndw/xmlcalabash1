@@ -187,7 +187,7 @@ public class Exec extends DefaultStep {
                 builder.directory(new File(cwd));
             }
 
-            info(step.getNode(), "Exec: " + showCmd);
+            fine(step.getNode(), "Exec: " + showCmd);
 
             Process process = builder.start();
 

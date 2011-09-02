@@ -74,7 +74,7 @@ public class MakeAbsoluteURIs extends DefaultStep implements ProcessMatchingNode
             setBaseURI = base.getBaseURI().resolve(base.getString());
         }
 
-        finer(doc, "Making URIs absolute against: " + setBaseURI);
+        finest(doc, "Making URIs absolute against: " + setBaseURI);
 
         matcher = new ProcessMatch(runtime, this);
         matcher.match(doc, getOption(_match));
