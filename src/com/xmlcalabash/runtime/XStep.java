@@ -47,6 +47,10 @@ public abstract class XStep implements XProcRunnable
         }
     }
 
+    public Step getStep() {
+        return step;
+    }
+
     public XdmNode getNode() {
         return step.getNode();
     }
