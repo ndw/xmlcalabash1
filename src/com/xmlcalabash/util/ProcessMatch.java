@@ -106,7 +106,7 @@ public class ProcessMatch extends TreeWriter {
             if (e.getMessage() != null && e.getMessage().contains("syntax error")) {
                 throw XProcException.dynamicError(23,node,e,"Syntax error in match pattern: \"" + match.getString() + "\"");
             } else {
-                throw new XProcException(node, e);
+                throw XProcException.dynamicError(23,node,e,"Expression could not be evaluated");
             }
         }
     }
