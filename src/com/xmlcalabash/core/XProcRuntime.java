@@ -577,6 +577,10 @@ public class XProcRuntime {
         msgListener.warning(step, node, message);
     }
 
+    public void warning(Throwable error) {
+        msgListener.warning(error);
+    }
+
     public void info(XProcRunnable step, XdmNode node, String message) {
         msgListener.info(step, node, message);
     }

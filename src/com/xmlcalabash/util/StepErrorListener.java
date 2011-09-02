@@ -55,7 +55,7 @@ public class StepErrorListener implements ErrorListener {
     public void warning(TransformerException exception) throws TransformerException {
         if (!report("warning", exception)) {
             // XProc doesn't have recoverable exceptions...
-            runtime.error(exception);
+            runtime.warning(exception);
         }
     }
 

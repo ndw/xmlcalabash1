@@ -15,6 +15,7 @@ public interface XProcMessageListener {
     public void error(XProcRunnable step, XdmNode node, String message, QName code);
     public void error(Throwable exception);
     public void warning(XProcRunnable step, XdmNode node, String message);
+    public void warning(Throwable exception);
     public void info(XProcRunnable step, XdmNode node, String message);
     public void fine(XProcRunnable step, XdmNode node, String message);
     public void finer(XProcRunnable step, XdmNode node, String message);

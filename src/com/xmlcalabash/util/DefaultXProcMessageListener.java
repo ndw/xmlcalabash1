@@ -35,6 +35,10 @@ public class DefaultXProcMessageListener implements XProcMessageListener {
     }
 
     public void error(Throwable exception) {
+        log.severe(exceptionMessage(exception) + exception.getMessage());
+    }
+
+    private String exceptionMessage(Throwable exception) {
         StructuredQName qCode = null;
         SourceLocator loc = null;
         String message = "";
@@ -94,7 +98,7 @@ public class DefaultXProcMessageListener implements XProcMessageListener {
             message = message + qCode.getDisplayName() + ":";
         }
 
-        log.severe(message + exception.getMessage());
+        return message;
     }
 
     public void warning(XProcRunnable step, XdmNode node, String message) {
@@ -104,6 +108,10 @@ public class DefaultXProcMessageListener implements XProcMessageListener {
             log = defaultLogger;
         }
         log.warning(message(step, node, message));
+    }
+
+    public void warning(Throwable exception) {
+        log.warning(exceptionMessage(exception) + exception.getMessage());
     }
 
     public void info(XProcRunnable step, XdmNode node, String message) {
