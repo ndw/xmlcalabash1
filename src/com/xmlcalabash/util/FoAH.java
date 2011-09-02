@@ -10,6 +10,7 @@ import net.sf.saxon.s9api.XdmNode;
 import org.xml.sax.InputSource;
 
 import javax.xml.transform.sax.SAXSource;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringReader;
@@ -56,10 +57,10 @@ public class FoAH implements FoProcessor {
 
         try {
             // Holy hack on a cracker!
-            StringReader reader = new StringReader(doc.toString());
-            ah.render(reader, out, outputFormat);
-        } catch (XfoException xfoe) {
-            throw new XProcException(xfoe);
+            ByteArrayInputStream bis = new ByteArrayInputStream(doc.toString().getBytes("UTF-8"));
+            ah.render(bis, out, outputFormat);
+        } catch (Exception e) {
+            throw new XProcException(e);
         }
     }
 }
