@@ -271,9 +271,7 @@ public class XSLT extends DefaultStep {
             treeWriter.endDocument();
 
             step.reportError(treeWriter.getResult());
-
-            System.err.println(content);
-            //finest(step.getNode(), "xsl:messsage (terminate=" + terminate + "): " + content);
+            step.info(step.getNode(), content.toString());
         }
     }
 }
