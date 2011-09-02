@@ -20,6 +20,7 @@
 
 package com.xmlcalabash.core;
 
+import com.xmlcalabash.config.XProcConfigurer;
 import com.xmlcalabash.functions.BaseURI;
 import com.xmlcalabash.functions.Cwd;
 import com.xmlcalabash.functions.IterationPosition;
@@ -34,6 +35,7 @@ import com.xmlcalabash.runtime.XLibrary;
 import com.xmlcalabash.runtime.XPipeline;
 import com.xmlcalabash.runtime.XRootStep;
 import com.xmlcalabash.runtime.XStep;
+import com.xmlcalabash.util.DefaultXProcConfigurer;
 import com.xmlcalabash.util.DefaultXProcMessageListener;
 import com.xmlcalabash.util.StepErrorListener;
 import net.sf.saxon.Configuration;
@@ -98,10 +100,13 @@ public class XProcRuntime {
     private PipelineLibrary standardLibrary = null;
     private XLibrary xStandardLibrary = null;
     private Hashtable<String,Vector<Cookie>> cookieHash = new Hashtable<String,Vector<Cookie>> ();
+    private XProcConfigurer configurer = null;
 
     public XProcRuntime(XProcConfiguration config) {
         this.config = config;
         processor = config.getProcessor();
+
+        this.configurer = new DefaultXProcConfigurer(this);
 
         xprocData = new XProcData(this);
 
@@ -172,6 +177,14 @@ public class XProcRuntime {
         standardLibrary = runtime.standardLibrary;
         xStandardLibrary = runtime.xStandardLibrary;
         cookieHash = runtime.cookieHash;
+    }
+
+    public XProcConfigurer getConfigurer() {
+        return configurer;
+    }
+
+    public void setConfigurer(XProcConfigurer configurer) {
+        this.configurer = configurer;
     }
 
     public XProcData getXProcData() {
@@ -355,6 +368,7 @@ public class XProcRuntime {
 
     private XPipeline _load(String pipelineURI) throws SaxonApiException {
         reset();
+        configurer.getXMLCalabashConfigurer().configRuntime(this);
         pipeline = parser.loadPipeline(pipelineURI);
         if (errorCode != null) {
             throw new XProcException(errorCode, errorMessage);
@@ -392,6 +406,7 @@ public class XProcRuntime {
     }
     private XPipeline _use(XdmNode p_pipeline) throws SaxonApiException {
         reset();
+        configurer.getXMLCalabashConfigurer().configRuntime(this);
         pipeline = parser.usePipeline(p_pipeline);
         if (errorCode != null) {
             throw new XProcException(errorCode, errorMessage);

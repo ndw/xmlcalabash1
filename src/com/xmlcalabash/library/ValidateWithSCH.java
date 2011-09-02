@@ -121,6 +121,9 @@ public class ValidateWithSCH extends DefaultStep {
         schemaCompiler.setInitialContextNode(theSchema2_sch);
         result = new XdmDestination();
         schemaCompiler.setDestination(result);
+
+        runtime.getConfigurer().getSaxonConfigurer().configSchematron(schemaCompiler.getUnderlyingController().getConfiguration());
+
         schemaCompiler.transform();
 
         XdmNode compiledSchema = result.getXdmNode();
