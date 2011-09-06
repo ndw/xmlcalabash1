@@ -78,6 +78,7 @@ public class XProcConfiguration {
     public LogOptions logOpt = LogOptions.WRAPPED;
     public Vector<String> extensionFunctions = new Vector<String>();
     public String foProcessor = null;
+    public String cssProcessor = null;
 
     public boolean extensionValues = false;
     
@@ -245,6 +246,8 @@ public class XProcConfiguration {
                     parseExtensionFunction(node);
                 } else if ("fo-processor".equals(localName)) {
                     parseFoProcessor(node);
+                } else if ("css-processor".equals(localName)) {
+                    parseCssProcessor(node);
                 } else {
                     throw new XProcException(doc, "Unexpected configuration option: " + localName);
                 }
@@ -324,6 +327,11 @@ public class XProcConfiguration {
     private void parseFoProcessor(XdmNode node) {
         String value = node.getAttributeValue(_class_name);
         foProcessor = value;
+    }
+
+    private void parseCssProcessor(XdmNode node) {
+        String value = node.getAttributeValue(_class_name);
+        cssProcessor = value;
     }
 
     private void parseInput(XdmNode node) {

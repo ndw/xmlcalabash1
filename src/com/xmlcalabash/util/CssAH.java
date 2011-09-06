@@ -1,6 +1,6 @@
 package com.xmlcalabash.util;
 
-import com.sun.tools.corba.se.idl.StringGen;
+import com.xmlcalabash.config.CssProcessor;
 import com.xmlcalabash.config.FoProcessor;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
@@ -10,15 +10,18 @@ import jp.co.antenna.XfoJavaCtl.MessageListener;
 import jp.co.antenna.XfoJavaCtl.XfoException;
 import jp.co.antenna.XfoJavaCtl.XfoFormatPageListener;
 import jp.co.antenna.XfoJavaCtl.XfoObj;
+import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmNode;
 
 import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Properties;
+import java.util.Vector;
 
 /**
  * Created by IntelliJ IDEA.
@@ -27,9 +30,15 @@ import java.util.Properties;
  * Time: 4:24 PM
  * To change this template use File | Settings | File Templates.
  */
-public class FoAH implements FoProcessor {
+public class CssAH implements CssProcessor {
+    private static final QName _content_type = new QName("content-type");
+    private static final QName _encoding = new QName("", "encoding");
+
     XProcRuntime runtime = null;
     Properties options = null;
+    String primarySS = null;
+    Vector<String> userSS = new Vector<String> ();
+
     XStep step = null;
     XfoObj ah = null;
 
@@ -39,7 +48,7 @@ public class FoAH implements FoProcessor {
         this.options = options;
         try {
             ah = new XfoObj();
-            ah.setFormatterType(XfoObj.S_FORMATTERTYPE_XSLFO);
+            ah.setFormatterType(XfoObj.S_FORMATTERTYPE_XMLCSS);
             FoMessages msgs = new FoMessages();
             ah.setMessageListener(msgs);
 
@@ -54,9 +63,17 @@ public class FoAH implements FoProcessor {
                 ah.setExitLevel(i);
             }
 
-            i = getIntProp("EmbedAllFontsEx");
-            if (i != null) {
-                ah.setPdfEmbedAllFontsEx(i);
+            s = getStringProp("EmbedAllFontsEx");
+            if (s != null) {
+                if ("part".equals(s.toLowerCase())) {
+                    ah.setPdfEmbedAllFontsEx(XfoObj.S_PDF_EMBALLFONT_PART);
+                } else if ("base14".equals(s.toLowerCase())) {
+                    ah.setPdfEmbedAllFontsEx(XfoObj.S_PDF_EMBALLFONT_BASE14);
+                } else if ("all".equals(s.toLowerCase())) {
+                    ah.setPdfEmbedAllFontsEx(XfoObj.S_PDF_EMBALLFONT_ALL);
+                } else {
+                    throw new XProcException("Unrecognized value for EmbedAllFontsEx");
+                }
             }
 
             i = getIntProp("ImageCompression");
@@ -112,6 +129,47 @@ public class FoAH implements FoProcessor {
             throw new XProcException(xfoe);
         }
     }
+
+    public void addStylesheet(XdmNode doc) {
+        doc = S9apiUtils.getDocumentElement(doc);
+
+        String stylesheet = null;
+        if ((XProcConstants.c_data.equals(doc.getNodeName())
+             && "application/octet-stream".equals(doc.getAttributeValue(_content_type)))
+            || "base64".equals(doc.getAttributeValue(_encoding))) {
+            byte[] decoded = Base64.decode(doc.getStringValue());
+            stylesheet = new String(decoded);
+        } else {
+            stylesheet = doc.getStringValue();
+        }
+
+        String prefix = "temp";
+        String suffix = ".css";
+
+        File temp;
+        try {
+            temp = File.createTempFile(prefix, suffix);
+        } catch (IOException ioe) {
+            throw new XProcException(step.getNode(), "Failed to create temporary file for CSS");
+        }
+
+        temp.deleteOnExit();
+
+        try {
+            PrintStream cssout = new PrintStream(temp);
+            cssout.print(stylesheet);
+            cssout.close();
+        } catch (FileNotFoundException fnfe) {
+            throw new XProcException(step.getNode(), "Failed to write to temporary CSS file");
+        }
+
+        if (primarySS == null) {
+            primarySS = temp.toURI().toASCIIString();
+        } else {
+            userSS.add(temp.toURI().toASCIIString());
+        }
+    }
+
     public void format(XdmNode doc, OutputStream out, String contentType) {
         String outputFormat = null;
         if (contentType == null || "application/pdf".equals(contentType)) {
@@ -131,6 +189,16 @@ public class FoAH implements FoProcessor {
         }
 
         try {
+            if (primarySS == null) {
+                throw new XProcException("No CSS stylesheets provided");
+            } else {
+                ah.setStylesheetURI(primarySS);
+            }
+
+            for (String uri : userSS) {
+                ah.addUserStylesheetURI(uri);
+            }
+
             // Holy hack on a cracker!
             ByteArrayInputStream bis = new ByteArrayInputStream(doc.toString().getBytes("UTF-8"));
             ah.render(bis, out, outputFormat);

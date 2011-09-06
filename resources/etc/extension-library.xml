@@ -70,6 +70,19 @@
   <p:option name="send-authorization"/>
 </p:declare-step>
 
+<!-- ============================================================ -->
+
+<p:declare-step type="cx:css-formatter">
+  <p:input port="source" primary="true"/>
+  <p:input port="css" sequence="true"/>
+  <p:input port="parameters" kind="parameter"/>
+  <p:output port="result" primary="false"/>
+  <p:option name="href" required="true"/>
+  <p:option name="content-type"/>
+</p:declare-step>
+
+<!-- ============================================================ -->
+
 <p:declare-step type="ml:adhoc-query">
   <p:input port="source"/>
   <p:input port="parameters" kind="parameter"/>

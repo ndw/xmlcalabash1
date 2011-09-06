@@ -200,6 +200,9 @@
 <implementation type="cx:set-cookies"
 		class-name="com.xmlcalabash.extensions.SetCookies"/>
 
+<implementation type="cx:css-formatter"
+		class-name="com.xmlcalabash.extensions.CssFormatter"/>
+
 <!-- Fileutils -->
 
 <implementation type="cxf:info"
