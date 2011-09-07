@@ -177,6 +177,42 @@ public class XProcConfiguration {
                 throw xe;
             }
         }
+
+        // What about properties?
+        schemaAware = "true".equals(System.getProperty("com.xmlcalabash.schema-aware", ""+schemaAware));
+        debug = "true".equals(System.getProperty("com.xmlcalabash.debug", ""+debug));
+        extensionValues = "true".equals(System.getProperty("com.xmlcalabash.general-values", ""+extensionValues));
+        entityResolver = System.getProperty("com.xmlcalabash.entity-resolver", entityResolver);
+        uriResolver = System.getProperty("com.xmlcalabash.uri-resolver", uriResolver);
+        errorListener = System.getProperty("com.xmlcalabash.error-listener", errorListener);
+        foProcessor = System.getProperty("com.xmlcalabash.fo-processor", foProcessor);
+        cssProcessor = System.getProperty("com.xmlcalabash.css-processor", cssProcessor);
+
+        String[] boolSerNames = new String[] {"byte-order-mark", "escape-uri-attributes",
+                "include-content-type","indent", "omit-xml-declaration", "undeclare-prefixes"};
+        String[] strSerNames = new String[] {"doctype-public", "doctype-system", "encoding",
+                "media-type", "normalization-form", "version", "standalone"};
+
+        for (String name : boolSerNames) {
+            String s = System.getProperty("com.xmlcalabash.serial."+name);
+            if ("true".equals(s) || "false".equals(s)) {
+                serializationOptions.put(name, s);
+            }
+        }
+
+        for (String name : strSerNames) {
+            String s = System.getProperty("com.xmlcalabash.serial."+name);
+            if (s != null) {
+                serializationOptions.put(name, s);
+            }
+        }
+
+        // cdata-section-elements is ignored
+
+        String method = System.getProperty("com.xmlcalabash.serial.method");
+        if ("html".equals(method) || "xhtml".equals(method) || "text".equals(method) || "xml".equals(method)) {
+            serializationOptions.put(method, method);
+        }
     }
 
     public XdmNode readXML(String href, String base) {
@@ -248,6 +284,8 @@ public class XProcConfiguration {
                     parseFoProcessor(node);
                 } else if ("css-processor".equals(localName)) {
                     parseCssProcessor(node);
+                } else if ("default-system-property".equals(localName)) {
+                    parseSystemProperty(node);
                 } else {
                     throw new XProcException(doc, "Unexpected configuration option: " + localName);
                 }
@@ -332,6 +370,17 @@ public class XProcConfiguration {
     private void parseCssProcessor(XdmNode node) {
         String value = node.getAttributeValue(_class_name);
         cssProcessor = value;
+    }
+
+    private void parseSystemProperty(XdmNode node) {
+        String name = node.getAttributeValue(_name);
+        String value = node.getAttributeValue(_value);
+        if (name == null || value == null) {
+            throw new XProcException("Configuration option 'default-system-property' cannot have null name or value");
+        }
+        if (System.getProperty(name) == null) {
+            System.setProperty(name, value);
+        }
     }
 
     private void parseInput(XdmNode node) {
