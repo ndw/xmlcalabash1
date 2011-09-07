@@ -51,6 +51,7 @@ import com.xmlcalabash.util.XProcURIResolver;
 import com.xmlcalabash.util.URIUtils;
 import com.xmlcalabash.util.Reporter;
 
+import java.lang.reflect.Constructor;
 import java.util.logging.Logger;
 import java.util.Hashtable;
 import java.util.Vector;
@@ -106,7 +107,17 @@ public class XProcRuntime {
         this.config = config;
         processor = config.getProcessor();
 
-        this.configurer = new DefaultXProcConfigurer(this);
+        if (config.xprocConfigurer != null) {
+            try {
+                String className = config.xprocConfigurer;
+                Constructor constructor = Class.forName(className).getConstructor(XProcRuntime.class);
+                configurer = (XProcConfigurer) constructor.newInstance(this);
+            } catch (Exception e) {
+                throw new XProcException(e);
+            }
+        } else {
+            configurer = new DefaultXProcConfigurer(this);
+        }
 
         xprocData = new XProcData(this);
 

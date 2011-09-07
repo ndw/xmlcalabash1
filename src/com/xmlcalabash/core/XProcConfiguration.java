@@ -79,6 +79,7 @@ public class XProcConfiguration {
     public Vector<String> extensionFunctions = new Vector<String>();
     public String foProcessor = null;
     public String cssProcessor = null;
+    public String xprocConfigurer = null;
 
     public boolean extensionValues = false;
     
@@ -187,6 +188,7 @@ public class XProcConfiguration {
         errorListener = System.getProperty("com.xmlcalabash.error-listener", errorListener);
         foProcessor = System.getProperty("com.xmlcalabash.fo-processor", foProcessor);
         cssProcessor = System.getProperty("com.xmlcalabash.css-processor", cssProcessor);
+        xprocConfigurer = System.getProperty("com.xmlcalabash.xproc-configurer", xprocConfigurer);
 
         String[] boolSerNames = new String[] {"byte-order-mark", "escape-uri-attributes",
                 "include-content-type","indent", "omit-xml-declaration", "undeclare-prefixes"};
@@ -284,6 +286,8 @@ public class XProcConfiguration {
                     parseFoProcessor(node);
                 } else if ("css-processor".equals(localName)) {
                     parseCssProcessor(node);
+                } else if ("xproc-configurer".equals(localName)) {
+                    parseXProcConfigurer(node);
                 } else if ("default-system-property".equals(localName)) {
                     parseSystemProperty(node);
                 } else {
@@ -370,6 +374,11 @@ public class XProcConfiguration {
     private void parseCssProcessor(XdmNode node) {
         String value = node.getAttributeValue(_class_name);
         cssProcessor = value;
+    }
+
+    private void parseXProcConfigurer(XdmNode node) {
+        String value = node.getAttributeValue(_class_name);
+        xprocConfigurer = value;
     }
 
     private void parseSystemProperty(XdmNode node) {
