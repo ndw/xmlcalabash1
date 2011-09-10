@@ -156,6 +156,9 @@
 <implementation type="cx:message"
 		class-name="com.xmlcalabash.extensions.Message"/>
 
+<implementation type="cx:pretty-print"
+		class-name="com.xmlcalabash.extensions.PrettyPrint"/>
+
 <implementation type="cx:metadata-extractor"
 		class-name="com.xmlcalabash.extensions.MetadataExtractor"/>
 
