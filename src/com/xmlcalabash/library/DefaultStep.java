@@ -59,6 +59,10 @@ public class DefaultStep implements XProcStep {
 
     }
 
+    public XAtomicStep getStep() {
+        return step;
+    }
+
     public void setInput(String port, ReadablePipe pipe) {
         throw new XProcException("No inputs allowed.");
     }
