@@ -186,6 +186,15 @@ public class ValidateJing extends DefaultStep {
             TreeWriter treeWriter = new TreeWriter(runtime);
             treeWriter.startDocument(docBaseURI);
             treeWriter.addStartElement(XProcConstants.c_error);
+
+            if (e.getLineNumber()!=-1) {
+                treeWriter.addAttribute(new QName("line"), ""+e.getLineNumber());
+            }
+
+            if (e.getColumnNumber()!=-1) {
+                treeWriter.addAttribute(new QName("column"), ""+e.getColumnNumber());
+            }
+
             treeWriter.startContent();
 
             treeWriter.addText(e.toString());
