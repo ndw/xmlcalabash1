@@ -3,7 +3,9 @@ package com.xmlcalabash.util;
 import com.renderx.xep.FOTarget;
 import com.renderx.xep.FormatterImpl;
 import com.renderx.xep.lib.ConfigurationException;
+import com.renderx.xep.lib.Logger;
 import com.xmlcalabash.config.FoProcessor;
+import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.runtime.XStep;
@@ -29,7 +31,7 @@ public class FoXEP implements FoProcessor {
         this.runtime = runtime;
         this.step = step;
         try {
-            xep = new FormatterImpl(options);
+            xep = new FormatterImpl(options, new FoLogger());
         } catch (ConfigurationException ce) {
             throw new XProcException("Failed to initialize XEP", ce);
         }
@@ -57,4 +59,44 @@ public class FoXEP implements FoProcessor {
             xep.cleanup();
         }
     }
+
+    private class FoLogger implements Logger {
+
+        public void openDocument() {
+            step.fine(step.getNode(), "p:xsl-formatter document processing starts");
+        }
+
+        public void closeDocument() {
+            step.fine(step.getNode(), "p:xsl-formatter document processing ends");
+        }
+
+        public void event(String name, String message) {
+            step.finer(step.getNode(), "p:xsl-formatter processing " + name + ": " + message);
+        }
+
+        public void openState(String state) {
+            step.finest(step.getNode(), "p:xsl-formatter process start: " + state);
+        }
+
+        public void closeState(String state) {
+            step.finest(step.getNode(), "p:xsl-formatter process end: " + state);
+        }
+
+        public void info(String message) {
+            step.info(step.getNode(), message);
+        }
+
+        public void warning(String message) {
+            step.warning(step.getNode(), message);
+        }
+
+        public void error(String message) {
+            step.error(step.getNode(), message, XProcConstants.stepError(1)); // FIXME: 1?
+        }
+
+        public void exception(String message, Exception exception) {
+            throw new XProcException(message, exception);
+        }
+    }
+
 }
