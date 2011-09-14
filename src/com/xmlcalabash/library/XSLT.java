@@ -217,8 +217,15 @@ public class XSLT extends DefaultStep {
         config.setCollectionURIResolver(collectionResolver);
 
         XdmNode xformed = result.getXdmNode();
+
+        // Can be null when nothing is written to the principle result tree...
         if (xformed != null) {
-            // Can be null when nothing is written to the principle result tree...
+            if (document != null
+                && (xformed.getBaseURI() == null
+                    || "".equals(xformed.getBaseURI().toASCIIString()))) {
+                String sysId = document.getBaseURI().toASCIIString();
+                xformed.getUnderlyingNode().setSystemId(sysId);
+            }
             resultPipe.write(xformed);
         }
     }
