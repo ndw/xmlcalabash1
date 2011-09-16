@@ -13,7 +13,8 @@ import java.net.URLConnection;
 import java.net.URISyntaxException;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
-import java.util.Hashtable;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
@@ -72,8 +73,8 @@ public class Zip extends DefaultStep {
     private ReadablePipe source = null;
     private ReadablePipe manifest = null;
     private WritablePipe result = null;
-    private Hashtable<String, FileToZip> zipManifest = new Hashtable<String, FileToZip> ();
-    private Hashtable<String, XdmNode> srcManifest = new Hashtable<String, XdmNode> ();
+    private Map<String, FileToZip> zipManifest = new LinkedHashMap<String, FileToZip> ();
+    private Map<String, XdmNode> srcManifest = new LinkedHashMap<String, XdmNode> ();
 
     /** Creates a new instance of Unzip */
     public Zip(XProcRuntime runtime, XAtomicStep step) {
