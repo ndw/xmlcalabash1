@@ -30,6 +30,8 @@ import java.net.URLConnection;
 import java.net.URISyntaxException;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
@@ -55,8 +57,10 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
     private static final QName cx_root = new QName("cx",XProcConstants.NS_CALABASH_EX,"root");
     private static final QName _encoding = new QName("", "encoding");
     private static final QName _href = new QName("", "href");
+    private static final QName _text = new QName("", "text");
     private static final QName _parse = new QName("", "parse");
     private static final QName _xpointer = new QName("", "xpointer");
+    private static final Pattern linesXptrRE = Pattern.compile("\\s*lines\\s*\\(\\s*(\\d+)\\s*-\\s*(\\d+)\\s*\\)\\s*");
 
     private ReadablePipe source = null;
     private WritablePipe result = null;
@@ -144,10 +148,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
             }
 
             if ("text".equals(parse)) {
-                if (xpointer != null) {
-                    throw new XProcException(step.getNode(), "XPointer cannot be applied with XInclude parse=text: " + href);
-                }
-                String text = readText(href, node, node.getBaseURI().toASCIIString());
+                String text = readText(href, node, node.getBaseURI().toASCIIString(), xpointer);
                 if (text == null) {
                     finest(node, "XInclude text parse failed: " + href);
                     fallback(node, href);
@@ -190,9 +191,8 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                         nodes.add(child);
                     }
                 } else {
-                    String xpath = xpointer.xpathEquivalent();
                     Hashtable<String,String> nsBindings = xpointer.xpathNamespaces();
-                    nodes = selectNodes(subdoc, xpath, nsBindings);
+                    nodes = xpointer.selectNodes(runtime,subdoc);
                 }
 
                 for (XdmNode snode : nodes) {
@@ -246,44 +246,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
         throw new UnsupportedOperationException("processPI can't happen in XInclude");
     }
 
-    private Vector<XdmNode> selectNodes(XdmNode doc, String select, Hashtable<String,String> nsBindings) {
-        Vector<XdmNode> selectedNodes = new Vector<XdmNode> ();
-
-        XPathSelector selector = null;
-        XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
-        for (String prefix : nsBindings.keySet()) {
-            xcomp.declareNamespace(prefix, nsBindings.get(prefix));
-        }
-
-        try {
-            XPathExecutable xexec = xcomp.compile(select);
-            selector = xexec.load();
-        } catch (SaxonApiException sae) {
-            throw new XProcException(sae);
-        }
-
-        try {
-            selector.setContextItem(doc);
-
-            Iterator iter = selector.iterator();
-            while (iter.hasNext()) {
-                XdmItem item = (XdmItem) iter.next();
-                XdmNode node = null;
-                try {
-                    node = (XdmNode) item;
-                } catch (ClassCastException cce) {
-                    throw new XProcException (step.getNode(), "XInclude pointer matched non-node item?");
-                }
-                selectedNodes.add(node);
-            }
-        } catch (SaxonApiException sae) {
-            throw new XProcException(sae);
-        }
-
-        return selectedNodes;
-    }
-
-    public String readText(String href, XdmNode node, String base) {
+    public String readText(String href, XdmNode node, String base, XPointer xpointer) {
         finest(null, "XInclude read text: " + href + " (" + base + ")");
 
         URI baseURI = null;
@@ -312,18 +275,26 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
             }
 
             // Get the response
+            InputStreamReader stream = null;
             BufferedReader rd = null;
+
             if (charset == null) {
-                rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                stream = new InputStreamReader(conn.getInputStream());
             } else {
-                rd = new BufferedReader(new InputStreamReader(conn.getInputStream(), charset));
+                stream = new InputStreamReader(conn.getInputStream(), charset);
             }
 
-            String line;
-            while ((line = rd.readLine()) != null) {
-                data += line + "\n";
+            if (xpointer != null) {
+                data = xpointer.selectText(stream);
+            } else {
+                rd = new BufferedReader(stream);
+                String line;
+                while ((line = rd.readLine()) != null) {
+                    data += line + "\n";
+                }
+                rd.close();
             }
-            rd.close();
+            stream.close();
         } catch (Exception e) {
             finest(null, "XInclude read text failed");
             mostRecentException = e;

@@ -16,7 +16,6 @@ public class XPointerTest extends TestCase {
 
     public static void main(String[] args) {
         XPointerTest test = new XPointerTest("command line xpointer tests");
-        test.testElement();
         test.testXmlns();
         test.testSchemes();
     }
@@ -30,6 +29,7 @@ public class XPointerTest extends TestCase {
         super.tearDown();
     }
 
+    /*
     public void testShortname() {
         XPointer xp = new XPointer("ncname");
         assertEquals(xp.xpathEquivalent(), "id(ncname)");
@@ -45,7 +45,7 @@ public class XPointerTest extends TestCase {
         xp = new XPointer("element(ncname/1/2)");
         assertEquals(xp.xpathEquivalent(), "id(ncname)/*[1]/*[2]");
     }
-
+    */
 
     public void testXmlns() {
         XPointer xp = new XPointer("xmlns(a=http://example.com/a) xmlns(b=http://example.com/b)");

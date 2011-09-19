@@ -153,7 +153,7 @@ public class ReadableDocument implements ReadablePipe {
                         }
 
                         XPointer xptr = new XPointer(ptr);
-                        Vector<XdmNode> nodes = xptr.selectNodes(runtime, doc, xptr.xpathEquivalent(), xptr.xpathNamespaces());
+                        Vector<XdmNode> nodes = xptr.selectNodes(runtime, doc);
 
                         if (nodes.size() == 1) {
                             doc = nodes.get(0);
