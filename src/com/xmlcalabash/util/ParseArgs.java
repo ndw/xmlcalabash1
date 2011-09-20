@@ -46,6 +46,7 @@ public class ParseArgs {
     private StepArgs lastStep = null;
 
     public boolean extensionValues = false;
+    public boolean allowXPointerOnText = false;
 
     private String[] args = null;
     private int argpos = 0;
@@ -152,6 +153,8 @@ public class ParseArgs {
                 String ext = parseString("X", "extension");
                 if ("general-values".equals(ext)) {
                     extensionValues = true;
+                } else if ("xpointer-on-text".equals(ext)) {
+                        allowXPointerOnText = true;
                 } else {
                     throw new XProcException("Unexpected extension name: " + ext);
                 }

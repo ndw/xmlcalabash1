@@ -148,6 +148,10 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
             }
 
             if ("text".equals(parse)) {
+                if (!runtime.getAllowXPointerOnText() && xpointer != null) {
+                    throw XProcException.stepError(1, "XPointer is not allowed on XInclude when parse='text'");
+                }
+
                 String text = readText(href, node, node.getBaseURI().toASCIIString(), xpointer);
                 if (text == null) {
                     finest(node, "XInclude text parse failed: " + href);

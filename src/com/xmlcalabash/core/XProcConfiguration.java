@@ -54,7 +54,6 @@ public class XProcConfiguration {
     public static final QName _type = new QName("", "type");
     public static final QName _port = new QName("", "port");
     public static final QName _href = new QName("", "href");
-    public static final QName _level = new QName("", "level");
     public static final QName _name = new QName("", "name");
     public static final QName _value = new QName("", "value");
     public static final QName _exclude_inline_prefixes = new QName("", "exclude-inline-prefixes");
@@ -82,6 +81,7 @@ public class XProcConfiguration {
     public String xprocConfigurer = null;
 
     public boolean extensionValues = false;
+    public boolean xpointerOnText = false;
     
     private Processor cfgProcessor = null;
     private boolean firstInput = false;
@@ -183,6 +183,7 @@ public class XProcConfiguration {
         schemaAware = "true".equals(System.getProperty("com.xmlcalabash.schema-aware", ""+schemaAware));
         debug = "true".equals(System.getProperty("com.xmlcalabash.debug", ""+debug));
         extensionValues = "true".equals(System.getProperty("com.xmlcalabash.general-values", ""+extensionValues));
+        xpointerOnText = "true".equals(System.getProperty("com.xmlcalabash.xpointer-on-text", ""+xpointerOnText));
         entityResolver = System.getProperty("com.xmlcalabash.entity-resolver", entityResolver);
         uriResolver = System.getProperty("com.xmlcalabash.uri-resolver", uriResolver);
         errorListener = System.getProperty("com.xmlcalabash.error-listener", errorListener);
@@ -290,6 +291,8 @@ public class XProcConfiguration {
                     parseXProcConfigurer(node);
                 } else if ("default-system-property".equals(localName)) {
                     parseSystemProperty(node);
+                } else if ("extension".equals(localName)) {
+                    parseExtension(node);
                 } else {
                     throw new XProcException(doc, "Unexpected configuration option: " + localName);
                 }
@@ -389,6 +392,22 @@ public class XProcConfiguration {
         }
         if (System.getProperty(name) == null) {
             System.setProperty(name, value);
+        }
+    }
+
+    private void parseExtension(XdmNode node) {
+        String name = node.getAttributeValue(_name);
+        String value = node.getAttributeValue(_value);
+        if (name == null || value == null) {
+            throw new XProcException("Configuration option 'extension' cannot have null name or value");
+        }
+
+        if ("general-values".equals(name)) {
+            extensionValues = "true".equals(value);
+        } else if ("xpointer-on-text".equals(name)) {
+            xpointerOnText = "true".equals(value);
+        } else {
+            throw new XProcException("Unrecognized extension in configuration: " + name);
         }
     }
 

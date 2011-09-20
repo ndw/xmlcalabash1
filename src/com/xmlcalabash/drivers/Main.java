@@ -141,7 +141,8 @@ public class Main {
                 config.debug = cmd.debug;
             }
 
-            config.extensionValues = cmd.extensionValues;
+            config.extensionValues |= cmd.extensionValues;
+            config.xpointerOnText |= cmd.allowXPointerOnText;
 
             debug = config.debug;
 

@@ -95,6 +95,7 @@ public class XProcRuntime {
     private Hashtable<String,Vector<XdmNode>> collections = null;
     private URI staticBaseURI = null;
     private boolean allowGeneralExpressions = true;
+    private boolean allowXPointerOnText = true;
     private XProcData xprocData = null;
     private Logger log = null;
     private XProcMessageListener msgListener = null;
@@ -160,6 +161,7 @@ public class XProcRuntime {
         saxonConfig.setErrorListener(errListener);
 
         allowGeneralExpressions = config.extensionValues;
+        allowXPointerOnText = config.xpointerOnText;
 
         for (String className : config.extensionFunctions) {
             try {
@@ -253,6 +255,10 @@ public class XProcRuntime {
 
     public boolean getAllowGeneralExpressions() {
         return allowGeneralExpressions;
+    }
+
+    public boolean getAllowXPointerOnText() {
+        return allowXPointerOnText;
     }
 
     public void cache(XdmNode doc, URI baseURI) {
