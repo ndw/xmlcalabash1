@@ -64,15 +64,18 @@ public class XPointer {
         return result;
     }
 
-    public String selectText(InputStreamReader stream) {
+    public String selectText(InputStreamReader stream, int contentLength) {
         String result = null;
 
         for (XPointerScheme scheme : parts) {
             String select = scheme.textEquivalent();
             if (result == null && select != null) {
                 try {
-                    result = scheme.selectText(stream);
-                } catch (XProcException e) {
+                    result = scheme.selectText(stream, contentLength);
+                } catch (IllegalArgumentException iae) {
+                    result = null;
+                    // in this case we will never have started reading the file, so we're good to go
+                } catch (XProcException xe) {
                     result = null;
                     // try the next one
                     try {
@@ -92,6 +95,8 @@ public class XPointer {
         if (xpointer.startsWith("/") && !xpointer.contains("(")) {
             xpointer = "element(" + xpointer + ")";
         }
+
+        xpointer = xpointer.trim();
 
         if (xpointer.matches("^[\\w:]+\\s*\\(.*")) {
             Pattern scheme = Pattern.compile("^([\\w+:]+)\\s*(\\(.*)$");

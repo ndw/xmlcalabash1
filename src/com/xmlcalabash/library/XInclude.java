@@ -264,6 +264,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
             URL url = hrefURI.toURL();
             URLConnection conn = url.openConnection();
             String contentType = conn.getContentType();
+            int contentLength = conn.getContentLength();
             String charset = HttpUtils.getCharset(contentType);
 
             if (charset == null && node.getAttributeValue(_encoding) != null) {
@@ -285,7 +286,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
             }
 
             if (xpointer != null) {
-                data = xpointer.selectText(stream);
+                data = xpointer.selectText(stream, contentLength);
             } else {
                 rd = new BufferedReader(stream);
                 String line;

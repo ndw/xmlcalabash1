@@ -30,6 +30,7 @@ public class XPointerScheme {
     protected QName schemeName = null;
     protected String schemeData = null;
     private static final Pattern rangeRE = Pattern.compile("^.*?=(\\d*)?(,(\\d*)?)?$");
+    private static final Pattern lengthRE = Pattern.compile("^length=(\\d+)(,.*)?$");
 
     private long sp = -1;
     private long ep = -1;
@@ -105,7 +106,7 @@ public class XPointerScheme {
         return selectedNodes;
     }
 
-    public String selectText(InputStreamReader stream) {
+    public String selectText(InputStreamReader stream, int contentLength) {
         String select = textEquivalent();
 
         if (select == null) {
@@ -131,11 +132,19 @@ public class XPointerScheme {
 
         rd = new BufferedReader(stream);
 
-        int pos = select.indexOf(";");
-        if (pos >= 0) {
-            // FIXME: Implement integrity checks
-            select = select.substring(0, pos);
+        String parts[] = select.split("\\s*;\\s*");
+        for (int pos = 1; pos < parts.length; pos++) {
+            // start at 1 because we want to skip the scheme
+            String check = parts[pos];
+            Matcher matcher = lengthRE.matcher(check);
+            if (contentLength >= 0 && matcher.matches()) {
+                int checklen = Integer.parseInt(matcher.group(1));
+                if (checklen != contentLength) {
+                    throw new IllegalArgumentException("Integrity check failed: " + checklen + " != " + contentLength);
+                }
+            }
         }
+        select = parts[0];
 
         select = select.trim();
 
