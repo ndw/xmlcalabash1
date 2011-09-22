@@ -93,6 +93,7 @@
       <exclude name="com/xmlcalabash/util/FoXEP.java"/>
       <exclude name="com/xmlcalabash/util/FoFOP.java"/>
       <exclude name="com/xmlcalabash/util/FoAH.java"/>
+      <exclude name="com/xmlcalabash/util/CssAH.java"/>
 
       <!-- Only for debugging -->
       <exclude name="com/xmlcalabash/drivers/SaxonProblem.java"/>
@@ -207,6 +208,7 @@
            includeantruntime="false">
       <src path="src"/>
       <include name="com/xmlcalabash/util/FoAH.java"/>
+      <include name="com/xmlcalabash/util/CssAH.java"/>
     </javac>
   </target>
 
