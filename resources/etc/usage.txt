@@ -1,6 +1,6 @@
 Usage: com.xmlcalabash.drivers.Main [switches] [pipeline.xpl] [options]
-   or: com.xmlcalabash.drivers.Main [switches]
-                                    { [inputs/outputs/parameters] step [options] }+
+   or: com.xmlcalabash.drivers.Main [switches] \
+           { [inputs/outputs/parameters] step [options] }+
 
 Where switches are:
   -a, --schema-aware                   Turn on schema-aware processing
