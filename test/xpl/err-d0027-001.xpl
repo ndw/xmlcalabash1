@@ -1,0 +1,5 @@
+<p:declare-step xmlns:t="http://xproc.org/ns/testsuite" xmlns:c="http://www.w3.org/ns/xproc-step" xmlns:p="http://www.w3.org/ns/xproc" xmlns:err="http://www.w3.org/ns/xproc-error" version="1.0" xpath-version="1.5">
+      <p:input port="source"/>
+      <p:output port="result"/>
+      <p:identity/>
+    </p:declare-step>
