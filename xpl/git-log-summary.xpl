@@ -15,39 +15,7 @@
 <p:xslt>
   <p:input port="source" select="/c:result/*"/>
   <p:input port="stylesheet">
-    <p:inline>
-      <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-                      xmlns:g="http://nwalsh.com/ns/git-repo-info"
-                      exclude-result-prefixes="g xs"
-                      version="2.0">
-        <xsl:template match="g:git-repo-info">
-          <xsl:copy>
-            <xsl:apply-templates select="g:commit">
-              <xsl:sort select="g:date" order="descending"/>
-            </xsl:apply-templates>
-          </xsl:copy>
-        </xsl:template>
-
-        <xsl:template match="g:commit">
-          <xsl:copy>
-            <xsl:copy-of select="@*"/>
-            <xsl:apply-templates/>
-          </xsl:copy>
-          <xsl:text>&#10;</xsl:text>
-        </xsl:template>
-
-        <xsl:template match="*">
-          <xsl:copy>
-            <xsl:copy-of select="@*"/>
-            <xsl:apply-templates/>
-          </xsl:copy>
-        </xsl:template>
-
-        <xsl:template match="comment()|processing-instruction()|text()">
-          <xsl:copy/>
-        </xsl:template>
-      </xsl:stylesheet>
-    </p:inline>
+    <p:document href="git-summarize.xsl"/>
   </p:input>
 </p:xslt>
 
