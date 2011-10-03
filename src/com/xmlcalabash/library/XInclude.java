@@ -54,10 +54,10 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
     private static final QName _fixup_xml_base = new QName("", "fixup-xml-base");
     private static final QName _fixup_xml_lang = new QName("", "fixup-xml-lang");
     private static final QName cx_mark_roots = new QName("cx",XProcConstants.NS_CALABASH_EX,"mark-roots");
+    private static final QName cx_copy_attributes = new QName("cx",XProcConstants.NS_CALABASH_EX,"copy-attributes");
     private static final QName cx_root = new QName("cx",XProcConstants.NS_CALABASH_EX,"root");
     private static final QName _encoding = new QName("", "encoding");
     private static final QName _href = new QName("", "href");
-    private static final QName _text = new QName("", "text");
     private static final QName _parse = new QName("", "parse");
     private static final QName _xpointer = new QName("", "xpointer");
     private static final Pattern linesXptrRE = Pattern.compile("\\s*lines\\s*\\(\\s*(\\d+)\\s*-\\s*(\\d+)\\s*\\)\\s*");
@@ -69,6 +69,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
     private boolean fixupBase = false;
     private boolean fixupLang = false;
     private boolean markRoots = false;
+    private boolean copyAttributes = false;
     private Exception mostRecentException = null;
 
     /**
@@ -97,7 +98,16 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
         fixupBase = getOption(_fixup_xml_base, false);
         fixupLang = getOption(_fixup_xml_lang, false);
 
-        String mark = getStep().getExtensionAttribute(cx_mark_roots);
+        String mark = getStep().getExtensionAttribute(cx_copy_attributes);
+        if (mark == null || "false".equals(mark)) {
+            // nop
+        } else if ("true".equals(mark)) {
+            copyAttributes = true;
+        } else {
+            throw new XProcException("On p:xinclude, cx:copy-attributes must be 'true' or 'false'.");
+        }
+
+        mark = getStep().getExtensionAttribute(cx_mark_roots);
         if (mark == null || "false".equals(mark)) {
             // nop
         } else if ("true".equals(mark)) {
@@ -200,8 +210,8 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                 }
 
                 for (XdmNode snode : nodes) {
-                    if ((fixupBase || fixupLang || markRoots) && snode.getNodeKind() == XdmNodeKind.ELEMENT) {
-                        Fixup fixup = new Fixup(runtime);
+                    if ((fixupBase || fixupLang || markRoots || copyAttributes) && snode.getNodeKind() == XdmNodeKind.ELEMENT) {
+                        Fixup fixup = new Fixup(runtime,node);
                         snode = fixup.fixup(snode);
                     }
 
@@ -361,9 +371,11 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
         private XProcRuntime runtime = null;
         private ProcessMatch matcher = null;
         private boolean root = true;
+        private XdmNode xinclude = null;
 
-        public Fixup(XProcRuntime runtime) {
+        public Fixup(XProcRuntime runtime, XdmNode node) {
             this.runtime = runtime;
+            xinclude = node;
         }
 
         public XdmNode fixup(XdmNode node) {
@@ -387,6 +399,17 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
 
             if (root) {
                 root = false;
+
+                if (copyAttributes) {
+                    XdmSequenceIterator iter = xinclude.axisIterator(Axis.ATTRIBUTE);
+                    while (iter.hasNext()) {
+                        XdmNode child = (XdmNode) iter.next();
+                        if (!"".equals(child.getNodeName().getNamespaceURI())) {
+                            matcher.addAttribute(child);
+                        }
+                    }
+                }
+
                 XdmSequenceIterator iter = node.axisIterator(Axis.ATTRIBUTE);
                 while (iter.hasNext()) {
                     XdmNode child = (XdmNode) iter.next();
