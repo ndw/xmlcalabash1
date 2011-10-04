@@ -823,6 +823,10 @@ public class Parser {
         String select = node.getAttributeValue(new QName("select"));
         String type = node.getAttributeValue(XProcConstants.cx_type);
 
+        if (name == null) {
+            runtime.error(null, node, "Attribute \"name\" required on p:with-option", XProcConstants.staticError(38));
+        }
+
         QName oname;
         if (name.contains(":")) {
             oname = new QName(name, node);
