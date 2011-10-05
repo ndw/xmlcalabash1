@@ -185,6 +185,9 @@
 <implementation type="cx:zip"
 		class-name="com.xmlcalabash.extensions.Zip"/>
 
+<implementation type="pxp:zip"
+		class-name="com.xmlcalabash.extensions.Zip"/>
+
 <implementation xmlns:ml="http://xmlcalabash.com/ns/extensions/marklogic"
 		type="ml:adhoc-query"
 		class-name="com.xmlcalabash.extensions.marklogic.XCCAdhocQuery"/>
