@@ -79,6 +79,7 @@ public class XProcConfiguration {
     public String foProcessor = null;
     public String cssProcessor = null;
     public String xprocConfigurer = null;
+    public String htmlParser = "validator.nu";
 
     public boolean extensionValues = false;
     public boolean xpointerOnText = false;
@@ -190,6 +191,7 @@ public class XProcConfiguration {
         foProcessor = System.getProperty("com.xmlcalabash.fo-processor", foProcessor);
         cssProcessor = System.getProperty("com.xmlcalabash.css-processor", cssProcessor);
         xprocConfigurer = System.getProperty("com.xmlcalabash.xproc-configurer", xprocConfigurer);
+        htmlParser = System.getProperty("com.xmlcalabash.html-parser", htmlParser);
 
         String[] boolSerNames = new String[] {"byte-order-mark", "escape-uri-attributes",
                 "include-content-type","indent", "omit-xml-declaration", "undeclare-prefixes"};
@@ -293,6 +295,8 @@ public class XProcConfiguration {
                     parseSystemProperty(node);
                 } else if ("extension".equals(localName)) {
                     parseExtension(node);
+                } else if ("html-parser".equals(localName)) {
+                    parseHtmlParser(node);
                 } else {
                     throw new XProcException(doc, "Unexpected configuration option: " + localName);
                 }
@@ -408,6 +412,19 @@ public class XProcConfiguration {
             xpointerOnText = "true".equals(value);
         } else {
             throw new XProcException("Unrecognized extension in configuration: " + name);
+        }
+    }
+
+    private void parseHtmlParser(XdmNode node) {
+        String value = node.getAttributeValue(_value);
+        if (value == null) {
+            throw new XProcException("Configuration option 'html-parser' cannot have null value");
+        }
+
+        if ("validator.nu".equals(value) || "tagsoup".equals(value)) {
+            htmlParser = value;
+        } else {
+            throw new XProcException("Unrecognized value in html-parser: " + value);
         }
     }
 

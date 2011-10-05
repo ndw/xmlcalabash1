@@ -103,6 +103,7 @@ public class XProcRuntime {
     private XLibrary xStandardLibrary = null;
     private Hashtable<String,Vector<Cookie>> cookieHash = new Hashtable<String,Vector<Cookie>> ();
     private XProcConfigurer configurer = null;
+    private String htmlParser = null;
 
     public XProcRuntime(XProcConfiguration config) {
         this.config = config;
@@ -174,6 +175,8 @@ public class XProcRuntime {
                 finer(null, null, "Failed to instantiate extension function: " + className);
             }
         }
+
+        htmlParser = config.htmlParser;
 
         reset();
     }
@@ -259,6 +262,10 @@ public class XProcRuntime {
 
     public boolean getAllowXPointerOnText() {
         return allowXPointerOnText;
+    }
+
+    public String htmlParser() {
+        return htmlParser;
     }
 
     public void cache(XdmNode doc, URI baseURI) {

@@ -19,6 +19,7 @@
 
 package com.xmlcalabash.library;
 
+import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 
@@ -39,12 +40,16 @@ import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.tree.iter.NamespaceIterator;
+import nu.validator.htmlparser.common.XmlViolationPolicy;
+import nu.validator.htmlparser.dom.HtmlDocumentBuilder;
 import org.json.JSONTokener;
+import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.ccil.cowan.tagsoup.Parser;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.NamePool;
 
+import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.sax.SAXSource;
 
 import com.xmlcalabash.runtime.XAtomicStep;
@@ -133,7 +138,12 @@ public class UnescapeMarkup extends DefaultStep {
         tree.startContent();
 
         if ("text/html".equals(contentType)) {
-            XdmNode tagDoc = tagSoup(escapedContent);
+            XdmNode tagDoc = null;
+            if ("tagsoup".equals(runtime.htmlParser())) {
+                tagDoc = tagSoup(escapedContent);
+            } else {
+                tagDoc = parseHTML(escapedContent);
+            }
             if (namespace == null) {
                 tree.addSubtree(tagDoc);
             } else {
@@ -282,6 +292,19 @@ public class UnescapeMarkup extends DefaultStep {
         DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
         try {
             XdmNode doc = builder.build(saxSource);
+            return doc;
+        } catch (Exception e) {
+            throw new XProcException(e);
+        }
+    }
+
+    private XdmNode parseHTML(String text) {
+        HtmlDocumentBuilder htmlBuilder = new HtmlDocumentBuilder(XmlViolationPolicy.ALTER_INFOSET);
+        try {
+            InputSource src = new InputSource(new StringReader(text));
+            Document html = htmlBuilder.parse(src);
+            DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
+            XdmNode doc = builder.build(new DOMSource(html));
             return doc;
         } catch (Exception e) {
             throw new XProcException(e);
