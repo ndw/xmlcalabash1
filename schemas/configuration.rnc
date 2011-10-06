@@ -1,5 +1,5 @@
 default namespace local = ""
-namespace cc = "http://com.xmlcalabash/ns/configuration"
+namespace cc = "http://xmlcalabash.com/ns/configuration"
 
 xmlid.attr = attribute xml:id { xsd:ID }
 xmlbase.attr = attribute xml:base { xsd:anyURI }
@@ -13,7 +13,7 @@ start = XProcConfiguration
 # ============================================================
 
 XProcConfiguration =
-   element xproc-config {
+   element cc:xproc-config {
       common.attributes,
       (NotCC|CCConfig)*
    }
@@ -27,14 +27,95 @@ CCConfig =
    CCSchema | CCBinding | CCDebug | CCEntityResolver
  | CCInput | CCLogLevel | CCLibrary | CCOutput | CCOption | CCWithParam
  | CCSafe | SSStepName | CCURIResolver | CCImplementation
- | CCPipeline
+ | CCPipeline | CCStepErrorListener | CCSerialization | CCExtensionFunction
+ | CCFOProcessor | CCCSSProcessor | CCXProcConfigurer | CCDefaultSystemProperty
+ | CCExtension | CCHTMLParser
+
+CCStepErrorListener =
+   element cc:step-error-listener {
+      common.attributes,
+      attribute class-name { xsd:NMTOKEN },
+      empty
+   }
+
+CCSerialization =
+   element cc:serialization {
+      common.attributes,
+      attribute byte-order-mark { xsd:boolean }?,
+      attribute cdata-section-elements { text }?,
+      attribute doctype-public { text }?,
+      attribute doctype-system { text }?,
+      attribute encoding { text }?,
+      attribute escape-uri-attributes { xsd:boolean }?,
+      attribute include-content-type { xsd:boolean }?,
+      attribute indent { xsd:boolean }?,
+      attribute media-type { text }?,
+      attribute method { "xml" | "xhtml" | "text" | "xml" }?,
+      attribute normalization-form { text }?,
+      attribute omit-xml-declaration { xsd:boolean }?,
+      attribute standalone { text }?,
+      attribute undeclare-prefixes { xsd:boolean }?,
+      attribute version { text }?,
+      empty
+   }
+
+CCExtensionFunction =
+   element cc:extension-function {
+      common.attributes,
+      attribute class-name { xsd:NMTOKEN },
+      empty
+   }
+
+CCFOProcessor =
+   element cc:fo-processor {
+      common.attributes,
+      attribute class-name { xsd:NMTOKEN },
+      empty
+   }
+
+CCCSSProcessor =
+   element cc:css-processor {
+      common.attributes,
+      attribute class-name { xsd:NMTOKEN },
+      empty
+   }
+
+CCXProcConfigurer =
+   element cc:xproc-configurer {
+      common.attributes,
+      attribute class-name { xsd:NMTOKEN },
+      empty
+   }
+
+CCDefaultSystemProperty =
+   element cc:default-system-property {
+      common.attributes,
+      attribute name { xsd:NMTOKEN },
+      attribute value { text },
+      empty
+   }
+
+CCExtension =
+   element cc:extension {
+      common.attributes,
+      attribute name { xsd:NMTOKEN },
+      attribute value { text },
+      empty
+   }
+
+CCHTMLParser =
+   element cc:html-parser {
+      common.attributes,
+      attribute value { "validator.nu" | "tagsoup" },
+      empty
+   }
 
 CCSchema =
    element cc:schema-aware {
       common.attributes,
       xsd:boolean
    }
-   
+
 CCBinding =
    element cc:namespace-binding {
       common.attributes,
