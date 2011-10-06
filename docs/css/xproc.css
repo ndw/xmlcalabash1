@@ -1,0 +1,73 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+.body {
+    padding-left: 1em;
+    padding-right: 1em;
+}
+
+.navheader {
+    padding-left: 0.25em;
+    padding-right: 0.25em;
+    padding-top: 0.5em;
+    padding-bottom: 0.25em;
+    border-bottom: 1px solid #999999;
+    background-color: #cccccc;
+}
+
+.navfooter {
+    padding-left: 0.25em;
+    padding-right: 0.25em;
+    padding-top: 0.25em;
+    padding-bottom: 0.5em;
+    border-top: 1px solid #999999;
+    background-color: #cccccc;
+}
+
+.copyrightfooter {
+    padding-left: 0.25em;
+    padding-right: 0.25em;
+    background-color: #cccccc;
+}
+
+.copyrightfooter p {
+    margin: 0;
+    padding-bottom: 0.5em;
+}
+
+p.element-syntax                    { padding: 4px; }
+p.element-syntax-declare-step-rqd   { border: solid thin;  background-color: #ffeeff }
+p.element-syntax-declare-step-opt   { border: dashed thin; background-color: #ffeeff }
+p.element-syntax-error-vocabulary   { border: solid thin;  background-color: #ffffee }
+p.element-syntax-language-construct { border: solid thin;  background-color: #ffeeff }
+p.element-syntax-language-example   { border: solid thin;  background-color: #ffeeff }
+p.element-syntax-other-step         { border: solid thin;  background-color: #ffeeff }
+p.element-syntax-step-vocabulary    { border: dotted thin; background-color: #ffffee }
+
+span.decl code.type-value {
+    font-weight: bold;
+}
+
+span.opt-req code.name-value {
+    font-weight: bold;
+}
+
+span.opt-type {
+    font-size: small;
+    font-style: italic;
+}
+
+code.comment {
+    font-style: italic;
+}
+
+code {
+    font-size: 90%;
+}
+
+.property {
+    font-family: monospace, serif;
+    font-size: 90%;
+}
