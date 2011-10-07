@@ -45,10 +45,8 @@ public class PrettyPrint extends DefaultStep {
                 if (instream == null) {
                     throw new UnsupportedOperationException("Failed to load prettyprint.xsl stylesheet from resources.");
                 }
-                SAXSource ppsource = new SAXSource(new InputSource(instream));
-                DocumentBuilder ppbuilder = runtime.getProcessor().newDocumentBuilder();
-                ppbuilder.setLineNumbering(true);
-                prettyPrint = S9apiUtils.getDocumentElement(ppbuilder.build(ppsource));
+                XdmNode ppd = runtime.parse(new InputSource(instream));
+                prettyPrint = S9apiUtils.getDocumentElement(ppd);
             } catch (Exception e) {
                 throw new XProcException(e);
             }
@@ -87,13 +85,7 @@ public class PrettyPrint extends DefaultStep {
         transformer.setDestination(serializer);
         transformer.transform();
 
-        SAXSource source = new SAXSource(new InputSource(new ByteArrayInputStream(stream.toByteArray())));
-
-        DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
-        builder.setDTDValidation(false);
-        builder.setLineNumbering(true);
-
-        XdmNode output = builder.build(source);
+        XdmNode output = runtime.parse(new InputSource(new ByteArrayInputStream(stream.toByteArray())));
         result.write(output);
     }
 }

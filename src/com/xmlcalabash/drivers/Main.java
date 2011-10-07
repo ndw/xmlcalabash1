@@ -108,6 +108,7 @@ public class Main {
                 // Make this absolute because sometimes it fails from the command line otherwise. WTF?
                 String cfgURI = URIUtils.cwdAsURI().resolve(cmd.configFile).toASCIIString();
                 SAXSource source = new SAXSource(new InputSource(cfgURI));
+                // No resolver, we don't have one yet
                 DocumentBuilder builder = config.getProcessor().newDocumentBuilder();
                 XdmNode doc = builder.build(source);
                 config.parse(doc);
@@ -158,8 +159,6 @@ public class Main {
                 if (debug) {
                     System.err.println("Implicit pipeline:");
                     Processor qtproc = runtime.getProcessor();
-                    DocumentBuilder builder = qtproc.newDocumentBuilder();
-                    builder.setBaseURI(new URI("http://example.com/"));
                     XQueryCompiler xqcomp = qtproc.newXQueryCompiler();
                     XQueryExecutable xqexec = xqcomp.compile(".");
                     XQueryEvaluator xqeval = xqexec.load();
@@ -234,12 +233,9 @@ public class Main {
 
                             SAXSource source = null;
                             if ("-".equals(uri)) {
-                                source = new SAXSource(new InputSource(System.in));
-                                DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
-                                doc = builder.build(source);
+                                doc = runtime.parse(new InputSource(System.in));
                             } else {
-                                source = new SAXSource(new InputSource(uri));
-                                doc = runtime.parse(uri, URIUtils.cwdAsURI().toASCIIString());
+                                doc = runtime.parse(new InputSource(uri));
                             }
                         } else if (uri.startsWith("data:")) {
                             uri = uri.substring(5);
@@ -434,19 +430,13 @@ public class Main {
     private String errorMessage(QName code) {
         InputStream instream = getClass().getResourceAsStream("/etc/error-list.xml");
         if (instream != null) {
-            try {
-                SAXSource source = new SAXSource(new InputSource(instream));
-                DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
-                XdmNode doc = builder.build(source);
-                XdmSequenceIterator iter = doc.axisIterator(Axis.DESCENDANT, new QName(XProcConstants.NS_XPROC_ERROR,"error"));
-                while (iter.hasNext()) {
-                    XdmNode error = (XdmNode) iter.next();
-                    if (code.getLocalName().equals(error.getAttributeValue(_code))) {
-                        return error.getStringValue();
-                    }
+            XdmNode doc = runtime.parse(new InputSource(instream));
+            XdmSequenceIterator iter = doc.axisIterator(Axis.DESCENDANT, new QName(XProcConstants.NS_XPROC_ERROR,"error"));
+            while (iter.hasNext()) {
+                XdmNode error = (XdmNode) iter.next();
+                if (code.getLocalName().equals(error.getAttributeValue(_code))) {
+                    return error.getStringValue();
                 }
-            } catch (SaxonApiException sae) {
-                // nop;
             }
         }
         return "Unknown error";

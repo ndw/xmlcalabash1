@@ -120,9 +120,7 @@ public class XProcURIResolver implements URIResolver, EntityResolver {
 
     public XdmNode parse(String href, String base, boolean dtdValidate) {
         Source source = null;
-
         href = URIUtils.encode(href);
-
         runtime.finest(null,null,"Attempting to parse: " + href + " (" + base + ")");
 
         try {
@@ -153,10 +151,6 @@ public class XProcURIResolver implements URIResolver, EntityResolver {
         DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
         builder.setDTDValidation(dtdValidate);
         builder.setLineNumbering(true);
-        //builder.setWhitespaceStrippingPolicy(WhitespaceStrippingPolicy.NONE);
-
-        Processor proc = runtime.getProcessor();
-        Configuration config = proc.getUnderlyingConfiguration();
 
         try {
             return builder.build(source);
@@ -169,6 +163,30 @@ public class XProcURIResolver implements URIResolver, EntityResolver {
             } else {
                 throw XProcException.dynamicError(11, sae);
             }
+        }
+    }
+
+    public XdmNode parse(InputSource isource) {
+        try {
+            // Make sure the builder uses our entity resolver
+            XMLReader reader = XMLReaderFactory.createXMLReader();
+            reader.setEntityResolver(this);
+            SAXSource source = new SAXSource(reader, isource);
+            DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
+            builder.setLineNumbering(true);
+            builder.setDTDValidation(false);
+            return builder.build(source);
+        } catch (SaxonApiException sae) {
+            String msg = sae.getMessage();
+            if (msg.contains("validation")) {
+                throw XProcException.stepError(27, sae);
+            } else if (msg.contains("HTTP response code: 403 ")) {
+                throw XProcException.dynamicError(21);
+            } else {
+                throw XProcException.dynamicError(11, sae);
+            }
+        } catch (SAXException e) {
+            throw new XProcException(e);
         }
     }
 

@@ -885,9 +885,7 @@ public class HttpRequest extends DefaultStep {
             if (xmlContentType(partType)) {
                 BufferedReader preader = new BufferedReader(new InputStreamReader(partStream, charset));
                 // Read it as XML
-                SAXSource source = new SAXSource(new InputSource(preader));
-                DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
-                tree.addSubtree(builder.build(source));
+                tree.addSubtree(runtime.parse(new InputSource(preader)));
             } else if (textContentType(partType)) {
                 BufferedReader preader = new BufferedReader(new InputStreamReader(partStream, charset));
                 // Read it as text
@@ -954,9 +952,7 @@ public class HttpRequest extends DefaultStep {
     public void readBodyContentPart(TreeWriter tree, InputStream bodyStream, String contentType, String charset) throws SaxonApiException, IOException {
         if (xmlContentType(contentType)) {
             // Read it as XML
-            SAXSource source = new SAXSource(new InputSource(bodyStream));
-            DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
-            tree.addSubtree(builder.build(source));
+            tree.addSubtree(runtime.parse(new InputSource(bodyStream)));
         } else if (textContentType(contentType)) {
             // Read it as text
 

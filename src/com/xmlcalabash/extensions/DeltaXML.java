@@ -85,9 +85,7 @@ public class DeltaXML extends DefaultStep {
             comparator.compare(docAxml, docBxml, buf);
 
             StringReader sr = new StringReader(buf.toString());
-            SAXSource source = new SAXSource(new InputSource(sr));
-            DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
-            XdmNode doc = builder.build(source);
+            XdmNode doc = runtime.parse(new InputSource(sr));
             result.write(doc);
         } catch (Exception e) {
             throw new XProcException(e);

@@ -49,7 +49,6 @@ import com.xmlcalabash.model.DeclareStep;
 import com.xmlcalabash.model.PipelineLibrary;
 import com.xmlcalabash.util.XProcURIResolver;
 import com.xmlcalabash.util.URIUtils;
-import com.xmlcalabash.util.Reporter;
 
 import java.lang.reflect.Constructor;
 import java.util.logging.Logger;
@@ -58,12 +57,7 @@ import java.util.Vector;
 import java.util.GregorianCalendar;
 import java.util.Locale;
 import java.io.FileNotFoundException;
-import java.io.PrintStream;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.net.URISyntaxException;
-import java.net.URLConnection;
-import java.net.URL;
 import java.net.URI;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -72,6 +66,7 @@ import javax.xml.transform.URIResolver;
 
 import org.apache.commons.httpclient.Cookie;
 import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
 
 /**
  *
@@ -157,6 +152,8 @@ public class XProcRuntime {
         } catch (Exception e) {
             throw new XProcException(e);
         }
+
+        processor.getUnderlyingConfiguration().setURIResolver(uriResolver);
 
         StepErrorListener errListener = new StepErrorListener(this);
         saxonConfig.setErrorListener(errListener);
@@ -520,8 +517,11 @@ public class XProcRuntime {
     }
 
     public XdmNode parse(String uri, String base, boolean validate) {
-        XdmNode doc = uriResolver.parse(uri, base, validate);
-        return doc;
+        return uriResolver.parse(uri, base, validate);
+    }
+
+    public XdmNode parse(InputSource isource) {
+        return uriResolver.parse(isource);
     }
 
     public void declareStep(QName name, DeclareStep step) {

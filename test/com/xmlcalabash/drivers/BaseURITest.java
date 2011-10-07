@@ -79,6 +79,7 @@ public class BaseURITest {
 
         //transformer.getUnderlyingController().setBaseOutputURI("http://example.com/");
 
+        // No resolver, there isn't one here.
         DocumentBuilder builder = processor.newDocumentBuilder();
         SAXSource document = new SAXSource(new InputSource(new StringReader(textXML)));
         XdmNode context = builder.build(document);

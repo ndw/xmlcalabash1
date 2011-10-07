@@ -343,17 +343,7 @@ public class Exec extends DefaultStep {
             tree.startContent();
 
             if (asXML) {
-                Source source = new SAXSource(new InputSource(is));
-                DocumentBuilder docbuilder = runtime.getProcessor().newDocumentBuilder();
-                docbuilder.setLineNumbering(true);
-
-                XdmNode doc;
-                try {
-                    doc = docbuilder.build(source);
-                } catch (SaxonApiException sae) {
-                    throw new XProcException(XProcConstants.dynamicError(11), sae);
-                }
-
+                XdmNode doc = runtime.parse(new InputSource(is));
                 tree.addSubtree(doc);
             } else {
                 // If we're not wrapping the lines, a buffered reader doesn't work. It can't

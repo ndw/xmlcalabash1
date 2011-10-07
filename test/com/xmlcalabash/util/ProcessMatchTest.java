@@ -63,6 +63,7 @@ public class ProcessMatchTest extends TestCase {
                 "</doc>";
 
         SAXSource source = new SAXSource(new InputSource(new StringReader(xml)));
+        // No resolver here, there isn't one.
         DocumentBuilder builder = saxon.newDocumentBuilder();
         XdmNode doc = builder.build(source);
         assertNotNull(doc);

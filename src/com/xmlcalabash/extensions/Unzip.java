@@ -8,10 +8,8 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -31,6 +29,9 @@ import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.XdmNode;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.XMLReaderFactory;
 
 /**
  *
@@ -146,9 +147,7 @@ public class Unzip extends DefaultStep {
                 if ("application/xml".equals(contentType) || "text/xml".equals(contentType)
                         || contentType.endsWith("+xml")) {
                     InputSource isource = new InputSource(zipFile);
-                    SAXSource source = new SAXSource(isource);
-                    DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
-                    XdmNode doc = builder.build(source);
+                    XdmNode doc = runtime.parse(isource);
                     result.write(doc);
                 } else {
                     tree.startDocument(step.getNode().getBaseURI());

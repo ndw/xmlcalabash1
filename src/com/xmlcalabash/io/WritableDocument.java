@@ -109,8 +109,6 @@ public class WritableDocument implements WritablePipe {
     public void write(XdmNode doc) {
         try {
             Processor qtproc = runtime.getProcessor();
-            DocumentBuilder builder = qtproc.newDocumentBuilder();
-            builder.setBaseURI(new URI("http://example.com/"));
             XQueryCompiler xqcomp = qtproc.newXQueryCompiler();
             XQueryExecutable xqexec = xqcomp.compile(".");
             XQueryEvaluator xqeval = xqexec.load();
@@ -193,9 +191,6 @@ public class WritableDocument implements WritablePipe {
             if (uri == null && runtime.getDebug()) {
                 System.out.println("\n--<document boundary>--------------------------------------------------------------------------");
             }
-        } catch (URISyntaxException use) {
-            use.printStackTrace();
-            throw new XProcException(use);
         } catch (SaxonApiException sae) {
             sae.printStackTrace();
             throw new XProcException(sae);

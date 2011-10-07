@@ -89,12 +89,6 @@ public class EscapeMarkup extends DefaultStep {
                 tree.startContent();
 
                 Processor qtproc = runtime.getProcessor();
-                DocumentBuilder builder = qtproc.newDocumentBuilder();
-                try {
-                    builder.setBaseURI(new URI("http://example.com/"));
-                } catch (URISyntaxException ex) {
-                    // can't happen
-                }
 
                 // Serialize the *whole* thing, then strip off the start and end tags, because
                 // otherwise namespace fixup messes with the namespace bindings

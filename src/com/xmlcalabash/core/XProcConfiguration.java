@@ -149,6 +149,7 @@ public class XProcConfiguration {
             if (instream == null) {
                 throw new UnsupportedOperationException("Failed to load configuration from JAR file");
             }
+            // No resolver, we don't have one yet
             SAXSource source = new SAXSource(new InputSource(instream));
             DocumentBuilder builder = cfgProcessor.newDocumentBuilder();
             builder.setLineNumbering(true);
@@ -231,6 +232,7 @@ public class XProcConfiguration {
             throw new XProcException(use);
         }
 
+        // No resolver, we don't have one yet
         DocumentBuilder builder = cfgProcessor.newDocumentBuilder();
         builder.setLineNumbering(true);
 

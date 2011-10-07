@@ -19,7 +19,6 @@
 
 package com.xmlcalabash.library;
 
-import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 
@@ -160,23 +159,7 @@ public class UnescapeMarkup extends DefaultStep {
             escapedContent = "<wrapper>" + escapedContent + "</wrapper>";
 
             StringReader sr = new StringReader(escapedContent);
-            InputSource isource = new InputSource(sr);
-            SAXSource source = new SAXSource(isource);
-            DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
-            builder.setDTDValidation(false);
-
-            XdmNode unesc = builder.build(source);
-            /*
-            if (namespace == null) {
-                XdmSequenceIterator unesciter = unesc.axisIterator(Axis.CHILD);
-                while (unesciter.hasNext()) {
-                    XdmNode unescnode = (XdmNode) unesciter.next();
-                    tree.addSubtree(unescnode);
-                }
-            } else {
-                remapDefaultNamespace(tree, unesc);
-            }
-            */
+            XdmNode unesc = runtime.parse(new InputSource(sr));
 
             // Now ignore the wrapper that we added...
             XdmNode dummyWrapper = S9apiUtils.getDocumentElement(unesc);
@@ -288,6 +271,7 @@ public class UnescapeMarkup extends DefaultStep {
         StringReader inputStream = new StringReader(text);
         InputSource source = new InputSource(inputStream);
         Parser parser = new Parser();
+        parser.setEntityResolver(runtime.getResolver());
         SAXSource saxSource = new SAXSource(parser, source);
         DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
         try {
@@ -300,6 +284,7 @@ public class UnescapeMarkup extends DefaultStep {
 
     private XdmNode parseHTML(String text) {
         HtmlDocumentBuilder htmlBuilder = new HtmlDocumentBuilder(XmlViolationPolicy.ALTER_INFOSET);
+        htmlBuilder.setEntityResolver(runtime.getResolver());
         try {
             InputSource src = new InputSource(new StringReader(text));
             Document html = htmlBuilder.parse(src);

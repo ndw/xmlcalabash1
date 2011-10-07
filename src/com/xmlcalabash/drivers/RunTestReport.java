@@ -59,6 +59,8 @@ import net.sf.saxon.s9api.Serializer;
 import javax.xml.transform.sax.SAXSource;
 
 import com.xmlcalabash.runtime.XPipeline;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.XMLReaderFactory;
 
 
 /**
@@ -174,20 +176,20 @@ public class RunTestReport {
             if (instream == null) {
                 throw new UnsupportedOperationException("Failed to load prettyprint stylesheet from resources.");
             }
-            SAXSource ppsource = new SAXSource(new InputSource(instream));
-            DocumentBuilder ppbuilder = runtime.getProcessor().newDocumentBuilder();
-            ppbuilder.setLineNumbering(true);
-            prettyPrint = S9apiUtils.getDocumentElement(ppbuilder.build(ppsource));
+            XdmNode ppd = runtime.parse(new InputSource(instream));
+            prettyPrint = S9apiUtils.getDocumentElement(ppd);
 
             InputSource isource = new InputSource(testfile);
-            SAXSource source = new SAXSource(isource);
+            XMLReader reader = XMLReaderFactory.createXMLReader();
+            reader.setEntityResolver(runtime.getResolver());
+            SAXSource source = new SAXSource(reader,isource);
             DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
             builder.setLineNumbering(true);
             builder.setDTDValidation(false);
 
             doc = builder.build(source);
             root = S9apiUtils.getDocumentElement(doc);
-        } catch (SaxonApiException sae) {
+        } catch (Exception sae) {
             TestResult result = new TestResult(testfile);
             result.catchException(sae);
             results.add(result);
@@ -228,17 +230,18 @@ public class RunTestReport {
 
         if (testNode.getAttributeValue(_href) != null) {
             URI turi = testNode.getBaseURI().resolve(testNode.getAttributeValue(_href));
-            InputSource isource = new InputSource(turi.toASCIIString());
-            SAXSource source = new SAXSource(isource);
-            DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
-            builder.setLineNumbering(true);
-            builder.setDTDValidation(false);
-
             try {
+                InputSource isource = new InputSource(turi.toASCIIString());
+                XMLReader reader = XMLReaderFactory.createXMLReader();
+                reader.setEntityResolver(runtime.getResolver());
+                SAXSource source = new SAXSource(reader, isource);
+                DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
+                builder.setLineNumbering(true);
+                builder.setDTDValidation(false);
                 XdmNode doc = builder.build(source);
                 XdmNode root = S9apiUtils.getDocumentElement(doc);
                 result = runTest(root);
-            } catch (SaxonApiException sae) {
+            } catch (Exception sae) {
                 result = new TestResult(turi.toASCIIString());
                 result.catchException(sae);
             }
@@ -610,12 +613,6 @@ private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
     public String serializeAsXML(XdmNode node) {
         try {
             Processor qtproc = runtime.getProcessor();
-            DocumentBuilder builder = qtproc.newDocumentBuilder();
-            try {
-                builder.setBaseURI(new URI("http://example.com/"));
-            } catch (URISyntaxException use) {
-                // won't happen
-            }
             XQueryCompiler xqcomp = qtproc.newXQueryCompiler();
             XQueryExecutable xqexec = xqcomp.compile(".");
             XQueryEvaluator xqeval = xqexec.load();
@@ -827,12 +824,7 @@ private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
 
         private void add(XdmNode node, String port, String href) throws SaxonApiException {
             String rhref = node.getBaseURI().resolve(href).toASCIIString();
-            SAXSource source = new SAXSource(new InputSource(rhref));
-            DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
-            XdmNode doc = builder.build(source);
-            //XdmNode root = S9apiUtils.getDocumentElement(doc);
-
-            add(node,port,doc);
+            add(node, port, runtime.parse(new InputSource(rhref)));
         }
 
         private void add(XdmNode node, String port, XdmNode root) {

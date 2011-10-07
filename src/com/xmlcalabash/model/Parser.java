@@ -32,6 +32,9 @@ import com.xmlcalabash.util.URIUtils;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.XMLReaderFactory;
 
 /**
  *
@@ -148,11 +151,18 @@ public class Parser {
     }
 
     private XdmNode parse(InputStream instream, URI baseURI) throws SaxonApiException {
-        SAXSource source = new SAXSource(new InputSource(instream));
-        DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
-        builder.setLineNumbering(true);
-        builder.setBaseURI(baseURI);
-        return builder.build(source);
+        try {
+            XMLReader reader = XMLReaderFactory.createXMLReader();
+            reader.setEntityResolver(runtime.getResolver());
+            SAXSource source = new SAXSource(reader, new InputSource(instream));
+            DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
+            builder.setLineNumbering(true);
+            builder.setDTDValidation(false);
+            builder.setBaseURI(baseURI);
+            return builder.build(source);
+        } catch (SAXException se) {
+            throw new XProcException(se);
+        }
     }
 
     private PipelineLibrary readLibrary(XdmNode node) {

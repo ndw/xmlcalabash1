@@ -39,6 +39,7 @@ public class ValidBaseURITest {
         Processor processor = new Processor(true);
         SchemaManager manager = processor.getSchemaManager();
 
+        // No resolver here, there isn't one.
         DocumentBuilder builder = processor.newDocumentBuilder();
         SAXSource source = new SAXSource(new InputSource("http://tests.xproc.org/tests/doc/compoundEntity.xml"));
         XdmNode document = builder.build(source);

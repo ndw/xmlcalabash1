@@ -136,13 +136,6 @@ public class XCCInvokeModule extends DefaultStep {
 
     private XdmNode parseString(String xml) {
         StringReader sr = new StringReader(xml);
-        SAXSource saxSource = new SAXSource(new InputSource(sr));
-        DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
-        builder.setLineNumbering(true);
-        try {
-            return builder.build(saxSource);
-        } catch (SaxonApiException sae) {
-            throw new XProcException(XProcConstants.dynamicError(11), sae);
-        }
+        return runtime.parse(new InputSource(sr));
     }
 }
