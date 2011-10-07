@@ -97,6 +97,7 @@ public class HttpRequest extends DefaultStep {
     public static final QName _disposition = new QName("", "disposition");
     public static final QName _status = new QName("", "status");
     public static final QName _boundary = new QName("", "boundary");
+    public static final QName _charset = new QName("", "charset");
 
     private static final int bufSize = 912 * 8; // A multiple of 3, 4, and 75 for base64 line breaking
 
@@ -494,39 +495,51 @@ public class HttpRequest extends DefaultStep {
 
         // FIXME: This sucks rocks. I want to write the data to be posted, not provide some way to read it
         String postContent = null;
+        String encoding = body.getAttributeValue(_encoding);
         try {
-            if (xmlContentType(contentType)) {
-                Serializer serializer = makeSerializer();
-
-                if (!S9apiUtils.isDocumentContent(body.axisIterator(Axis.CHILD))) {
-                    throw XProcException.stepError(22);
-                }
-
-                Vector<XdmNode> content = new Vector<XdmNode> ();
-                XdmSequenceIterator iter = body.axisIterator(Axis.CHILD);
-                while (iter.hasNext()) {
-                    XdmNode node = (XdmNode) iter.next();
-                    content.add(node);
-                }
-
-                // FIXME: set serializer properties appropriately!
+            if ("base64".equals(encoding)) {
+                String charset = body.getAttributeValue(_charset);
+                // FIXME: is utf-8 the right default?
+                if (charset == null) { charset = "utf-8"; }
+                String escapedContent = decodeBase64(body, charset);
                 StringWriter writer = new StringWriter();
-                serializer.setOutputWriter(writer);
-                S9apiUtils.serialize(runtime, content, serializer);
+                writer.write(escapedContent);
                 writer.close();
                 postContent = writer.toString();
             } else {
-                StringWriter writer = new StringWriter();
-                XdmSequenceIterator iter = body.axisIterator(Axis.CHILD);
-                while (iter.hasNext()) {
-                    XdmNode node = (XdmNode) iter.next();
-                    if (node.getNodeKind() != XdmNodeKind.TEXT) {
-                        throw XProcException.stepError(28);
+                if (xmlContentType(contentType)) {
+                    Serializer serializer = makeSerializer();
+
+                    if (!S9apiUtils.isDocumentContent(body.axisIterator(Axis.CHILD))) {
+                        throw XProcException.stepError(22);
                     }
-                    writer.write(node.getStringValue());
+
+                    Vector<XdmNode> content = new Vector<XdmNode> ();
+                    XdmSequenceIterator iter = body.axisIterator(Axis.CHILD);
+                    while (iter.hasNext()) {
+                        XdmNode node = (XdmNode) iter.next();
+                        content.add(node);
+                    }
+
+                    // FIXME: set serializer properties appropriately!
+                    StringWriter writer = new StringWriter();
+                    serializer.setOutputWriter(writer);
+                    S9apiUtils.serialize(runtime, content, serializer);
+                    writer.close();
+                    postContent = writer.toString();
+                } else {
+                    StringWriter writer = new StringWriter();
+                    XdmSequenceIterator iter = body.axisIterator(Axis.CHILD);
+                    while (iter.hasNext()) {
+                        XdmNode node = (XdmNode) iter.next();
+                        if (node.getNodeKind() != XdmNodeKind.TEXT) {
+                            throw XProcException.stepError(28);
+                        }
+                        writer.write(node.getStringValue());
+                    }
+                    writer.close();
+                    postContent = writer.toString();
                 }
-                writer.close();
-                postContent = writer.toString();
             }
 
             StringRequestEntity requestEntity = new StringRequestEntity(postContent, contentType, "UTF-8");
@@ -982,6 +995,28 @@ public class HttpRequest extends DefaultStep {
             }
 
             tree.addText("\n"); // FIXME: should we be doing this?
+        }
+    }
+
+    private String extractText(XdmNode doc) {
+        String content = "";
+        XdmSequenceIterator iter = doc.axisIterator(Axis.CHILD);
+        while (iter.hasNext()) {
+            XdmNode child = (XdmNode) iter.next();
+            if (child.getNodeKind() == XdmNodeKind.ELEMENT || child.getNodeKind() == XdmNodeKind.TEXT) {
+                content += child.getStringValue();
+            }
+        }
+        return content;
+    }
+
+    private String decodeBase64(XdmNode doc, String charset) {
+        String content = extractText(doc);
+        byte[] decoded = Base64.decode(content);
+        try {
+            return new String(decoded, charset);
+        } catch (UnsupportedEncodingException uee) {
+            throw XProcException.stepError(10, uee);
         }
     }
 
