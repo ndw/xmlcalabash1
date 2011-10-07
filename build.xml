@@ -302,7 +302,7 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
     </copy>
 
     <copy todir="${install.dir}/schemas">
-      <fileset file="schemas/**"/>
+      <fileset file="resources/schemas/**"/>
     </copy>
 
     <echo file="${install.dir}/VERSION">${version}</echo>
