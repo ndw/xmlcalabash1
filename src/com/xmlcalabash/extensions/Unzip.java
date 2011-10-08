@@ -4,6 +4,7 @@ package com.xmlcalabash.extensions;
 import java.io.IOException;
 import java.io.BufferedInputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
@@ -14,7 +15,6 @@ import java.util.zip.ZipInputStream;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
-import javax.xml.transform.sax.SAXSource;
 
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
@@ -27,11 +27,7 @@ import com.xmlcalabash.library.DefaultStep;
 import com.xmlcalabash.runtime.XAtomicStep;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.XdmNode;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.XMLReaderFactory;
 
 /**
  *
@@ -43,6 +39,7 @@ public class Unzip extends DefaultStep {
     protected final static QName c_zipfile = new QName("c", XProcConstants.NS_XPROC_STEP, "zipfile");
     protected final static QName c_file = new QName("c", XProcConstants.NS_XPROC_STEP, "file");
     protected final static QName _file = new QName("", "file");
+    protected final static QName _charset = new QName("", "charset");
     protected final static QName _name = new QName("", "name");
     protected final static QName c_directory = new QName("c", XProcConstants.NS_XPROC_STEP, "directory");
     protected final static QName _compressed_size = new QName("", "compressed-size");
@@ -55,6 +52,7 @@ public class Unzip extends DefaultStep {
     private URI zipURI = null;
     private String name = null;
     private String contentType = "application/xml";
+    private String charset = null;
 
     /** Creates a new instance of Unzip */
     public Unzip(XProcRuntime runtime, XAtomicStep step) {
@@ -81,6 +79,10 @@ public class Unzip extends DefaultStep {
 
         if (getOption(_content_type) != null) {
             contentType = getOption(_content_type).getString();
+        }
+
+        if (getOption(_charset) != null) {
+            charset = getOption(_charset).getString();
         }
 
         try {
@@ -156,18 +158,33 @@ public class Unzip extends DefaultStep {
                     tree.addAttribute(_content_type, contentType);
                     tree.startContent();
 
-                    BufferedInputStream bufstream = new BufferedInputStream(zipFile);
-                    int maxlen = 4096 * 3;
-                    byte[] bytes = new byte[maxlen];
-                    int read = bufstream.read(bytes, 0, maxlen);
-                    while (read >= 0) {
-                        if (read > 0) {
-                            String base64 = Base64.encodeBytes(bytes, 0, read);
-                            tree.addText(base64 + "\n");
+                    if (contentType != null && contentType.startsWith("text/") && charset != null) {
+                        InputStreamReader reader = new InputStreamReader(zipFile, charset);
+                        int maxlen = 4096;
+                        char[] chars = new char[maxlen];
+                        int read = reader.read(chars, 0, maxlen);
+                        while (read >= 0) {
+                            if (read > 0) {
+                                String s = new String(chars);
+                                tree.addText(s);
+                            }
+                            read = reader.read(chars, 0, maxlen);
                         }
-                        read = bufstream.read(bytes, 0, maxlen);
+                        reader.close();
+                    } else {
+                        BufferedInputStream bufstream = new BufferedInputStream(zipFile);
+                        int maxlen = 4096 * 3;
+                        byte[] bytes = new byte[maxlen];
+                        int read = bufstream.read(bytes, 0, maxlen);
+                        while (read >= 0) {
+                            if (read > 0) {
+                                String base64 = Base64.encodeBytes(bytes, 0, read);
+                                tree.addText(base64 + "\n");
+                            }
+                            read = bufstream.read(bytes, 0, maxlen);
+                        }
+                        bufstream.close();
                     }
-                    bufstream.close();
 
                     tree.addEndElement();
                     tree.endDocument();
