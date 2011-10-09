@@ -268,6 +268,24 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
     <mkdir dir="${install.dir}/docs"/>
     <mkdir dir="${install.dir}/schemas"/>
     <mkdir dir="${install.dir}/xpl"/>
+    <ant dir="docs"/>
+    <mkdir dir="${install.dir}/docs/reference"/>
+    <mkdir dir="${install.dir}/docs/reference/css"/>
+    <mkdir dir="${install.dir}/docs/reference/js"/>
+    <mkdir dir="${install.dir}/docs/reference/img"/>
+    <copy todir="${install.dir}/docs/reference">
+      <fileset dir="docs/build"/>
+    </copy>
+    <copy todir="${install.dir}/docs/reference/css">
+      <fileset dir="docs/css"/>
+    </copy>
+    <copy todir="${install.dir}/docs/reference/js">
+      <fileset dir="docs/js"/>
+    </copy>
+    <copy todir="${install.dir}/docs/reference/img">
+      <fileset dir="docs/img"/>
+    </copy>
+
     <copy todir="${install.dir}/docs">
       <fileset file="docs/NOTICES"/>
       <fileset file="docs/ChangeLog"/>
