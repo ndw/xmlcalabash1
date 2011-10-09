@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="docs" default="default" basedir=".">
+  <description>Builds the XML Calabash documentation</description>
+
+  <path id="build.classpath">
+    <fileset dir="../lib">
+      <include name="*.jar"/>
+    </fileset>
+  </path>
+
+  <target name="default" depends="init,docs"/>
+
+  <target name="init">
+    <delete>
+      <fileset dir="build" includes="**/*.html"/>
+    </delete>
+  </target>
+
+  <target name="docs" depends="init">
+    <java fork="true" classname="com.xmlcalabash.drivers.Main">
+      <classpath>
+        <pathelement location="../out/production/Calabash"/>
+        <path refid="build.classpath"/>
+      </classpath>
+      <jvmarg value="-Xmx1024m"/>
+      <arg value="-D"/>
+      <arg value="-isource=src/ref.xml"/>
+      <arg value="style/format.xpl"/>
+    </java>
+  </target>
+
+</project>
