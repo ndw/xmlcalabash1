@@ -18,6 +18,24 @@
    </refsynopsisdiv>
    <refsection>
       <title>Description</title>
-      <para>TBD.</para>
+
+<para>The file identified by the <option>file</option> option in the ZIP archive
+identified by the <option>href</option> option is extracted. If no <option>file</option>
+option is specified, a manifest of the ZIP archive contents produced instead.</para>
+
+<para>If the <option>content-type</option>
+is not specified, or if an XML content type is specified, the file is parsed
+as XML and returned. It is a <glossterm>dynamic error</glossterm> if the
+file is not well-formed XML.</para>
+
+<para>If the <option>content-type</option> specified is not an XML
+content type and no <option>charset</option> is specified, the file is
+base64 encoded and returned in a single <tag>c:data</tag> element.</para>
+
+<para>If the <option>content-type</option> is a text content type (begins
+with “<literal>text/</literal>”), <emphasis>and</emphasis> a <option>charset</option>
+is specified, the file is returned as a single <tag>c:data</tag> element
+containing the text content of the file.</para>
+
    </refsection>
 </refentry>

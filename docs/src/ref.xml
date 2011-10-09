@@ -8,12 +8,24 @@
       version="5.0">
 <?dbhtml filename="index.html"?>
 <info>
-<title>XML Calabash Step Reference</title>
-<releaseinfo>0.1</releaseinfo>
-<copyright>
-  <year>2011</year>
-  <holder>Norman Walsh</holder>
-</copyright>
+  <mediaobject>
+    <alt>[Cover]</alt>
+    <imageobject>
+      <imagedata fileref="../img/cover.png" align="left"/>
+    </imageobject>
+  </mediaobject>
+
+  <title>XML Calabash Step Reference</title>
+  <author>
+    <personname>
+      <firstname>Norman</firstname><surname>Walsh</surname>
+    </personname>
+  </author>
+  <releaseinfo>0.1</releaseinfo>
+  <copyright>
+    <year>2011</year>
+    <holder>Norman Walsh</holder>
+  </copyright>
 </info>
 
 <preface xml:id="preface">
@@ -99,6 +111,7 @@
 <xi:include href="steps/cx-delta-xml.xml"/>
 <xi:include href="steps/cx-eval.xml"/>
 <xi:include href="steps/cx-get-cookies.xml"/>
+<xi:include href="steps/cx-java-properties.xml"/>
 <xi:include href="steps/cx-message.xml"/>
 <xi:include href="steps/cx-metadata-extractor.xml"/>
 <xi:include href="steps/cx-namespace-delete.xml"/>

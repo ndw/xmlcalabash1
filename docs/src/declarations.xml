@@ -408,6 +408,11 @@
       <p:output port="result"/>
    </p:declare-step>
 
+   <p:declare-step type="cx:java-properties">
+     <p:output port="result"/>
+     <p:option name="href" e:type="xsd:anyURI"/>
+   </p:declare-step>
+
     <p:declare-step type="cx:message">
       <p:input port="source" sequence="true"/>
       <p:output port="result" sequence="true"/>
@@ -597,6 +602,7 @@
       <p:option name="href" required="true" e:type="xsd:anyURI"/>
       <p:option name="file" e:type="xsd:string"/>
       <p:option name="content-type" e:type="xsd:string"/>
+      <p:option name="charset" e:type="xsd:string"/>
    </p:declare-step>
 
     <p:declare-step type="pxp:zip">

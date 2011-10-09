@@ -37,6 +37,15 @@ body {
     padding-bottom: 0.5em;
 }
 
+header.book-titlepage {
+    clear: both;
+}
+
+.cover img {
+    border: 1px solid #aaaaaa;
+    margin-right: 1em;
+}
+
 p.element-syntax                    { padding: 4px; }
 p.element-syntax-declare-step-rqd   { border: solid thin;  background-color: #ffeeff }
 p.element-syntax-declare-step-opt   { border: dashed thin; background-color: #ffeeff }

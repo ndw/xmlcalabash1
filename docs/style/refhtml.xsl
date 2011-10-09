@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                xmlns="http://www.w3.org/1999/xhtml"
                 xmlns:db="http://docbook.org/ns/docbook"
                 xmlns:f="http://docbook.org/xslt/ns/extension"
                 xmlns:t="http://docbook.org/xslt/ns/template"
                 xmlns:m="http://docbook.org/xslt/ns/mode"
+                xmlns:tmpl="http://docbook.org/xslt/titlepage-templates"
                 xmlns:xs="http://www.w3.org/2001/XMLSchema"
                 exclude-result-prefixes="db f t m xs"
                 version="2.0">
@@ -14,6 +16,33 @@
 <xsl:param name="refentry.separator" select="0"/>
 <xsl:param name="resource.root" select="''"/>
 <xsl:param name="html.stylesheets" select="'css/xproc.css'"/>
+
+<xsl:template name="t:user-titlepage-templates" as="element(tmpl:templates-list)?">
+  <tmpl:templates-list>
+    <tmpl:templates name="book">
+      <tmpl:recto>
+        <header tmpl:class="titlepage">
+          <db:mediaobject/>
+          <db:title/>
+          <db:subtitle/>
+          <db:corpauthor/>
+          <db:authorgroup/>
+          <db:author/>
+          <db:editor/>
+          <db:othercredit/>
+          <db:releaseinfo/>
+          <db:copyright/>
+          <db:legalnotice/>
+          <db:pubdate/>
+          <db:revision/>
+          <db:revhistory/>
+          <db:abstract/>
+        </header>
+        <hr tmpl:keep="true"/>
+      </tmpl:recto>
+    </tmpl:templates>
+  </tmpl:templates-list>
+</xsl:template>
 
 <xsl:function name="f:chunk-filename" as="xs:string">
   <xsl:param name="chunk" as="element()"/>
@@ -204,5 +233,33 @@
     </xsl:otherwise>
   </xsl:choose>
 </xsl:function>
+
+<xsl:template match="db:releaseinfo[not(@role)]" mode="m:titlepage-mode">
+  <p class="releaseinfo">
+    <xsl:text>Reference version </xsl:text>
+    <xsl:apply-templates/>
+  </p>
+</xsl:template>
+
+<xsl:template match="db:releaseinfo[@role='xml-calabash-version']" mode="m:titlepage-mode">
+  <p class="releaseinfo">
+    <xsl:text>For XML Calabash version </xsl:text>
+    <xsl:apply-templates/>
+  </p>
+</xsl:template>
+
+<xsl:template match="db:pubdate" mode="m:titlepage-mode">
+  <p class="pubdate">
+    <xsl:text>Published </xsl:text>
+    <xsl:value-of select='format-date(xs:date(.), "[D01] [MNn,*-3] [Y0001]")'/>
+  </p>
+  <br clear="all"/>
+</xsl:template>
+
+<xsl:template match="db:mediaobject" mode="m:titlepage-mode">
+  <div class="cover">
+    <xsl:apply-templates select="."/>
+  </div>
+</xsl:template>
 
 </xsl:stylesheet>
