@@ -153,6 +153,9 @@
 <implementation type="cx:eval"
 		class-name="com.xmlcalabash.extensions.Eval"/>
 
+<implementation type="cx:java-properties"
+		class-name="com.xmlcalabash.extensions.JavaProperties"/>
+
 <implementation type="cx:message"
 		class-name="com.xmlcalabash.extensions.Message"/>
 
