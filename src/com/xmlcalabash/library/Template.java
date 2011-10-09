@@ -88,6 +88,7 @@ public class Template extends DefaultStep implements ProcessMatchingNodes {
     public void reset() {
         source.resetReader();
         result.resetWriter();
+        template.resetReader();
     }
 
     public void run() throws SaxonApiException {
