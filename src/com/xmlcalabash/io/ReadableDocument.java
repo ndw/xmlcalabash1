@@ -19,19 +19,23 @@
 
 package com.xmlcalabash.io;
 
+import com.xmlcalabash.util.JSONtoXML;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.SaxonApiException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.model.Step;
 import com.xmlcalabash.util.XPointer;
+import org.json.JSONTokener;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
-import java.util.logging.Logger;
 import java.util.Vector;
 
 /**
@@ -142,7 +146,28 @@ public class ReadableDocument implements ReadablePipe {
                         documents.add(doc);
                     }
                 } else {
-                    doc = runtime.parse(uri, base);
+                    doc = null;
+
+                    try {
+                        doc = runtime.parse(uri, base);
+                    } catch (XProcException xe) {
+                        if (runtime.transparentJSON()) {
+                            try {
+                                URI baseURI = new URI(base);
+                                URL url = baseURI.resolve(uri).toURL();
+                                URLConnection conn = url.openConnection();
+                                InputStreamReader reader = new InputStreamReader(conn.getInputStream());
+                                JSONTokener jt = new JSONTokener(reader);
+                                doc = JSONtoXML.convert(runtime.getProcessor(), jt);
+                                documents.add(doc);
+                                return;
+                            } catch (Exception e) {
+                                throw xe;
+                            }
+                        } else {
+                            throw xe;
+                        }
+                    }
 
                     if (fn.contains("#")) {
                         int pos = fn.indexOf("#");

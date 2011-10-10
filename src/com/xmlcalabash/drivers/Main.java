@@ -144,6 +144,7 @@ public class Main {
 
             config.extensionValues |= cmd.extensionValues;
             config.xpointerOnText |= cmd.allowXPointerOnText;
+            config.transparentJSON |= cmd.transparentJSON;
 
             debug = config.debug;
 

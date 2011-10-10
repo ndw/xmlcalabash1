@@ -91,6 +91,7 @@ public class XProcRuntime {
     private URI staticBaseURI = null;
     private boolean allowGeneralExpressions = true;
     private boolean allowXPointerOnText = true;
+    private boolean transparentJSON = false;
     private XProcData xprocData = null;
     private Logger log = null;
     private XProcMessageListener msgListener = null;
@@ -160,6 +161,7 @@ public class XProcRuntime {
 
         allowGeneralExpressions = config.extensionValues;
         allowXPointerOnText = config.xpointerOnText;
+        transparentJSON = config.transparentJSON;
 
         for (String className : config.extensionFunctions) {
             try {
@@ -259,6 +261,10 @@ public class XProcRuntime {
 
     public boolean getAllowXPointerOnText() {
         return allowXPointerOnText;
+    }
+
+    public boolean transparentJSON() {
+        return transparentJSON;
     }
 
     public String htmlParser() {

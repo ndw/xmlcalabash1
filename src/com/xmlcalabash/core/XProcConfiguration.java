@@ -83,6 +83,7 @@ public class XProcConfiguration {
 
     public boolean extensionValues = false;
     public boolean xpointerOnText = false;
+    public boolean transparentJSON = false;
     
     private Processor cfgProcessor = null;
     private boolean firstInput = false;
@@ -186,6 +187,7 @@ public class XProcConfiguration {
         debug = "true".equals(System.getProperty("com.xmlcalabash.debug", ""+debug));
         extensionValues = "true".equals(System.getProperty("com.xmlcalabash.general-values", ""+extensionValues));
         xpointerOnText = "true".equals(System.getProperty("com.xmlcalabash.xpointer-on-text", ""+xpointerOnText));
+        transparentJSON = "true".equals(System.getProperty("com.xmlcalabash.transparent-json", ""+transparentJSON));
         entityResolver = System.getProperty("com.xmlcalabash.entity-resolver", entityResolver);
         uriResolver = System.getProperty("com.xmlcalabash.uri-resolver", uriResolver);
         errorListener = System.getProperty("com.xmlcalabash.error-listener", errorListener);
@@ -412,6 +414,8 @@ public class XProcConfiguration {
             extensionValues = "true".equals(value);
         } else if ("xpointer-on-text".equals(name)) {
             xpointerOnText = "true".equals(value);
+        } else if ("transparent-json".equals(name)) {
+            transparentJSON = "true".equals(value);
         } else {
             throw new XProcException("Unrecognized extension in configuration: " + name);
         }

@@ -1,5 +1,6 @@
 package com.xmlcalabash.util;
 
+import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
@@ -25,6 +26,12 @@ public class JSONtoXML {
     private static QName _item = new QName("", "item");
     private static QName _name = new QName("", "name");
 
+    private static QName c_json = new QName("c", XProcConstants.NS_XPROC_STEP, "json");
+    private static QName c_type = new QName("c", XProcConstants.NS_XPROC_STEP, "type");
+    private static QName c_pair = new QName("c", XProcConstants.NS_XPROC_STEP, "pair");
+    private static QName c_item = new QName("c", XProcConstants.NS_XPROC_STEP, "item");
+    private static QName c_name = new QName("c", XProcConstants.NS_XPROC_STEP, "name");
+
     public static XdmNode convert(Processor processor, JSONTokener jt) {
         TreeWriter tree = new TreeWriter(processor);
         tree.startDocument(null);
@@ -34,7 +41,7 @@ public class JSONtoXML {
     }
 
     private static void build(TreeWriter tree, JSONTokener jt) {
-        tree.addStartElement(_json);
+        tree.addStartElement(c_json);
 
         try {
             char ch = jt.next();
@@ -62,7 +69,7 @@ public class JSONtoXML {
             while (keys.hasNext()) {
                 String name = (String) keys.next();
                 Object json = jo.get(name);
-                tree.addStartElement(_pair);
+                tree.addStartElement(c_pair);
                 tree.addAttribute(_name, name);
 
                 if (json instanceof JSONObject) {
@@ -112,7 +119,7 @@ public class JSONtoXML {
             for (int pos = 0; pos < arr.length(); pos++) {
                 Object json = arr.get(pos);
 
-                tree.addStartElement(_item);
+                tree.addStartElement(c_item);
 
                 if (json instanceof JSONObject) {
                     tree.addAttribute(_type, "object");

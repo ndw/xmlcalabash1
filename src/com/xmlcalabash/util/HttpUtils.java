@@ -29,6 +29,12 @@ public class HttpUtils {
                     || baseType.endsWith("+xml"));
     }
 
+    public static boolean jsonContentType(String contentType) {
+        String baseType = HttpUtils.baseContentType(contentType);
+        return baseType != null
+                && ("application/json".equals(baseType));
+    }
+
     public static boolean textContentType(String contentType) {
         return contentType != null && contentType.startsWith("text/");
     }

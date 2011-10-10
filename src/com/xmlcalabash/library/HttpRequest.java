@@ -20,6 +20,8 @@ package com.xmlcalabash.library;
  */
 
 import com.xmlcalabash.util.HttpUtils;
+import com.xmlcalabash.util.JSONtoXML;
+import com.xmlcalabash.util.XMLtoJSON;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -61,6 +63,7 @@ import java.io.FileInputStream;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
+import org.json.JSONTokener;
 import org.xml.sax.InputSource;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
@@ -507,7 +510,9 @@ public class HttpRequest extends DefaultStep {
                 writer.close();
                 postContent = writer.toString();
             } else {
-                if (xmlContentType(contentType)) {
+                if (jsonContentType(contentType)) {
+                    postContent = XMLtoJSON.convert(body);
+                } else if (xmlContentType(contentType)) {
                     Serializer serializer = makeSerializer();
 
                     if (!S9apiUtils.isDocumentContent(body.axisIterator(Axis.CHILD))) {
@@ -679,6 +684,8 @@ public class HttpRequest extends DefaultStep {
                     writer.close();
                     //postContent += writer.toString();
                     byteContent.append(writer.toString());
+                } else if (jsonContentType(contentType)) {
+                    byteContent.append(XMLtoJSON.convert(body));
                 } else if (!encodeBinary && "base64".equals(bodyEncoding)) {
                     byte[] decoded = Base64.decode(body.getStringValue());
                     byteContent.append(decoded, decoded.length);
@@ -817,6 +824,10 @@ public class HttpRequest extends DefaultStep {
         return HttpUtils.xmlContentType(contentType);
     }
 
+    private boolean jsonContentType(String contentType) {
+        return runtime.transparentJSON() && HttpUtils.jsonContentType(contentType);
+    }
+
     private boolean textContentType(String contentType) {
         return HttpUtils.textContentType(contentType);
     }
@@ -840,12 +851,12 @@ public class HttpRequest extends DefaultStep {
 
             tree.addEndElement();
         } else {
-            if (!detailed && xmlContentType(contentType)) {
+            if (!detailed && (xmlContentType(contentType) || jsonContentType(contentType))) {
                 readBodyContentPart(tree, bodyStream, contentType, charset);
             } else {
                 tree.addStartElement(XProcConstants.c_body);
                 tree.addAttribute(_content_type, contentType);
-                if (!xmlContentType(contentType) && !textContentType(contentType)) {
+                if (!xmlContentType(contentType) && !textContentType(contentType) && !jsonContentType(contentType)) {
                     tree.addAttribute(_encoding, "base64");
                 }
                 tree.startContent();
@@ -965,6 +976,11 @@ public class HttpRequest extends DefaultStep {
                 tree.addText(s);
                 len = reader.read(buf, 0, bufSize);
             }
+        } else if (jsonContentType(contentType)) {
+            InputStreamReader reader = new InputStreamReader(bodyStream);
+            JSONTokener jt = new JSONTokener(reader);
+            XdmNode jsonDoc = JSONtoXML.convert(runtime.getProcessor(), jt);
+            tree.addSubtree(jsonDoc);
         } else {
             // Read it as binary
             byte bytes[] = new byte[bufSize];

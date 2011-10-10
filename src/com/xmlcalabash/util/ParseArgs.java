@@ -47,6 +47,7 @@ public class ParseArgs {
 
     public boolean extensionValues = false;
     public boolean allowXPointerOnText = false;
+    public boolean transparentJSON = false;
 
     private String[] args = null;
     private int argpos = 0;
@@ -155,6 +156,8 @@ public class ParseArgs {
                     extensionValues = true;
                 } else if ("xpointer-on-text".equals(ext)) {
                         allowXPointerOnText = true;
+                } else if ("transparent-json".equals(ext)) {
+                        transparentJSON = true;
                 } else {
                     throw new XProcException("Unexpected extension name: " + ext);
                 }

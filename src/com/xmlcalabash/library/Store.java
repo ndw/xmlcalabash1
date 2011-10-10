@@ -19,6 +19,7 @@
 
 package com.xmlcalabash.library;
 
+import java.io.PrintWriter;
 import java.net.URI;
 import java.io.FileOutputStream;
 import java.io.File;
@@ -32,6 +33,8 @@ import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.Base64;
 import com.xmlcalabash.core.XProcRuntime;
 import java.net.URLConnection;
+
+import com.xmlcalabash.util.XMLtoJSON;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.QName;
@@ -54,7 +57,10 @@ import java.net.URL;
 public class Store extends DefaultStep {
     private static final QName _href = new QName("href");
     private static final QName _encoding = new QName("encoding");
+    private static final QName _content_type = new QName("content-type");
     private static final QName c_encoding = new QName("c", XProcConstants.NS_XPROC_STEP, "encoding");
+    private static final QName c_body = new QName("c", XProcConstants.NS_XPROC_STEP, "body");
+    private static final QName c_json = new QName("c", XProcConstants.NS_XPROC_STEP, "json");
     private static final QName cx_decode = new QName("cx", XProcConstants.NS_CALABASH_EX, "decode");
 
     private ReadablePipe source = null;
@@ -112,6 +118,11 @@ public class Store extends DefaultStep {
                  || ("".equals(root.getNodeName().getNamespaceURI())
                      && "base64".equals(root.getAttributeValue(c_encoding))))) {
             storeBinary(doc, href);
+        } else if (runtime.transparentJSON()
+                   && ((c_body.equals(root.getNodeName())
+                        && "application/json".equals(root.getAttributeValue(_content_type)))
+                       || (c_json.equals(root.getNodeName())))) {
+            storeJSON(doc, href);
         } else {
             storeXML(doc, href);
         }
@@ -159,7 +170,6 @@ public class Store extends DefaultStep {
         } catch (IOException ioe) {
             throw XProcException.stepError(50, ioe);
         }
-
     }
 
     private void storeBinary(XdmNode doc, URI href) {
@@ -180,7 +190,35 @@ public class Store extends DefaultStep {
         } catch (IOException ioe) {
             throw new XProcException(ioe);
         }
+    }
 
+    private void storeJSON(XdmNode doc, URI href) throws SaxonApiException {
+        try {
+            OutputStream outstr;
+            if(href.getScheme().equals("file")) {
+                File output = new File(href);
+
+                File path = new File(output.getParent());
+                if (!path.isDirectory()) {
+                    if (!path.mkdirs()) {
+                        throw XProcException.stepError(50);
+                    }
+                }
+                outstr = new FileOutputStream(output);
+            } else {
+                final URLConnection conn = href.toURL().openConnection();
+                conn.setDoOutput(true);
+                outstr = conn.getOutputStream();
+            }
+
+            PrintWriter writer = new PrintWriter(outstr);
+            String json = XMLtoJSON.convert(doc);
+            writer.print(json);
+            writer.close();
+            outstr.close();
+        } catch (IOException ioe) {
+            throw XProcException.stepError(50, ioe);
+        }
     }
 }
 
