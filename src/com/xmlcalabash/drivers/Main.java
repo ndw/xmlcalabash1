@@ -28,6 +28,7 @@ import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.model.Serialization;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritableDocument;
+import com.xmlcalabash.util.S9apiUtils;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.Processor;
@@ -162,11 +163,6 @@ public class Main {
 
                 if (debug) {
                     System.err.println("Implicit pipeline:");
-                    Processor qtproc = runtime.getProcessor();
-                    XQueryCompiler xqcomp = qtproc.newXQueryCompiler();
-                    XQueryExecutable xqexec = xqcomp.compile(".");
-                    XQueryEvaluator xqeval = xqexec.load();
-                    xqeval.setContextItem(implicitPipeline);
 
                     Serializer serializer = new Serializer();
 
@@ -175,8 +171,7 @@ public class Main {
 
                     serializer.setOutputStream(System.err);
 
-                    xqeval.setDestination(serializer);
-                    xqeval.run();
+                    S9apiUtils.serialize(runtime, implicitPipeline, serializer);
                 }
 
                 pipeline=runtime.use(implicitPipeline);

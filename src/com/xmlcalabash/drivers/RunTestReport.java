@@ -612,12 +612,6 @@ private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
 
     public String serializeAsXML(XdmNode node) {
         try {
-            Processor qtproc = runtime.getProcessor();
-            XQueryCompiler xqcomp = qtproc.newXQueryCompiler();
-            XQueryExecutable xqexec = xqcomp.compile(".");
-            XQueryEvaluator xqeval = xqexec.load();
-            xqeval.setContextItem(node);
-
             Serializer serializer = new Serializer();
 
             serializer.setOutputProperty(Serializer.Property.BYTE_ORDER_MARK, "no");
@@ -629,13 +623,10 @@ private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
             ByteArrayOutputStream os = new ByteArrayOutputStream();
             serializer.setOutputStream(os);
 
-            xqeval.setDestination(serializer);
-            xqeval.run();
-
+            S9apiUtils.serialize(runtime, node, serializer);
             String result = os.toString();
 
             return result;
-
         } catch (SaxonApiException sae) {
             sae.printStackTrace();
             return "";

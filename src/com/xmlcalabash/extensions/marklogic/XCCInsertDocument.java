@@ -97,17 +97,9 @@ public class XCCInsertDocument extends DefaultStep {
 
         if ("xml".equals(format)) {
             Serializer serializer = makeSerializer();
-
-            Processor qtproc = runtime.getProcessor();
-            XQueryCompiler xqcomp = qtproc.newXQueryCompiler();
-            XQueryExecutable xqexec = xqcomp.compile(".");
-            XQueryEvaluator xqeval = xqexec.load();
-            xqeval.setContextItem(doc);
-
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             serializer.setOutputStream(stream);
-            xqeval.setDestination(serializer);
-            xqeval.run();
+            S9apiUtils.serialize(runtime, doc, serializer);
 
             try {
                 docstring = stream.toString("UTF-8");

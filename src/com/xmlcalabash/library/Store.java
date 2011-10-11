@@ -144,12 +144,6 @@ public class Store extends DefaultStep {
     private void storeXML(XdmNode doc, URI href) throws SaxonApiException {
         Serializer serializer = makeSerializer();
 
-        Processor qtproc = runtime.getProcessor();
-        XQueryCompiler xqcomp = qtproc.newXQueryCompiler();
-        XQueryExecutable xqexec = xqcomp.compile(".");
-        XQueryEvaluator xqeval = xqexec.load();
-        xqeval.setContextItem(doc);
-
         try {
             OutputStream outstr;
             if(href.getScheme().equals("file")) {
@@ -167,9 +161,9 @@ public class Store extends DefaultStep {
                 conn.setDoOutput(true);
                 outstr = conn.getOutputStream();
             }
+
             serializer.setOutputStream(outstr);
-            xqeval.setDestination(serializer);
-            xqeval.run();
+            S9apiUtils.serialize(runtime, doc, serializer);
             outstr.close();
         } catch (IOException ioe) {
             throw XProcException.stepError(50, ioe);

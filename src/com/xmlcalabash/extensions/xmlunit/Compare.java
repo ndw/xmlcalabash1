@@ -30,6 +30,7 @@ import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.library.DefaultStep;
+import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TreeWriter;
 import net.sf.saxon.s9api.*;
 
@@ -104,17 +105,9 @@ public class Compare extends DefaultStep
 	private String getXMLDocument(XdmNode saxonNode) throws SaxonApiException
 	{
 		Serializer serializer = makeSerializer();
-
-		Processor qtproc = runtime.getProcessor();
-		XQueryCompiler xqcomp = qtproc.newXQueryCompiler();
-		XQueryExecutable xqexec = xqcomp.compile(".");
-		XQueryEvaluator xqeval = xqexec.load();
-		xqeval.setContextItem(saxonNode);
-
 		ByteArrayOutputStream stream = new ByteArrayOutputStream();
 		serializer.setOutputStream(stream);
-		xqeval.setDestination(serializer);
-		xqeval.run();
+        S9apiUtils.serialize(runtime, saxonNode, serializer);
 
 		try {
 			return stream.toString("UTF-8");

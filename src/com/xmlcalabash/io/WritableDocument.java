@@ -24,6 +24,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLConnection;
 
+import com.xmlcalabash.util.S9apiUtils;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -108,12 +109,6 @@ public class WritableDocument implements WritablePipe {
     
     public void write(XdmNode doc) {
         try {
-            Processor qtproc = runtime.getProcessor();
-            XQueryCompiler xqcomp = qtproc.newXQueryCompiler();
-            XQueryExecutable xqexec = xqcomp.compile(".");
-            XQueryEvaluator xqeval = xqexec.load();
-            xqeval.setContextItem(doc);
-
             serializer = new Serializer();
 
             serializer.setOutputProperty(Serializer.Property.BYTE_ORDER_MARK, serial.getByteOrderMark() ? "yes" : "no");
@@ -185,8 +180,7 @@ public class WritableDocument implements WritablePipe {
                 }
             }
 
-            xqeval.setDestination(serializer);
-            xqeval.run();
+            S9apiUtils.serialize(runtime, doc, serializer);
 
             if (uri == null && runtime.getDebug()) {
                 System.out.println("\n--<document boundary>--------------------------------------------------------------------------");

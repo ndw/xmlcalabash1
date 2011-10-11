@@ -21,6 +21,7 @@ package com.xmlcalabash.library;
 
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.util.RelevantNodes;
+import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
@@ -88,21 +89,11 @@ public class EscapeMarkup extends DefaultStep {
                 tree.addAttributes(child);
                 tree.startContent();
 
-                Processor qtproc = runtime.getProcessor();
-
                 // Serialize the *whole* thing, then strip off the start and end tags, because
                 // otherwise namespace fixup messes with the namespace bindings
-                XQueryCompiler xqcomp = qtproc.newXQueryCompiler();
-                XQueryExecutable xqexec = xqcomp.compile(".");
-                XQueryEvaluator xqeval = xqexec.load();
-                xqeval.setContextItem(child);
-
                 ByteArrayOutputStream outstr = new ByteArrayOutputStream();
                 serializer.setOutputStream(outstr);
-
-                xqeval.setDestination(serializer);
-                xqeval.run();
-
+                S9apiUtils.serialize(runtime, child, serializer);
                 String data = outstr.toString();
 
                 data = data.replaceAll("^<.*?>",""); // Strip off the start tag...
