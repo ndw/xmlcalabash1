@@ -288,8 +288,6 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
 
     <copy todir="${install.dir}/docs">
       <fileset file="docs/NOTICES"/>
-      <fileset file="docs/ChangeLog"/>
-      <fileset file="docs/BUGS"/>
       <fileset file="docs/**txt"/>
     </copy>
     <copy todir="${install.dir}">
