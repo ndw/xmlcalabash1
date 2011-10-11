@@ -28,6 +28,7 @@ import java.io.IOException;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
+import com.xmlcalabash.util.JSONtoXML;
 import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.Base64;
@@ -119,9 +120,12 @@ public class Store extends DefaultStep {
                      && "base64".equals(root.getAttributeValue(c_encoding))))) {
             storeBinary(doc, href);
         } else if (runtime.transparentJSON()
-                   && ((c_body.equals(root.getNodeName())
+                   && (((c_body.equals(root.getNodeName())
                         && "application/json".equals(root.getAttributeValue(_content_type)))
-                       || (c_json.equals(root.getNodeName())))) {
+                       || c_json.equals(root.getNodeName()))
+                       || JSONtoXML.JSONX_NS.equals(root.getNodeName().getNamespaceURI())
+                       || JSONtoXML.JXML_NS.equals(root.getNodeName().getNamespaceURI())
+                       || JSONtoXML.MLJS_NS.equals(root.getNodeName().getNamespaceURI()))) {
             storeJSON(doc, href);
         } else {
             storeXML(doc, href);

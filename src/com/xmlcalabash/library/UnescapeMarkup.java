@@ -150,7 +150,7 @@ public class UnescapeMarkup extends DefaultStep {
             }
         } else if ("application/json".equals(contentType)) {
             JSONTokener jt = new JSONTokener(escapedContent);
-            XdmNode jsonDoc = JSONtoXML.convert(runtime.getProcessor(), jt);
+            XdmNode jsonDoc = JSONtoXML.convert(runtime.getProcessor(), jt, runtime.jsonFlavor());
             tree.addSubtree(jsonDoc);
         } else if (!"application/xml".equals(contentType)) {
             throw XProcException.stepError(51);

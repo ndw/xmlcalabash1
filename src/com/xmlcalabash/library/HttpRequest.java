@@ -979,7 +979,7 @@ public class HttpRequest extends DefaultStep {
         } else if (jsonContentType(contentType)) {
             InputStreamReader reader = new InputStreamReader(bodyStream);
             JSONTokener jt = new JSONTokener(reader);
-            XdmNode jsonDoc = JSONtoXML.convert(runtime.getProcessor(), jt);
+            XdmNode jsonDoc = JSONtoXML.convert(runtime.getProcessor(), jt, runtime.jsonFlavor());
             tree.addSubtree(jsonDoc);
         } else {
             // Read it as binary

@@ -21,6 +21,7 @@
 package com.xmlcalabash.io;
 
 import com.xmlcalabash.util.HttpUtils;
+import com.xmlcalabash.util.JSONtoXML;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.QName;
@@ -30,6 +31,7 @@ import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.util.Base64;
 import com.xmlcalabash.model.Step;
+import org.json.JSONTokener;
 
 import java.io.*;
 import java.net.URL;
@@ -113,77 +115,87 @@ public class ReadableData implements ReadablePipe {
                 charset = userCharset;
             }
 
-            tree.addStartElement(wrapper);
-            if (XProcConstants.c_data.equals(wrapper)) {
-                if ("content/unknown".equals(serverContentType)) {
-                    tree.addAttribute(_contentType, "application/octet-stream");
-                } else {
-                    tree.addAttribute(_contentType, serverContentType);
-                }
-                if (!isText(serverContentType, charset)) {
-                    tree.addAttribute(_encoding, "base64");
-                }
-            } else {
-                if ("content/unknown".equals(serverContentType)) {
-                    tree.addAttribute(c_contentType, "application/octet-stream");
-                } else {
-                    tree.addAttribute(c_contentType, serverContentType);
-                }
-                if (!isText(serverContentType, charset)) {
-                    tree.addAttribute(c_encoding, "base64");
-                }
-            }
-            tree.startContent();
-
-
-            if (isText(serverContentType, charset)) {
-                BufferedReader bufread;
+            if (runtime.transparentJSON() && HttpUtils.jsonContentType(contentType)) {
                 if (charset == null) {
                     // FIXME: Is this right? I think it is...
                     charset = "UTF-8";
                 }
-                BufferedReader bufreader = new BufferedReader(new InputStreamReader(stream, charset));
-                int maxlen = 4096 * 3;
-                char[] chars = new char[maxlen];
-                int read = bufreader.read(chars, 0, maxlen);
-                while (read >= 0) {
-                    if (read > 0) {
-                        String data = new String(chars, 0, read);
-                        tree.addText(data);
-                    }
-                    read = bufreader.read(chars, 0, maxlen);
-                }
-                bufreader.close();
+                InputStreamReader reader = new InputStreamReader(stream, charset);
+                JSONTokener jt = new JSONTokener(reader);
+                XdmNode jsonDoc = JSONtoXML.convert(runtime.getProcessor(), jt, runtime.jsonFlavor());
+                tree.addSubtree(jsonDoc);
             } else {
-                // Fill the buffer each time so that we get an even number of base64 lines
-                int maxlen = 4096 * 3;
-                byte[] bytes = new byte[maxlen];
-                int pos = 0;
-                int readlen = maxlen;
-                boolean done = false;
-                while (!done) {
-                    int read = stream.read(bytes, pos, readlen);
-                    if (read >= 0) {
-                        pos += read;
-                        readlen -= read;
+                tree.addStartElement(wrapper);
+                if (XProcConstants.c_data.equals(wrapper)) {
+                    if ("content/unknown".equals(serverContentType)) {
+                        tree.addAttribute(_contentType, "application/octet-stream");
                     } else {
-                        done = true;
+                        tree.addAttribute(_contentType, serverContentType);
                     }
-
-                    if ((readlen == 0) || done) {
-                        String base64 = Base64.encodeBytes(bytes, 0, pos);
-                        tree.addText(base64 + "\n");
-                        pos = 0;
-                        readlen = maxlen;
+                    if (!isText(serverContentType, charset)) {
+                        tree.addAttribute(_encoding, "base64");
+                    }
+                } else {
+                    if ("content/unknown".equals(serverContentType)) {
+                        tree.addAttribute(c_contentType, "application/octet-stream");
+                    } else {
+                        tree.addAttribute(c_contentType, serverContentType);
+                    }
+                    if (!isText(serverContentType, charset)) {
+                        tree.addAttribute(c_encoding, "base64");
                     }
                 }
-                stream.close();
+                tree.startContent();
+
+                if (isText(serverContentType, charset)) {
+                    BufferedReader bufread;
+                    if (charset == null) {
+                        // FIXME: Is this right? I think it is...
+                        charset = "UTF-8";
+                    }
+                    BufferedReader bufreader = new BufferedReader(new InputStreamReader(stream, charset));
+                    int maxlen = 4096 * 3;
+                    char[] chars = new char[maxlen];
+                    int read = bufreader.read(chars, 0, maxlen);
+                    while (read >= 0) {
+                        if (read > 0) {
+                            String data = new String(chars, 0, read);
+                            tree.addText(data);
+                        }
+                        read = bufreader.read(chars, 0, maxlen);
+                    }
+                    bufreader.close();
+                } else {
+                    // Fill the buffer each time so that we get an even number of base64 lines
+                    int maxlen = 4096 * 3;
+                    byte[] bytes = new byte[maxlen];
+                    int pos = 0;
+                    int readlen = maxlen;
+                    boolean done = false;
+                    while (!done) {
+                        int read = stream.read(bytes, pos, readlen);
+                        if (read >= 0) {
+                            pos += read;
+                            readlen -= read;
+                        } else {
+                            done = true;
+                        }
+
+                        if ((readlen == 0) || done) {
+                            String base64 = Base64.encodeBytes(bytes, 0, pos);
+                            tree.addText(base64 + "\n");
+                            pos = 0;
+                            readlen = maxlen;
+                        }
+                    }
+                    stream.close();
+                }
+                tree.addEndElement();
             }
         } catch (IOException ioe) {
             throw new XProcException(XProcConstants.dynamicError(29), ioe);
         }
 
-        tree.addEndElement();
         tree.endDocument();
 
         documents.add(tree.getResult());

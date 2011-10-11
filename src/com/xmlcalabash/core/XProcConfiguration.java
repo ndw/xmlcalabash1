@@ -1,5 +1,6 @@
 package com.xmlcalabash.core;
 
+import com.xmlcalabash.util.JSONtoXML;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.Processor;
@@ -84,6 +85,7 @@ public class XProcConfiguration {
     public boolean extensionValues = false;
     public boolean xpointerOnText = false;
     public boolean transparentJSON = false;
+    public String jsonFlavor = JSONtoXML.MARKLOGIC;
     
     private Processor cfgProcessor = null;
     private boolean firstInput = false;
@@ -188,6 +190,7 @@ public class XProcConfiguration {
         extensionValues = "true".equals(System.getProperty("com.xmlcalabash.general-values", ""+extensionValues));
         xpointerOnText = "true".equals(System.getProperty("com.xmlcalabash.xpointer-on-text", ""+xpointerOnText));
         transparentJSON = "true".equals(System.getProperty("com.xmlcalabash.transparent-json", ""+transparentJSON));
+        jsonFlavor = System.getProperty("com.xmlcalabash.json-flavor", jsonFlavor);
         entityResolver = System.getProperty("com.xmlcalabash.entity-resolver", entityResolver);
         uriResolver = System.getProperty("com.xmlcalabash.uri-resolver", uriResolver);
         errorListener = System.getProperty("com.xmlcalabash.error-listener", errorListener);
@@ -416,6 +419,11 @@ public class XProcConfiguration {
             xpointerOnText = "true".equals(value);
         } else if ("transparent-json".equals(name)) {
             transparentJSON = "true".equals(value);
+        } else if ("json-flavor".equals(name)) {
+            jsonFlavor = value;
+            if (! JSONtoXML.knownFlavor(jsonFlavor)) {
+                throw new XProcException("Unrecognized JSON flavor: " + jsonFlavor);
+            }
         } else {
             throw new XProcException("Unrecognized extension in configuration: " + name);
         }

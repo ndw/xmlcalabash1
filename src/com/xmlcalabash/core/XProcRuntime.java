@@ -37,6 +37,7 @@ import com.xmlcalabash.runtime.XRootStep;
 import com.xmlcalabash.runtime.XStep;
 import com.xmlcalabash.util.DefaultXProcConfigurer;
 import com.xmlcalabash.util.DefaultXProcMessageListener;
+import com.xmlcalabash.util.JSONtoXML;
 import com.xmlcalabash.util.StepErrorListener;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
@@ -92,6 +93,7 @@ public class XProcRuntime {
     private boolean allowGeneralExpressions = true;
     private boolean allowXPointerOnText = true;
     private boolean transparentJSON = false;
+    private String jsonFlavor = JSONtoXML.MARKLOGIC;
     private XProcData xprocData = null;
     private Logger log = null;
     private XProcMessageListener msgListener = null;
@@ -162,6 +164,7 @@ public class XProcRuntime {
         allowGeneralExpressions = config.extensionValues;
         allowXPointerOnText = config.xpointerOnText;
         transparentJSON = config.transparentJSON;
+        jsonFlavor = config.jsonFlavor;
 
         for (String className : config.extensionFunctions) {
             try {
@@ -265,6 +268,10 @@ public class XProcRuntime {
 
     public boolean transparentJSON() {
         return transparentJSON;
+    }
+
+    public String jsonFlavor() {
+        return jsonFlavor;
     }
 
     public String htmlParser() {

@@ -119,6 +119,16 @@ public class SystemProperty extends ExtensionFunctionDefinition {
                  } else if ("psvi-supported".equals(local)) {
                      value = runtime.getPSVISupported() ? "true" : "false";
                  }
+             } else if (uri.equals(XProcConstants.NS_CALABASH_EX)) {
+                 if ("transparent-json".equals(local)) {
+                     value = runtime.transparentJSON() ? "true" : "false";
+                 } else if ("json-flavor".equals(local)) {
+                     value = runtime.jsonFlavor();
+                 } else if ("general-values".equals(local)) {
+                     value = runtime.getAllowGeneralExpressions() ? "true" : "false";
+                 } else if ("xpointer-on-text".equals(local)) {
+                     value = runtime.getAllowXPointerOnText() ? "true" : "false";
+                 }
              }
 
              return SingletonIterator.makeIterator(

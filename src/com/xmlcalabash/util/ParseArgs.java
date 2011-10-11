@@ -48,6 +48,7 @@ public class ParseArgs {
     public boolean extensionValues = false;
     public boolean allowXPointerOnText = false;
     public boolean transparentJSON = false;
+    public String jsonFlavor = null;
 
     private String[] args = null;
     private int argpos = 0;
@@ -155,11 +156,16 @@ public class ParseArgs {
                 if ("general-values".equals(ext)) {
                     extensionValues = true;
                 } else if ("xpointer-on-text".equals(ext)) {
-                        allowXPointerOnText = true;
+                    allowXPointerOnText = true;
                 } else if ("transparent-json".equals(ext)) {
-                        transparentJSON = true;
+                    transparentJSON = true;
+                } else if (ext.startsWith("json-flavor=")) {
+                    jsonFlavor = ext.substring(12);
+                    if (!JSONtoXML.knownFlavor(jsonFlavor)) {
+                        throw new XProcException("Can't parse JSON flavor '" + ext + "' or unrecognized format: " + jsonFlavor);
+                    }
                 } else {
-                    throw new XProcException("Unexpected extension name: " + ext);
+                    throw new XProcException("Unexpected extension: " + ext);
                 }
                 continue;
             }
