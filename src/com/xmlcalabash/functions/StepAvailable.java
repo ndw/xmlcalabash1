@@ -95,7 +95,8 @@ public class StepAvailable extends ExtensionFunctionDefinition {
             XProcRuntime runtime = (XProcRuntime) tl_runtime.get();
             XStep step = runtime.getXProcData().getStep();
             // FIXME: this can't be the best way to do this...
-            if (!(step instanceof XCompoundStep)) {
+            // step == null in use-when
+            if (step != null && !(step instanceof XCompoundStep)) {
                 throw XProcException.dynamicError(23);
             }
 
