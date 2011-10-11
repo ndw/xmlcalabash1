@@ -42,6 +42,14 @@
 
 <p:xinclude/>
 
+<!-- write custom schema that includes p:* elements!
+<p:validate-with-relax-ng>
+  <p:input port="schema">
+    <p:document href="/projects/docbook/docbook/relaxng/schemas/docbook.rng"/>
+  </p:input>
+</p:validate-with-relax-ng>
+-->
+
 <p:xslt name="xslt">
   <p:input port="stylesheet">
     <p:document href="refhtml.xsl"/>

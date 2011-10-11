@@ -17,6 +17,16 @@
 <xsl:param name="resource.root" select="''"/>
 <xsl:param name="html.stylesheets" select="'css/xproc.css'"/>
 
+<xsl:param name="linenumbering" as="element()*">
+<ln path="literallayout" everyNth="2" width="3" separator=" " padchar=" " minlines="3"/>
+<ln path="programlisting" everyNth="2" width="3" separator=" " padchar=" " minlines="1"/>
+<ln path="programlistingco" everyNth="2" width="3" separator=" " padchar=" " minlines="3"/>
+<ln path="screen" everyNth="2" width="3" separator=" " padchar=" " minlines="3"/>
+<ln path="synopsis" everyNth="2" width="3" separator=" " padchar=" " minlines="3"/>
+<ln path="address" everyNth="0"/>
+<ln path="epigraph/literallayout" everyNth="0"/>
+</xsl:param>
+
 <xsl:template name="t:user-titlepage-templates" as="element(tmpl:templates-list)?">
   <tmpl:templates-list>
     <tmpl:templates name="book">

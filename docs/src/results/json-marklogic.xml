@@ -1,0 +1,21 @@
+<j:json xmlns:j="http://marklogic.com/json" type="object">
+   <j:_ type="string">empty string</j:_>
+   <j:id type="string">1234</j:id>
+   <j:_0031foo_0024bar type="string">1foo$bar</j:_0031foo_0024bar>
+   <j:x_003ahtml type="string">x:html</j:x_003ahtml>
+   <j:isnull type="null"/>
+   <j:foo_0024bar type="string">foo$bar</j:foo_0024bar>
+   <j:image type="object">
+      <j:height type="number">500</j:height>
+      <j:width type="number">500</j:width>
+      <j:url type="string">http://example.com/image.jpg</j:url>
+   </j:image>
+   <j:bool type="boolean">false</j:bool>
+   <j:array type="array">
+      <j:item type="number">1</j:item>
+      <j:item type="number">2</j:item>
+      <j:item type="number">3</j:item>
+      <j:item type="boolean">false</j:item>
+      <j:item type="null"/>
+   </j:array>
+</j:json>

@@ -1,0 +1,15 @@
+{
+  "id": "1234",
+  "": "empty string",
+  "foo$bar": "foo$bar",
+  "1foo$bar": "1foo$bar",
+  "x:html": "x:html",
+  "array": [1,2,3,false,null],
+  "bool": false,
+  "isnull": null,
+  "image": {
+    "url": "http://example.com/image.jpg",
+    "width": 500,
+    "height": 500
+  }
+}

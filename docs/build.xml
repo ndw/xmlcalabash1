@@ -21,6 +21,10 @@
       <classpath>
         <pathelement location="../out/production/Calabash"/>
         <path refid="build.classpath"/>
+        <pathelement location="/Users/ndw/java"/>
+        <pathelement location="/projects/docbook/xslt20/ext/build/classes"/>
+        <pathelement location="/projects/docbook/xslt20/tools/lib/jython.jar"/>
+        <pathelement location="/projects/docbook/xslt20/ext/jython"/>
       </classpath>
       <jvmarg value="-Xmx1024m"/>
       <arg value="-D"/>

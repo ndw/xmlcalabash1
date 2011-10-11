@@ -1,4 +1,4 @@
-<?dbhtml navigation='true'?>
+<?dbhtml navigation='true' pygments="true"?>
 <book xmlns="http://docbook.org/ns/docbook"
       xmlns:p="http://www.w3.org/ns/xproc"
       xmlns:c="http://www.w3.org/ns/xproc-step"
@@ -15,7 +15,7 @@
     </imageobject>
   </mediaobject>
 
-  <title>XML Calabash Step Reference</title>
+  <title>XML Calabash Reference</title>
   <author>
     <personname>
       <firstname>Norman</firstname><surname>Walsh</surname>
@@ -28,10 +28,8 @@
   </copyright>
 </info>
 
-<preface xml:id="preface">
-<title>Preface</title>
-<para>This <quote>book</quote> needs a <emphasis>whole lotta</emphasis> work.</para>
-</preface>
+<xi:include href="preface.xml"/>
+<xi:include href="extensions.xml"/>
 
 <reference xml:id="p-steps">
 <title>Standard XProc Steps</title>

@@ -1,0 +1,190 @@
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:id="extensions" version="5.0">
+<title>Extensions</title>
+
+<para><citetitle>XML Calabash</citetitle> has three extensions: “general values”, “XPointer on text”,
+and “transparent JSON”. Enabling extensions makes the processor <emphasis>non-conformant</emphasis>.
+Pipelines that rely on these extensions are not likely to be interoperable with other implementations.
+You're encouraged to avoid them if possible. That said, they can be very useful.</para>
+
+<section xml:id="ext.general-values">
+<title>General values extension</title>
+
+<para>If the general values extension is enabled, variables, options,
+and parameters are not limited to strings. If the select expression
+that establishes the value of a variable, option, or parameter selects
+nodes from a tree, then those node values will be passed along as the
+value.</para>
+
+<para>Consider the pipeline in <xref linkend="ex-gv-1"/>:</para>
+
+<example xml:id="ex-gv-1">
+<title>Pipeline that exploits the general values extension</title>
+<programlisting language="xml"><xi:include href="examples/general-values.xpl" parse="text"/></programlisting>
+</example>
+
+<para>In a conformant processor, the <parameter>text</parameter> parameter passed to the
+<tag>p:xslt</tag> step is a string:</para>
+
+<informalexample>
+<programlisting language="xml"><xi:include href="results/general-values-false.xml" parse="text"/></programlisting>
+</informalexample>
+
+<para>If the general values extension is enabled, the value contains the selected subtree:</para>
+
+<informalexample>
+<programlisting language="xml"><xi:include href="results/general-values-true.xml" parse="text"/></programlisting>
+</informalexample>
+
+<para>The general values extension can be enabled in three ways:</para>
+
+<orderedlist>
+<listitem>
+<para>With the <literal>-Xgeneral-values</literal> command-line option.</para>
+</listitem>
+<listitem>
+<para>With the <literal>com.xmlcalabash.general-values</literal> Java system property.</para>
+</listitem>
+<listitem>
+<para>Or with the <literal>&lt;extension name="general-values" value="true"/&gt;</literal>
+configuration option.</para>
+</listitem>
+</orderedlist>
+
+<para>A pipeline can test whether the general values extension is enabled or not with the
+<function>p:system-property</function> function using the argument
+<literal>cx:general-values</literal>.</para>
+
+</section>
+<section xml:id="ext.xpointer-on-text-">
+<title>XPointer on text</title>
+
+<para>If the XPointer on text extension is enabled, the <tag class="attribute">xpointer</tag>
+attribute on an XInclude element can be used when <literal>parse="text"</literal>. The XPointer
+must use the <literal>text()</literal> scheme and must contain an
+<link xlink:href="https://tools.ietf.org/html/rfc5147">RFC 5147</link> fragment identifier.
+Consider
+the following DocBook XML fragment:</para>
+
+<programlisting language="xml"><![CDATA[<programlisting>
+<xi:include href="examples/general-values.xpl" parse="text"
+            xpointer="text(line=6,15;length=1081)"/>
+</programlisting>]]></programlisting>
+
+<para>If processed with the XPointer on text extension enabled, it would produce effectively the following
+result:</para>
+
+<programlisting language="xml">&lt;programlisting>&lt;![CDATA[
+<xi:include href="examples/general-values.xpl" parse="text"
+            xpointer="text(line=5,14;length=1081)"/>]]&gt;&lt;/programlisting&gt;</programlisting>
+
+<para>Only the “length” integrity check is supported.</para>
+
+<para>The XPointer on text extension can be enabled in three ways:</para>
+
+<orderedlist>
+<listitem>
+<para>With the <literal>-Xxpointer-on-text</literal> command-line option.</para>
+</listitem>
+<listitem>
+<para>With the <literal>com.xmlcalabash.xpointer-on-text</literal> Java system property.</para>
+</listitem>
+<listitem>
+<para>Or with the <literal>&lt;extension name="xpointer-on-text" value="true"/&gt;</literal>
+configuration option.</para>
+</listitem>
+</orderedlist>
+
+<para>A pipeline can test whether the XPointer on text extension is enabled or not with the
+<function>p:system-property</function> function using the argument
+<literal>cx:xpointer-on-text</literal>.</para>
+
+</section>
+<section xml:id="ext.transparent-json">
+<title>Transparent JSON</title>
+
+<para>If the transparent JSON extension is enabled,
+<tag>p:http-request</tag>, <tag>p:store</tag>, <tag>p:document</tag>,
+and <tag>p:data</tag> will translate automatically between JSON and
+XML. If JSON is returned by a web service or loaded, it will be turned
+into XML. If a JSON-in-XML document is sent or stored, it will be
+turned into textual JSON first.</para>
+
+<para>Consider this JSON object:</para>
+
+<programlisting language="javascript"><xi:include href="examples/object.json" parse="text"/></programlisting>
+
+<para>It can be translated into any one of five XML representations:</para>
+
+<variablelist>
+<varlistentry><term><literal>marklogic</literal></term>
+<listitem>
+<programlisting language="xml"><xi:include href="results/json-marklogic.xml" parse="text"/></programlisting>
+</listitem>
+</varlistentry>
+<varlistentry><term><literal xlink:href="https://tools.ietf.org/html/draft-rsalz-jsonx-00">jsonx</literal></term>
+<listitem>
+<programlisting language="xml"><xi:include href="results/json-jsonx.xml" parse="text"/></programlisting>
+</listitem>
+</varlistentry>
+<varlistentry><term><literal xlink:href="http://xml.calldei.com/JsonXML">jxml</literal></term>
+<listitem>
+<programlisting language="xml"><xi:include href="results/json-jxml.xml" parse="text"/></programlisting>
+</listitem>
+</varlistentry>
+<varlistentry><term><literal>calabash</literal></term>
+<listitem>
+<programlisting language="xml"><xi:include href="results/json-calabash.xml" parse="text"/></programlisting>
+</listitem>
+</varlistentry>
+<varlistentry><term><literal>calabash-deprecated</literal></term>
+<listitem>
+<programlisting language="xml"><xi:include href="results/json-calabash-deprecated.xml" parse="text"/></programlisting>
+<para>This was the original format introduced when JSON support was added to
+<tag>p:unescape-markup</tag>. Don't use it. Automatic conversion from XML to JSON is not
+supported for this format.</para>
+</listitem>
+</varlistentry>
+</variablelist>
+
+<para>The transparent JSON extension can be enabled in three ways:</para>
+
+<orderedlist>
+<listitem>
+<para>With the <literal>-Xtransparent-json</literal> command-line option.</para>
+</listitem>
+<listitem>
+<para>With the <literal>com.xmlcalabash.transparent-json</literal> Java system property.</para>
+</listitem>
+<listitem>
+<para>Or with the <literal>&lt;extension name="transparent-json" value="true"/&gt;</literal>
+configuration option.</para>
+</listitem>
+</orderedlist>
+
+<para>A pipeline can test whether the transparent JSON extension is enabled or not with the
+<function>p:system-property</function> function using the argument
+<literal>cx:transparent-json</literal>.</para>
+
+<para>The desired XML flavor can be selected using the same mechanisms:</para>
+
+<orderedlist>
+<listitem>
+<para>With the <literal>-Xjson-flavor=<replaceable>flavor</replaceable></literal> command-line option.</para>
+</listitem>
+<listitem>
+<para>With the <literal>com.xmlcalabash.json-flavor</literal> Java system property.</para>
+</listitem>
+<listitem>
+<para>Or with the <literal>&lt;extension name="json-flavor" value="<replaceable>flavor</replaceable>"/&gt;</literal>
+configuration option.</para>
+</listitem>
+</orderedlist>
+
+<para>A pipeline can determine the current flavor with the
+<function>p:system-property</function> function using the argument
+<literal>cx:json-flavor</literal>.</para>
+</section>
+</chapter>
