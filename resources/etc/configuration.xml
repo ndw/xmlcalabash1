@@ -4,7 +4,11 @@
 	      xmlns:cx="http://xmlcalabash.com/ns/extensions"
 	      xmlns:cxf="http://xmlcalabash.com/ns/extensions/fileutils"
 	      xmlns:cxo="http://xmlcalabash.com/ns/extensions/osutils"
-	      xmlns:cxu="http://xmlcalabash.com/ns/extensions/xmlunit">
+	      xmlns:cxu="http://xmlcalabash.com/ns/extensions/xmlunit"
+	      xmlns:pos="http://exproc.org/proposed/steps/os"
+	      xmlns:pxf="http://exproc.org/proposed/steps/file"
+	      xmlns:pxp="http://exproc.org/proposed/steps">
+
 
 <implementation type="p:add-attribute"
 		class-name="com.xmlcalabash.library.AddAttribute"/>
@@ -168,28 +172,16 @@
 <implementation type="cx:namespace-delete"
 		class-name="com.xmlcalabash.extensions.NamespaceDelete"/>
 
-<implementation type="cx:nvdl"
+<implementation type="cx:nvdl pxp:nvdl"
 		class-name="com.xmlcalabash.extensions.NVDL"/>
 
-<implementation type="pxp:nvdl"
-                xmlns:pxp="http://exproc.org/proposed/steps"
-		class-name="com.xmlcalabash.extensions.NVDL"/>
-
-<implementation type="cx:unzip"
-		class-name="com.xmlcalabash.extensions.Unzip"/>
-
-<implementation type="pxp:unzip"
-                xmlns:pxp="http://exproc.org/proposed/steps"
+<implementation type="cx:unzip pxp:unzip"
 		class-name="com.xmlcalabash.extensions.Unzip"/>
 
 <implementation type="cx:uri-info"
 		class-name="com.xmlcalabash.extensions.UriInfo"/>
 
-<implementation type="cx:zip"
-		class-name="com.xmlcalabash.extensions.Zip"/>
-
-<implementation type="pxp:zip"
-                xmlns:pxp="http://exproc.org/proposed/steps"
+<implementation type="cx:zip pxp:zip"
 		class-name="com.xmlcalabash.extensions.Zip"/>
 
 <implementation xmlns:ml="http://xmlcalabash.com/ns/extensions/marklogic"
@@ -215,42 +207,42 @@
 
 <!-- Fileutils -->
 
-<implementation type="cxf:info"
+<implementation type="cxf:info pxf:info"
 		class-name="com.xmlcalabash.extensions.fileutils.Info"/>
 
-<implementation type="cxf:delete"
+<implementation type="cxf:delete pxf:delete"
 		class-name="com.xmlcalabash.extensions.fileutils.Delete"/>
 
-<implementation type="cxf:mkdir"
+<implementation type="cxf:mkdir pxf:mkdir"
 		class-name="com.xmlcalabash.extensions.fileutils.Mkdir"/>
 
-<implementation type="cxf:copy"
+<implementation type="cxf:copy pxf:copy"
 		class-name="com.xmlcalabash.extensions.fileutils.Copy"/>
 
-<implementation type="cxf:move"
+<implementation type="cxf:move pxf:move"
 		class-name="com.xmlcalabash.extensions.fileutils.Move"/>
 
-<implementation type="cxf:touch"
+<implementation type="cxf:touch pxf:touch"
 		class-name="com.xmlcalabash.extensions.fileutils.Touch"/>
 
-<implementation type="cxf:tempfile"
+<implementation type="cxf:tempfile pxf:tempfile"
 		class-name="com.xmlcalabash.extensions.fileutils.Tempfile"/>
 
-<implementation type="cxf:head"
+<implementation type="cxf:head pxf:head"
 		class-name="com.xmlcalabash.extensions.fileutils.Head"/>
 
-<implementation type="cxf:tail"
+<implementation type="cxf:tail pxf:tail"
 		class-name="com.xmlcalabash.extensions.fileutils.Tail"/>
 
 <!-- OSutils -->
 
-<implementation type="cxo:info"
+<implementation type="cxo:info pos:info"
 		class-name="com.xmlcalabash.extensions.osutils.Info"/>
 
-<implementation type="cxo:cwd"
+<implementation type="cxo:cwd pos:cwd"
 		class-name="com.xmlcalabash.extensions.osutils.Cwd"/>
 
-<implementation type="cxo:env"
+<implementation type="cxo:env pos:env"
 		class-name="com.xmlcalabash.extensions.osutils.Env"/>
 
 <!-- XMLUnit -->

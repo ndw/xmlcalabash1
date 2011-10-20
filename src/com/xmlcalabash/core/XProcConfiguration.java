@@ -635,9 +635,10 @@ public class XProcConfiguration {
             throw new XProcException(node, "Unexpected implementation in configuration; must have both type and class-name attributes");
         }
 
-        QName name = new QName(nameStr,node);
-
-        implementations.put(name, value);
+        for (String tname : nameStr.split("\\s+")) {
+            QName name = new QName(tname,node);
+            implementations.put(name, value);
+        }
     }
 
     private void parseSerialization(XdmNode node) {
