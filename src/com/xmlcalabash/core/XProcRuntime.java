@@ -195,6 +195,11 @@ public class XProcRuntime {
         standardLibrary = runtime.standardLibrary;
         xStandardLibrary = runtime.xStandardLibrary;
         cookieHash = runtime.cookieHash;
+        configurer = runtime.configurer;
+        allowGeneralExpressions = runtime.allowGeneralExpressions;
+        allowXPointerOnText = runtime.allowXPointerOnText;
+        transparentJSON = runtime.transparentJSON;
+        jsonFlavor = runtime.jsonFlavor;
     }
 
     public XProcConfigurer getConfigurer() {
