@@ -41,11 +41,14 @@ public class Info extends DefaultStep {
     private static final QName _username = new QName("username");
     private static final QName _password = new QName("password");
     private static final QName _auth_method = new QName("auth_method");
-    private static final QName _send_authorization = new QName("send_authorization");
+    private static final QName _send_authorization = new QName("send-authorization");
+    private static final QName _fail_on_error = new QName("fail-on-error");
     protected final static QName c_uri = new QName("c", XProcConstants.NS_XPROC_STEP, "uri");
     protected final static QName c_directory = new QName("c", XProcConstants.NS_XPROC_STEP, "directory");
     protected final static QName c_file = new QName("c", XProcConstants.NS_XPROC_STEP, "file");
     protected final static QName c_other = new QName("c", XProcConstants.NS_XPROC_STEP, "other");
+    protected final static QName c_error = new QName("c", XProcConstants.NS_XPROC_STEP, "error");
+    protected final static QName err_fu01 = new QName("err", XProcConstants.NS_XPROC_ERROR, "FU01");
 
     private static final QName _uri = new QName("uri");
     private static final QName _readable = new QName("readable");
@@ -78,6 +81,8 @@ public class Info extends DefaultStep {
         RuntimeValue href = getOption(_href);
         URI uri = href.getBaseURI().resolve(href.getString());
 
+        boolean failOnError = getOption(_fail_on_error, true);
+
         finest(step.getNode(), "Checking info for " + uri);
 
         TreeWriter tree = new TreeWriter(runtime);
@@ -87,8 +92,16 @@ public class Info extends DefaultStep {
             File file = new File(uri.getPath());
 
             if (!file.exists()) {
-                // Result is an empty sequence
-                return;
+                if (failOnError) {
+                    throw new XProcException(err_fu01);
+                } else {
+                    tree.addStartElement(c_error);
+                    tree.addText("File not found");
+                    tree.addEndElement();
+                    tree.endDocument();
+                    result.write(tree.getResult());
+                    return;
+                }
             }
 
             if (file.isDirectory()) {
