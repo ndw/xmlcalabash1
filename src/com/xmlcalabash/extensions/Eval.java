@@ -146,7 +146,7 @@ public class Eval extends DefaultStep {
         while (portiter.hasNext()) {
             String port = portiter.next();
             Input input = decl.getInput(port);
-            if ((inputports.size() == 1 && !input.getPrimarySet()) || input.getPrimary()) {
+            if (!input.getParameterInput() && ((inputports.size() == 1 && !input.getPrimarySet()) || input.getPrimary())) {
                 primaryin = port;
             }
         }
