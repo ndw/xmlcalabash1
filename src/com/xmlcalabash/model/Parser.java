@@ -834,7 +834,7 @@ public class Parser {
         String type = node.getAttributeValue(XProcConstants.cx_type);
 
         if (name == null) {
-            runtime.error(null, node, "Attribute \"name\" required on p:with-option", XProcConstants.staticError(38));
+            throw XProcException.staticError(38, node, "Attribute \"name\" required on p:with-option");
         }
 
         QName oname;
