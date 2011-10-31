@@ -59,7 +59,7 @@ public class LabelElements extends DefaultStep implements ProcessMatchingNodes {
     private WritablePipe result = null;
     private ProcessMatch matcher = null;
     private QName attribute = null;
-    private String label = null;
+    private RuntimeValue label = null;
     private boolean replace = true;
     private int count = 1;
 
@@ -103,7 +103,7 @@ public class LabelElements extends DefaultStep implements ProcessMatchingNodes {
             attribute = new QName(apfx == null ? "" : apfx, ans, attrNameStr);
         }
 
-        label = getOption(_label).getString();
+        label = getOption(_label);
         replace = getOption(_replace).getBoolean();
 
         matcher = new ProcessMatch(runtime, this);
@@ -168,10 +168,14 @@ public class LabelElements extends DefaultStep implements ProcessMatchingNodes {
 
     private String computedLabel(XdmNode node) throws SaxonApiException {
         XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
-        xcomp.declareNamespace("p", XProcConstants.NS_XPROC);
+
+        // Make sure any namespace bindings in-scope for the label are available for the expression
+        for (String prefix : label.getNamespaceBindings().keySet()) {
+            xcomp.declareNamespace(prefix, label.getNamespaceBindings().get(prefix));
+        }
         xcomp.declareVariable(p_index);
 
-        XPathExecutable xexec = xcomp.compile(label);
+        XPathExecutable xexec = xcomp.compile(label.getString());
         XPathSelector selector = xexec.load();
 
         selector.setVariable(p_index,new XdmAtomicValue(count++));
