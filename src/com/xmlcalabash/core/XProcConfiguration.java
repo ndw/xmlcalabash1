@@ -56,6 +56,7 @@ public class XProcConfiguration {
     public static final QName _port = new QName("", "port");
     public static final QName _href = new QName("", "href");
     public static final QName _name = new QName("", "name");
+    public static final QName _key = new QName("", "key");
     public static final QName _value = new QName("", "value");
     public static final QName _exclude_inline_prefixes = new QName("", "exclude-inline-prefixes");
 
@@ -304,6 +305,8 @@ public class XProcConfiguration {
                     parseExtension(node);
                 } else if ("html-parser".equals(localName)) {
                     parseHtmlParser(node);
+                } else if ("saxon-configuration-property".equals(localName)) {
+                    saxonConfigurationProperty(node);
                 } else {
                     throw new XProcException(doc, "Unexpected configuration option: " + localName);
                 }
@@ -439,6 +442,30 @@ public class XProcConfiguration {
             htmlParser = value;
         } else {
             throw new XProcException("Unrecognized value in html-parser: " + value);
+        }
+    }
+
+    private void saxonConfigurationProperty(XdmNode node) {
+        String value = node.getAttributeValue(_value);
+        String key = node.getAttributeValue(_key);
+        String type = node.getAttributeValue(_type);
+        Object valueObj = null;
+        if (key == null || value == null) {
+            throw new XProcException("Configuration option 'saxon-configuration-property' cannot have a null key or value");
+        }
+
+        if ("boolean".equals(type)) {
+            valueObj = new Boolean("true".equals(value));
+        } else if ("integer".equals(type)) {
+            valueObj = new Integer(Integer.parseInt(value));
+        } else {
+            valueObj = value;
+        }
+
+        try {
+            cfgProcessor.setConfigurationProperty(key, valueObj);
+        } catch (Exception e) {
+            throw new XProcException(e);
         }
     }
 
