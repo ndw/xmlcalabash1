@@ -136,8 +136,10 @@ public class FoAH implements FoProcessor {
             ah.render(bis, out, outputFormat);
             ah.releaseObjectEx();
         } catch (XfoException e) {
-            System.out.println("ErrorLevel = " + e.getErrorLevel() + "\nErrorCode = " + e.getErrorCode() + "\n" + e.getErrorMessage());
-            e.printStackTrace();
+            if (runtime.getDebug()) {
+                System.out.println("ErrorLevel = " + e.getErrorLevel() + "\nErrorCode = " + e.getErrorCode() + "\n" + e.getErrorMessage());
+                e.printStackTrace();
+            }
             throw new XProcException(e);
         } catch (UnsupportedEncodingException e) {
             // won't happen

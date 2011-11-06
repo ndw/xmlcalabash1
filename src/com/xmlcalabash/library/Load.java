@@ -67,7 +67,9 @@ public class Load extends DefaultStep {
             XdmNode doc = runtime.getConfigurer().getXMLCalabashConfigurer().loadDocument(this);
             result.write(doc);
         } catch (XProcException e) {
-            e.printStackTrace();
+            if (runtime.getDebug()) {
+                e.printStackTrace();
+            }
             if (err_XD0011.equals(e.getErrorCode())) {
                 RuntimeValue href = getOption(_href);
                 String baseURI = href.getBaseURI().toASCIIString();

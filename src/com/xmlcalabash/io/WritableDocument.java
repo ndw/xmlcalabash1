@@ -186,7 +186,9 @@ public class WritableDocument implements WritablePipe {
                 System.out.println("\n--<document boundary>--------------------------------------------------------------------------");
             }
         } catch (SaxonApiException sae) {
-            sae.printStackTrace();
+            if (runtime.getDebug()) {
+                sae.printStackTrace();
+            }
             throw new XProcException(sae);
         }
 

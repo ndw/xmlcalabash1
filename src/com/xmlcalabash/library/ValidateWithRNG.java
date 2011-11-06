@@ -106,7 +106,9 @@ public class ValidateWithRNG extends DefaultStep {
 
             result.write(doc);
         } catch (VerifierConfigurationException ex) {
-            ex.printStackTrace();
+            if (runtime.getDebug()) {
+                ex.printStackTrace();
+            }
             throw new XProcException(ex);
         } catch (SAXException sx) {
             // Assume the only error is validity failed?
@@ -115,7 +117,9 @@ public class ValidateWithRNG extends DefaultStep {
             }
             result.write(doc);
         } catch (IOException ioe) {
-            ioe.printStackTrace();
+            if (runtime.getDebug()) {
+                ioe.printStackTrace();
+            }
             throw new XProcException(ioe);
         }
     }
