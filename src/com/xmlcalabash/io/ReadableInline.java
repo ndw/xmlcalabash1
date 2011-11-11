@@ -47,6 +47,11 @@ public class ReadableInline implements ReadablePipe {
         this.runtime = runtime;
         documents = new DocumentSequence(runtime);
         XdmDestination dest = new XdmDestination();
+        XdmNode p_inline = null;
+
+        if (nodes.size() > 0) {
+            p_inline = ((XdmNode) nodes.get(pos)).getParent();
+        }
 
         // Find the document element so we can get the base URI
         XdmNode node = null;
@@ -57,7 +62,7 @@ public class ReadableInline implements ReadablePipe {
         }
 
         if (node == null) {
-            throw XProcException.dynamicError(1);
+            throw XProcException.dynamicError(1, p_inline, "Invalid inline content");
         }
 
         try {
