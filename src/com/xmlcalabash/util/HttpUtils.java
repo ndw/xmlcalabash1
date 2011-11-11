@@ -32,7 +32,8 @@ public class HttpUtils {
     public static boolean jsonContentType(String contentType) {
         String baseType = HttpUtils.baseContentType(contentType);
         return baseType != null
-                && ("application/json".equals(baseType));
+                && ("application/json".equals(baseType)
+                    || "text/json".equals(baseType));
     }
 
     public static boolean textContentType(String contentType) {

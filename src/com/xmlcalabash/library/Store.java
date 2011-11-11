@@ -121,7 +121,8 @@ public class Store extends DefaultStep {
             storeBinary(doc, href);
         } else if (runtime.transparentJSON()
                    && (((c_body.equals(root.getNodeName())
-                        && "application/json".equals(root.getAttributeValue(_content_type)))
+                        && ("application/json".equals(root.getAttributeValue(_content_type))
+                            || "text/json".equals(root.getAttributeValue(_content_type))))
                        || c_json.equals(root.getNodeName()))
                        || JSONtoXML.JSONX_NS.equals(root.getNodeName().getNamespaceURI())
                        || JSONtoXML.JXML_NS.equals(root.getNodeName().getNamespaceURI())

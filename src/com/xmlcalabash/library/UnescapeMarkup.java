@@ -148,7 +148,7 @@ public class UnescapeMarkup extends DefaultStep {
             } else {
                 remapDefaultNamespace(tree, tagDoc);
             }
-        } else if ("application/json".equals(contentType)) {
+        } else if ("application/json".equals(contentType) || "text/json".equals(contentType)) {
             JSONTokener jt = new JSONTokener(escapedContent);
             XdmNode jsonDoc = JSONtoXML.convert(runtime.getProcessor(), jt, runtime.jsonFlavor());
             tree.addSubtree(jsonDoc);
