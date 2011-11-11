@@ -1,0 +1,85 @@
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:id="running" version="5.0">
+<title>Running XML Calabash</title>
+
+<para>This chapter describes how to run <citetitle>XML
+Calabash</citetitle> from the command-line. If you're using the
+processor embedded in some other application, please consult the
+documentation for that application for details about how to run and
+control it.</para>
+
+<section xml:id="javasetup">
+<title>Setting up the environment</title>
+
+<para>You must have Java 1.6 installed in order to run <citetitle>XML Calabash</citetitle>.
+(You can probably run it with Java 1.5, but you'll have to compile it yourself.)</para>
+
+<para>In addition to Java, you need a set of jar files on your classpath. At a minimum, you need
+to include the <filename>calabash.jar</filename> file and the jar files in the
+<filename class="directory">lib</filename> directory of the distribution. Some steps
+need various other libraries.</para>
+
+<para>FIXME: provide list of optional library dependencies.</para>
+
+<para>Assuming you have the appropriate jar files on your classpath, you can run
+<citetitle>XML Calabash</citetitle> like this:</para>
+
+<screen>java <replaceable>java-options</replaceable> com.xmlcalabash.drivers.Main <replaceable>xml-calabash-options</replaceable> <replaceable>pipeline.xpl</replaceable></screen>
+
+<para>Throughout the rest of this chapter, we assume that the command <replaceable>calabash</replaceable>
+will run Java with the correct class path and other arguments.</para>
+</section>
+
+<section xml:id="cmdline">
+<title>The command line</title>
+
+<para>The following synopsis describes the <citetitle>XML Calabash</citetitle> command line:</para>
+
+<cmdsynopsis>
+  <command><replaceable>calabash</replaceable></command>
+  <arg>--schema-aware</arg>
+  <arg>--debug</arg>
+  <arg>--safe-mode</arg>
+  <arg>--config <replaceable>configuri</replaceable></arg>
+  <arg>--log-style=
+    <group choice="plain">
+      <arg choice="plain">off</arg>
+      <arg choice="plain">plain</arg>
+      <arg choice="plain">wrapped</arg>
+      <arg choice="plain">directory</arg>
+    </group>
+  </arg>
+  <sbr/>
+  <arg>--entity-resolver=<replaceable>classname</replaceable></arg>
+  <arg>--uri-resolver=<replaceable>classname</replaceable></arg>
+  <arg rep="repeat">--extension=<replaceable>extname</replaceable></arg>
+  <sbr/>
+  <arg rep="repeat">--binding <replaceable>prefix</replaceable>=<replaceable>uri</replaceable></arg>
+  <arg rep="repeat">--with-param <replaceable>name</replaceable>=<replaceable>value</replaceable></arg>
+  <sbr/>
+  <arg rep="repeat">--input <replaceable>portname</replaceable>=<replaceable>uri</replaceable></arg>
+  <arg rep="repeat">--data-input <replaceable>portname</replaceable>=<replaceable>uri</replaceable></arg>
+  <arg rep="repeat">--output <replaceable>portname</replaceable>=<replaceable>uri</replaceable></arg>
+  <sbr/>
+  <arg>--library=<replaceable>uri</replaceable></arg>
+  <group choice="plain">
+    <group choice="plain">
+      <arg choice="plain" rep="repeat">--step=<replaceable>steptype</replaceable></arg>
+    </group>
+    <arg choice="plain"><replaceable>pipeline-uri</replaceable></arg>
+  </group>
+  <sbr/>
+  <arg rep="repeat"><replaceable>name</replaceable>=<replaceable>value</replaceable></arg>
+</cmdsynopsis>
+
+<para>See <xref linkend="configuration"/> for a description of these arguments and what they
+mean.</para>
+
+<para>There are two different ways to select the pipeline to run: you can specify the URI of
+the pipeline document or you can specify one or more step types.</para>
+
+</section>
+
+</chapter>

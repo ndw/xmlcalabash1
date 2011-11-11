@@ -21,7 +21,7 @@
       <firstname>Norman</firstname><surname>Walsh</surname>
     </personname>
   </author>
-  <releaseinfo>0.1</releaseinfo>
+  <releaseinfo>0.2</releaseinfo>
   <copyright>
     <year>2011</year>
     <holder>Norman Walsh</holder>
@@ -29,6 +29,8 @@
 </info>
 
 <xi:include href="preface.xml"/>
+<xi:include href="running.xml"/>
+<xi:include href="configuration.xml"/>
 <xi:include href="extensions.xml"/>
 
 <reference xml:id="p-steps">

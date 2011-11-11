@@ -82,3 +82,8 @@ code {
     font-family: monospace, serif;
     font-size: 90%;
 }
+
+.cfgprop .tcol1 {
+    width: 10em;
+}
+

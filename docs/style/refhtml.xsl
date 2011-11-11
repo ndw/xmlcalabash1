@@ -16,6 +16,7 @@
 <xsl:param name="refentry.separator" select="0"/>
 <xsl:param name="resource.root" select="''"/>
 <xsl:param name="html.stylesheets" select="'css/xproc.css'"/>
+<xsl:param name="default.table.column.widths" select="0"/>
 
 <xsl:param name="linenumbering" as="element()*">
 <ln path="literallayout" everyNth="2" width="3" separator=" " padchar=" " minlines="3"/>
