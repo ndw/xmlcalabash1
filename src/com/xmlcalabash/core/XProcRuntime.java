@@ -222,6 +222,22 @@ public class XProcRuntime {
         return staticBaseURI;
     }
 
+    public String getSendmailHost() {
+        return config.mailHost;
+    }
+
+    public String getSendmailPort() {
+        return config.mailPort;
+    }
+
+    public String getSendmailUsername() {
+        return config.mailUser;
+    }
+
+    public String getSendmailPassword() {
+        return config.mailPass;
+    }
+
     public void setURIResolver(URIResolver resolver) {
         uriResolver.setUnderlyingURIResolver(resolver);
     }

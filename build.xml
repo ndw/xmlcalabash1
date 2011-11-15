@@ -121,7 +121,7 @@
   </target>
 
   <target name="optional-features" depends="compile-MetadataException,
-                                            compile-XEP,compile-FOP,compile-AH,
+                                            compile-XEP,compile-FOP,compile-AH,compile-SendMail,
                                             compile-DeltaXML,compile-XMLUnit,compile-XCC"/>
 
   <condition property="XMLUnit.present">
@@ -209,6 +209,19 @@
       <src path="src"/>
       <include name="com/xmlcalabash/util/FoAH.java"/>
       <include name="com/xmlcalabash/util/CssAH.java"/>
+    </javac>
+  </target>
+
+  <available classname="javax.mail.Address" property="Mail.present">
+    <classpath refid="build.classpath"/>
+  </available>
+
+  <target name="compile-SendMail" depends="init" if="Mail.present">
+    <javac destdir="${build.dir}"
+	   classpathref="build.classpath"
+           includeantruntime="false">
+      <src path="src"/>
+      <include name="com/xmlcalabash/extensions/SendMail.java"/>
     </javac>
   </target>
 

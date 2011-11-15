@@ -205,6 +205,9 @@
 <implementation type="cx:css-formatter"
 		class-name="com.xmlcalabash.extensions.CssFormatter"/>
 
+<implementation type="cx:send-mail"
+                class-name="com.xmlcalabash.extensions.SendMail"/>
+
 <!-- Fileutils -->
 
 <implementation type="cxf:info pxf:info"

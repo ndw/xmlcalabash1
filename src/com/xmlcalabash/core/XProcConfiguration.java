@@ -82,6 +82,10 @@ public class XProcConfiguration {
     public String cssProcessor = null;
     public String xprocConfigurer = null;
     public String htmlParser = "validator.nu";
+    public String mailHost = null;
+    public String mailPort = "25";
+    public String mailUser = null;
+    public String mailPass = null;
 
     public boolean extensionValues = false;
     public boolean xpointerOnText = false;
@@ -199,6 +203,10 @@ public class XProcConfiguration {
         cssProcessor = System.getProperty("com.xmlcalabash.css-processor", cssProcessor);
         xprocConfigurer = System.getProperty("com.xmlcalabash.xproc-configurer", xprocConfigurer);
         htmlParser = System.getProperty("com.xmlcalabash.html-parser", htmlParser);
+        mailHost = System.getProperty("com.xmlcalabash.mail-host", mailHost);
+        mailPort = System.getProperty("com.xmlcalabash.mail-port", mailPort);
+        mailUser = System.getProperty("com.xmlcalabash.mail-user", mailUser);
+        mailPass = System.getProperty("com.xmlcalabash.mail-password", mailPass);
 
         String[] boolSerNames = new String[] {"byte-order-mark", "escape-uri-attributes",
                 "include-content-type","indent", "omit-xml-declaration", "undeclare-prefixes"};
@@ -305,6 +313,8 @@ public class XProcConfiguration {
                     parseExtension(node);
                 } else if ("html-parser".equals(localName)) {
                     parseHtmlParser(node);
+                } else if ("sendmail".equals(localName)) {
+                    parseSendMail(node);
                 } else if ("saxon-configuration-property".equals(localName)) {
                     saxonConfigurationProperty(node);
                 } else {
@@ -442,6 +452,23 @@ public class XProcConfiguration {
             htmlParser = value;
         } else {
             throw new XProcException("Unrecognized value in html-parser: " + value);
+        }
+    }
+
+    private void parseSendMail(XdmNode node) {
+        String host = node.getAttributeValue(new QName("", "host"));
+        String port = node.getAttributeValue(_port);
+        String user = node.getAttributeValue(new QName("", "username"));
+        String pass = node.getAttributeValue(new QName("", "password"));
+
+        if (host != null) { mailHost = host; }
+        if (port != null) { mailPort = port; }
+        if (user != null) {
+            mailUser = user;
+            if (pass == null) {
+                throw new XProcException("Misconfigured sendmail: user specified without password");
+            }
+            mailPass = pass;
         }
     }
 
