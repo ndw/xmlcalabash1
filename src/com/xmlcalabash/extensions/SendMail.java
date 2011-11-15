@@ -7,6 +7,7 @@ import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.library.DefaultStep;
 import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.util.NodeToBytes;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TreeWriter;
 import net.sf.saxon.s9api.Axis;
@@ -16,19 +17,27 @@ import net.sf.saxon.s9api.Serializer;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
-import org.xml.sax.InputSource;
 
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
 import javax.mail.Authenticator;
+import javax.mail.BodyPart;
 import javax.mail.MessagingException;
+import javax.mail.Part;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.Message;
+import javax.mail.internet.MimeMultipart;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Properties;
 import java.util.Vector;
@@ -43,13 +52,11 @@ import java.util.Vector;
 public class SendMail extends DefaultStep {
     public final static String NS_EMAIL = "URN:ietf:params:email-xml:";
     public final static String NS_RFC822 = "URN:ietf:params:rfc822:";
+    public static final QName _content_type = new QName("content-type");
     public final static QName em_Message = new QName("em", NS_EMAIL, "Message");
-    public final static QName rf_subject = new QName("rf", NS_RFC822, "subject");
-    public final static QName rf_from = new QName("rf", NS_RFC822, "from");
     public final static QName em_Address = new QName("em", NS_EMAIL, "Address");
     public final static QName em_name = new QName("em", NS_EMAIL, "name");
     public final static QName em_adrs = new QName("em", NS_EMAIL, "adrs");
-    public final static QName rf_to = new QName("rf", NS_EMAIL, "to");
     public final static QName em_content = new QName("em", NS_EMAIL, "content");
 
     private ReadablePipe source = null;
@@ -94,6 +101,8 @@ public class SendMail extends DefaultStep {
         if (runtime.getSendmailUsername() != null) {
             props.put("mail.smtp.auth", "true");
         }
+
+        MimeMultipart mp = null;
 
         try {
             Authenticator auth = new SMTPAuthenticator();
@@ -169,16 +178,41 @@ public class SendMail extends DefaultStep {
                         contentType = "text/plain; charset=utf-8";
                     }
 
-                    msg.setContent(content, contentType);
+                    if (source.moreDocuments()) {
+                        mp = new MimeMultipart();
+                        BodyPart bodyPart = new MimeBodyPart();
+                        DataSource source = new PartDataSource(content.getBytes("utf-8"), contentType, "irrelevant");
+                        bodyPart.setDataHandler(new DataHandler(source));
+                        bodyPart.setDisposition(Part.INLINE);
+                        mp.addBodyPart(bodyPart);
+                    } else {
+                        msg.setContent(content, contentType);
+                    }
                 } else {
                     throw new XProcException("Unexpected element in email message: " + field.getNodeName());
                 }
             }
 
+            while (source.moreDocuments()) {
+                XdmNode xmlpart = S9apiUtils.getDocumentElement(source.read());
+                String contentType = xmlpart.getAttributeValue(_content_type);
+                if (contentType == null) { contentType = "application/octet-stream"; }
+                BodyPart bodyPart = new MimeBodyPart();
+                DataSource source = new PartDataSource(NodeToBytes.convert(runtime, xmlpart, true), contentType, "irrelevant");
+                bodyPart.setDataHandler(new DataHandler(source));
+                bodyPart.setFileName(xmlpart.getBaseURI().getPath());
+                bodyPart.setDisposition(Part.ATTACHMENT);
+                mp.addBodyPart(bodyPart);
+            }
+            msg.setContent(mp);
+
             Transport.send(msg);
         } catch (AddressException ex) {
             throw new XProcException(ex);
         } catch (MessagingException ex) {
+            throw new XProcException(ex);
+        } catch (UnsupportedEncodingException ex) {
+            // I don't think this can ever actually happen
             throw new XProcException(ex);
         }
 
@@ -277,6 +311,34 @@ public class SendMail extends DefaultStep {
     private class SMTPAuthenticator extends javax.mail.Authenticator {
         public PasswordAuthentication getPasswordAuthentication() {
             return new PasswordAuthentication(runtime.getSendmailUsername(), runtime.getSendmailPassword());
+        }
+    }
+
+    private class PartDataSource implements DataSource {
+        private byte[] data = null;
+        private String contentType = null;
+        private String name = null;
+
+        public PartDataSource(byte[] data, String contentType, String name) {
+            this.data = data;
+            this.contentType = contentType;
+            this.name = name;
+        }
+
+        public InputStream getInputStream() throws IOException {
+            return new ByteArrayInputStream(data);
+        }
+
+        public OutputStream getOutputStream() throws IOException {
+            throw new XProcException("Called getOutputStream() on PartDataSource for cx:send-mail???");
+        }
+
+        public String getContentType() {
+            return contentType;
+        }
+
+        public String getName() {
+            return name;
         }
     }
 }
