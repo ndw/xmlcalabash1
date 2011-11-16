@@ -205,7 +205,7 @@ public class XProcConfiguration {
         htmlParser = System.getProperty("com.xmlcalabash.html-parser", htmlParser);
         mailHost = System.getProperty("com.xmlcalabash.mail-host", mailHost);
         mailPort = System.getProperty("com.xmlcalabash.mail-port", mailPort);
-        mailUser = System.getProperty("com.xmlcalabash.mail-user", mailUser);
+        mailUser = System.getProperty("com.xmlcalabash.mail-username", mailUser);
         mailPass = System.getProperty("com.xmlcalabash.mail-password", mailPass);
 
         String[] boolSerNames = new String[] {"byte-order-mark", "escape-uri-attributes",
