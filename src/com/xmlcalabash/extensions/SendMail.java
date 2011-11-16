@@ -196,11 +196,16 @@ public class SendMail extends DefaultStep {
             while (source.moreDocuments()) {
                 XdmNode xmlpart = S9apiUtils.getDocumentElement(source.read());
                 String contentType = xmlpart.getAttributeValue(_content_type);
+                String filename = xmlpart.getBaseURI().getPath();
+                int pos = filename.lastIndexOf("/");
+                if (pos >= 0) {
+                    filename = filename.substring(pos+1);
+                }
                 if (contentType == null) { contentType = "application/octet-stream"; }
                 BodyPart bodyPart = new MimeBodyPart();
                 DataSource source = new PartDataSource(NodeToBytes.convert(runtime, xmlpart, true), contentType, "irrelevant");
                 bodyPart.setDataHandler(new DataHandler(source));
-                bodyPart.setFileName(xmlpart.getBaseURI().getPath());
+                bodyPart.setFileName(filename);
                 bodyPart.setDisposition(Part.ATTACHMENT);
                 mp.addBodyPart(bodyPart);
             }
