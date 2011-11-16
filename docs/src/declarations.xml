@@ -419,6 +419,11 @@
       <p:option name="message" required="true" e:type="xsd:string"/>
    </p:declare-step>
 
+   <p:declare-step type="cx:send-mail">
+     <p:input port="source" sequence="true"/>
+     <p:output port="result"/>
+   </p:declare-step>
+
     <p:declare-step type="cx:pretty-print">
       <p:input port="source"/>
       <p:output port="result"/>

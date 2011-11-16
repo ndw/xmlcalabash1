@@ -571,7 +571,7 @@ values are QNames.)</para>
 <section xml:id="cfg.extension-function">
 <title>Extension function</title>
 
-<para>There are </para>
+<para>Extension functions are specified in the configuration file.</para>
 
 <informaltable frame="none" role="cfgprop">
 <tgroup cols="2" colsep="0" rowsep="0">
@@ -590,7 +590,7 @@ values are QNames.)</para>
 <section xml:id="cfg.fo-processor">
 <title>FO processor</title>
 
-<para>There are </para>
+<para>The FO Processor is specified in the configuration file.</para>
 
 <informaltable frame="none" role="cfgprop">
 <tgroup cols="2" colsep="0" rowsep="0">
@@ -609,7 +609,7 @@ values are QNames.)</para>
 <section xml:id="cfg.css-processor">
 <title>CSS processor</title>
 
-<para>There are </para>
+<para>The CSS processor is specified in the configuration file. </para>
 
 <informaltable frame="none" role="cfgprop">
 <tgroup cols="2" colsep="0" rowsep="0">
@@ -628,7 +628,7 @@ values are QNames.)</para>
 <section xml:id="cfg.xproc-configurer">
 <title>XProc configurer</title>
 
-<para>There are </para>
+<para>The XProcConfigurer is specified in the configuration file.</para>
 
 <informaltable frame="none" role="cfgprop">
 <tgroup cols="2" colsep="0" rowsep="0">
@@ -647,7 +647,7 @@ values are QNames.)</para>
 <section xml:id="cfg.default-system-property">
 <title>Default system property</title>
 
-<para>There are </para>
+<para>Default system properties can be specified in the configuration file.</para>
 
 <informaltable frame="none" role="cfgprop">
 <tgroup cols="2" colsep="0" rowsep="0">
@@ -666,7 +666,7 @@ values are QNames.)</para>
 <section xml:id="cfg.html-parser">
 <title>HTML parser</title>
 
-<para>There are </para>
+<para>The HTML parser is specified in the configuration file.</para>
 
 <informaltable frame="none" role="cfgprop">
 <tgroup cols="2" colsep="0" rowsep="0">
@@ -688,7 +688,7 @@ values are QNames.)</para>
 <section xml:id="cfg.saxon-configuration-property">
 <title>Saxon configuration property</title>
 
-<para>There are </para>
+<para>Saxon configuration properties (Features) can be specified in the configuration file.</para>
 
 <informaltable frame="none" role="cfgprop">
 <tgroup cols="2" colsep="0" rowsep="0">
@@ -710,6 +710,46 @@ or “<literal>string</literal>”.</para>
 
 <para>Setting Saxon features through this interface may have unanticipated consequences, use with
 care.</para>
+
+<para>T.B.D.</para>
+</section>
+
+<section xml:id="cfg.">
+<title>Send mail configuration</title>
+
+<para>There are two ways to specify the SMTP configuration for sending mail.</para>
+
+<informaltable frame="none" role="cfgprop">
+<tgroup cols="2" colsep="0" rowsep="0">
+<tbody>
+<row>
+  <entry morerows="3" valign="top">Java system properties:</entry>
+  <entry><property>com.xmlcalabash.mail-host</property>=<replaceable>hostname</replaceable></entry>
+</row>
+<row>
+  <entry><property>com.xmlcalabash.mail-port</property>=<replaceable>portnumber</replaceable></entry>
+</row>
+<row>
+  <entry><property>com.xmlcalabash.mail-username</property>=<replaceable>name</replaceable></entry>
+</row>
+<row>
+  <entry><property>com.xmlcalabash.mail-password</property>=<replaceable>password</replaceable></entry>
+</row>
+<row>
+  <entry>XML configuration:</entry>
+  <entry><tag class="emptytag">cc:saxon-configuration-property
+<tag class="attribute"><replaceable>host</replaceable></tag>="<tag class="attvalue"><replaceable>hostname</replaceable></tag>"
+<tag class="attribute"><replaceable>port</replaceable></tag>="<tag class="attvalue"><replaceable>portnumber</replaceable></tag>"
+<tag class="attribute"><replaceable>username</replaceable></tag>="<tag class="attvalue"><replaceable>name</replaceable></tag>"
+<tag class="attribute"><replaceable>password</replaceable></tag>="<tag class="attvalue"><replaceable>password</replaceable></tag>"</tag></entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+
+<para>If you specify a <tag class="attribute">username</tag>, you must specify a
+<tag class="attribute">password</tag>, otherwise all the properties are optional. Any unspecified
+properties will be defaulted by JavaMail to whatever defaults JavaMail uses.</para>
 
 <para>T.B.D.</para>
 </section>

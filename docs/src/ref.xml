@@ -21,7 +21,7 @@
       <firstname>Norman</firstname><surname>Walsh</surname>
     </personname>
   </author>
-  <releaseinfo>0.2</releaseinfo>
+  <releaseinfo>0.3</releaseinfo>
   <copyright>
     <year>2011</year>
     <holder>Norman Walsh</holder>
@@ -116,6 +116,7 @@
 <xi:include href="steps/cx-metadata-extractor.xml"/>
 <xi:include href="steps/cx-namespace-delete.xml"/>
 <xi:include href="steps/cx-pretty-print.xml"/>
+<xi:include href="steps/cx-send-mail.xml"/>
 <xi:include href="steps/cx-set-cookies.xml"/>
 <xi:include href="steps/cx-uri-info.xml"/>
 <xi:include href="steps/cxu-compare.xml"/>
