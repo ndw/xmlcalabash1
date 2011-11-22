@@ -66,10 +66,12 @@ public class StepErrorListener implements ErrorListener {
         writer.addStartElement(c_error);
         writer.addAttribute(_type, type);
 
+        String message = exception.toString();
         StructuredQName qCode = null;
         if (exception instanceof XPathException) {
             XPathException xxx = (XPathException) exception;
             qCode = xxx.getErrorCodeQName();
+            message = exception.getException().toString();
             //qCode = ((XPathException) exception).getErrorCodeQName();
         }
         if (qCode == null && exception.getException() instanceof XPathException) {
@@ -111,7 +113,7 @@ public class StepErrorListener implements ErrorListener {
 
 
         writer.startContent();
-        writer.addText(exception.toString());
+        writer.addText(message);
         writer.addEndElement();
         writer.endDocument();
 
