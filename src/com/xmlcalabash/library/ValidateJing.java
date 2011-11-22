@@ -178,6 +178,8 @@ public class ValidateJing extends DefaultStep {
     }
 
     class RNGErrorHandler implements ErrorHandler {
+        SAXParseException err = null;
+
         public void fatalError(SAXParseException e) throws SAXException {
             error(e);
         }
@@ -203,7 +205,9 @@ public class ValidateJing extends DefaultStep {
             treeWriter.endDocument();
 
             step.reportError(treeWriter.getResult());
-            throw e;
+            if (err != null) {
+                err = e;
+            }
         }
 
         public void warning( SAXParseException e ) {
