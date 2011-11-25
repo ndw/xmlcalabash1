@@ -4,10 +4,60 @@
          xml:id="extensions" version="5.0">
 <title>Extensions</title>
 
-<para><citetitle>XML Calabash</citetitle> has three extensions: “general values”, “XPointer on text”,
-and “transparent JSON”. Enabling extensions makes the processor <emphasis>non-conformant</emphasis>.
-Pipelines that rely on these extensions are not likely to be interoperable with other implementations.
-You're encouraged to avoid them if possible. That said, they can be very useful.</para>
+<section xml:id="extattr">
+<title>Extension Attributes</title>
+
+<para><citetitle>XML Calabash</citetitle> supports an extension attribute
+<tag class="attribute">cx:depends-on</tag> to provide finer grained control
+over the dependencies between steps. Consider the following example:</para>
+
+<mediaobject>
+<imageobject>
+<imagedata fileref="../img/depends.png"/>
+</imageobject>
+</mediaobject>
+
+<para>Because step “C” depends on steps “A” and “B”, you can be sure
+that step “C” will run after “A” and “B”. (If Calabash was a
+multi-threaded, streaming implementation, the constraint would be
+weaker.) But what about steps “A” and “B”?</para>
+
+<para>Because neither step depends (directly or indirectly) on the output
+of the other, there is no guarantee about the order in which they will
+be evaluated.</para>
+
+<para>If step “B” relies on some side effect of step “A” (perhaps “A” calls
+a web service or writes a document to disk and “B” relies on this having already
+happened for its correct operation), then you need a way to force the ordering.</para>
+
+<para>It's best if this can be accomplished by establishing an input/output dependency,
+reading an output of “A” in the evaluation of “B”.</para>
+
+<para>However, if you can't easily arrange an input/output dependency and you're not
+concerned about introducing an implementation dependency into your pipeline, you
+can establish the relationship directly by adding</para>
+
+<programlisting>cx:depends="A"</programlisting>
+
+<para>as an extension attribute on “B”. That informs <citetitle>XML Calabash</citetitle>
+that the evaluation of “A” <emphasis>must</emphasis> precede the evaluation
+of “B”. The value of <tag class="attribute">cx:depends</tag> is a space-separated
+list of step names.</para>
+
+<para>It is an error if the use of <tag class="attribute">cx:depends</tag> introduces
+a circular dependency into the pipeline.</para>
+
+</section>
+
+<section xml:id="langext">
+<title>Language Extensions</title>
+
+<para><citetitle>XML Calabash</citetitle> has three language extensions:
+“general values”, “XPointer on text”, and “transparent JSON”. Enabling
+any of these extensions makes the processor <emphasis>non-conformant</emphasis>.
+Pipelines that rely on these extensions are not likely to be
+interoperable with other implementations. You're encouraged to avoid
+them if possible. That said, they can be very useful.</para>
 
 <section xml:id="ext.general-values">
 <title>General values extension</title>
@@ -187,4 +237,6 @@ configuration option.</para>
 <function>p:system-property</function> function using the argument
 <literal>cx:json-flavor</literal>.</para>
 </section>
+</section>
+
 </chapter>
