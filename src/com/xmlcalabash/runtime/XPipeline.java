@@ -241,6 +241,12 @@ public class XPipeline extends XCompoundStep {
                 String wport = port.substring(1);
                 WritablePipe pipe = outputs.get(wport);
                 for (ReadablePipe reader : inputs.get(port)) {
+                    // Check for the case where there are no documents, but a sequence is not allowed
+                    if (!reader.moreDocuments() && !pipe.writeSequence()) {
+                        throw XProcException.dynamicError(7);
+                    }
+
+
                     while (reader.moreDocuments()) {
                         XdmNode doc = reader.read();
                         pipe.write(doc);
