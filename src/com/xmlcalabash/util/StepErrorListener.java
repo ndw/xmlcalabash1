@@ -71,8 +71,15 @@ public class StepErrorListener implements ErrorListener {
         if (exception instanceof XPathException) {
             XPathException xxx = (XPathException) exception;
             qCode = xxx.getErrorCodeQName();
-            message = exception.getException().toString();
-            //qCode = ((XPathException) exception).getErrorCodeQName();
+
+            Throwable underlying = exception.getException();
+            if (underlying == null) {
+                underlying = exception.getCause();
+            }
+
+            if (underlying != null) {
+                message = underlying.toString();
+            }
         }
         if (qCode == null && exception.getException() instanceof XPathException) {
             qCode = ((XPathException) exception.getException()).getErrorCodeQName();
