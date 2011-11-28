@@ -24,6 +24,7 @@ import java.util.Vector;
 import java.util.HashSet;
 import java.util.logging.Logger;
 
+import com.xmlcalabash.core.XProcConstants;
 import net.sf.saxon.s9api.*;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.core.XProcRuntime;
@@ -65,8 +66,18 @@ public class ReadableInline implements ReadablePipe {
             throw XProcException.dynamicError(1, p_inline, "Invalid inline content");
         }
 
+        // If the document element of the inline document has a relative xml:base, then we have
+        // to be careful *not* to resolve it now. Otherwise, it'll get resolved *twice* if someone
+        // calls p:make-absolute-uris on it.
+        URI baseURI = null;
+        if (node.getAttributeValue(XProcConstants.xml_base) == null) {
+            baseURI = node.getBaseURI();
+        } else {
+            baseURI = node.getParent().getBaseURI();
+        }
+
         try {
-            S9apiUtils.writeXdmValue(runtime, nodes, dest, node.getBaseURI());
+            S9apiUtils.writeXdmValue(runtime, nodes, dest, baseURI);
             XdmNode doc = dest.getXdmNode();
 
             doc = S9apiUtils.removeNamespaces(runtime, doc, excludeNS);
@@ -79,6 +90,10 @@ public class ReadableInline implements ReadablePipe {
 
     public void canReadSequence(boolean sequence) {
         readSeqOk = sequence;
+    }
+
+    public boolean readSequence() {
+        return readSeqOk;
     }
     
     public void resetReader() {

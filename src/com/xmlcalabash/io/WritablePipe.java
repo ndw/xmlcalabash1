@@ -28,6 +28,7 @@ import com.xmlcalabash.model.Step;
  */
 public interface WritablePipe {
     public void canWriteSequence(boolean sequence);
+    public boolean writeSequence();
     public void write(XdmNode node);
     public void setWriter(Step step);
     public void resetWriter();

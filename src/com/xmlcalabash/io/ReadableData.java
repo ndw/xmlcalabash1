@@ -202,7 +202,11 @@ public class ReadableData implements ReadablePipe {
     }
 
     public void canReadSequence(boolean sequence) {
-        // nop; always falkse
+        // nop; always false
+    }
+
+    public boolean readSequence() {
+        return false;
     }
 
     public void resetReader() {

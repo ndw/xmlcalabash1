@@ -62,6 +62,10 @@ public class Select implements ReadablePipe {
     public void canReadSequence(boolean sequence) {
         // nop; always true
     }
+
+    public boolean readSequence() {
+        return true;
+    }
     
     private void readSource() {
         initialized = true;

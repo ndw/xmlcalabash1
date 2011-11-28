@@ -82,6 +82,14 @@ public class Pipe implements ReadablePipe, WritablePipe {
         readSeqOk = sequence;
     }
 
+    public boolean readSequence() {
+        return readSeqOk;
+    }
+
+    public boolean writeSequence() {
+        return writeSeqOk;
+    }
+
     public boolean moreDocuments() {
         return pos < documents.size();
     }

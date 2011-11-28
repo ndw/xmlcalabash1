@@ -16,6 +16,10 @@ public class ReadableEmpty implements ReadablePipe {
         // nop;
     }
 
+    public boolean readSequence() {
+        return false;
+    }
+
     public XdmNode read() throws SaxonApiException {
         return null;    }
 

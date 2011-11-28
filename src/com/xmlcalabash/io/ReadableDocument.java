@@ -76,6 +76,10 @@ public class ReadableDocument implements ReadablePipe {
     public void canReadSequence(boolean sequence) {
         // nop; always false
     }
+
+    public boolean readSequence() {
+        return false;
+    }
     
     public void resetReader() {
         pos = 0;

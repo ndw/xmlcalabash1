@@ -796,6 +796,10 @@ public class XProcConfiguration {
             // nop; always false
         }
 
+        public boolean readSequence() {
+            return false;
+        }
+
         public XdmNode read() throws SaxonApiException {
             read = true;
 

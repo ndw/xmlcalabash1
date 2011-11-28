@@ -88,6 +88,10 @@ public class WritableDocument implements WritablePipe {
         writeSeqOk = sequence;
     }
 
+    public boolean writeSequence() {
+        return writeSeqOk;
+    }
+
     public void resetWriter() {
         throw new UnsupportedOperationException("You can't resetWriter a WritableDocument");
     }
