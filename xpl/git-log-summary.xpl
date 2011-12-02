@@ -30,7 +30,10 @@
         <commit xmlns="http://nwalsh.com/ns/git-repo-info">
           <xsl:copy-of select="current-group()/g:file"/>
           <xsl:copy-of select="current-group()[1]/g:date"/>
+          <xsl:copy-of select="current-group()[1]/g:hash"/>
           <xsl:copy-of select="current-group()[1]/g:committer"/>
+          <xsl:copy-of select="current-group()[1]/g:committer-name"/>
+          <xsl:copy-of select="current-group()[1]/g:committer-email"/>
           <xsl:copy-of select="current-group()[1]/g:message"/>
         </commit>
       </xsl:for-each-group>
