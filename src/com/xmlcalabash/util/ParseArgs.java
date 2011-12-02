@@ -26,6 +26,7 @@ public class ParseArgs {
     public boolean debugExplicit = false;
     public boolean debug = false;
 
+    public String saxonProcessor = null;
     public boolean schemaAwareExplicit = false;
     public boolean schemaAware = false;
 
@@ -64,6 +65,14 @@ public class ParseArgs {
         while (arg != null || argpos < args.length) {
             if (arg == null) {
                 arg = args[argpos];
+            }
+
+            if (arg.startsWith("-P") || arg.startsWith("--saxon-processor")) {
+                saxonProcessor = parseString("P","saxon-processor");
+                if ( !("he".equals(saxonProcessor) || "pe".equals(saxonProcessor) || "ee".equals(saxonProcessor)) ) {
+                    throw new XProcException("Invalid Saxon processor option: " + saxonProcessor + ". Must be 'he', 'pe', or 'ee'.");
+                }
+                continue;
             }
 
             if (arg.startsWith("-a") || arg.startsWith("--schema-aware")) {

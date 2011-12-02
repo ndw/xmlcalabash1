@@ -149,7 +149,7 @@ public class RunTestReport {
 
     public void runTests(Vector<String> tests) {
         // We create this runtime for startReport(), I know it never actually gets used...
-        XProcConfiguration config = new XProcConfiguration(schemaAware);
+        XProcConfiguration config = new XProcConfiguration("ee", schemaAware);
         runtime = new XProcRuntime(config);
 
         startReport();
@@ -164,7 +164,7 @@ public class RunTestReport {
     public void run(String testfile) {
         Vector<TestResult> results = new Vector<TestResult> ();
 
-        XProcConfiguration config = new XProcConfiguration(schemaAware);
+        XProcConfiguration config = new XProcConfiguration("ee", schemaAware);
         runtime = new XProcRuntime(config);
         runtime.getConfiguration().debug = debug;
 

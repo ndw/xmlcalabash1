@@ -60,6 +60,7 @@ public class XProcConfiguration {
     public static final QName _value = new QName("", "value");
     public static final QName _exclude_inline_prefixes = new QName("", "exclude-inline-prefixes");
 
+    public String saxonProcessor = "he";
     public boolean schemaAware = false;
     public Hashtable<String,String> nsBindings = new Hashtable<String,String> ();
     public boolean debug = false;
@@ -100,7 +101,7 @@ public class XProcConfiguration {
         cfgProcessor = new Processor(false);
         loadConfiguration();
 
-        if (schemaAware) {
+        if (schemaAware || !"he".equals(saxonProcessor)) {
             // Bugger. We have to restart with a schema-aware processor
             nsBindings.clear();
             inputs.clear();
@@ -111,22 +112,28 @@ public class XProcConfiguration {
             extensionFunctions.clear();
 
             cfgProcessor = new Processor(true);
+
+            String actualtype = cfgProcessor.getUnderlyingConfiguration().softwareEdition;
+            if (!"he".equals(saxonProcessor) && (!actualtype.toLowerCase().equals(saxonProcessor))) {
+                System.err.println("Failed to obtain " + saxonProcessor.toUpperCase() + " processor; using " + actualtype + " instead.");
+            }
+
             loadConfiguration();
         }
     }
 
-    public XProcConfiguration(boolean schemaAware) {
-        cfgProcessor = new Processor(schemaAware);
+    public XProcConfiguration(String proctype, boolean schemaAware) {
+        if (schemaAware) {
+            proctype = "ee";
+        }
+        boolean licensed = schemaAware || !"he".equals(proctype);
+
+        cfgProcessor = new Processor(licensed);
         boolean sa = cfgProcessor.isSchemaAware();
 
-        /*
-        Properties prop = System.getProperties();
-        System.err.println(prop.getProperty("java.class.path", null));
-        System.err.println(cfgProcessor.getUnderlyingConfiguration().getClass().getName());
-        */
-
-        if (schemaAware && !sa) {
-            System.err.println("Failed to obtain schema-aware processor.");
+        String actualtype = cfgProcessor.getUnderlyingConfiguration().softwareEdition;
+        if ((proctype != null) && !"he".equals(proctype) && (!actualtype.toLowerCase().equals(proctype))) {
+            System.err.println("Failed to obtain " + proctype.toUpperCase() + " processor; using " + actualtype + " instead.");
         }
 
         loadConfiguration();
@@ -190,6 +197,12 @@ public class XProcConfiguration {
         }
 
         // What about properties?
+        saxonProcessor = System.getProperty("com.xmlcalabash.saxon-processor", saxonProcessor);
+
+        if ( !("he".equals(saxonProcessor) || "pe".equals(saxonProcessor) || "ee".equals(saxonProcessor)) ) {
+            throw new XProcException("Invalid Saxon processor specified in com.xmlcalabash.saxon-processor property.");
+        }
+
         schemaAware = "true".equals(System.getProperty("com.xmlcalabash.schema-aware", ""+schemaAware));
         debug = "true".equals(System.getProperty("com.xmlcalabash.debug", ""+debug));
         extensionValues = "true".equals(System.getProperty("com.xmlcalabash.general-values", ""+extensionValues));
@@ -271,6 +284,8 @@ public class XProcConfiguration {
                     || XProcConstants.NS_EXPROC_CONFIG.equals(uri)) {
                 if ("implementation".equals(localName)) {
                     parseImplementation(node);
+                } else if ("saxon-processor".equals(localName)) {
+                    parseSaxonProcessor(node);
                 } else if ("schema-aware".equals(localName)) {
                     parseSchemaAware(node);
                 } else if ("namespace-binding".equals(localName)) {
@@ -357,6 +372,16 @@ public class XProcConfiguration {
 		} catch (InvocationTargetException ite) {
 			throw new UnsupportedOperationException("Invocation target exception", ite);
         }
+    }
+
+    private void parseSaxonProcessor(XdmNode node) {
+        String value = node.getStringValue().trim();
+
+        if ( !("he".equals(value) || "pe".equals(value) || "ee".equals(value)) ) {
+            throw new XProcException(node, "Invalid Saxon processor: " + value + ". Must be 'he', 'pe', or 'ee'.");
+        }
+
+        saxonProcessor = value;
     }
 
     private void parseSchemaAware(XdmNode node) {

@@ -13,6 +13,47 @@ order.</para>
 <para>This chapter summarizes the configuration options, irrespective of how they're
 set.</para>
 
+<section xml:id="cfg.saxon-processor">
+<title>Saxon processor</title>
+
+<para>There are three classes of Saxon processor: “home edition”, “professional edition”,
+and “enterprise edition”. There are four ways to select the edition you wish to use:
+</para>
+
+<informaltable frame="none" role="cfgprop">
+<tgroup cols="2" colsep="0" rowsep="0">
+<tbody>
+<row>
+  <entry>Command line (long):</entry>
+  <entry><literal>--saxon-processor</literal>=<replaceable>edition</replaceable></entry>
+</row>
+<row>
+  <entry>Command line (short):</entry>
+  <entry><literal>-P</literal><replaceable>edition</replaceable></entry>
+</row>
+<row>
+  <entry>Java system property:</entry>
+  <entry><property>com.xmlcalabash.saxon-processor</property>=<replaceable>edition</replaceable></entry>
+</row>
+<row>
+  <entry>XML configuration:</entry>
+  <entry><tag class="starttag">cc:saxon-processor</tag><replaceable>edition</replaceable><tag class="endtag">cc:saxon-processor</tag></entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+
+<para>Where <replaceable>edition</replaceable> is one of “<literal>he</literal>”,
+“<literal>pe</literal>”, or “<literal>ee</literal>”. The actual edition that you get
+will depend on where the Saxon jar files appear on your classpath. <citetitle>XML
+Calabash</citetitle> will proceed even if it cannot obtain the requested edition,
+but dynamic errors will occur if you attempt to use features not available in the
+edition actually used.</para>
+
+<para>Schema aware processing requires “enterprise edition”; if you
+request schema aware processing, the processor option is treated as if you'd
+requested “<literal>ee</literal>” irrespective of what you actually specified.</para>
+</section>
 
 <section xml:id="cfg.schema-aware">
 <title>Schema aware processing</title>

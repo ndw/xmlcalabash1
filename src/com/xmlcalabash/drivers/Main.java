@@ -93,9 +93,15 @@ public class Main {
         try {
             XProcConfiguration config = null;
 
+            // Blech
             try {
+                String proc = cmd.saxonProcessor;
                 if (cmd.schemaAware) {
-                    config = new XProcConfiguration(cmd.schemaAware);
+                    proc = "ee";
+                }
+
+                if (proc != null) {
+                    config = new XProcConfiguration(proc, cmd.schemaAware);
                 } else {
                     config = new XProcConfiguration();
                 }

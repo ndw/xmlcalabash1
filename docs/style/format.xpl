@@ -4,11 +4,6 @@
                 xmlns:l="http://xproc.org/library">
 <p:input port="source"/>
 <p:input port="parameters" kind="parameter"/>
-<p:output port="result">
-  <p:pipe step="xslt" port="result"/>
-</p:output>
-
-<p:serialization port="result" method="xhtml"/>
 
 <p:declare-step type="cx:java-properties">
   <p:output port="result"/>
@@ -56,6 +51,8 @@
   </p:input>
   <p:with-param name="base.dir" select="'/projects/github/calabash/docs/build/'"/>
 </p:xslt>
+
+<p:sink/>
 
 <p:for-each>
   <p:iteration-source>
