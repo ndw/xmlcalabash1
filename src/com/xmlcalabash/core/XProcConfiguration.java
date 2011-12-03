@@ -122,7 +122,28 @@ public class XProcConfiguration {
         }
     }
 
+    // This constructor is historical, the (String, boolean) constructor is preferred
+    public XProcConfiguration(boolean schemaAware) {
+        init("he", schemaAware);
+    }
+
     public XProcConfiguration(String proctype, boolean schemaAware) {
+        init(proctype, schemaAware);
+    }
+
+    public XProcConfiguration(Processor processor) {
+        cfgProcessor = processor;
+        loadConfiguration();
+        if (schemaAware != processor.isSchemaAware()) {
+            throw new XProcException("Schema awareness in configuration conflicts with specified processor.");
+        }
+    }
+
+    public Processor getProcessor() {
+        return cfgProcessor;
+    }
+
+    private void init(String proctype, boolean schemaAware) {
         if (schemaAware) {
             proctype = "ee";
         }
@@ -137,18 +158,6 @@ public class XProcConfiguration {
         }
 
         loadConfiguration();
-    }
-
-    public XProcConfiguration(Processor processor) {
-        cfgProcessor = processor;
-        loadConfiguration();
-        if (schemaAware != processor.isSchemaAware()) {
-            throw new XProcException("Schema awareness in configuration conflicts with specified processor.");
-        }
-    }
-
-    public Processor getProcessor() {
-        return cfgProcessor;
     }
 
     private void loadConfiguration() {
