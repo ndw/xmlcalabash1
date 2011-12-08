@@ -27,6 +27,7 @@ public class ParseArgs {
     public boolean debug = false;
 
     public String saxonProcessor = null;
+    public String saxonConfigFile = null;
     public boolean schemaAwareExplicit = false;
     public boolean schemaAware = false;
 
@@ -72,6 +73,11 @@ public class ParseArgs {
                 if ( !("he".equals(saxonProcessor) || "pe".equals(saxonProcessor) || "ee".equals(saxonProcessor)) ) {
                     throw new XProcException("Invalid Saxon processor option: " + saxonProcessor + ". Must be 'he', 'pe', or 'ee'.");
                 }
+                continue;
+            }
+
+            if (arg.startsWith("--saxon-configuration")) {
+                saxonConfigFile = parseString(null, "saxon-configuration");
                 continue;
             }
 
@@ -442,22 +448,25 @@ public class ParseArgs {
     }
 
     private String parseString(String shortName, String longName) {
-        String sOpt = "-" + shortName;
-        String lOpt = "--" + longName;
         String value = null;
 
-        if (arg.startsWith(sOpt)) {
-            if (arg.equals(sOpt)) {
-                value = args[++argpos];
-                arg = null;
-                argpos++;
-            } else {
-                value = arg.substring(2);
-                arg = null;
-                argpos++;
+        if (shortName != null) {
+            String sOpt = "-" + shortName;
+            if (arg.startsWith(sOpt)) {
+                if (arg.equals(sOpt)) {
+                    value = args[++argpos];
+                    arg = null;
+                    argpos++;
+                } else {
+                    value = arg.substring(2);
+                    arg = null;
+                    argpos++;
+                }
+                return value;
             }
-            return value;
         }
+
+        String lOpt = "--" + longName;
 
         if (arg.equals(lOpt)) {
             value = args[++argpos];

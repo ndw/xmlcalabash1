@@ -15,6 +15,8 @@ import net.sf.saxon.value.Whitespace;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.NamePool;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.Hashtable;
 import java.util.Properties;
 import java.util.Vector;
@@ -62,6 +64,7 @@ public class XProcConfiguration {
 
     public String saxonProcessor = "he";
     public boolean schemaAware = false;
+    public String saxonConfigFile = null;
     public Hashtable<String,String> nsBindings = new Hashtable<String,String> ();
     public boolean debug = false;
     public Hashtable<String,Vector<ReadablePipe>> inputs = new Hashtable<String,Vector<ReadablePipe>> ();
@@ -98,10 +101,12 @@ public class XProcConfiguration {
     private boolean firstOutput = false;
 
     public XProcConfiguration() {
+        init("he", false, null);
+/*        
         cfgProcessor = new Processor(false);
         loadConfiguration();
 
-        if (schemaAware || !"he".equals(saxonProcessor)) {
+        if (schemaAware || !"he".equals(saxonProcessor) || saxonConfigFile != null) {
             // Bugger. We have to restart with a schema-aware processor
             nsBindings.clear();
             inputs.clear();
@@ -120,15 +125,20 @@ public class XProcConfiguration {
 
             loadConfiguration();
         }
+*/        
     }
 
     // This constructor is historical, the (String, boolean) constructor is preferred
     public XProcConfiguration(boolean schemaAware) {
-        init("he", schemaAware);
+        init("he", schemaAware, null);
+    }
+
+    public XProcConfiguration(String saxoncfg) {
+        init(null, false, saxoncfg);
     }
 
     public XProcConfiguration(String proctype, boolean schemaAware) {
-        init(proctype, schemaAware);
+        init(proctype, schemaAware, null);
     }
 
     public XProcConfiguration(Processor processor) {
@@ -143,23 +153,58 @@ public class XProcConfiguration {
         return cfgProcessor;
     }
 
-    private void init(String proctype, boolean schemaAware) {
+    private void init(String proctype, boolean schemaAware, String saxoncfg) {
         if (schemaAware) {
             proctype = "ee";
         }
+
+        createSaxonProcessor(proctype, schemaAware, saxoncfg);
+        loadConfiguration();
+
+        if (!(proctype == null || saxonProcessor.equals(proctype)) || schemaAware != this.schemaAware ||
+            (saxoncfg == null && saxonConfigFile != null)) {
+            // Drat. We have to restart to get the right configuration.
+            nsBindings.clear();
+            inputs.clear();
+            outputs.clear();
+            params.clear();
+            options.clear();
+            implementations.clear();
+            extensionFunctions.clear();
+            
+            createSaxonProcessor(saxonProcessor, this.schemaAware, saxonConfigFile);
+            loadConfiguration();
+        }
+
+        // If we got a schema aware processor, make sure it's reflected in our config
+        // FIXME: are there other things that should be reflected this way?
+        this.schemaAware = cfgProcessor.isSchemaAware();
+        this.saxonProcessor = cfgProcessor.getUnderlyingConfiguration().softwareEdition.toLowerCase();
+    }
+
+    private void createSaxonProcessor(String proctype, boolean schemaAware, String saxoncfg) {
         boolean licensed = schemaAware || !"he".equals(proctype);
 
-        cfgProcessor = new Processor(licensed);
-        boolean sa = cfgProcessor.isSchemaAware();
+        if (saxoncfg != null) {
+            try {
+                InputStream instream = new FileInputStream(saxoncfg);
+                SAXSource source = new SAXSource(new InputSource(instream));
+                cfgProcessor = new Processor(source);
+            } catch (FileNotFoundException e) {
+                throw new XProcException(e);
+            } catch (SaxonApiException e) {
+                throw new XProcException(e);
+            }
+        } else {
+            cfgProcessor = new Processor(licensed);
+        }
 
         String actualtype = cfgProcessor.getUnderlyingConfiguration().softwareEdition;
         if ((proctype != null) && !"he".equals(proctype) && (!actualtype.toLowerCase().equals(proctype))) {
             System.err.println("Failed to obtain " + proctype.toUpperCase() + " processor; using " + actualtype + " instead.");
         }
-
-        loadConfiguration();
     }
-
+    
     private void loadConfiguration() {
         URI home = URIUtils.homeAsURI();
         URI cwd = URIUtils.cwdAsURI();
@@ -211,6 +256,8 @@ public class XProcConfiguration {
         if ( !("he".equals(saxonProcessor) || "pe".equals(saxonProcessor) || "ee".equals(saxonProcessor)) ) {
             throw new XProcException("Invalid Saxon processor specified in com.xmlcalabash.saxon-processor property.");
         }
+
+        saxonConfigFile = System.getProperty("com.xmlcalabash.saxon-configuration", saxonConfigFile);
 
         schemaAware = "true".equals(System.getProperty("com.xmlcalabash.schema-aware", ""+schemaAware));
         debug = "true".equals(System.getProperty("com.xmlcalabash.debug", ""+debug));
@@ -295,6 +342,8 @@ public class XProcConfiguration {
                     parseImplementation(node);
                 } else if ("saxon-processor".equals(localName)) {
                     parseSaxonProcessor(node);
+                } else if ("saxon-configuration".equals(localName)) {
+                    parseSaxonConfiguration(node);
                 } else if ("schema-aware".equals(localName)) {
                     parseSchemaAware(node);
                 } else if ("namespace-binding".equals(localName)) {
@@ -391,6 +440,11 @@ public class XProcConfiguration {
         }
 
         saxonProcessor = value;
+    }
+
+    private void parseSaxonConfiguration(XdmNode node) {
+        String value = node.getStringValue().trim();
+        saxonConfigFile = value;
     }
 
     private void parseSchemaAware(XdmNode node) {

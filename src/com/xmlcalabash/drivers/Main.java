@@ -90,6 +90,15 @@ public class Main {
             usage();
         }
 
+        if (cmd.saxonConfigFile != null) {
+            if (cmd.schemaAware) {
+                throw new XProcException("Specifying schema-aware processing is an error if you specify a Saxon configuration file.");
+            }
+            if (cmd.saxonProcessor != null) {
+                throw new XProcException("Specifying a processor type is an error if you specify a Saxon configuration file.");
+            }
+        }
+
         try {
             XProcConfiguration config = null;
 
@@ -100,7 +109,9 @@ public class Main {
                     proc = "ee";
                 }
 
-                if (proc != null) {
+                if (cmd.saxonConfigFile != null) {
+                    config = new XProcConfiguration(cmd.saxonConfigFile);
+                } else if (proc != null) {
                     config = new XProcConfiguration(proc, cmd.schemaAware);
                 } else {
                     config = new XProcConfiguration();
