@@ -55,6 +55,41 @@ request schema aware processing, the processor option is treated as if you'd
 requested “<literal>ee</literal>” irrespective of what you actually specified.</para>
 </section>
 
+<section xml:id="cfg.saxon-configuration">
+<title>Saxon configuration</title>
+
+<para>The Saxon “professional edition” and
+“enterprise edition” processors can load an
+<link xlink:href="http://saxonica.com/documentation/configuration/configuration-file.xml">external
+configuration file</link> to control various aspects of the Saxon processor.
+There are three ways to specify the location of this file:
+</para>
+
+<informaltable frame="none" role="cfgprop">
+<tgroup cols="2" colsep="0" rowsep="0">
+<tbody>
+<row>
+  <entry>Command line (long):</entry>
+  <entry><literal>--saxon-configuration</literal>=<replaceable>filename</replaceable></entry>
+</row>
+<row>
+  <entry>Java system property:</entry>
+  <entry><property>com.xmlcalabash.saxon-configuration</property>=<replaceable>filename</replaceable></entry>
+</row>
+<row>
+  <entry>XML configuration:</entry>
+  <entry><tag class="starttag">cc:saxon-configuration</tag><replaceable>filename</replaceable><tag class="endtag">cc:saxon-configuration</tag></entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+
+<para>The settings in this file take precedence over other, related settings
+available in Calabash (for example, schema awareness or processor type).
+This option will cause <citetitle>XML Calabash</citetitle> to throw an error
+if you are using “home edition”.</para>
+</section>
+
 <section xml:id="cfg.schema-aware">
 <title>Schema aware processing</title>
 

@@ -40,6 +40,7 @@ will run Java with the correct class path and other arguments.</para>
 <cmdsynopsis>
   <command><replaceable>calabash</replaceable></command>
   <arg>--saxon-processor <replaceable>processortype</replaceable></arg>
+  <arg>--saxon-configuration <replaceable>filename</replaceable></arg>
   <arg>--schema-aware</arg>
   <arg>--debug</arg>
   <arg>--safe-mode</arg>

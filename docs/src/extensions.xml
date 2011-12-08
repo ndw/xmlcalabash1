@@ -4,6 +4,60 @@
          xml:id="extensions" version="5.0">
 <title>Extensions</title>
 
+<section xml:id="extprop">
+<title>System property extensions</title>
+
+<para><citetitle>XML Calabash</citetitle> supports several additional
+property names in <function>p:system-property</function>:
+</para>
+
+<variablelist>
+<varlistentry><term>cx:transparent-json</term>
+<listitem>
+<para>Returns “<literal>true</literal>” if the
+<link linkend="ext.transparent-json">transparent JSON</link> extension
+is enabled, “<literal>false</literal>” otherwise.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry><term>cx:json-flavor</term>
+<listitem>
+<para>Returns the flavor of JSON returned by the transparent JSON extension,
+if it's enabled.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry><term>cx:general-values</term>
+<listitem>
+<para>Returns “<literal>true</literal>” if the
+<link linkend="ext.general-values">general values</link> extension
+is enabled, “<literal>false</literal>” otherwise.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry><term>cx:xpointer-on-text</term>
+<listitem>
+<para>Returns “<literal>true</literal>” if the
+<link linkend="ext.xpointer-on-text">XPointer on text</link> extension
+is enabled, “<literal>false</literal>” otherwise.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry><term>cx:saxon-version</term>
+<listitem>
+<para>Returns the version of the underlying Saxon processor.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry><term>cx:saxon-edition</term>
+<listitem>
+<para>Returns the edition of the underlying Saxon processor (“he”, “pe”, or “ee”).
+</para>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+
 <section xml:id="extattr">
 <title>Extension Attributes</title>
 
@@ -108,7 +162,7 @@ configuration option.</para>
 <literal>cx:general-values</literal>.</para>
 
 </section>
-<section xml:id="ext.xpointer-on-text-">
+<section xml:id="ext.xpointer-on-text">
 <title>XPointer on text</title>
 
 <para>If the XPointer on text extension is enabled, the <tag class="attribute">xpointer</tag>
