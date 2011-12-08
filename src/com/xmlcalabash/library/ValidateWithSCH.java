@@ -1,5 +1,6 @@
 package com.xmlcalabash.library;
 
+import net.sf.saxon.om.StandardNames;
 import net.sf.saxon.s9api.*;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.sxpath.IndependentContext;
@@ -43,6 +44,7 @@ public class ValidateWithSCH extends DefaultStep {
     private WritablePipe resultPipe = null;
     private WritablePipe reportPipe = null;
     private Hashtable<QName,RuntimeValue> params = new Hashtable<QName,RuntimeValue> ();
+    private boolean schemaAware = false;
 
 
     /** Creates a new instance of ValidateWithXSD */
@@ -80,6 +82,11 @@ public class ValidateWithSCH extends DefaultStep {
     public void run() throws SaxonApiException {
         super.run();
 
+        XdmNode sourceXML = source.read();
+
+        // If we're dealing with a typed document, we must compile the XSLT in schema-aware mode
+        schemaAware = (sourceXML.getUnderlyingNode().getTypeAnnotation() != StandardNames.XS_UNTYPED);
+
         XsltCompiler compiler;
         XsltExecutable exec;
         XdmDestination result;
@@ -104,6 +111,7 @@ public class ValidateWithSCH extends DefaultStep {
         }
 
         compiler = runtime.getProcessor().newXsltCompiler();
+        compiler.setSchemaAware(schemaAware);
         compiler.setURIResolver(new UResolver());
         exec = compiler.compile(getSchematronXSLT("iso_svrl_for_xslt2.xsl"));
         XsltTransformer schemaCompiler = exec.load();
@@ -130,9 +138,8 @@ public class ValidateWithSCH extends DefaultStep {
 
         XsltTransformer transformer;
 
-        XdmNode sourceXML = source.read();
-
         compiler = runtime.getProcessor().newXsltCompiler();
+        compiler.setSchemaAware(schemaAware);
         exec = compiler.compile(new SAXSource(S9apiUtils.xdmToInputSource(runtime, compiledSchema)));
         transformer = exec.load();
         transformer.setInitialContextNode(sourceXML);
@@ -217,7 +224,7 @@ public class ValidateWithSCH extends DefaultStep {
     private SAXSource getSchematronXSLT(String xslt) {
         InputStream instream = getClass().getResourceAsStream("/etc/schematron/" + xslt);
         if (instream == null) {
-            throw new UnsupportedOperationException("Failed to load iso_svrl.xsl from JAR file.");
+            throw new UnsupportedOperationException("Failed to load " + xslt + " from JAR file.");
         }
 
         return new SAXSource(new InputSource(instream));
@@ -225,6 +232,7 @@ public class ValidateWithSCH extends DefaultStep {
 
     private XdmNode transform(XdmNode source, SAXSource stylesheet) throws SaxonApiException {
         XsltCompiler compiler = runtime.getProcessor().newXsltCompiler();
+        compiler.setSchemaAware(schemaAware);
         compiler.setURIResolver(new UResolver());
         XsltExecutable exec = compiler.compile(stylesheet);
         XsltTransformer schemaCompiler = exec.load();
