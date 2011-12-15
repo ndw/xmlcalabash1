@@ -86,6 +86,7 @@
       <!-- Optional features -->
       <exclude name="com/xmlcalabash/extensions/MetadataExtractor.java"/>
       <exclude name="com/xmlcalabash/extensions/DeltaXML.java"/>
+      <exclude name="com/xmlcalabash/extensions/SendMail.java"/>
       <exclude name="com/xmlcalabash/extensions/xmlunit/Compare.java"/>
       <exclude name="com/xmlcalabash/extensions/marklogic/XCCAdhocQuery.java"/>
       <exclude name="com/xmlcalabash/extensions/marklogic/XCCInsertDocument.java"/>
