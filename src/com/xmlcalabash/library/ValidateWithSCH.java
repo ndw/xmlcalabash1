@@ -87,6 +87,8 @@ public class ValidateWithSCH extends DefaultStep {
         // If we're dealing with a typed document, we must compile the XSLT in schema-aware mode
         schemaAware = (sourceXML.getUnderlyingNode().getTypeAnnotation() != StandardNames.XS_UNTYPED);
 
+        XdmNode schemaXML = schema.read();
+
         XsltCompiler compiler;
         XsltExecutable exec;
         XdmDestination result;
@@ -102,7 +104,7 @@ public class ValidateWithSCH extends DefaultStep {
 
         // It would be nice to load these stylesheets only once, but sometimes (i.e. from RunTest),
         // there are different controllers involved and you can't do that.
-        XdmNode theSchema1_sch = transform(schema.read(), getSchematronXSLT("iso_dsdl_include.xsl"));
+        XdmNode theSchema1_sch = transform(schemaXML, getSchematronXSLT("iso_dsdl_include.xsl"));
         XdmNode theSchema2_sch = transform(theSchema1_sch, getSchematronXSLT("iso_abstract_expand.xsl"));
 
         skeleton = getClass().getResourceAsStream("/etc/schematron/iso_schematron_skeleton_for_saxon.xsl");
@@ -135,6 +137,13 @@ public class ValidateWithSCH extends DefaultStep {
         schemaCompiler.transform();
 
         XdmNode compiledSchema = result.getXdmNode();
+        XdmNode compiledRoot = S9apiUtils.getDocumentElement(compiledSchema);
+        
+        if (compiledRoot == null) {
+            XdmNode schemaRoot = S9apiUtils.getDocumentElement(schemaXML);
+            String root = schemaRoot == null ? "null" : schemaRoot.getNodeName().toString();
+            throw new XProcException("p:validate-with-schematron failed to compile provided schema: " + root);
+        }
 
         XsltTransformer transformer;
 
