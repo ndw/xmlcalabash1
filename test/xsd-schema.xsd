@@ -1,0 +1,27 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           elementFormDefault="qualified">
+
+  <xs:complexType name="docType">
+    <xs:sequence>
+      <xs:element ref="p" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="foo" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="pType" mixed="true">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element ref="em"/>
+    </xs:choice>
+    <xs:attribute name="bar" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="emType" mixed="true">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element ref="em"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:element name="doc" type="docType"/>
+  <xs:element name="p" type="pType"/>
+  <xs:element name="em" type="emType"/>
+</xs:schema>

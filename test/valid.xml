@@ -1,0 +1,5 @@
+<doc foo="foo">
+  <p bar="bar">
+    <em/>
+  </p>
+</doc>

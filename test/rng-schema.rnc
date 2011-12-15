@@ -1,0 +1,15 @@
+start = doc
+
+doc = element doc {
+   attribute foo { text },
+   p+
+}
+
+p = element p {
+   attribute bar { text },
+   (text|em)*
+}
+
+em = element em {
+   (text|em)*
+}

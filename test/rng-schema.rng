@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+  <start>
+    <ref name="doc"/>
+  </start>
+  <define name="doc">
+    <element name="doc">
+      <attribute name="foo"/>
+      <oneOrMore>
+        <ref name="p"/>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="p">
+    <element name="p">
+      <attribute name="bar"/>
+      <zeroOrMore>
+        <choice>
+          <text/>
+          <ref name="em"/>
+        </choice>
+      </zeroOrMore>
+    </element>
+  </define>
+  <define name="em">
+    <element name="em">
+      <zeroOrMore>
+        <choice>
+          <text/>
+          <ref name="em"/>
+        </choice>
+      </zeroOrMore>
+    </element>
+  </define>
+</grammar>
