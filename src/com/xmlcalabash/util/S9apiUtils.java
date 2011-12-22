@@ -20,9 +20,7 @@
 
 package com.xmlcalabash.util;
 
-import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.om.Item;
-import net.sf.saxon.om.NamePool;
+import net.sf.saxon.om.*;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.Destination;
 import net.sf.saxon.s9api.Processor;
@@ -48,7 +46,6 @@ import net.sf.saxon.event.NamespaceReducer;
 import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.Configuration;
 import com.xmlcalabash.core.XProcRuntime;
-
 import java.util.Iterator;
 import java.util.Vector;
 import java.util.HashSet;
@@ -56,7 +53,7 @@ import java.net.URI;
 import java.io.StringWriter;
 import java.io.StringReader;
 
-import net.sf.saxon.tree.iter.NamespaceIterator;
+import net.sf.saxon.tree.util.NamespaceIterator;
 import org.xml.sax.InputSource;
 
 /**
@@ -230,19 +227,24 @@ public class S9apiUtils {
                                      && !"".equals(node.getNodeName().getNamespaceURI()));
 
             NodeInfo inode = node.getUnderlyingNode();
-            NamePool pool = inode.getNamePool();
-            int inscopeNS[] = NamespaceIterator.getInScopeNamespaceCodes(inode);
+            int nscount = 0;
+            Iterator<NamespaceBinding> nsiter = NamespaceIterator.iterateNamespaces(inode);
+            while (nsiter.hasNext()) {
+                nscount++;
+                nsiter.next();
+            }
 
             boolean excludeDefault = false;
             boolean changed = false;
-            int newNS[] = null;
-            if (inscopeNS.length > 0) {
-                newNS = new int[inscopeNS.length];
+            NamespaceBinding newNS[] = null;
+            if (nscount > 0) {
+                newNS = new NamespaceBinding[nscount];
                 int newpos = 0;
-                for (int pos = 0; pos < inscopeNS.length; pos++) {
-                    int ns = inscopeNS[pos];
-                    String pfx = pool.getPrefixFromNamespaceCode(ns);
-                    String uri = pool.getURIFromNamespaceCode(ns);
+                nsiter = NamespaceIterator.iterateNamespaces(inode);
+                while (nsiter.hasNext()) {
+                    NamespaceBinding ns = nsiter.next();
+                    String pfx = ns.getPrefix();
+                    String uri = ns.getURI();
 
                     boolean delete = excludeNS.contains(uri);
                     excludeDefault = excludeDefault || ("".equals(pfx) && delete);
@@ -258,7 +260,7 @@ public class S9apiUtils {
                         newNS[newpos++] = ns;
                     }
                 }
-                int onlyNewNS[] = new int[newpos];
+                NamespaceBinding onlyNewNS[] = new NamespaceBinding[newpos];
                 for (int pos = 0; pos < newpos; pos++) {
                     onlyNewNS[pos] = newNS[pos];
                 }
@@ -267,6 +269,7 @@ public class S9apiUtils {
 
             // Careful, we're messing with the namespace bindings
             // Make sure the nameCode is right...
+            /* Not sure what to do here in 9.4. Nothing?
             int nameCode = inode.getNameCode();
             int typeCode = inode.getTypeAnnotation() & NamePool.FP_MASK;
             String pfx = pool.getPrefix(nameCode);
@@ -275,8 +278,9 @@ public class S9apiUtils {
             if (excludeDefault && "".equals(pfx) && !usesDefaultNS) {
                 nameCode = pool.allocate("", "", pool.getLocalName(nameCode));
             }
-
-            tree.addStartElement(nameCode, typeCode, newNS);
+            */
+            
+            tree.addStartElement(new NameOfNode(inode), inode.getSchemaType(), newNS);
             tree.addAttributes(node);
 
             XdmSequenceIterator iter = node.axisIterator(Axis.CHILD);

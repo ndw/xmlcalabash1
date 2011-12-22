@@ -95,8 +95,8 @@ public class SystemProperty extends ExtensionFunctionDefinition {
                  throw e;
              }
 
-             String uri = propertyName.getNamespaceURI();
-             String local = propertyName.getLocalName();
+             String uri = propertyName.getURI();
+             String local = propertyName.getLocalPart();
              String value = "";
 
              if (uri.equals(XProcConstants.NS_XPROC)) {

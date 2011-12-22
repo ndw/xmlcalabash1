@@ -85,7 +85,9 @@ public class AddXmlBase extends DefaultStep implements ProcessMatchingNodes {
         matcher = new ProcessMatch(runtime, this);
         matcher.match(source.read(), new RuntimeValue("*", step.getNode()));
 
-        result.write(matcher.getResult());
+        XdmNode doc = matcher.getResult();
+        System.err.println(doc);
+        result.write(doc);
     }
 
     public boolean processStartDocument(XdmNode node) {

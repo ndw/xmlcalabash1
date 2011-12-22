@@ -14,6 +14,7 @@ import javax.xml.transform.sax.SAXSource;
 import javax.xml.XMLConstants;
 
 import com.xmlcalabash.extensions.UntilUnchanged;
+import net.sf.saxon.om.InscopeNamespaceResolver;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.NamePool;
 import net.sf.saxon.s9api.QName;
@@ -23,7 +24,6 @@ import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.XdmSequenceIterator;
-import net.sf.saxon.tree.iter.NamespaceIterator;
 import org.xml.sax.InputSource;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.util.RelevantNodes;
@@ -800,20 +800,17 @@ public class Parser {
             // FIXME: Surely there's a better way to do this?
             NodeInfo inode = node.getUnderlyingNode();
             NamePool pool = inode.getNamePool();
-            int inscopeNS[] = NamespaceIterator.getInScopeNamespaceCodes(inode);
+            InscopeNamespaceResolver inscopeNS = new InscopeNamespaceResolver(inode);
 
             for (String pfx : prefixList.split("\\s+")) {
                 boolean found = false;
 
-                for (int pos = 0; pos < inscopeNS.length; pos++) {
-                    int ns = inscopeNS[pos];
-                    String nspfx = pool.getPrefixFromNamespaceCode(ns);
-                    String nsuri = pool.getURIFromNamespaceCode(ns);
-
-                    if (pfx.equals(nspfx) || ("#default".equals(pfx) && "".equals(nspfx)) || "#all".equals(pfx)) {
-                        found = true;
-                        excludeURIs.add(nsuri);
-                    }
+                if ("#all".equals(pfx)) {
+                    found = true;
+                } else if ("#default".equals(pfx)) {
+                    found = (inscopeNS.getURIForPrefix("", true) != null);
+                } else {
+                    found = (inscopeNS.getURIForPrefix(pfx, false) != null);
                 }
 
                 if (!found) {
