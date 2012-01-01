@@ -40,7 +40,7 @@
 <!-- write custom schema that includes p:* elements!
 <p:validate-with-relax-ng>
   <p:input port="schema">
-    <p:document href="/projects/docbook/docbook/relaxng/schemas/docbook.rng"/>
+    <p:document href="/Volumes/Data/docbook/docbook/relaxng/schemas/docbook.rng"/>
   </p:input>
 </p:validate-with-relax-ng>
 -->
@@ -49,7 +49,7 @@
   <p:input port="stylesheet">
     <p:document href="refhtml.xsl"/>
   </p:input>
-  <p:with-param name="base.dir" select="'/projects/github/calabash/docs/build/'"/>
+  <p:with-param name="base.dir" select="'/Volumes/Data/github/calabash/docs/build/'"/>
 </p:xslt>
 
 <p:sink/>
