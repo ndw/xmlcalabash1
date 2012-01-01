@@ -116,6 +116,7 @@
 <xi:include href="steps/cx-metadata-extractor.xml"/>
 <xi:include href="steps/cx-namespace-delete.xml"/>
 <xi:include href="steps/cx-pretty-print.xml"/>
+<xi:include href="steps/cx-report-errors.xml"/>
 <xi:include href="steps/cx-send-mail.xml"/>
 <xi:include href="steps/cx-set-cookies.xml"/>
 <xi:include href="steps/cx-uri-info.xml"/>
