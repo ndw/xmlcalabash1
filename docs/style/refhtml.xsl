@@ -10,7 +10,7 @@
                 exclude-result-prefixes="db f t m xs"
                 version="2.0">
 
-<xsl:import href="/projects/docbook/xslt20/xslt/base/html/chunk.xsl"/>
+<xsl:import href="/Volumes/Data/docbook/xslt20/xslt/base/html/chunk.xsl"/>
 <xsl:import href="xproc.xsl"/>
 
 <xsl:param name="refentry.separator" select="0"/>
