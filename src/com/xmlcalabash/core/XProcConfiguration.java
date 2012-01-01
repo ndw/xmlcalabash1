@@ -161,6 +161,11 @@ public class XProcConfiguration {
         createSaxonProcessor(proctype, schemaAware, saxoncfg);
         loadConfiguration();
 
+        // If we got a schema aware processor, make sure it's reflected in our config
+        // FIXME: are there other things that should be reflected this way?
+        this.schemaAware = cfgProcessor.isSchemaAware();
+        this.saxonProcessor = cfgProcessor.getUnderlyingConfiguration().softwareEdition.toLowerCase();
+
         if (!(proctype == null || saxonProcessor.equals(proctype)) || schemaAware != this.schemaAware ||
             (saxoncfg == null && saxonConfigFile != null)) {
             // Drat. We have to restart to get the right configuration.
@@ -174,12 +179,12 @@ public class XProcConfiguration {
             
             createSaxonProcessor(saxonProcessor, this.schemaAware, saxonConfigFile);
             loadConfiguration();
-        }
 
-        // If we got a schema aware processor, make sure it's reflected in our config
-        // FIXME: are there other things that should be reflected this way?
-        this.schemaAware = cfgProcessor.isSchemaAware();
-        this.saxonProcessor = cfgProcessor.getUnderlyingConfiguration().softwareEdition.toLowerCase();
+            // If we got a schema aware processor, make sure it's reflected in our config
+            // FIXME: are there other things that should be reflected this way?
+            this.schemaAware = cfgProcessor.isSchemaAware();
+            this.saxonProcessor = cfgProcessor.getUnderlyingConfiguration().softwareEdition.toLowerCase();
+        }
     }
 
     private void createSaxonProcessor(String proctype, boolean schemaAware, String saxoncfg) {
