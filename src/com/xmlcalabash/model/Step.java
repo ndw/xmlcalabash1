@@ -608,13 +608,6 @@ public class Step extends SourceArtifact {
                 vars.add(var.getName());
             }
         }
-
-        // FIXME: this is crude and inefficient
-        for (Step step : subpipeline) {
-            HashSet<QName> curVars = (HashSet<QName>) vars.clone();
-            step.checkDuplicateVars(curVars);
-        }
-
     }
 
     protected boolean checkBinding(Input input) {
