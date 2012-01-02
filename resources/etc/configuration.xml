@@ -175,8 +175,11 @@
 <implementation type="cx:nvdl pxp:nvdl"
 		class-name="com.xmlcalabash.extensions.NVDL"/>
 
-<implementation type="cx:unzip pxp:unzip"
-		class-name="com.xmlcalabash.extensions.Unzip"/>
+<implementation type="cx:nvdl pxp:nvdl"
+		class-name="com.xmlcalabash.extensions.NVDL"/>
+
+<implementation type="cx:report-errors"
+		class-name="com.xmlcalabash.extensions.ReportErrors"/>
 
 <implementation type="cx:uri-info"
 		class-name="com.xmlcalabash.extensions.UriInfo"/>

@@ -429,6 +429,15 @@
       <p:output port="result"/>
    </p:declare-step>
 
+   <p:declare-step type="cx:report-errors">
+     <p:input port="source" primary="true"/>
+     <p:input port="report" sequence="true"/>
+     <p:output port="result" sequence="true"/>
+     <p:option name="code" e:type="xsd:QName"/>
+     <p:option name="code-prefix" e:type="xsd:NCName"/>
+     <p:option name="code-namespace" e:type="xsd:anyURI"/>
+   </p:declare-step>
+
    <!--
     <p:declare-step type="cx:nvdl">
       <p:input port="source" primary="true"/>

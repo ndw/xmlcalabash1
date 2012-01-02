@@ -62,6 +62,8 @@ public class ValidateJing extends DefaultStep {
     private static final QName _dtd_attribute_values = new QName("", "dtd-attribute-values");
     private static final QName _dtd_id_idref_warnings = new QName("", "dtd-id-idref-warnings");
     private static final QName _encoding = new QName("encoding");
+    private static final QName _line = new QName("line");
+    private static final QName _column = new QName("column");
 
     private ReadablePipe source = null;
     private ReadablePipe schemaSource = null;
@@ -190,11 +192,11 @@ public class ValidateJing extends DefaultStep {
             treeWriter.addStartElement(XProcConstants.c_error);
 
             if (e.getLineNumber()!=-1) {
-                treeWriter.addAttribute(new QName("line"), ""+e.getLineNumber());
+                treeWriter.addAttribute(_line, ""+e.getLineNumber());
             }
 
             if (e.getColumnNumber()!=-1) {
-                treeWriter.addAttribute(new QName("column"), ""+e.getColumnNumber());
+                treeWriter.addAttribute(_column, ""+e.getColumnNumber());
             }
 
             treeWriter.startContent();
