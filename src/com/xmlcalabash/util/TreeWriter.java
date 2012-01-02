@@ -232,7 +232,8 @@ public class TreeWriter {
         
         URI nodeBaseURI = node.getBaseURI();
         receiver.setSystemId(nodeBaseURI.toASCIIString());
-        addStartElement(new NameOfNode(inode), inode.getSchemaType(), inscopeNS);
+        FingerprintedQName newNameOfNode = new FingerprintedQName(newName.getPrefix(),newName.getNamespaceURI(),newName.getLocalName());
+        addStartElement(newNameOfNode, inode.getSchemaType(), inscopeNS);
     }
 
     public void addStartElement(QName newName) {
