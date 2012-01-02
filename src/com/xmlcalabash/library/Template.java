@@ -185,20 +185,22 @@ public class Template extends DefaultStep implements ProcessMatchingNodes {
         Hashtable<String,String> nsbindings = new Hashtable<String,String> ();
 
         // FIXME: Surely there's a better way to do this?
-        XdmNode parent = node.getParent();
+        XdmNode parent = node;
         while (parent != null
                 && parent.getNodeKind() != XdmNodeKind.ELEMENT
                 && parent.getNodeKind() != XdmNodeKind.DOCUMENT) {
             parent = parent.getParent();
         }
 
-        NodeInfo inode = parent.getUnderlyingNode();
-        InscopeNamespaceResolver inscopeNS = new InscopeNamespaceResolver(inode);
-        Iterator<String> prefixes = inscopeNS.iteratePrefixes();
-        while (prefixes.hasNext()) {
-            String nspfx = prefixes.next();
-            String nsuri = inscopeNS.getURIForPrefix(nspfx, true);
-            nsbindings.put(nspfx,nsuri);
+        if (parent.getNodeKind() == XdmNodeKind.ELEMENT) {
+            NodeInfo inode = parent.getUnderlyingNode();
+            InscopeNamespaceResolver inscopeNS = new InscopeNamespaceResolver(inode);
+            Iterator<String> prefixes = inscopeNS.iteratePrefixes();
+            while (prefixes.hasNext()) {
+                String nspfx = prefixes.next();
+                String nsuri = inscopeNS.getURIForPrefix(nspfx, true);
+                nsbindings.put(nspfx,nsuri);
+            }
         }
 
         String peek = "";
