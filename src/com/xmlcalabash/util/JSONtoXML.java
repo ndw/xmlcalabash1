@@ -227,8 +227,9 @@ public class JSONtoXML {
                 localName = "";
                 for (int pos = 0; pos < name.length(); pos++) {
                     int ch = name.charAt(pos);
-                    if ((pos == 0 && XMLCharacterData.isNCNameStart10(ch))
-                        || (pos > 0 && XMLCharacterData.isNCName10(ch))) {
+                    if ('_' != ch
+                        && ((pos == 0 && XMLCharacterData.isNCNameStart10(ch))
+                            || (pos > 0 && XMLCharacterData.isNCName10(ch)))) {
                         localName += Character.toString((char) ch);
                     } else {
                         localName += String.format("_%04x", ch);
