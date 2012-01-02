@@ -19,6 +19,7 @@
 
 package com.xmlcalabash.library;
 
+import java.io.PrintStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Hashtable;
@@ -36,8 +37,12 @@ import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.util.CollectionResolver;
 import com.xmlcalabash.util.S9apiUtils;
 import net.sf.saxon.Configuration;
+import net.sf.saxon.Controller;
+import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.CollectionURIResolver;
 import net.sf.saxon.lib.OutputURIResolver;
+import net.sf.saxon.lib.TraceListener;
+import net.sf.saxon.om.Item;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -51,6 +56,7 @@ import net.sf.saxon.s9api.ValidationMode;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.event.Receiver;
 import com.xmlcalabash.runtime.XAtomicStep;
+import net.sf.saxon.trace.InstructionInfo;
 
 /**
  *
