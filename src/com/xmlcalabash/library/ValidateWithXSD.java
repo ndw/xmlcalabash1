@@ -26,7 +26,9 @@ import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.util.S9apiUtils;
+import com.xmlcalabash.util.TreeWriter;
 import net.sf.saxon.Configuration;
+import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
@@ -46,6 +48,9 @@ import net.sf.saxon.om.NodeInfo;
 
 import com.xmlcalabash.runtime.XAtomicStep;
 
+import javax.xml.transform.ErrorListener;
+import javax.xml.transform.SourceLocator;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.Source;
 import javax.xml.validation.SchemaFactory;
@@ -54,6 +59,7 @@ import javax.xml.validation.Validator;
 import javax.xml.XMLConstants;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URI;
 import java.util.Vector;
 import java.io.IOException;
 
@@ -66,10 +72,15 @@ public class ValidateWithXSD extends DefaultStep {
     private static final QName _mode = new QName("", "mode");
     private static final QName _use_location_hints = new QName("", "use-location-hints");
     private static final QName _try_namespaces = new QName("", "try-namespaces");
+    private static final QName _line = new QName("line");
+    private static final QName _column = new QName("column");
+
     private static final Class [] paramTypes = new Class [] {};
     private ReadablePipe source = null;
     private ReadablePipe schemas = null;
     private WritablePipe result = null;
+    private URI docBaseURI = null;
+    private Throwable validationException = null;
 
     /** Creates a new instance of ValidateWithXSD */
     public ValidateWithXSD(XProcRuntime runtime, XAtomicStep step) {
@@ -131,6 +142,8 @@ public class ValidateWithXSD extends DefaultStep {
         }
 
         XdmNode doc = source.read();
+        docBaseURI = doc.getBaseURI();
+
         String namespace = S9apiUtils.getDocumentElement(doc).getNodeName().getNamespaceURI();
         boolean tryNamespaces = getOption(_try_namespaces, false) && !"".equals(namespace);
 
@@ -177,6 +190,7 @@ public class ValidateWithXSD extends DefaultStep {
 
         SchemaValidator validator = manager.newSchemaValidator();
         validator.setDestination(destination);
+        validator.setErrorListener(new XSDErrorHandler());
 
         String mode = getOption(_mode, "strict");
         validator.setLax("lax".equals(mode));
@@ -187,6 +201,9 @@ public class ValidateWithXSD extends DefaultStep {
         try {
             finer(step.getNode(), "Validating: " + doc.getBaseURI().toASCIIString());
             validator.validate(new SAXSource(S9apiUtils.xdmToInputSource(runtime, doc)));
+            if (validationException != null) {
+                throw (SaxonApiException) validationException;
+            }
         } catch (SaxonApiException sae) {
             if (getOption(_assert_valid,false)) {
                 throw new XProcException(XProcConstants.stepError(53), sae);
@@ -208,6 +225,7 @@ public class ValidateWithXSD extends DefaultStep {
         }
 
         XdmNode doc = source.read();
+        docBaseURI = doc.getBaseURI();
 
         try {
             SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
@@ -219,12 +237,16 @@ public class ValidateWithXSD extends DefaultStep {
             is.setSystemId(schemaNode.getBaseURI().toASCIIString());
             Schema schema = factory.newSchema(new SAXSource(is));
             Validator validator = schema.newValidator();
+            validator.setErrorHandler(new XSDErrorHandler());
 
             InputSource docSource = S9apiUtils.xdmToInputSource(runtime, doc);
             docSource.setSystemId(doc.getBaseURI().toASCIIString());
 
             try {
                 validator.validate(new SAXSource(docSource));
+                if (validationException != null) {
+                    throw (SAXParseException) validationException;
+                }
             } catch (SAXParseException spe) {
                 if (getOption(_assert_valid, false)) {
                     throw new XProcException(XProcConstants.stepError(53), spe);
@@ -239,5 +261,87 @@ public class ValidateWithXSD extends DefaultStep {
         result.write(doc);
     }
 
+    class XSDErrorHandler implements ErrorHandler, ErrorListener {
+        @Override
+        public void fatalError(SAXParseException e) throws SAXException {
+            error(e);
+        }
+
+        @Override
+        public void error(SAXParseException e) throws SAXException {
+            TreeWriter treeWriter = new TreeWriter(runtime);
+            treeWriter.startDocument(docBaseURI);
+            treeWriter.addStartElement(XProcConstants.c_error);
+
+            if (e.getLineNumber()!=-1) {
+                treeWriter.addAttribute(_line, ""+e.getLineNumber());
+            }
+
+            if (e.getColumnNumber()!=-1) {
+                treeWriter.addAttribute(_column, ""+e.getColumnNumber());
+            }
+
+            treeWriter.startContent();
+
+            treeWriter.addText(e.toString());
+
+            treeWriter.addEndElement();
+            treeWriter.addText("\n");
+            treeWriter.endDocument();
+
+            step.reportError(treeWriter.getResult());
+
+            if (validationException == null) {
+                validationException = e;
+            }
+        }
+
+        @Override
+        public void warning( SAXParseException e ) {
+            // ignore warnings
+        }
+
+        @Override
+        public void warning(TransformerException e) throws TransformerException {
+            // Ignore warnings?
+        }
+
+        @Override
+        public void error(TransformerException e) throws TransformerException {
+            TreeWriter treeWriter = new TreeWriter(runtime);
+            treeWriter.startDocument(docBaseURI);
+            treeWriter.addStartElement(XProcConstants.c_error);
+
+            SourceLocator loc = e.getLocator();
+            if (loc != null) {
+                if (loc.getLineNumber() != -1) {
+                    treeWriter.addAttribute(_line, ""+loc.getLineNumber());
+                }
+
+                if (loc.getColumnNumber() != -1) {
+                    treeWriter.addAttribute(_column, ""+loc.getColumnNumber());
+                }
+            }
+
+            treeWriter.startContent();
+
+            treeWriter.addText(e.toString());
+
+            treeWriter.addEndElement();
+            treeWriter.addText("\n");
+            treeWriter.endDocument();
+
+            step.reportError(treeWriter.getResult());
+
+            if (validationException == null) {
+                validationException = e;
+            }
+        }
+
+        @Override
+        public void fatalError(TransformerException e) throws TransformerException {
+            error(e);
+        }
+    }
 }
 
