@@ -225,7 +225,8 @@ public class UnescapeMarkup extends DefaultStep {
             }
             */
 
-            tree.addStartElement(new NameOfNode(inode), inode.getSchemaType(), newNS);
+            FingerprintedQName newName = new FingerprintedQName("", namespace, inode.getLocalPart());
+            tree.addStartElement(newName, inode.getSchemaType(), newNS);
 
             XdmSequenceIterator iter = unescnode.axisIterator(Axis.ATTRIBUTE);
             while (iter.hasNext()) {
