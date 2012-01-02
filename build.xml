@@ -19,9 +19,20 @@
   <property name="submit.password" value=""/>
 
   <property name="izpack.dir" value="/Applications/IzPack"/>
-  <taskdef name="izpack"
-           classpath="${izpack.dir}/lib/compiler.jar"
-           classname="com.izforge.izpack.ant.IzPackTask"/>
+
+  <available property="izpack.present"
+             classname="com.izforge.izpack.ant.IzPackTask"
+             classpath="${izpack.dir}/lib/compiler.jar"/>
+
+  <target name="izpacktool" if="izpack.present">
+    <taskdef name="izpack"
+             classpath="${izpack.dir}/lib/compiler.jar"
+             classname="com.izforge.izpack.ant.IzPackTask"/>
+  </target>
+
+  <target name="izpackmissing" unless="izpack.present">
+    <echo>Cannot find IzPack; request to build dist ignored.</echo>
+  </target>
 
   <path id="build.classpath">
     <fileset dir="${lib.dir}">
@@ -253,7 +264,8 @@
     </javac>
   </target>
 
-  <target name="dist" depends="init,compile-everything,distrib">
+  <target name="dist" depends="init,compile-everything,distrib,izpacktool,izpackmissing"
+          if="izpack.present">
     <delete file="${dist.dir}/install.xml"/>
 
     <xslt in="resources/etc/install-proto.xsl" style="resources/etc/install-proto.xsl"
