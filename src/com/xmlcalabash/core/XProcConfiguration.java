@@ -1,7 +1,6 @@
 package com.xmlcalabash.core;
 
 import com.xmlcalabash.util.JSONtoXML;
-import net.sf.saxon.om.InscopeNamespaceResolver;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.Processor;
@@ -12,13 +11,10 @@ import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmValue;
 import net.sf.saxon.value.Whitespace;
-import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.om.NamePool;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.Hashtable;
-import java.util.Properties;
 import java.util.Vector;
 import java.util.HashSet;
 import java.util.logging.Level;
@@ -618,39 +614,9 @@ public class XProcConfiguration {
 
             documents.add(new ConfigDocument(href, node.getBaseURI().toASCIIString()));
         } else {
-            HashSet<String> excludeURIs = readExcludeInlinePrefixes(node, node.getAttributeValue(_exclude_inline_prefixes));
+            HashSet<String> excludeURIs = S9apiUtils.excludeInlinePrefixes(node, node.getAttributeValue(_exclude_inline_prefixes));
             documents.add(new ConfigDocument(docnodes, excludeURIs));
         }
-    }
-
-    private HashSet<String> readExcludeInlinePrefixes(XdmNode node, String prefixList) {
-        HashSet<String> excludeURIs = new HashSet<String> ();
-        excludeURIs.add(XProcConstants.NS_XPROC);
-
-        if (prefixList != null) {
-            // FIXME: Surely there's a better way to do this?
-            NodeInfo inode = node.getUnderlyingNode();
-            NamePool pool = inode.getNamePool();
-            InscopeNamespaceResolver inscopeNS = new InscopeNamespaceResolver(inode);
-
-            for (String pfx : prefixList.split("\\s+")) {
-                boolean found = false;
-
-                if ("#all".equals(pfx)) {
-                    found = true;
-                } else if ("#default".equals(pfx)) {
-                    found = (inscopeNS.getURIForPrefix("", true) != null);
-                } else {
-                    found = (inscopeNS.getURIForPrefix(pfx, false) != null);
-                }
-
-                if (!found) {
-                    throw new XProcException(XProcConstants.staticError(57), node, "No binding for '" + pfx + ":'");
-                }
-            }
-        }
-
-        return excludeURIs;
     }
 
     private void parsePipeline(XdmNode node) {
@@ -674,7 +640,7 @@ public class XProcConfiguration {
             }
             pipeline = new ConfigDocument(href, node.getBaseURI().toASCIIString());
         } else {
-            HashSet<String> excludeURIs = readExcludeInlinePrefixes(node, node.getAttributeValue(_exclude_inline_prefixes));
+            HashSet<String> excludeURIs = S9apiUtils.excludeInlinePrefixes(node, node.getAttributeValue(_exclude_inline_prefixes));
             pipeline = new ConfigDocument(docnodes, excludeURIs);
         }
     }

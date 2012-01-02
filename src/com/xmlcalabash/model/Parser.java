@@ -14,9 +14,6 @@ import javax.xml.transform.sax.SAXSource;
 import javax.xml.XMLConstants;
 
 import com.xmlcalabash.extensions.UntilUnchanged;
-import net.sf.saxon.om.InscopeNamespaceResolver;
-import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.om.NamePool;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -777,7 +774,7 @@ public class Parser {
             inline.addNode(child);
         }
 
-        HashSet<String> excludeURIs = readExcludeInlinePrefixes(node, node.getAttributeValue(_exclude_inline_prefixes));
+        HashSet<String> excludeURIs = S9apiUtils.excludeInlinePrefixes(node, node.getAttributeValue(_exclude_inline_prefixes));
         if (!declStack.isEmpty()) {
             DeclareStep parent = declStack.peek();
             for (String uri : parent.getExcludeInlineNamespaces()) {
@@ -790,36 +787,6 @@ public class Parser {
         inline.excludeNamespaces(excludeURIs);
 
         return inline;
-    }
-
-    private HashSet<String> readExcludeInlinePrefixes(XdmNode node, String prefixList) {
-        HashSet<String> excludeURIs = new HashSet<String> ();
-        excludeURIs.add(XProcConstants.NS_XPROC);
-
-        if (prefixList != null) {
-            // FIXME: Surely there's a better way to do this?
-            NodeInfo inode = node.getUnderlyingNode();
-            NamePool pool = inode.getNamePool();
-            InscopeNamespaceResolver inscopeNS = new InscopeNamespaceResolver(inode);
-
-            for (String pfx : prefixList.split("\\s+")) {
-                boolean found = false;
-
-                if ("#all".equals(pfx)) {
-                    found = true;
-                } else if ("#default".equals(pfx)) {
-                    found = (inscopeNS.getURIForPrefix("", true) != null);
-                } else {
-                    found = (inscopeNS.getURIForPrefix(pfx, false) != null);
-                }
-
-                if (!found) {
-                    throw new XProcException(XProcConstants.staticError(57), node, "No binding for '" + pfx + ":'");
-                }
-            }
-        }
-
-        return excludeURIs;
     }
 
     private Option readOption(XdmNode node) {
@@ -1265,7 +1232,7 @@ public class Parser {
         step.setPsviRequired(psviRequired);
         step.setXPathVersion(xpathVersion);
 
-        HashSet<String> excludeURIs = readExcludeInlinePrefixes(node, node.getAttributeValue(_exclude_inline_prefixes));
+        HashSet<String> excludeURIs = S9apiUtils.excludeInlinePrefixes(node, node.getAttributeValue(_exclude_inline_prefixes));
         if (!declStack.isEmpty()) {
             DeclareStep parent = declStack.peek();
             for (String uri : parent.getExcludeInlineNamespaces()) {
@@ -1276,7 +1243,7 @@ public class Parser {
         if (node.getParent() != null) {
             XdmNode parent = node.getParent();
             if (XProcConstants.p_library.equals(parent.getNodeName()) && parent.getAttributeValue(_exclude_inline_prefixes) != null) {
-                HashSet<String> pexcl = readExcludeInlinePrefixes(parent, parent.getAttributeValue(_exclude_inline_prefixes));
+                HashSet<String> pexcl = S9apiUtils.excludeInlinePrefixes(parent, parent.getAttributeValue(_exclude_inline_prefixes));
                 for (String uri : pexcl) {
                     excludeURIs.add(uri);
                 }

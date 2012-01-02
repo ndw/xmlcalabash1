@@ -20,6 +20,8 @@
 
 package com.xmlcalabash.util;
 
+import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.core.XProcException;
 import net.sf.saxon.om.*;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.Destination;
@@ -201,6 +203,51 @@ public class S9apiUtils {
         //SAXSource source = new SAXSource(isource);
         //return source;
         return isource;
+    }
+
+    public static HashSet<String> excludeInlinePrefixes(XdmNode node, String prefixList) {
+        HashSet<String> excludeURIs = new HashSet<String> ();
+        excludeURIs.add(XProcConstants.NS_XPROC);
+
+        if (prefixList != null) {
+            NodeInfo inode = node.getUnderlyingNode();
+            InscopeNamespaceResolver inscopeNS = new InscopeNamespaceResolver(inode);
+            boolean all = false;
+
+            for (String pfx : prefixList.split("\\s+")) {
+                boolean found = false;
+
+                if ("#all".equals(pfx)) {
+                    found = true;
+                    all = true;
+                } else if ("#default".equals(pfx)) {
+                    found = (inscopeNS.getURIForPrefix("", true) != null);
+                    if (found) {
+                        excludeURIs.add(inscopeNS.getURIForPrefix("", true));
+                    }
+                } else {
+                    found = (inscopeNS.getURIForPrefix(pfx, false) != null);
+                    if (found) {
+                        excludeURIs.add(inscopeNS.getURIForPrefix(pfx, false));
+                    }
+                }
+
+                if (!found) {
+                    throw new XProcException(XProcConstants.staticError(57), node, "No binding for '" + pfx + ":'");
+                }
+            }
+
+            if (all) {
+                Iterator<String> pfxiter = inscopeNS.iteratePrefixes();
+                while (pfxiter.hasNext()) {
+                    String pfx = pfxiter.next();
+                    boolean def = ("".equals(pfx));
+                    excludeURIs.add(inscopeNS.getURIForPrefix(pfx,def));
+                }
+            }
+        }
+
+        return excludeURIs;
     }
 
     public static XdmNode removeNamespaces(XProcRuntime runtime, XdmNode node, HashSet<String> excludeNS) {
