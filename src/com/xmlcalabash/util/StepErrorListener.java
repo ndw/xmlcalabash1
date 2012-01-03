@@ -24,7 +24,7 @@ import java.net.URI;
  */
 public class StepErrorListener implements ErrorListener {
     private static QName c_error = new QName(XProcConstants.NS_XPROC_STEP, "error");
-    private static QName _name = new QName("", "name");
+    private static StructuredQName err_sxxp0003 = new StructuredQName("err", "http://www.w3.org/2005/xqt-errors", "SXXP0003");
     private static QName _type = new QName("", "type");
     private static QName _href = new QName("", "href");
     private static QName _line = new QName("", "line");
@@ -60,6 +60,15 @@ public class StepErrorListener implements ErrorListener {
     }
 
     private boolean report(String type, TransformerException exception) {
+        // HACK!!!
+        if (runtime.transparentJSON() && exception instanceof XPathException) {
+            XPathException e = (XPathException) exception;
+            if (e.getErrorCodeQName().equals(err_sxxp0003)) {
+                // We'll be trying again as JSON, so let it go this time
+                return true;
+            }
+        }
+        
         TreeWriter writer = new TreeWriter(runtime);
 
         writer.startDocument(baseURI);
