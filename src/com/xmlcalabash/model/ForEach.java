@@ -23,6 +23,8 @@ import net.sf.saxon.s9api.XdmNode;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcConstants;
 
+import java.util.HashSet;
+
 /**
  *
  * @author ndw
@@ -48,6 +50,11 @@ public class ForEach extends DeclareStep {
 
     public DeclareStep getDeclaration() {
         return declaration;
+    }
+
+    @Override
+    public HashSet<String> getExcludeInlineNamespaces() {
+        return ((DeclareStep) parent).getExcludeInlineNamespaces();
     }
 
     @Override
