@@ -81,7 +81,7 @@ public class Parser {
             node = S9apiUtils.getDocumentElement(node);
         }
         DeclareStep decl = readDeclareStep(node);
-        parseDeclareStepBody(decl);
+        parseDeclareStepBodyPassTwo(decl);
         return decl;
     }
 
@@ -1406,11 +1406,11 @@ public class Parser {
         return step;
     }
 
-    private void parseDeclareStepBody(DeclareStep step) {
+    private void parseDeclareStepBodyPassTwo(DeclareStep step) {
         step.setBodyParsed(true);
 
         for (DeclareStep substep : step.getStepDeclarations()) {
-            parseDeclareStepBody(substep);
+            parseDeclareStepBodyPassTwo(substep);
         }
         
         Vector<XdmNode> rest = step.getXmlContent();
