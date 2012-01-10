@@ -20,11 +20,11 @@
 package com.xmlcalabash.model;
 
 import com.xmlcalabash.core.XProcData;
-import com.xmlcalabash.runtime.XStep;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.QName;
 import com.xmlcalabash.core.XProcRuntime;
 
+import java.util.Collection;
 import java.util.Vector;
 import java.util.Hashtable;
 import java.util.HashSet;
@@ -160,6 +160,10 @@ public class DeclareStep extends CompoundStep {
         } else {
             return runtime.getBuiltinDeclaration(type);
         }
+    }
+    
+    public Collection<DeclareStep> getStepDeclarations() {
+        return declaredSteps.values();
     }
 
     public void setupEnvironment() {

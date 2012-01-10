@@ -23,6 +23,8 @@ import net.sf.saxon.s9api.XdmNode;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcConstants;
 
+import java.util.HashSet;
+
 /**
  *
  * @author ndw
@@ -34,6 +36,11 @@ public class Group extends DeclareStep {
         super(xproc, node, name);
         declaration = this;
         stepType = XProcConstants.p_group;
+    }
+
+    @Override
+    public HashSet<String> getExcludeInlineNamespaces() {
+        return ((DeclareStep) parent).getExcludeInlineNamespaces();
     }
 
     public boolean isPipeline() {

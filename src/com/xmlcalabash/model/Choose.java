@@ -19,6 +19,7 @@
 
 package com.xmlcalabash.model;
 
+import java.util.HashSet;
 import java.util.Hashtable;
 
 import net.sf.saxon.s9api.XdmNode;
@@ -89,6 +90,11 @@ public class Choose extends DeclareStep {
         }
 
         super.augmentIO();
+    }
+
+    @Override
+    public HashSet<String> getExcludeInlineNamespaces() {
+        return ((DeclareStep) parent).getExcludeInlineNamespaces();
     }
 
     @Override

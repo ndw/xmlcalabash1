@@ -223,6 +223,9 @@ public class Exec extends DefaultStep {
                 xqeval.run();
 
                 os.close();
+            } else {
+                OutputStream os = process.getOutputStream();
+                os.close();
             }
 
             boolean showStderr = !"false".equals(step.getExtensionAttribute(cx_show_stderr));
@@ -255,10 +258,14 @@ public class Exec extends DefaultStep {
             tree.addText("" + rc);
             tree.addEndElement();
             tree.endDocument();
-            status.write(tree.getResult());
+            XdmNode execResult = tree.getResult();
+            status.write(execResult);
 
-            result.write(stdoutReader.getResult());
-            errors.write(stderrReader.getResult());
+            execResult = stdoutReader.getResult();
+            result.write(execResult);
+
+            execResult = stderrReader.getResult();
+            errors.write(execResult);
         } catch (IOException ex) {
             throw new XProcException(ex);
         }
