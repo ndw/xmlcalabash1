@@ -9,22 +9,26 @@ import com.drew.metadata.Tag;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.library.DefaultStep;
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.util.TreeWriter;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XdmNode;
 
+import java.awt.*;
+import java.awt.image.ImageObserver;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.BufferedReader;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Iterator;
+import java.util.StringTokenizer;
 
 /**
  * Created by IntelliJ IDEA.
@@ -117,7 +121,180 @@ public class MetadataExtractor extends DefaultStep {
         } catch (IOException ioe) {
             throw new XProcException(ioe);
         } catch (JpegProcessingException e) {
-            throw new XProcException(e);
+            // Not a JPEG? Let's try to do at least the intrinsics...
+            runIntrinsics(href);
+        }
+    }
+    
+    private void runIntrinsics(URI href) throws SaxonApiException {
+        ImageIntrinsics intrinsics = new ImageIntrinsics();
+        intrinsics.run(href.toASCIIString());
+    }
+
+    private class ImageIntrinsics implements ImageObserver {
+        boolean imageLoaded = false;
+        boolean imageFailed = false;
+        Image image = null;
+        int width = -1;
+        int depth = -1;
+
+        public void run(String imageFn) {
+            imageLoaded = false;
+            imageFailed = false;
+            image = null;
+            width = -1;
+            depth = -1;
+
+            System.setProperty("java.awt.headless","true");
+
+            try {
+                URL url = new URL(imageFn);
+                image = Toolkit.getDefaultToolkit().getImage (url);
+            } catch (MalformedURLException mue) {
+                image = Toolkit.getDefaultToolkit().getImage (imageFn);
+            }
+
+            width = image.getWidth(this);
+            depth = image.getHeight(this);
+
+            while (!imageFailed && (width == -1 || depth == -1)) {
+                try {
+                    java.lang.Thread.currentThread().sleep(50);
+                } catch (Exception e) {
+                    // nop;
+                }
+                width = image.getWidth(this);
+                depth = image.getHeight(this);
+            }
+
+            image.flush();
+
+            if ((width == -1 || depth == -1) && imageFailed) {
+                // Maybe it's an EPS or PDF?
+                // FIXME: this code is crude
+                BufferedReader ir = null;
+                String line = null;
+                int lineLimit = 100;
+
+                try {
+                    ir = new BufferedReader(new FileReader(new File(imageFn)));
+                    line = ir.readLine();
+
+                    if (line != null && line.startsWith("%PDF-")) {
+                        // We've got a PDF!
+                        while (lineLimit > 0 && line != null) {
+                            lineLimit--;
+                            if (line.startsWith("/CropBox [")) {
+                                line = line.substring(10);
+                                if (line.indexOf("]") >= 0) {
+                                    line = line.substring(0, line.indexOf("]"));
+                                }
+                                parseBox(line);
+                                lineLimit = 0;
+                            }
+                            line = ir.readLine();
+                        }
+                    } else if (line != null
+                            && line.startsWith("%!")
+                            && line.indexOf(" EPSF-") > 0) {
+                        // We've got an EPS!
+                        while (lineLimit > 0 && line != null) {
+                            lineLimit--;
+                            if (line.startsWith("%%BoundingBox: ")) {
+                                line = line.substring(15);
+                                parseBox(line);
+                                lineLimit = 0;
+                            }
+                            line = ir.readLine();
+                        }
+                    } else {
+                        System.err.println("Failed to interpret image: " + imageFn);
+                    }
+                } catch (Exception e) {
+                    System.err.println("Failed to load image: " + imageFn);
+                    // nop;
+                }
+
+                if (ir != null) {
+                    try {
+                        ir.close();
+                    } catch (Exception e) {
+                        // nop;
+                    }
+                }
+            }
+
+            if (width >= 0) {
+                TreeWriter tree = new TreeWriter(runtime);
+                tree.startDocument(step.getNode().getBaseURI());
+                tree.addStartElement(c_metadata);
+                tree.addAttribute(_href, imageFn);
+                tree.startContent();
+
+                tree.addStartElement(c_tag);
+                tree.addAttribute(_dir, "Exif");
+                tree.addAttribute(_type, "0x9000");
+                tree.addAttribute(_name, "Exif Version");
+                tree.startContent();
+                tree.addText("0");
+                tree.addEndElement();
+
+                tree.addStartElement(c_tag);
+                tree.addAttribute(_dir, "Jpeg");
+                tree.addAttribute(_type, "0x0001");
+                tree.addAttribute(_name, "Image Height");
+                tree.startContent();
+                tree.addText(""+depth+" pixels");
+                tree.addEndElement();
+
+                tree.addStartElement(c_tag);
+                tree.addAttribute(_dir, "Jpeg");
+                tree.addAttribute(_type, "0x0003");
+                tree.addAttribute(_name, "Image Width");
+                tree.startContent();
+                tree.addText(""+width+" pixels");
+                tree.addEndElement();
+
+                tree.endDocument();
+                result.write(tree.getResult());
+            } else {
+                throw new XProcException("Failed to read image intrinsics");
+            }
+        }
+
+        private void parseBox(String line) {
+            int [] corners = new int [4];
+            int count = 0;
+
+            StringTokenizer st = new StringTokenizer(line);
+            while (count < 4 && st.hasMoreTokens()) {
+                try {
+                    corners[count++] = Integer.parseInt(st.nextToken());
+                } catch (Exception e) {
+                    // nop;
+                }
+            }
+
+            width = corners[2] - corners[0];
+            depth = corners[3] - corners[1];
+        }
+
+        public boolean imageUpdate(Image img, int infoflags,
+                                   int x, int y, int width, int height) {
+            if (((infoflags & ImageObserver.ERROR) == ImageObserver.ERROR)
+                    || ((infoflags & ImageObserver.ABORT) == ImageObserver.ABORT)) {
+                imageFailed = true;
+                return false;
+            }
+
+            // I really only care about the width and height, but if I return false as
+            // soon as those are available, the BufferedInputStream behind the loader
+            // gets closed too early.
+            if ((infoflags & ImageObserver.ALLBITS) == ImageObserver.ALLBITS) {
+                return false;
+            } else {
+                return true;
+            }
         }
     }
 }

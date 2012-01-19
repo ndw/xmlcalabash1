@@ -87,3 +87,23 @@ code {
     width: 10em;
 }
 
+figure {
+    padding-bottom: 0px;
+    margin-bottom: 0px;
+}
+
+figure img {
+    border: 1px solid #999999;
+    border-radius: 3px;
+    padding: 5px;
+}
+
+figure div.title {
+    font-family: sans-serif;
+    margin-top: 0.25em;
+}
+
+figure.figure-wrapper div.title {
+    margin-bottom: 1em;
+}
+
