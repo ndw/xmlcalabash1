@@ -25,6 +25,7 @@ import java.util.Vector;
 public class ParseArgs {
     public boolean debugExplicit = false;
     public boolean debug = false;
+    public boolean showVersion = false;
 
     public String saxonProcessor = null;
     public String saxonConfigFile = null;
@@ -150,6 +151,10 @@ public class ParseArgs {
                 continue;
             }
 
+            if (arg.startsWith("-v") || arg.equals("--version")) {
+                showVersion = parseBoolean("v","version");
+                continue;
+            }
 
             if (arg.startsWith("-s") || arg.startsWith("--step")) {
                 stepName = parseQName("s","step");
