@@ -132,6 +132,7 @@ public class XProcConstants {
     }
 
     private static String initializeVersion() {
+        String sver = "(for Saxon 9.3.x)";
         Properties config = new Properties();
         InputStream stream = null;
         try {
@@ -146,7 +147,7 @@ public class XProcConstants {
             if (major == null || minor == null || release == null) {
                 throw new UnsupportedOperationException("Invalid version.properties in JAR file!?");
             }
-            return major + "." + minor + "." + release;
+            return major + "." + minor + "." + release + " " + sver;
         } catch (IOException ioe) {
             throw new UnsupportedOperationException("No version.properties in JAR file!?");
         }
