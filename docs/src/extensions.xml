@@ -101,6 +101,8 @@ list of step names.</para>
 <para>It is an error if the use of <tag class="attribute">cx:depends</tag> introduces
 a circular dependency into the pipeline.</para>
 
+<para>FIXME: Also document
+<tag class="attribute">cx:logstyle</tag>.</para>
 </section>
 
 <section xml:id="langext">

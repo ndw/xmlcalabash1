@@ -14,39 +14,14 @@ Where switches are:
   -l, --library library.xpl            Load the specified library
   -o, --output port=uri                Bind the specified output port
   -p, --with-param [port@]param=value  Specify a parameter
-  -S, --safe-mode                      Request "safe" execution
+  -P, --saxon-processor edition        Request a specific edition of Saxon
   -s, --step-name stepname             Run the step named 'stepname'
+  -S, --safe-mode                      Request "safe" execution
   -U, --uri-resolver className         Specify a resolver class for URI resolution
+  -v, --version                        Show XML Calabash version
+  -X, --extension extname              Enable the 'extname' extension
+      --saxon-configuration file       Load the specified Saxon configuration
 
-The -b option may be used to provide namespace bindings for parameter
-and option names passed on the command line. As of 0.9.18 the p:
-prefix is bound to the XProc namespace by default.
+For more information, consult http://xmlcalabash.com/docs/reference/ or
+the documentation that came with the distribution.
 
-The value "-" may be used as the URI for exactly one input binding to
-bind that input port to stdin. The value "-" may be used as the URI to
-bind exactly one output port to stdout.
-
-If you specify multiple inputs for the same source, they will be
-passed as a sequence of documents.
-
-The default logging style for p:log output is "wrapped". You can
-specify alternate styles of "plain", "directory", or "off" to suppress
-all p:log output. (A default of "off" disables all logging, even if
-individual p:log elements specify an alternate style with
-cx:logstyle.)
-
-If a resolver class is specified with -U, it will be instantiated and
-used as the URIResolver for all URIs accessed by Calabash. If a
-resolver class is specified with -E, it will be instantiated and used
-as the EntityResolver for all XML parsing by Calabash.
-
-All parameters specified with -p will be bound to either the specified
-parameter input port or the the primary parameter input port if no
-explicit port is specified.
-
-At most one library or pipeline can be loaded. If a library is loaded
-and no step name is specified, the first step in the library will be
-run.
-
-The pipeline options consist of zero or more "option=value" tokens.
-Each option will be given the specified value.

@@ -227,7 +227,15 @@ access the local filesystem will result in a dynamic error.</para>
 </tgroup>
 </informaltable>
 
-<para>T.B.D.</para>
+<para>The default logging style for p:log output is
+“<literal>wrapped</literal>”. You can specify alternate styles of
+“<literal>plain</literal>”, “<literal>directory</literal>”,
+or “<literal>off</literal>” to suppress all p:log output. The value
+“<literal>off</literal>” disables all logging, even if individual
+<tag>p:log</tag>
+elements specify an alternate style with
+<tag class="attribute">cx:logstyle</tag>.
+</para>
 </section>
 
 <section xml:id="cfg.entity-resolver">
@@ -258,7 +266,8 @@ access the local filesystem will result in a dynamic error.</para>
 </tgroup>
 </informaltable>
 
-<para>T.B.D.</para>
+<para>The class specified will be instantiated and used as the entity resolver
+for all XML documents accessed.</para>
 </section>
 
 <section xml:id="cfg.uri-resolver">
@@ -289,7 +298,8 @@ access the local filesystem will result in a dynamic error.</para>
 </tgroup>
 </informaltable>
 
-<para>T.B.D.</para>
+<para>The class specified will be instantiated and used as the URI resolver
+for all URIs accessed.</para>
 </section>
 
 
@@ -354,11 +364,13 @@ and “<literal>transparent-json</literal>”.</para>
 </tgroup>
 </informaltable>
 
-<para>These bindings apply (only) to the options, parameters, and step names (if any) specified
-on the command line. For convenience, the prefix “<literal>p</literal>” is bound to the XProc namespace
-by default.</para>
+<para>These bindings apply (only) to the options, parameters, and step
+names (if any) specified on the command line. For convenience, the
+prefix “<literal>p</literal>” is bound to the XProc namespace by
+default.</para>
 
-<para>Namespaces in the XML configuration are bound by the normal, XML means.</para>
+<para>Namespaces in the XML configuration are bound by the normal, XML
+means.</para>
 
 </section>
 
@@ -373,11 +385,11 @@ by default.</para>
 <tbody>
 <row>
   <entry>Command line (long):</entry>
-  <entry><literal>--with-param</literal> <replaceable>name</replaceable>=<replaceable>value</replaceable></entry>
+  <entry><literal>--with-param</literal> <replaceable>port@</replaceable><replaceable>name</replaceable>=<replaceable>value</replaceable></entry>
 </row>
 <row>
   <entry>Command line (short):</entry>
-  <entry><literal>-p</literal><replaceable>name</replaceable>=<replaceable>value</replaceable></entry>
+  <entry><literal>-p</literal><replaceable>port@</replaceable><replaceable>name</replaceable>=<replaceable>value</replaceable></entry>
 </row>
 <row>
   <entry>XML configuration:</entry>
@@ -390,7 +402,9 @@ by default.</para>
 </tgroup>
 </informaltable>
 
-<para>T.B.D.</para>
+<para>All parameters specified will be bound to either the specified
+parameter input port or the the primary parameter input port if no
+explicit port is specified.</para>
 </section>
 
 <section xml:id="cfg.input">
@@ -419,9 +433,12 @@ by default.</para>
 </tgroup>
 </informaltable>
 
-<para>The input specified must be an XML document.</para>
+<para>The input specified must be an XML document. The string
+“<literal>-</literal>” may be used for exactly one input URI to bind
+that input to <literal>stdin</literal>.</para>
 
-<para>T.B.D.</para>
+<para>If the input binding for a particular port is repeated, all of the inputs
+specified will appear on that port as a sequence of documents.</para>
 </section>
 
 
@@ -476,7 +493,10 @@ by default.</para>
 </tgroup>
 </informaltable>
 
-<para>T.B.D.</para>
+<para>The result(s) that appear on the named output port will be written to
+the specified URI. The string
+“<literal>-</literal>” may be used for exactly one output URI to bind
+that output to <literal>stdout</literal>.</para>
 </section>
 
 <section xml:id="cfg.library">
@@ -499,9 +519,9 @@ by default.</para>
 </tgroup>
 </informaltable>
 
-<para>The steps in the library loaded are only available in <option>--step</option> options.</para>
-
-<para>T.B.D.</para>
+<para>The steps in the library loaded are only available in
+<option>--step</option> options. At most one library may be loaded.
+If no step name is specified, the first step in the library will be used.</para>
 </section>
 
 <section xml:id="cfg.step">
