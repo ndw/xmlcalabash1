@@ -16,7 +16,7 @@
           <author name="Norman Walsh" email="ndw@nwalsh.com"/>
         </authors>
         <url>http://xmlcalabash.com/</url>
-        <javaversion>1.5</javaversion>
+        <javaversion>1.6</javaversion>
       </info>
 
       <!--
@@ -35,7 +35,7 @@
           the InfoPanel.
       -->
       <resources>
-        <res id="LicencePanel.licence" src="../docs/CDDL+GPL.txt"/>
+        <res id="LicencePanel.licence" src="../resources/notices/CDDL+GPL.txt"/>
       </resources>
 
       <!--
