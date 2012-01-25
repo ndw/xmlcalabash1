@@ -6,11 +6,16 @@
   <property file="resources/etc/version.properties"/>
 
   <property name="version" value="${version.major}.${version.minor}.${version.release}"/>
-  <property name="lib.dir" value="lib"/> <!-- so I can point to a directory containing commercial jars -->
+
+  <!-- so I can point to a directory containing commercial jars -->
+  <property name="lib.dir" value="lib"/>
+
   <property name="dist.dir" value="dist"/>
-  <property name="install.dir" value="${dist.dir}/calabash-${version}"/>
   <property name="build.dir" value="out/production/Calabash"/>
-  <property name="license.dir" value="/Users/ndw/java"/> <!-- where my Saxon EE license lives -->
+
+  <!-- where my Saxon EE license lives -->
+  <property name="license.dir" value="/Users/ndw/java"/>
+
   <property name="tests.root" value="http://tests.xproc.org"/>
   <property name="test.report" value="test/report.xml"/>
   <property name="test.errors" value="test/errors.txt"/>
@@ -47,14 +52,33 @@
     </fileset>
   </path>
 
+  <available property="saxon94"
+             classname="net.sf.saxon.expr.flwor.ForClause">
+    <classpath refid="build.classpath"/>
+  </available>
+
   <pathconvert property="run.classpath" refid="build.classpath" pathsep=" ">
     <map from="${basedir}/" to=""/>
   </pathconvert>
 
   <target name="default" depends="jar"/>
 
-  <target name="init">
+  <target name="init" depends="saxon93,saxon94">
     <mkdir dir="${build.dir}"/>
+    <property name="dist-version" value="${version}-${saxon-version}"/>
+    <property name="install.dir" value="${dist.dir}/calabash-${dist-version}"/>
+  </target>
+
+  <target name="saxon94" if="saxon94">
+    <property name="saxon-version" value="94"/>
+  </target>
+
+  <target name="saxon93" unless="saxon94">
+    <property name="saxon-version" value="93"/>
+  </target>
+
+  <target name="saxon-version" depends="saxon93,saxon94">
+    <echo>Currently using saxon ${saxon-version}</echo>
   </target>
 
   <target name="update-output">
@@ -71,7 +95,7 @@
 	<attribute name="Built-By" value="${built.by}"/>
 	<attribute name="Implementation-Vendor" value="${implementation.vendor}"/>
 	<attribute name="Implementation-Title" value="${implementation.title}"/>
-	<attribute name="Implementation-Version" value="${version}"/>
+	<attribute name="Implementation-Version" value="${dist-version}"/>
         <attribute name="Main-Class" value="com.xmlcalabash.drivers.Main"/>
         <attribute name="Class-Path" value="${run.classpath}"/>
       </manifest>
@@ -270,7 +294,7 @@
 
     <xslt in="resources/etc/install-proto.xsl" style="resources/etc/install-proto.xsl"
           out="${dist.dir}/install.xml">
-      <param name="version.label" expression="${version}"/>
+      <param name="version.label" expression="${dist-version}"/>
     </xslt>
 
     <echo file="${install.dir}/calabash">#!/bin/sh
@@ -282,7 +306,7 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
     </echo>
 
     <izpack input="${dist.dir}/install.xml"
-            output="${dist.dir}/calabash-${version}.jar"
+            output="${dist.dir}/calabash-${dist-version}.jar"
             installerType="standard"
             basedir="${dist.dir}"
             izPackDir="${izpack.dir}"/>
@@ -324,7 +348,7 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
         <attribute name="Built-By" value="${built.by}"/>
         <attribute name="Implementation-Vendor" value="${implementation.vendor}"/>
         <attribute name="Implementation-Title" value="${implementation.title}"/>
-        <attribute name="Implementation-Version" value="${version}"/>
+        <attribute name="Implementation-Version" value="${dist-version}"/>
         <attribute name="Main-Class" value="com.xmlcalabash.drivers.Main"/>
         <attribute name="Class-Path" value="${run.classpath}"/>
       </manifest>
@@ -347,11 +371,11 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
       <fileset file="resources/schemas/**"/>
     </copy>
 
-    <echo file="${install.dir}/VERSION">${version}</echo>
+    <echo file="${install.dir}/VERSION">${dist-version}</echo>
 
-    <zip destfile="${dist.dir}/calabash-${version}.zip"
+    <zip destfile="${dist.dir}/calabash-${dist-version}.zip"
          basedir="${dist.dir}"
-         includes="calabash-${version}/**"/>
+         includes="calabash-${dist-version}/**"/>
   </target>
 
   <target name="test-suite" depends="jar">
