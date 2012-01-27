@@ -80,8 +80,14 @@ public class CssFormatter extends DefaultStep {
             provider.initialize(runtime,step,options);
         } catch (NoClassDefFoundError ncdfe) {
             provider = null;
+            if (runtime.getDebug()) {
+                ncdfe.printStackTrace();
+            }
         } catch (Exception e) {
             provider = null;
+            if (runtime.getDebug()) {
+                e.printStackTrace();
+            }
         }
 
         if (provider == null) {
