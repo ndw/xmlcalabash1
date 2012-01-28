@@ -315,26 +315,15 @@ public class S9apiUtils {
                 newNS = onlyNewNS;
             }
 
-            // Careful, we're messing with the namespace bindings
-            // Make sure the nameCode is right...
-            /* Not sure what to do here in 9.4. Nothing?
-            int nameCode = inode.getNameCode();
-            int typeCode = inode.getTypeAnnotation() & NamePool.FP_MASK;
-            String pfx = pool.getPrefix(nameCode);
-            String uri = pool.getURI(nameCode);
-
-            if (preserveUsed) {
-                if (excludeDefault && "".equals(pfx) && !usesDefaultNS) {
-                    nameCode = pool.allocate("", "", pool.getLocalName(nameCode));
-                }
-            } else {
-                if (excludeNS.contains(uri)) {
-                    nameCode = pool.allocate("", "", pool.getLocalName(nameCode));
+            NodeName newName = new NameOfNode(inode);
+            if (!preserveUsed) {
+                NamespaceBinding binding = newName.getNamespaceBinding();
+                if (excludeNS.contains(binding.getURI())) {
+                    newName = new FingerprintedQName("", "", newName.getLocalPart());
                 }
             }
-            */
 
-            tree.addStartElement(new NameOfNode(inode), inode.getSchemaType(), newNS);
+            tree.addStartElement(newName, inode.getSchemaType(), newNS);
 
             if (!preserveUsed) {
                 // In this case, we may need to change some attributes too
