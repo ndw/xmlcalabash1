@@ -23,6 +23,7 @@ import java.net.URI;
  */
 public class Delete extends DefaultStep {
     private static final QName _href = new QName("href");
+    private static final QName _recursive = new QName("recursive");
 
     private WritablePipe result = null;
 
@@ -48,6 +49,8 @@ public class Delete extends DefaultStep {
             throw XProcException.dynamicError(21);
         }
 
+        boolean recursive = getOption(_recursive, false);
+        
         RuntimeValue href = getOption(_href);
         URI uri = href.getBaseURI().resolve(href.getString());
         File file;
@@ -68,13 +71,23 @@ public class Delete extends DefaultStep {
 
         tree.addText(file.toURI().toASCIIString());
 
-        if (!file.delete()) {
-            throw new XProcException(step.getNode(), "Delete failed for: " + file.getAbsolutePath());
-        }
+        performDelete(file, recursive);
 
         tree.addEndElement();
         tree.endDocument();
 
         result.write(tree.getResult());
+    }
+    
+    private void performDelete(File file, boolean recursive) {
+        if (recursive && file.isDirectory()) {
+            for (File f : file.listFiles()) {
+                performDelete(f, recursive);
+            }
+        }
+
+        if (!file.delete()) {
+            throw new XProcException(step.getNode(), "Delete failed for: " + file.getAbsolutePath());
+        }
     }
 }
