@@ -914,7 +914,7 @@ public class XProcConfiguration {
                     S9apiUtils.writeXdmValue(cfgProcessor, nodes, dest, node.getBaseURI());
                     doc = dest.getXdmNode();
                     if (excludeUris.size() != 0) {
-                        doc = S9apiUtils.removeNamespaces(cfgProcessor, doc, excludeUris);
+                        doc = S9apiUtils.removeNamespaces(cfgProcessor, doc, excludeUris, true);
                     }
                 } catch (SaxonApiException sae) {
                     throw new XProcException(sae);

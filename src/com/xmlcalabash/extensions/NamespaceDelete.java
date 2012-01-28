@@ -58,7 +58,7 @@ public class NamespaceDelete extends DefaultStep {
         while (source.moreDocuments()) {
             XdmNode doc = source.read();
             runtime.finest(this, step.getNode(), "Namespace-delete step " + step.getName() + " read " + doc.getDocumentURI());
-            doc = S9apiUtils.removeNamespaces(runtime, doc, excludeUris);
+            doc = S9apiUtils.removeNamespaces(runtime, doc, excludeUris, false);
             result.write(doc);
         }
     }

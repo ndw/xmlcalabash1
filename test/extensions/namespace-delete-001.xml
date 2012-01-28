@@ -7,7 +7,7 @@
 <document xmlns="http://example.com/ns1">
 <title>Some Title</title>
 <para xmlns="http://example.com/ns2">Some paragraph.</para>
-<x:para xmlns:x="http://example1.com/ns1">Some other paragraph.</x:para>
+<x:para xmlns:x="http://example.com/ns1">Some other paragraph.</x:para>
 </document>
 </t:input>
 
@@ -31,7 +31,11 @@
 </t:pipeline>
 
 <t:output port='result'>
-<fred/>
+<document>
+<title>Some Title</title>
+<para xmlns="http://example.com/ns2">Some paragraph.</para>
+<para>Some other paragraph.</para>
+</document>
 </t:output>
 
 </t:test>
