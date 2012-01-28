@@ -295,4 +295,18 @@ configuration option.</para>
 </section>
 </section>
 
+<section xml:id="extsteps">
+<title>Extension steps</title>
+
+<para><citetitle>XML Calabash</citetitle> supports a repertoire of extension
+steps (described elsewhere). You can declare all of them in one fell swoop by
+importing the following library:</para>
+
+<programlisting><![CDATA[<p:import href="http://xmlcalabash.com/extension/steps/library-1.0.xpl"/>]]></programlisting>
+
+<para>Importing this library <emphasis>does not</emphasis> require network
+access. An internal version of the library is automatically imported when this
+URI is referenced <emphasis>in a <tag>p:import</tag> statement</emphasis>.</para>
+</section>
+
 </chapter>
