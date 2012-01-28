@@ -40,8 +40,8 @@ import com.xmlcalabash.core.XProcRuntime;
 
 public class Cwd extends ExtensionFunctionDefinition {
     private static StructuredQName funcname = new StructuredQName("exf", XProcConstants.NS_EXPROC_FUNCTIONS,"cwd");
-    private ThreadLocal tl_runtime = new ThreadLocal() {
-        protected synchronized Object initialValue() {
+    private ThreadLocal<XProcRuntime> tl_runtime = new ThreadLocal<XProcRuntime>() {
+        protected synchronized XProcRuntime initialValue() {
             return null;
         }
     };
@@ -81,7 +81,7 @@ public class Cwd extends ExtensionFunctionDefinition {
     private class CwdCall extends ExtensionFunctionCall {
         public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
 
-            XProcRuntime runtime = (XProcRuntime) tl_runtime.get();
+            XProcRuntime runtime = tl_runtime.get();
             XStep step = runtime.getXProcData().getStep();
             // FIXME: this can't be the best way to do this...
             // step == null in use-when

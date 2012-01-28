@@ -80,7 +80,7 @@ public class ReadableInline implements ReadablePipe {
             S9apiUtils.writeXdmValue(runtime, nodes, dest, baseURI);
             XdmNode doc = dest.getXdmNode();
 
-            doc = S9apiUtils.removeNamespaces(runtime, doc, excludeNS);
+            doc = S9apiUtils.removeNamespaces(runtime, doc, excludeNS, true);
             runtime.finest(null, null, "Instantiate a ReadableInline");
             documents.add(doc);
         } catch (SaxonApiException sae) {

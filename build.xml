@@ -114,9 +114,17 @@
   </target>
 
   <target name="compile" depends="init,optional-features,update-output">
+    <!-- debugging
+    <property name="theclasspath" refid="build.classpath"/>
+    <echo>Classpath: ${theclasspath}</echo>
+    -->
+
     <javac destdir="${build.dir}"
 	   classpathref="build.classpath"
            includeantruntime="false">
+      <!--
+      <compilerarg value="-Xlint"/>
+      -->
       <src path="src"/>
       <!-- Optional features -->
       <exclude name="com/xmlcalabash/extensions/MetadataExtractor.java"/>
@@ -143,9 +151,6 @@
       <classpath>
         <!-- Yes, I know these are explicit. This target is really only for me. -->
         <fileset dir="lib">
-          <include name="*.jar"/>
-        </fileset>
-        <fileset dir="libpriv">
           <include name="*.jar"/>
         </fileset>
       </classpath>
@@ -203,6 +208,9 @@
     <javac destdir="${build.dir}"
 	   classpathref="build.classpath"
            includeantruntime="false">
+      <!--
+      <compilerarg value="-Xlint"/>
+      -->
       <src path="src"/>
       <include name="com/xmlcalabash/extensions/MetadataExtractor.java"/>
     </javac>
@@ -319,6 +327,7 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
     <mkdir dir="${install.dir}/schemas"/>
     <mkdir dir="${install.dir}/xpl"/>
     <ant dir="docs"/>
+    <mkdir dir="${install.dir}/docs/notices"/>
     <mkdir dir="${install.dir}/docs/reference"/>
     <mkdir dir="${install.dir}/docs/reference/css"/>
     <mkdir dir="${install.dir}/docs/reference/js"/>
@@ -336,9 +345,8 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
       <fileset dir="docs/img"/>
     </copy>
 
-    <copy todir="${install.dir}/docs">
-      <fileset file="docs/NOTICES"/>
-      <fileset file="docs/**txt"/>
+    <copy todir="${install.dir}/docs/notices">
+      <fileset file="resources/notices/**"/>
     </copy>
     <copy todir="${install.dir}">
       <fileset file="docs/README"/>

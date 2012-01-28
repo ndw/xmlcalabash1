@@ -203,8 +203,6 @@ public class S9apiUtils {
         StringReader sr = new StringReader(serxml);
         InputSource isource = new InputSource(sr);
         isource.setSystemId(node.getBaseURI().toASCIIString());
-        //SAXSource source = new SAXSource(isource);
-        //return source;
         return isource;
     }
 
@@ -253,24 +251,24 @@ public class S9apiUtils {
         return excludeURIs;
     }
 
-    public static XdmNode removeNamespaces(XProcRuntime runtime, XdmNode node, HashSet<String> excludeNS) {
-        return removeNamespaces(runtime.getProcessor(), node, excludeNS);
+    public static XdmNode removeNamespaces(XProcRuntime runtime, XdmNode node, HashSet<String> excludeNS, boolean preserveUsed) {
+        return removeNamespaces(runtime.getProcessor(), node, excludeNS, preserveUsed);
     }
 
-    public static XdmNode removeNamespaces(Processor proc, XdmNode node, HashSet<String> excludeNS) {
+    public static XdmNode removeNamespaces(Processor proc, XdmNode node, HashSet<String> excludeNS, boolean preserveUsed) {
         TreeWriter tree = new TreeWriter(proc);
         tree.startDocument(node.getBaseURI());
-        removeNamespacesWriter(tree, node, excludeNS);
+        removeNamespacesWriter(tree, node, excludeNS, preserveUsed);
         tree.endDocument();
         return tree.getResult();
     }
 
-    private static void removeNamespacesWriter(TreeWriter tree, XdmNode node, HashSet<String> excludeNS) {
+    private static void removeNamespacesWriter(TreeWriter tree, XdmNode node, HashSet<String> excludeNS, boolean preserveUsed) {
         if (node.getNodeKind() == XdmNodeKind.DOCUMENT) {
             XdmSequenceIterator iter = node.axisIterator(Axis.CHILD);
             while (iter.hasNext()) {
                 XdmNode cnode = (XdmNode) iter.next();
-                removeNamespacesWriter(tree, cnode, excludeNS);
+                removeNamespacesWriter(tree, cnode, excludeNS, preserveUsed);
             }
         } else if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
             boolean usesDefaultNS = ("".equals(node.getNodeName().getPrefix())
@@ -300,7 +298,7 @@ public class S9apiUtils {
                     excludeDefault = excludeDefault || ("".equals(pfx) && delete);
 
                     // You can't exclude the default namespace if it's in use
-                    if ("".equals(pfx) && usesDefaultNS) {
+                    if ("".equals(pfx) && usesDefaultNS && preserveUsed) {
                         delete = false;
                     }
 
@@ -325,18 +323,39 @@ public class S9apiUtils {
             String pfx = pool.getPrefix(nameCode);
             String uri = pool.getURI(nameCode);
 
-            if (excludeDefault && "".equals(pfx) && !usesDefaultNS) {
-                nameCode = pool.allocate("", "", pool.getLocalName(nameCode));
+            if (preserveUsed) {
+                if (excludeDefault && "".equals(pfx) && !usesDefaultNS) {
+                    nameCode = pool.allocate("", "", pool.getLocalName(nameCode));
+                }
+            } else {
+                if (excludeNS.contains(uri)) {
+                    nameCode = pool.allocate("", "", pool.getLocalName(nameCode));
+                }
             }
             */
-            
+
             tree.addStartElement(new NameOfNode(inode), inode.getSchemaType(), newNS);
-            tree.addAttributes(node);
+
+            if (!preserveUsed) {
+                // In this case, we may need to change some attributes too
+                XdmSequenceIterator attriter = node.axisIterator(Axis.ATTRIBUTE);
+                while (attriter.hasNext()) {
+                    XdmNode attr = (XdmNode) attriter.next();
+                    String attrns = attr.getNodeName().getNamespaceURI();
+                    if (excludeNS.contains(attrns)) {
+                        tree.addAttribute(new QName(attr.getNodeName().getLocalName()), attr.getStringValue());
+                    } else {
+                        tree.addAttribute(attr);
+                    }
+                }
+            } else {
+                tree.addAttributes(node);
+            }
 
             XdmSequenceIterator iter = node.axisIterator(Axis.CHILD);
             while (iter.hasNext()) {
                 XdmNode cnode = (XdmNode) iter.next();
-                removeNamespacesWriter(tree, cnode, excludeNS);
+                removeNamespacesWriter(tree, cnode, excludeNS, preserveUsed);
             }
             tree.addEndElement();
         } else {

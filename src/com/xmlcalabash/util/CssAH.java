@@ -1,7 +1,6 @@
 package com.xmlcalabash.util;
 
 import com.xmlcalabash.config.CssProcessor;
-import com.xmlcalabash.config.FoProcessor;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;

@@ -10,7 +10,7 @@
           xml:id="cxu-compare">
    <refnamediv>
       <refname>cxu:compare</refname>
-      <refpurpose>XML Unit comparison fo two documents</refpurpose>
+      <refpurpose>XML Unit comparison of two documents</refpurpose>
    </refnamediv>
    <refsynopsisdiv>
       <xi:include href="../declarations.xml" xpointer="xpath(/*/*[@type='cxu:compare'])"/>

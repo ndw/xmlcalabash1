@@ -909,7 +909,7 @@ private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
                             }
                         }
                     }
-                    node = S9apiUtils.removeNamespaces(runtime, node, prefixes);
+                    node = S9apiUtils.removeNamespaces(runtime, node, prefixes, true);
                     description.add(node);
                 }
             }
