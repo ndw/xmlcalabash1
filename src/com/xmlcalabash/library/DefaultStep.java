@@ -256,6 +256,7 @@ public class DefaultStep implements XProcStep {
 
         try {
             XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
+            xcomp.setBaseURI(step.getNode().getBaseURI());
             // Extension functions are not available here...
 
             for (QName varname : globals.keySet()) {

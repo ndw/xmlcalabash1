@@ -81,6 +81,8 @@ public class XSelect implements ReadablePipe {
         try {
             NamespaceBinding bindings = new NamespaceBinding(runtime,context);
             XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
+            xcomp.setBaseURI(context.getBaseURI());
+
             IndependentContext icontext = (IndependentContext) xcomp.getUnderlyingStaticContext();
 
             Hashtable<QName, RuntimeValue> inScopeOptions = new Hashtable<QName, RuntimeValue> ();

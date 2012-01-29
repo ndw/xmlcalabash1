@@ -178,6 +178,7 @@ public class ValidateWithSCH extends DefaultStep {
 
         try {
             XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
+            xcomp.setBaseURI(step.getNode().getBaseURI());
 
             for (String prefix : nsBindings.keySet()) {
                 xcomp.declareNamespace(prefix, nsBindings.get(prefix));
