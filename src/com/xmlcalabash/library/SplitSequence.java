@@ -101,6 +101,8 @@ public class SplitSequence extends DefaultStep {
 
             try {
                 XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
+                xcomp.setBaseURI(step.getNode().getBaseURI());
+
                 for (String prefix : test.getNamespaceBindings().keySet()) {
                     xcomp.declareNamespace(prefix, test.getNamespaceBindings().get(prefix));
                 }

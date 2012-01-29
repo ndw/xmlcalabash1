@@ -252,6 +252,8 @@ public class Wrap extends DefaultStep implements ProcessMatchingNodes {
     private XdmItem computeGroup(XdmNode node) {
         try {
             XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
+            xcomp.setBaseURI(step.getNode().getBaseURI());
+
             for (String prefix : groupAdjacent.getNamespaceBindings().keySet()) {
                 xcomp.declareNamespace(prefix, groupAdjacent.getNamespaceBindings().get(prefix));
             }

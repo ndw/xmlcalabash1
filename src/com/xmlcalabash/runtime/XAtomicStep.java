@@ -571,6 +571,7 @@ public class XAtomicStep extends XStep {
             } else if (nsbinding.getXPath() != null) {
                 try {
                     XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
+                    xcomp.setBaseURI(step.getNode().getBaseURI());
 
                     for (QName varname : globals.keySet()) {
                         xcomp.declareVariable(varname);
@@ -741,6 +742,7 @@ public class XAtomicStep extends XStep {
 
         try {
             XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
+            xcomp.setBaseURI(step.getNode().getBaseURI());
 
             for (QName varname : boundOpts.keySet()) {
                 xcomp.declareVariable(varname);
