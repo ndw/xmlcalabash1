@@ -17,6 +17,9 @@
    </refsynopsisdiv>
    <refsection>
       <title>Description</title>
-      <para>TBD.</para>
+
+<para>This step is mostly for debugging. It performs the identity step
+with the side-effect of writing a message to the console.</para>
+
    </refsection>
 </refentry>

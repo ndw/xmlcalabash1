@@ -294,6 +294,7 @@
       <p:option name="path-separator" e:type="xsd:string"/>
       <p:option name="failure-threshold" e:type="xsd:integer"/>
       <p:option name="arg-separator" select="' '" e:type="xsd:string"/>
+      <p:option name="cx:show-stderr" select="'true'" e:type="xsd:boolean"/>
       <p:option name="byte-order-mark" e:type="xsd:boolean"/>
       <p:option name="cdata-section-elements" select="''" e:type="ListOfQNames"/>
       <p:option name="doctype-public" e:type="xsd:string"/>

@@ -295,11 +295,39 @@ configuration option.</para>
 </section>
 </section>
 
+<section xml:id="extfunc">
+<title>Extension functions</title>
+
+<para><citetitle>XML Calabash</citetitle> supports one extension
+function.</para>
+
+<variablelist>
+<varlistentry>
+<term><function>pxf:cwd()</function></term>
+<listitem>
+<para>The <function>cwd</function> function returns the “current
+working directory” of the processor. This function takes no arguments
+and does not depend on the context.</para>
+
+<para>There are no XML Calabash steps that change the working
+directory, so this function is likely to return the same value every
+time it is called. However, there is nothing which prevents an
+extension step from being defined which changes the current working
+directory, so it is not necessarily the case that the same value will
+always be returned.</para>
+</listitem>
+</varlistentry>
+</variablelist>
+
+</section>
+
 <section xml:id="extsteps">
 <title>Extension steps</title>
 
 <para><citetitle>XML Calabash</citetitle> supports a repertoire of extension
-steps (described elsewhere). You can declare all of them in one fell swoop by
+steps (<link xlink:href="pxp-steps.html">EXProc</link>
+and <link xlink:href="cx-steps.html">implementation-specific</link>).
+You can declare all of them in one fell swoop by
 importing the following library:</para>
 
 <programlisting><![CDATA[<p:import href="http://xmlcalabash.com/extension/steps/library-1.0.xpl"/>]]></programlisting>

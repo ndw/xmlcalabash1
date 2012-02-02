@@ -6,6 +6,7 @@
           xmlns:cxu="http://xmlcalabash.com/ns/extensions/xmlunit"
           xmlns="http://docbook.org/ns/docbook"
           xmlns:xi="http://www.w3.org/2001/XInclude"
+          xmlns:xlink="http://www.w3.org/1999/xlink"
           xmlns:pos="http://exproc.org/proposed/steps/os"
           xml:id="ml-insert-document">
    <refnamediv>
@@ -17,6 +18,13 @@
    </refsynopsisdiv>
    <refsection>
       <title>Description</title>
-      <para>TBD.</para>
+
+<para>The <tag>ml:insert-document</tag> step inserts a document into a
+<link xlink:href="http://www.marklogic.com">Mark Logic</link> Server.
+</para>
+
+<para>To use this step you must have a Mark Logic Server and the
+<link xlink:href="http://xqzone.marklogic.com/download/default.xqy#XCC">Java
+XCC</link> libraries.</para>
    </refsection>
 </refentry>
