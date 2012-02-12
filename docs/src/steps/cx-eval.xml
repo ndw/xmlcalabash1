@@ -17,6 +17,31 @@
    </refsynopsisdiv>
    <refsection>
       <title>Description</title>
-      <para>TBD.</para>
+
+<para>In the simplest case, where the specified pipeline has a single
+input and a single output, the document(s) on the <literal role="port">source</literal>
+port are passed to the pipeline, processed, and the results are passed
+back on the <literal role="port">result</literal> port.</para>
+
+<para>If the pipeline specified has multiple inputs or outputs, then the
+inputs and outputs have to be “multiplexed” on the single port. If this is
+the case, you must specify that the <option>detailed</option> option is
+“<literal>true</literal>”, and encode the input using <tag>cx:document</tag>.
+Each input must be wrapped in <tag>cx:document</tag> with a
+<tag class="attribute">port</tag> attribute that identifies the port to
+which that document is to be sent. Each output will be wrapped in a
+<tag>cx:document</tag> element identifying the port from which it came.</para>
+
+<para>If the pipeline has options, they are passed to the <literal role="port">options</literal>
+port. Each options document must have <tag>cx:options</tag> as its document
+element and consist entirely of <tag>cx:option</tag> elements with
+<tag class="attribute">name</tag> and <tag class="attribute">value</tag>
+attributes that specify options and their values.</para>
+
+<para>If the pipeline is a <tag>p:library</tag>, then the step to evaluate
+may be specified using the <option>step</option> option. If the pipeline is
+a library and no step option is specified, the first step in the library will
+be selected.</para>
+
    </refsection>
 </refentry>

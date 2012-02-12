@@ -6,6 +6,7 @@
           xmlns:cxu="http://xmlcalabash.com/ns/extensions/xmlunit"
           xmlns="http://docbook.org/ns/docbook"
           xmlns:xi="http://www.w3.org/2001/XInclude"
+          xmlns:xlink="http://www.w3.org/1999/xlink"
           xmlns:pos="http://exproc.org/proposed/steps/os"
           xml:id="ml-invoke-module">
    <refnamediv>
@@ -17,6 +18,19 @@
    </refsynopsisdiv>
    <refsection>
       <title>Description</title>
-      <para>TBD.</para>
+
+<para>The <tag>ml:invoke-module</tag> step invokes a module on a
+<link xlink:href="http://www.marklogic.com">Mark Logic</link> Server,
+as its name implies.
+</para>
+
+<para>To use this step you must have a Mark Logic Server and the
+<link xlink:href="http://xqzone.marklogic.com/download/default.xqy#XCC">Java
+XCC</link> libraries.</para>
+
+<para>Because the results of a module invocation may not be a single,
+well formed XML document (for example, it could be a single atomic value),
+the results are wrapped in the specified wrapper element.</para>
+
    </refsection>
 </refentry>

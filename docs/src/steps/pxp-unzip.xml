@@ -6,6 +6,7 @@
           xmlns:cxu="http://xmlcalabash.com/ns/extensions/xmlunit"
           xmlns="http://docbook.org/ns/docbook"
           xmlns:xi="http://www.w3.org/2001/XInclude"
+          xmlns:xlink="http://www.w3.org/1999/xlink"
           xmlns:pos="http://exproc.org/proposed/steps/os"
           xml:id="pxp-unzip">
    <refnamediv>
@@ -36,6 +37,13 @@ base64 encoded and returned in a single <tag>c:data</tag> element.</para>
 with “<literal>text/</literal>”), <emphasis>and</emphasis> a <option>charset</option>
 is specified, the file is returned as a single <tag>c:data</tag> element
 containing the text content of the file.</para>
+
+<para>The <tag>cx:unzip</tag> step
+<link xlink:href="http://exproc.org/proposed/steps/">is defined</link>
+at <link xlink:href="http://exproc.org/"/>.</para>
+
+<para>The names <tag>cx:unzip</tag> and <tag>pxp:unzip</tag> are
+synonymous. The latter is preferred.</para>
 
    </refsection>
 </refentry>

@@ -6,6 +6,7 @@
           xmlns:cxu="http://xmlcalabash.com/ns/extensions/xmlunit"
           xmlns="http://docbook.org/ns/docbook"
           xmlns:xi="http://www.w3.org/2001/XInclude"
+          xmlns:xlink="http://www.w3.org/1999/xlink"
           xmlns:pos="http://exproc.org/proposed/steps/os"
           xml:id="cx-delta-xml">
    <refnamediv>
@@ -17,6 +18,13 @@
    </refsynopsisdiv>
    <refsection>
       <title>Description</title>
-      <para>TBD.</para>
+
+<para>The <tag>cx:delta-xml</tag> step invokes the <link
+xlink:href="http://www.deltaxml.com/">Delta XML</link> XML “diff”
+library.</para>
+
+<para>To use this step, you must have a valid license for the Delta XML
+product and the Delta XML jar files.</para>
    </refsection>
+
 </refentry>

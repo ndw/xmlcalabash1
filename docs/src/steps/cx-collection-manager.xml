@@ -10,7 +10,7 @@
           xml:id="cx-collection-manager">
    <refnamediv>
       <refname>cx:collection-manager</refname>
-      <refpurpose>Add documents to the default collection</refpurpose>
+      <refpurpose>Associate documents with a collection URI</refpurpose>
    </refnamediv>
    <refsynopsisdiv>
       <xi:include href="../declarations.xml"
@@ -18,6 +18,19 @@
    </refsynopsisdiv>
    <refsection>
       <title>Description</title>
-      <para>TBD.</para>
+
+<para>If at least one document appears on the <literal role="port">source</literal> port,
+the sequence of documents that appears on that port is associated with
+the specified collection URI. It may subsequently be accessed in an
+XSLT 2.0 or XQuery step using the XPath 2.0 <function>collection</function>
+function. The <literal role="port">source</literal> documents are copied to the
+<literal role="port">result</literal> port.</para>
+
+<para>If an empty sequence of documents appears on the <literal role="port">source</literal> port,
+the previously stored collection associated with the specified collation
+URI is retrieved and that set of documents appears on the <literal role="port">result</literal>
+port. If no collection is associated with the URI, the empty sequence is
+returned.</para>
+
    </refsection>
 </refentry>

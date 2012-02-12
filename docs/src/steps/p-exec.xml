@@ -17,6 +17,21 @@
    </refsynopsisdiv>
    <refsection>
       <title>Description</title>
+
       <para>TBD.</para>
+
+<refsection>
+<title>Extensions</title>
+
+<para>XML Calabash implements an extension to the <tag>p:exec</tag> step.</para>
+
+<para>The <tag>cx:show-stderr</tag> extension attribute controls whether or
+not process output to <literal>STDERR</literal> is displayed as the process
+runs.</para>
+
+<para>If <option>errors-is-xml</option> is <literal>true</literal>, this
+extension attribute is ignored.</para>
+</refsection>
+
    </refsection>
 </refentry>

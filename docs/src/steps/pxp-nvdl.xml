@@ -6,6 +6,7 @@
           xmlns:cxu="http://xmlcalabash.com/ns/extensions/xmlunit"
           xmlns="http://docbook.org/ns/docbook"
           xmlns:xi="http://www.w3.org/2001/XInclude"
+          xmlns:xlink="http://www.w3.org/1999/xlink"
           xmlns:pos="http://exproc.org/proposed/steps/os"
           xml:id="pxp-nvdl">
    <refnamediv>
@@ -18,6 +19,16 @@
    </refsynopsisdiv>
    <refsection>
       <title>Description</title>
-      <para>TBD.</para>
+
+<para>A step for performing <link xlink:href="http://www.nvdl.org/">NVDL</link>
+(Namespace-based Validation Dispatching Language) validation over
+mixed-namespace documents.</para>
+
+<para>The <tag>pxp:nvdl</tag> step
+<link xlink:href="http://exproc.org/proposed/steps/">is defined</link>
+at <link xlink:href="http://exproc.org/"/>.</para>
+
+<para>The names <tag>cx:nvdl</tag> and <tag>pxp:nvdl</tag> are
+synonymous. The latter is preferred.</para>
    </refsection>
 </refentry>
