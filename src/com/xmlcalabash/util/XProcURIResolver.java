@@ -22,8 +22,10 @@ import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcRuntime;
 
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Hashtable;
 import java.util.logging.Logger;
 import java.io.IOException;
@@ -88,7 +90,17 @@ public class XProcURIResolver implements URIResolver, EntityResolver {
         }
 
         if (uriResolver != null) {
-            Source resolved = uriResolver.resolve(href, base);
+            URL absoluteURI = null;
+
+            // This is an attempt to deal with jar: URIs, pipelines run from inside jar files.
+            try {
+                absoluteURI = new URL(new URL(base), href);
+            } catch (MalformedURLException mue) {
+                throw new XProcException(mue);
+            }
+
+            Source resolved = uriResolver.resolve(absoluteURI.toString(), base);
+
             // FIXME: This is a grotesque hack. This is wrong. Wrong. Wrong.
             // To support caching, XMLResolver (xmlresolver.org) returns a Source even when it hasn't
             // found the resource. Problem is, it doesn't setup the entity resolver correctly for that
