@@ -90,11 +90,6 @@ public class Main {
             usage();
         }
 
-        if (cmd.showVersion) {
-            showVersion();
-            System.exit(0);
-        }
-        
         if (cmd.saxonConfigFile != null) {
             if (cmd.schemaAware) {
                 throw new XProcException("Specifying schema-aware processing is an error if you specify a Saxon configuration file.");
@@ -177,6 +172,10 @@ public class Main {
             runtime = new XProcRuntime(config);
 
             XPipeline pipeline = null;
+
+            if (cmd.showVersion) {
+                showVersion();
+            }
 
             if (cmd.pipelineURI != null) {
                 pipeline = runtime.load(cmd.pipelineURI);
@@ -428,7 +427,14 @@ public class Main {
     }
 
     private void showVersion() {
-        System.out.println("XML Calabash version " + XProcConstants.XPROC_VERSION + ", an XProc processor");
+        System.out.println("XML Calabash version " + XProcConstants.XPROC_VERSION + ", an XProc processor.");
+        if (runtime != null) {
+            System.out.print("Running on Saxon version ");
+            System.out.print(runtime.getConfiguration().getProcessor().getSaxonProductVersion());
+            System.out.print(", ");
+            System.out.print(runtime.getConfiguration().getProcessor().getUnderlyingConfiguration().getEditionCode());
+            System.out.println(" edition.");
+        }
         System.out.println("Copyright (c) 2007-2012 Norman Walsh");
         System.out.println("See http://xmlcalabash.com/");
         System.out.println("");
