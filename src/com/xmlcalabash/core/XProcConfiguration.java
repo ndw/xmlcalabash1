@@ -68,7 +68,6 @@ public class XProcConfiguration {
     public Hashtable<String,String> nsBindings = new Hashtable<String,String> ();
     public boolean debug = false;
     public Hashtable<String,Vector<ReadablePipe>> inputs = new Hashtable<String,Vector<ReadablePipe>> ();
-    public Hashtable<String,Level> logLevel = new Hashtable<String,Level> ();
     public ReadablePipe pipeline = null;
     public Hashtable<String,String> outputs = new Hashtable<String,String> ();
     public Hashtable<String,Hashtable<QName,String>> params = new Hashtable<String,Hashtable<QName,String>> ();
@@ -102,30 +101,6 @@ public class XProcConfiguration {
 
     public XProcConfiguration() {
         init("he", false, null);
-/*        
-        cfgProcessor = new Processor(false);
-        loadConfiguration();
-
-        if (schemaAware || !"he".equals(saxonProcessor) || saxonConfigFile != null) {
-            // Bugger. We have to restart with a schema-aware processor
-            nsBindings.clear();
-            inputs.clear();
-            outputs.clear();
-            params.clear();
-            options.clear();
-            implementations.clear();
-            extensionFunctions.clear();
-
-            cfgProcessor = new Processor(true);
-
-            String actualtype = cfgProcessor.getUnderlyingConfiguration().softwareEdition;
-            if (!"he".equals(saxonProcessor) && (!actualtype.toLowerCase().equals(saxonProcessor))) {
-                System.err.println("Failed to obtain " + saxonProcessor.toUpperCase() + " processor; using " + actualtype + " instead.");
-            }
-
-            loadConfiguration();
-        }
-*/        
     }
 
     // This constructor is historical, the (String, boolean) constructor is preferred
