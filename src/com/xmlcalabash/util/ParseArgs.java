@@ -52,6 +52,7 @@ public class ParseArgs {
     public boolean allowXPointerOnText = false;
     public boolean transparentJSON = false;
     public String jsonFlavor = null;
+    public boolean useXslt10 = false;
 
     private String[] args = null;
     private int argpos = 0;
@@ -177,6 +178,8 @@ public class ParseArgs {
                     extensionValues = true;
                 } else if ("xpointer-on-text".equals(ext)) {
                     allowXPointerOnText = true;
+                } else if ("use-xslt-1.0".equals(ext) || "use-xslt-10".equals(ext)) {
+                    useXslt10 = true;
                 } else if ("transparent-json".equals(ext)) {
                     transparentJSON = true;
                 } else if (ext.startsWith("json-flavor=")) {
