@@ -159,7 +159,12 @@ public class UnescapeMarkup extends DefaultStep {
             escapedContent = "<wrapper>" + escapedContent + "</wrapper>";
 
             StringReader sr = new StringReader(escapedContent);
-            XdmNode unesc = runtime.parse(new InputSource(sr));
+
+            // Make sure the nodes in the unescapedContent get the right base URI
+            InputSource is = new InputSource(sr);
+            is.setSystemId(doc.getBaseURI().toASCIIString());
+
+            XdmNode unesc = runtime.parse(is);
 
             // Now ignore the wrapper that we added...
             XdmNode dummyWrapper = S9apiUtils.getDocumentElement(unesc);
