@@ -149,9 +149,13 @@ public class XSLT extends DefaultStep {
             version = getOption(_version).getString();
         }
         
-        if (!"1.0".equals(version) && !"2.0".equals(version)) {
-            throw XProcException.stepError(38, "XSLT version '" + version + "' is not supported.");
+        if ("3.0".equals(version) && Configuration.softwareEdition.toLowerCase().equals("he")) {
+            throw XProcException.stepError(38, "XSLT version '" + version + "' is not supported (Saxon PE or EE processor required).");
         }
+        
+        // We used to check if the XSLT version was supported, but I've removed that check.
+        // If it's not supported by Saxon, we'll get an error from Saxon. Otherwise, we'll
+        // get the results we get.
 
         if ("1.0".equals(version) && defaultCollection.size() > 1) {
             throw XProcException.stepError(39);

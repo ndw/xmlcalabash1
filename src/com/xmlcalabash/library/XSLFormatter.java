@@ -77,8 +77,14 @@ public class XSLFormatter extends DefaultStep {
                     provider = (FoProcessor) Class.forName(className).newInstance();
                     provider.initialize(runtime,step,options);
                 } catch (NoClassDefFoundError ncdfe) {
+                    if (runtime.getDebug()) {
+                        ncdfe.printStackTrace();
+                    }
                     provider = null;
                 } catch (Exception e) {
+                    if (runtime.getDebug()) {
+                        e.printStackTrace();
+                    }
                     provider = null;
                 }
             }
