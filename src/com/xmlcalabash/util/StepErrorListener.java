@@ -63,7 +63,8 @@ public class StepErrorListener implements ErrorListener {
         // HACK!!!
         if (runtime.transparentJSON() && exception instanceof XPathException) {
             XPathException e = (XPathException) exception;
-            if (e.getErrorCodeQName().equals(err_sxxp0003)) {
+            StructuredQName errqn = e.getErrorCodeQName();
+            if (errqn != null && errqn.equals(err_sxxp0003)) {
                 // We'll be trying again as JSON, so let it go this time
                 return true;
             }
