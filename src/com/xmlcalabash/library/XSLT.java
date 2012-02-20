@@ -24,7 +24,13 @@ import java.net.URISyntaxException;
 import java.util.Hashtable;
 import java.util.Vector;
 import javax.xml.transform.Result;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMResult;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.sax.SAXSource;
 
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
@@ -38,6 +44,7 @@ import com.xmlcalabash.util.S9apiUtils;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.lib.CollectionURIResolver;
 import net.sf.saxon.lib.OutputURIResolver;
+import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -51,6 +58,7 @@ import net.sf.saxon.s9api.ValidationMode;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.event.Receiver;
 import com.xmlcalabash.runtime.XAtomicStep;
+import org.xml.sax.InputSource;
 
 /**
  *
@@ -61,7 +69,6 @@ public class XSLT extends DefaultStep {
     private static final QName _template_name = new QName("", "template-name");
     private static final QName _output_base_uri = new QName("", "output-base-uri");
     private static final QName _version = new QName("", "version");
-    // FIXME: doesn't support sequence input yet!
     private ReadablePipe sourcePipe = null;
     private ReadablePipe stylesheetPipe = null;
     private WritablePipe resultPipe = null;
@@ -143,6 +150,11 @@ public class XSLT extends DefaultStep {
         if ("1.0".equals(version) && defaultCollection.size() > 1) {
             throw XProcException.stepError(39);
         }
+        
+        if ("1.0".equals(version) && runtime.getUseXslt10Processor()) {
+            run10(stylesheet, document);
+            return;
+        }
 
         QName initialMode = null;
         QName templateName = null;
@@ -178,9 +190,6 @@ public class XSLT extends DefaultStep {
         compiler.setSchemaAware(processor.isSchemaAware());
         XsltExecutable exec = compiler.compile(stylesheet.asSource());
         XsltTransformer transformer = exec.load();
-
-        // NDW debugging, ignore this
-        // transformer.getUnderlyingController().setBaseOutputURI("http://example.com/");
 
         for (QName name : params.keySet()) {
             RuntimeValue v = params.get(name);
@@ -227,6 +236,46 @@ public class XSLT extends DefaultStep {
                 xformed.getUnderlyingNode().setSystemId(sysId);
             }
             resultPipe.write(xformed);
+        }
+    }
+    
+    public void run10(XdmNode stylesheet, XdmNode document) {
+        try {
+            InputSource is = S9apiUtils.xdmToInputSource(runtime, stylesheet);
+            
+            TransformerFactory tfactory = TransformerFactory.newInstance();
+            Transformer transformer = tfactory.newTransformer(new SAXSource(is));
+
+            transformer.setURIResolver(runtime.getResolver());
+
+            for (QName name : params.keySet()) {
+                RuntimeValue v = params.get(name);
+                transformer.setParameter(name.getClarkName(), v.getString());
+            }
+
+            DOMResult result = new DOMResult();
+            is = S9apiUtils.xdmToInputSource(runtime, document);
+            transformer.transform(new SAXSource(is), result);
+
+            DocumentBuilder xdmBuilder = runtime.getConfiguration().getProcessor().newDocumentBuilder();
+            XdmNode xformed = xdmBuilder.build(new DOMSource(result.getNode()));
+
+            // Can be null when nothing is written to the principle result tree...
+            if (xformed != null) {
+                if (document != null
+                        && (xformed.getBaseURI() == null
+                        || "".equals(xformed.getBaseURI().toASCIIString()))) {
+                    String sysId = document.getBaseURI().toASCIIString();
+                    xformed.getUnderlyingNode().setSystemId(sysId);
+                }
+                resultPipe.write(xformed);
+            }
+        } catch (SaxonApiException sae) {
+            throw new XProcException(sae);
+        } catch (TransformerConfigurationException tce) {
+            throw new XProcException(tce);
+        } catch (TransformerException te) {
+            throw new XProcException(te);
         }
     }
 

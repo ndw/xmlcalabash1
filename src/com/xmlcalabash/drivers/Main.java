@@ -31,19 +31,14 @@ import com.xmlcalabash.io.WritableDocument;
 import com.xmlcalabash.util.S9apiUtils;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.DocumentBuilder;
-import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.Serializer;
-import net.sf.saxon.s9api.XQueryCompiler;
-import net.sf.saxon.s9api.XQueryEvaluator;
-import net.sf.saxon.s9api.XQueryExecutable;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import org.xml.sax.InputSource;
 
 import javax.xml.transform.sax.SAXSource;
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -166,6 +161,7 @@ public class Main {
             if (cmd.jsonFlavor != null) {
                 config.jsonFlavor = cmd.jsonFlavor;
             }
+            config.useXslt10 |= cmd.useXslt10;
 
             debug = config.debug;
 

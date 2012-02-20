@@ -128,6 +128,8 @@ public class SystemProperty extends ExtensionFunctionDefinition {
                      value = runtime.getAllowGeneralExpressions() ? "true" : "false";
                  } else if ("xpointer-on-text".equals(local)) {
                      value = runtime.getAllowXPointerOnText() ? "true" : "false";
+                 } else if ("use-xslt-1.0".equals(local) || "use-xslt-10".equals(local)) {
+                     value = runtime.getUseXslt10Processor() ? "true" : "false";
                  } else if ("saxon-version".equals(local)) {
                      value = runtime.getConfiguration().getProcessor().getSaxonProductVersion();
                  } else if ("saxon-edition".equals(local)) {
