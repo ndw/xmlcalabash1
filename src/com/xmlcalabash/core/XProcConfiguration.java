@@ -1,6 +1,7 @@
 package com.xmlcalabash.core;
 
 import com.xmlcalabash.util.JSONtoXML;
+import net.sf.saxon.Configuration;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.Processor;
@@ -57,9 +58,11 @@ public class XProcConfiguration {
     public static final QName _type = new QName("", "type");
     public static final QName _port = new QName("", "port");
     public static final QName _href = new QName("", "href");
+    public static final QName _data = new QName("", "data");
     public static final QName _name = new QName("", "name");
     public static final QName _key = new QName("", "key");
     public static final QName _value = new QName("", "value");
+    public static final QName _loader = new QName("", "loader");
     public static final QName _exclude_inline_prefixes = new QName("", "exclude-inline-prefixes");
 
     public String saxonProcessor = "he";
@@ -89,12 +92,14 @@ public class XProcConfiguration {
     public String mailPort = "25";
     public String mailUser = null;
     public String mailPass = null;
+    public Hashtable<String,String> loaders = new Hashtable<String,String> ();
 
     public boolean extensionValues = false;
     public boolean xpointerOnText = false;
     public boolean transparentJSON = false;
     public String jsonFlavor = JSONtoXML.MARKLOGIC;
-    
+    public boolean useXslt10 = false;
+
     private Processor cfgProcessor = null;
     private boolean firstInput = false;
     private boolean firstOutput = false;
@@ -139,7 +144,7 @@ public class XProcConfiguration {
         // If we got a schema aware processor, make sure it's reflected in our config
         // FIXME: are there other things that should be reflected this way?
         this.schemaAware = cfgProcessor.isSchemaAware();
-        this.saxonProcessor = cfgProcessor.getUnderlyingConfiguration().softwareEdition.toLowerCase();
+        this.saxonProcessor = Configuration.softwareEdition.toLowerCase();
 
         if (!(proctype == null || saxonProcessor.equals(proctype)) || schemaAware != this.schemaAware ||
             (saxoncfg == null && saxonConfigFile != null)) {
@@ -158,7 +163,7 @@ public class XProcConfiguration {
             // If we got a schema aware processor, make sure it's reflected in our config
             // FIXME: are there other things that should be reflected this way?
             this.schemaAware = cfgProcessor.isSchemaAware();
-            this.saxonProcessor = cfgProcessor.getUnderlyingConfiguration().softwareEdition.toLowerCase();
+            this.saxonProcessor = Configuration.softwareEdition.toLowerCase();
         }
     }
 
@@ -179,7 +184,7 @@ public class XProcConfiguration {
             cfgProcessor = new Processor(licensed);
         }
 
-        String actualtype = cfgProcessor.getUnderlyingConfiguration().softwareEdition;
+        String actualtype = Configuration.softwareEdition;
         if ((proctype != null) && !"he".equals(proctype) && (!actualtype.toLowerCase().equals(proctype))) {
             System.err.println("Failed to obtain " + proctype.toUpperCase() + " processor; using " + actualtype + " instead.");
         }
@@ -245,6 +250,7 @@ public class XProcConfiguration {
         xpointerOnText = "true".equals(System.getProperty("com.xmlcalabash.xpointer-on-text", ""+xpointerOnText));
         transparentJSON = "true".equals(System.getProperty("com.xmlcalabash.transparent-json", ""+transparentJSON));
         jsonFlavor = System.getProperty("com.xmlcalabash.json-flavor", jsonFlavor);
+        useXslt10 = "true".equals(System.getProperty("com.xmlcalabash.use-xslt-10", ""+useXslt10));
         entityResolver = System.getProperty("com.xmlcalabash.entity-resolver", entityResolver);
         uriResolver = System.getProperty("com.xmlcalabash.uri-resolver", uriResolver);
         errorListener = System.getProperty("com.xmlcalabash.error-listener", errorListener);
@@ -370,6 +376,8 @@ public class XProcConfiguration {
                     parseSendMail(node);
                 } else if ("saxon-configuration-property".equals(localName)) {
                     saxonConfigurationProperty(node);
+                } else if ("pipeline-loader".equals(localName)) {
+                    pipelineLoader(node);
                 } else {
                     throw new XProcException(doc, "Unexpected configuration option: " + localName);
                 }
@@ -505,6 +513,8 @@ public class XProcConfiguration {
             if (! JSONtoXML.knownFlavor(jsonFlavor)) {
                 throw new XProcException("Unrecognized JSON flavor: " + jsonFlavor);
             }
+        } else if ("use-xslt-1.0".equals(name) || "use-xslt-10".equals(name)) {
+            useXslt10 = "true".equals(value);
         } else {
             throw new XProcException("Unrecognized extension in configuration: " + name);
         }
@@ -550,9 +560,9 @@ public class XProcConfiguration {
         }
 
         if ("boolean".equals(type)) {
-            valueObj = new Boolean("true".equals(value));
+            valueObj = "true".equals(value);
         } else if ("integer".equals(type)) {
-            valueObj = new Integer(Integer.parseInt(value));
+            valueObj = Integer.parseInt(value);
         } else {
             valueObj = value;
         }
@@ -561,6 +571,24 @@ public class XProcConfiguration {
             cfgProcessor.setConfigurationProperty(key, valueObj);
         } catch (Exception e) {
             throw new XProcException(e);
+        }
+    }
+
+    private void pipelineLoader(XdmNode node) {
+        String data = node.getAttributeValue(_data);
+        String href = node.getAttributeValue(_href);
+        String loader = node.getAttributeValue(_loader);
+        if ((data == null && href == null) || (data != null && href != null)) {
+            throw new XProcException("Configuration option 'pipeline-loader' must have one of 'href' or 'data'");
+        }
+        if (loader == null) {
+            throw new XProcException("Configuration option 'pipeline-loader' must specify a 'loader'");
+        }
+
+        if (data == null) {
+            loaders.put("href:" + href, loader);
+        } else {
+            loaders.put("data:" + data, loader);
         }
     }
 

@@ -43,6 +43,14 @@ is enabled, “<literal>false</literal>” otherwise.
 </para>
 </listitem>
 </varlistentry>
+<varlistentry><term>cx:use-xslt-1.0</term>
+<listitem>
+<para>Returns “<literal>true</literal>” if the
+<link linkend="ext.use-xslt-10">Use XSLT 1.0</link> extension
+is enabled, “<literal>false</literal>” otherwise.
+</para>
+</listitem>
+</varlistentry>
 <varlistentry><term>cx:saxon-version</term>
 <listitem>
 <para>Returns the version of the underlying Saxon processor.
@@ -292,6 +300,14 @@ configuration option.</para>
 <para>A pipeline can determine the current flavor with the
 <function>p:system-property</function> function using the argument
 <literal>cx:json-flavor</literal>.</para>
+</section>
+
+<section xml:id="ext.use-xslt-10">
+<title>Use XSLT 1.0</title>
+
+<para>The “use XSLT 1.0” extension enables processing of XSLT 1.0 stylesheets
+with an XSLT 1.0 processor. See <xref linkend="p-xslt-ext"/> in
+<xref linkend="p-xslt"/>.</para>
 </section>
 </section>
 

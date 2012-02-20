@@ -321,7 +321,7 @@ for all URIs accessed.</para>
   <entry><literal>-X</literal><replaceable>extname</replaceable></entry>
 </row>
 <row>
-  <entry morerows="2" valign="top">Java system properties:</entry>
+  <entry morerows="4" valign="top">Java system properties:</entry>
   <entry><property>com.xmlcalabash.general-values</property>=<replaceable>boolean</replaceable></entry>
 </row>
 <row>
@@ -331,16 +331,25 @@ for all URIs accessed.</para>
   <entry><property>com.xmlcalabash.transparent-json</property>=<replaceable>boolean</replaceable></entry>
 </row>
 <row>
+  <entry><property>com.xmlcalabash.json-flavor</property>=<replaceable>flavor</replaceable></entry>
+</row>
+<row>
+  <entry><property>com.xmlcalabash.use-xslt-10</property>=<replaceable>boolean</replaceable></entry>
+</row>
+<row>
   <entry>XML configuration:</entry>
-  <entry><tag class="emptytag">cc:extension <tag class="attribute">name</tag>="<tag class="attvalue"><replaceable>extname</replaceable></tag>" <tag class="attribute">value</tag>="<tag class="attvalue"><replaceable>boolean</replaceable></tag>"</tag></entry>
+  <entry><tag class="emptytag">cc:extension <tag class="attribute">name</tag>="<tag class="attvalue"><replaceable>extensions-names</replaceable></tag>" <tag class="attribute">value</tag>="<tag class="attvalue"><replaceable>boolean</replaceable></tag>"</tag></entry>
 </row>
 </tbody>
 </tgroup>
 </informaltable>
 
-<para>Valid extension names are “<literal>general-values</literal>”,
-“<literal>xpointer-on-text</literal>”,
-and “<literal>transparent-json</literal>”.</para>
+<para>Valid extension names are
+“<literal linkend="ext.general-values">general-values</literal>”,
+“<literal linkend="ext.xpointer-on-text">xpointer-on-text</literal>”,
+“<literal linkend="ext.transparent-json">transparent-json</literal>”,
+“<literal>json-flavor</literal>”,
+and “<literal linkend="ext.use-xslt-10">use-xslt-10</literal>”.</para>
 
 </section>
 

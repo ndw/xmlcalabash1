@@ -31,6 +31,8 @@ import com.xmlcalabash.functions.SystemProperty;
 import com.xmlcalabash.functions.ValueAvailable;
 import com.xmlcalabash.functions.VersionAvailable;
 import com.xmlcalabash.functions.XPathVersionAvailable;
+import com.xmlcalabash.io.ReadableData;
+import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.runtime.XLibrary;
 import com.xmlcalabash.runtime.XPipeline;
 import com.xmlcalabash.runtime.XRootStep;
@@ -39,6 +41,7 @@ import com.xmlcalabash.util.DefaultXProcConfigurer;
 import com.xmlcalabash.util.DefaultXProcMessageListener;
 import com.xmlcalabash.util.JSONtoXML;
 import com.xmlcalabash.util.StepErrorListener;
+import com.xmlcalabash.util.TreeWriter;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
 import net.sf.saxon.s9api.Processor;
@@ -94,6 +97,7 @@ public class XProcRuntime {
     private boolean allowXPointerOnText = true;
     private boolean transparentJSON = false;
     private String jsonFlavor = JSONtoXML.MARKLOGIC;
+    private boolean useXslt10 = false;
     private XProcData xprocData = null;
     private Logger log = null;
     private XProcMessageListener msgListener = null;
@@ -165,6 +169,7 @@ public class XProcRuntime {
         allowXPointerOnText = config.xpointerOnText;
         transparentJSON = config.transparentJSON;
         jsonFlavor = config.jsonFlavor;
+        useXslt10 = config.useXslt10;
 
         for (String className : config.extensionFunctions) {
             try {
@@ -189,7 +194,7 @@ public class XProcRuntime {
         uriResolver = runtime.uriResolver;
         config = runtime.config;
         staticBaseURI = runtime.staticBaseURI;
-        allowGeneralExpressions = runtime.allowGeneralExpressions;
+        useXslt10 = runtime.useXslt10;
         log = runtime.log;
         msgListener = runtime.msgListener;
         standardLibrary = runtime.standardLibrary;
@@ -297,6 +302,10 @@ public class XProcRuntime {
 
     public String htmlParser() {
         return htmlParser;
+    }
+
+    public boolean getUseXslt10Processor() {
+        return useXslt10;
     }
 
     public void cache(XdmNode doc, URI baseURI) {
@@ -410,6 +419,14 @@ public class XProcRuntime {
 
     // FIXME: This design sucks
     public XPipeline load(String pipelineURI) throws SaxonApiException {
+        for (String map : config.loaders.keySet()) {
+            boolean data = map.startsWith("data:");
+            String pattern = map.substring(5);
+            if (pipelineURI.matches(pattern)) {
+                return runPipelineLoader(pipelineURI, config.loaders.get(map), data);
+            }
+        }
+
         try {
             return _load(pipelineURI);
         } catch (SaxonApiException sae) {
@@ -487,6 +504,14 @@ public class XProcRuntime {
 
     // FIXME: This design sucks
     public XLibrary loadLibrary(String libraryURI) throws SaxonApiException {
+        for (String map : config.loaders.keySet()) {
+            boolean data = map.startsWith("data:");
+            String pattern = map.substring(5);
+            if (libraryURI.matches(pattern)) {
+                return runLibraryLoader(libraryURI, config.loaders.get(map), data);
+            }
+        }
+
         try {
             return _loadLibrary(libraryURI);
         } catch (SaxonApiException sae) {
@@ -542,6 +567,47 @@ public class XProcRuntime {
         return xlibrary;
     }
 
+    private XPipeline runPipelineLoader(String pipelineURI, String loaderURI, boolean data) throws SaxonApiException {
+        XdmNode pipeDoc = runLoader(pipelineURI, loaderURI, data);
+        return use(pipeDoc);
+    }
+
+    private XLibrary runLibraryLoader(String pipelineURI, String loaderURI, boolean data) throws SaxonApiException {
+        XdmNode libDoc = runLoader(pipelineURI, loaderURI, data);
+        return useLibrary(libDoc);
+    }
+    
+    private XdmNode runLoader(String pipelineURI, String loaderURI, boolean data) throws SaxonApiException {
+        XPipeline loader = null;
+
+        try {
+            loader = _load(loaderURI);
+        } catch (SaxonApiException sae) {
+            error(sae);
+            throw sae;
+        } catch (XProcException xe) {
+            error(xe);
+            throw xe;
+        }
+
+        XdmNode pipeDoc = null;
+        if (data) {
+            ReadableData rdata = new ReadableData(this, XProcConstants.c_result, getStaticBaseURI().resolve(pipelineURI).toASCIIString(), "text/plain");
+            pipeDoc = rdata.read();
+        } else {
+            pipeDoc = parse(pipelineURI, getStaticBaseURI().toASCIIString());
+        }
+
+        loader.clearInputs("source");
+        loader.writeTo("source", pipeDoc);
+        loader.run();
+        ReadablePipe xformed = loader.readFrom("result");
+        pipeDoc = xformed.read();
+
+        reset();
+        return pipeDoc;
+    }
+    
     public Processor getProcessor() {
         return processor;        
     }
@@ -596,29 +662,6 @@ public class XProcRuntime {
         }
     }
 
-    /*
-    public void makeBuiltinsExplicit() {
-        explicitDeclarations = true;
-    }
-
-    public void clearBuiltins() {
-        if (explicitDeclarations) {
-            throw XProcException.staticError(50);
-        }
-
-        Vector<QName> delete = new Vector<QName> ();
-        for (QName type : declaredSteps.keySet()) {
-            if (XProcConstants.NS_XPROC.equals(type.getNamespaceURI())) {
-                delete.add(type);
-            }
-        }
-
-        for (QName type : delete) {
-            declaredSteps.remove(type);
-        }
-    }
-    */
-    
     public QName getErrorCode() {
         return errorCode;
     }
