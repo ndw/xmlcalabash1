@@ -1,21 +1,30 @@
 <j:object xmlns:j="http://www.xmlsh.org/jxml">
+   <j:member name="&lt;crazy&amp;key&gt;">
+      <j:string>sane value</j:string>
+   </j:member>
    <j:member name="">
       <j:string>empty string</j:string>
    </j:member>
    <j:member name="id">
       <j:string>1234</j:string>
    </j:member>
+   <j:member name="'single quotes'">
+      <j:string>squoted key</j:string>
+   </j:member>
    <j:member name="1foo$bar">
-      <j:string>1foo$bar</j:string>
+      <j:string>key starts with non-name-start char</j:string>
    </j:member>
    <j:member name="x:html">
-      <j:string>x:html</j:string>
+      <j:string>key with colon</j:string>
    </j:member>
    <j:member name="isnull">
       <j:null/>
    </j:member>
    <j:member name="foo$bar">
-      <j:string>foo$bar</j:string>
+      <j:string>key contains non-name char</j:string>
+   </j:member>
+   <j:member name="&#34;double quotes&#34;">
+      <j:string>dquoted key</j:string>
    </j:member>
    <j:member name="image">
       <j:object>

@@ -263,6 +263,9 @@ supported for this format.</para>
 </varlistentry>
 </variablelist>
 
+<para>Note that key values in a JSON object are considered unordered. There's
+no way to preserve the order of keys when switching between representations.</para>
+
 <para>The transparent JSON extension can be enabled in three ways:</para>
 
 <orderedlist>
@@ -296,6 +299,10 @@ configuration option.</para>
 configuration option.</para>
 </listitem>
 </orderedlist>
+
+<para>The flavors are “<literal>marklogic</literal>”, “<literal>jsonx</literal>”,
+“<literal>jxml</literal>”, “<literal>calabash</literal>”, and
+“<literal>calabash-deprecated</literal>”.</para>
 
 <para>A pipeline can determine the current flavor with the
 <function>p:system-property</function> function using the argument
