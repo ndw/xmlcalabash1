@@ -348,18 +348,7 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
     <copy todir="${install.dir}">
       <fileset file="docs/README"/>
     </copy>
-    <jar destfile="${install.dir}/calabash.jar">
-      <manifest>
-        <attribute name="Built-By" value="${built.by}"/>
-        <attribute name="Implementation-Vendor" value="${implementation.vendor}"/>
-        <attribute name="Implementation-Title" value="${implementation.title}"/>
-        <attribute name="Implementation-Version" value="${dist-version}"/>
-        <attribute name="Main-Class" value="com.xmlcalabash.drivers.Main"/>
-        <attribute name="Class-Path" value="${run.classpath}"/>
-      </manifest>
-
-      <fileset dir="${build.dir}"/>
-    </jar>
+    <copy todir="${install.dir}" file="calabash.jar"/>
 
     <copy todir="${install.dir}/lib">
       <fileset file="lib/commons*.jar"/>
