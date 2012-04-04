@@ -71,27 +71,24 @@ public class XSLFormatter extends DefaultStep {
         foClasses.add("com.xmlcalabash.util.FoFOP");
 
         FoProcessor provider = null;
+        Throwable pexcept = null;
         for (String className : foClasses) {
             if (provider == null) {
                 try {
                     provider = (FoProcessor) Class.forName(className).newInstance();
                     provider.initialize(runtime,step,options);
                 } catch (NoClassDefFoundError ncdfe) {
-                    if (runtime.getDebug()) {
-                        ncdfe.printStackTrace();
-                    }
+                    pexcept = ncdfe;
                     provider = null;
                 } catch (Exception e) {
-                    if (runtime.getDebug()) {
-                        e.printStackTrace();
-                    }
+                    pexcept = e;
                     provider = null;
                 }
             }
         }
 
         if (provider == null) {
-            throw new XProcException(step.getNode(), "Failed to instantiate FO provider");
+            throw new XProcException(step.getNode(), "Failed to instantiate FO provider", pexcept);
         }
 
         String contentType = null;
