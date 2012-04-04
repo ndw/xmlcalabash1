@@ -72,21 +72,28 @@ public class XProcURIResolver implements URIResolver, EntityResolver {
     public Source resolve(String href, String base) throws TransformerException {
         runtime.finest(null,null,"URIResolver(" + href + "," + base + ")");
 
-        try {
-            URI baseURI = new URI(base);
-            String uri = baseURI.resolve(href).toASCIIString();
-            if (cache.containsKey(uri)) {
-                runtime.finest(null ,null,"Returning cached document.");
-                return cache.get(uri).asSource();
+        String uri = null;
+        if (base == null) {
+            try {
+                URL url = new URL(href);
+                uri = url.toURI().toASCIIString();
+            } catch (MalformedURLException mue) {
+                runtime.finest(null,null,"MalformedURLException on " + href);
+            } catch (URISyntaxException use) {
+                runtime.finest(null,null,"URISyntaxException on " + href);
             }
+        } else {
+            try {
+                URI baseURI = new URI(base);
+                uri = baseURI.resolve(href).toASCIIString();
+            } catch (URISyntaxException use) {
+                runtime.finest(null,null,"URISyntaxException resolving base and href: " + base + " : " + href);
+            }
+        }
 
-            /* This is clearly not right because with it you can't even load pipelines from the local disk...
-            if (runtime.getSafeMode() && uri.startsWith("file:")) {
-                throw XProcException.dynamicError(21);
-            }
-            */
-        } catch (URISyntaxException use) {
-            runtime.finest(null,null,"URISyntaxException resolving base and href?");
+        if (cache.containsKey(uri)) {
+            runtime.finest(null ,null,"Returning cached document.");
+            return cache.get(uri).asSource();
         }
 
         if (uriResolver != null) {
@@ -94,7 +101,11 @@ public class XProcURIResolver implements URIResolver, EntityResolver {
 
             // This is an attempt to deal with jar: URIs, pipelines run from inside jar files.
             try {
-                absoluteURI = new URL(new URL(base), href);
+                if (base == null) {
+                    absoluteURI = new URL(href);
+                } else {
+                    absoluteURI = new URL(new URL(base), href);
+                }
             } catch (MalformedURLException mue) {
                 throw new XProcException(mue);
             }
