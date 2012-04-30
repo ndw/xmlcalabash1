@@ -129,7 +129,7 @@
 <p:declare-step type="cxf:copy">
    <p:output port="result" primary="false"/>
    <p:option name="href" required="true" cx:type="xsd:anyURI"/>
-   <p:option name="target" required="true" cx:type="xsd:boolean"/>
+   <p:option name="target" required="true" cx:type="xsd:anyURI"/>
    <p:option name="fail-on-error" select="'true'" cx:type="xsd:boolean"/>
 </p:declare-step>
 
@@ -162,7 +162,7 @@
 <p:declare-step type="cxf:move">
    <p:output port="result" primary="false"/>
    <p:option name="href" required="true" cx:type="xsd:anyURI"/>
-   <p:option name="target" required="true" cx:type="xsd:boolean"/>
+   <p:option name="target" required="true" cx:type="xsd:anyURI"/>
    <p:option name="fail-on-error" select="'true'" cx:type="xsd:boolean"/>
 </p:declare-step>
 
@@ -269,7 +269,7 @@
 <p:declare-step type="pxf:copy">
    <p:output port="result" primary="false"/>
    <p:option name="href" required="true" cx:type="xsd:anyURI"/>
-   <p:option name="target" required="true" cx:type="xsd:boolean"/>
+   <p:option name="target" required="true" cx:type="xsd:anyURI"/>
    <p:option name="fail-on-error" select="'true'" cx:type="xsd:boolean"/>
 </p:declare-step>
 
@@ -302,7 +302,7 @@
 <p:declare-step type="pxf:move">
    <p:output port="result" primary="false"/>
    <p:option name="href" required="true" cx:type="xsd:anyURI"/>
-   <p:option name="target" required="true" cx:type="xsd:boolean"/>
+   <p:option name="target" required="true" cx:type="xsd:anyURI"/>
    <p:option name="fail-on-error" select="'true'" cx:type="xsd:boolean"/>
 </p:declare-step>
 
