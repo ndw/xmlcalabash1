@@ -45,6 +45,7 @@ import java.util.logging.Logger;
  * @author ndw
  */
 public class ReadableData implements ReadablePipe {
+    protected String contentType = null;
     private Logger logger = Logger.getLogger(this.getClass().getName());
     public static final QName _contentType = new QName("","content-type");
     public static final QName c_contentType = new QName("c",XProcConstants.NS_XPROC_STEP, "content-type");
@@ -53,7 +54,7 @@ public class ReadableData implements ReadablePipe {
     private int pos = 0;
     private QName wrapper = null;
     private String uri = null;
-    private String contentType = null;
+    private String serverContentType = null;
     private XProcRuntime runtime = null;
     private DocumentSequence documents = null;
     private Step reader = null;
@@ -64,30 +65,31 @@ public class ReadableData implements ReadablePipe {
         this.uri = uri;
         this.wrapper = wrapper;
         this.contentType = contentType;
+    }
+
+    private DocumentSequence ensureDocuments() {
+        if (documents != null) {
+            return documents;
+        }
+
         documents = new DocumentSequence(runtime);
+
+        if (uri == null) {
+            return documents;
+        }
 
         String userContentType = parseContentType(contentType);
         String userCharset = parseCharset(contentType);
-
-        if (uri == null) {
-            return;
-        }
-
-        URI dataURI;
-        try {
-            dataURI = new URI(uri);
-        } catch (URISyntaxException use) {
-            throw new XProcException(use);
-        }
+        URI dataURI = getDataUri(uri);
 
         TreeWriter tree = new TreeWriter(runtime);
         tree.startDocument(dataURI);
 
+        InputStream stream;
+
         try {
-            URL url = dataURI.toURL();
-            URLConnection connection = url.openConnection();
-            InputStream stream = connection.getInputStream();
-            String serverContentType = connection.getContentType();
+            stream = getStream(dataURI);
+            String serverContentType = getContentType();
 
             if ("content/unknown".equals(serverContentType) && contentType != null) {
                 // pretend...
@@ -109,7 +111,7 @@ public class ReadableData implements ReadablePipe {
             // FIXME: provide some way to override this!!!
 
             String charset = serverCharset;
-            if ("file".equals(url.getProtocol())
+            if ("file".equals(dataURI.getScheme())
                     && serverCharset == null
                     && serverBaseContentType.equals(userContentType)) {
                 charset = userCharset;
@@ -199,6 +201,7 @@ public class ReadableData implements ReadablePipe {
         tree.endDocument();
 
         documents.add(tree.getResult());
+        return documents;
     }
 
     public void canReadSequence(boolean sequence) {
@@ -218,7 +221,8 @@ public class ReadableData implements ReadablePipe {
     }
 
     public boolean moreDocuments() {
-        return pos < documents.size();
+        DocumentSequence docs = ensureDocuments();
+        return pos < docs.size();
     }
 
     public boolean closed() {
@@ -226,19 +230,46 @@ public class ReadableData implements ReadablePipe {
     }
 
     public int documentCount() {
-        return documents.size();
+        DocumentSequence docs = ensureDocuments();
+        return docs.size();
     }
 
     public DocumentSequence documents() {
-        return documents;
+        return ensureDocuments();
     }
 
     public XdmNode read() throws SaxonApiException {
-        XdmNode doc = documents.get(pos++);
+        DocumentSequence docs = ensureDocuments();
+        XdmNode doc = docs.get(pos++);
         if (reader != null) {
             runtime.finest(null, reader.getNode(), reader.getName() + " read '" + (doc == null ? "null" : doc.getBaseURI()) + "' from " + this);
         }
         return doc;
+    }
+
+    // =======================================================================
+
+    protected URI getDataUri(String uri) {
+        try {
+            return new URI(uri);
+        } catch (URISyntaxException use) {
+            throw new XProcException(use);
+        }
+    }
+
+    protected InputStream getStream(URI uri) {
+        try {
+            URL url = uri.toURL();
+            URLConnection connection = url.openConnection();
+            serverContentType = connection.getContentType();
+            return connection.getInputStream();
+        } catch (IOException ioe) {
+            throw new XProcException(XProcConstants.dynamicError(29), ioe);
+        }
+    }
+
+    protected String getContentType() {
+        return serverContentType;
     }
 
     // =======================================================================

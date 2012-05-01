@@ -43,11 +43,11 @@ import java.util.Vector;
  * @author ndw
  */
 public class ReadableDocument implements ReadablePipe {
+    protected DocumentSequence documents = null;
+    protected String uri = null;
+    protected XProcRuntime runtime = null;
     private int pos = 0;
-    private DocumentSequence documents = null;
     private String base = null;
-    private String uri = null;
-    private XProcRuntime runtime = null;
     private XdmNode node = null;
     private boolean readDoc = false;
     private Step reader = null;
@@ -125,7 +125,7 @@ public class ReadableDocument implements ReadablePipe {
         return doc;
     }
 
-    private void readDoc() {
+    protected void readDoc() {
         XdmNode doc;
 
         readDoc = true;
