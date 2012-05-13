@@ -33,33 +33,42 @@
   </target>
 
 
-  <target name="use.without" description="Use without any" depends="use.init">
-    <calabash/>
+  <target name="use.basic" description="Use without 'in', 'out', and 'pipeline'." depends="use.init">
+    <calabash in="in.xml" out="out1.xml" pipeline="pipeline.xpl"/>
   </target>
 
-  <target name="use.message" description="Use with attribute 'message'" depends="use.init">
-    <calabash message="attribute-text"/>
+  <target name="use.in2" description="Use with different input." depends="use.init">
+    <calabash in="in2.xml" out="out2.xml" pipeline="pipeline.xpl" />
   </target>
 
-  <target name="use.fail" description="Use with attribute 'fail'" depends="use.init">
-    <calabash fail="true"/>
+  <target name="use.inport" description="Use with bogus 'inport'." depends="use.init">
+    <calabash in="in.xml" out="out3.xml" inport="bogus" pipeline="pipeline.xpl" />
   </target>
 
-  <target name="use.nestedText" description="Use with nested text" depends="use.init">
-    <calabash>nested-text</calabash>
+  <target name="use.inport2" description="Use with real 'inport' value." depends="use.init">
+    <calabash in="in.xml" inport="source" out="out4.xml" pipeline="pipeline.xpl" />
   </target>
 
-  <target name="use.nestedElement" description="Use with nested 'message'" depends="use.init">
-    <calabash>
-      <message msg="Nested Element 1"/>
-      <message msg="Nested Element 2"/>
+  <target name="use.outport" description="Use with bogus 'outport'." depends="use.init">
+    <calabash in="in.xml" out="out5.xml" outport="bogus" pipeline="pipeline.xpl" />
+  </target>
+
+  <target name="use.outport2" description="Use with real 'outport' value." depends="use.init">
+    <calabash in="in.xml" out="out6.xml" outport="result" pipeline="pipeline.xpl" />
+  </target>
+
+  <target name="use.nestedPipeline" description="Use with nested 'pipeline'" depends="use.init">
+    <calabash in="in.xml" out="out7.xml">
+      <pipeline>
+	<file file="pipeline.xpl" />
+      </pipeline>
     </calabash>
   </target>
 
 
   <target name="use"
-	  description="Try all (w/out use.fail)"
-	  depends="use.without,use.message,use.nestedText,use.nestedElement"
+	  description="Try all"
+	  depends="use.basic,use.in2,use.inport2,use.outport,use.outport2,use.nestedPipeline"
 	  />
 
 
