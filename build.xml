@@ -118,7 +118,7 @@
 
     <javac destdir="${build.dir}"
 	   classpathref="build.classpath"
-           includeantruntime="false">
+           includeantruntime="true">
       <!--
       <compilerarg value="-Xlint"/>
       -->

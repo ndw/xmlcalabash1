@@ -31,13 +31,6 @@ import javax.xml.transform.sax.SAXSource;
  */
 public class CalabashTask extends Task {
 
-    private Hashtable<String, Vector<XdmNode>> inputs = new Hashtable<String, Vector<XdmNode>>();
-    private Hashtable<String, Vector<XdmNode>> outputs = new Hashtable<String, Vector<XdmNode>>();
-    private Hashtable<QName, String> parameters = new Hashtable<QName, String>();
-    private Hashtable<QName, String> options = new Hashtable<QName, String>();
-    private XProcRuntime runtime = null;
-
-
     /** The message to print. As attribute. */
     String message;
     public void setMessage(String msg) {
@@ -59,21 +52,7 @@ public class CalabashTask extends Task {
     /** Do the work. */
     public void execute() {
         XProcConfiguration config = new XProcConfiguration("he", false);
-        runtime = new XProcRuntime(config);
-
-	try {
-	    InputSource isource = new InputSource("in.xml");
-	    XMLReader reader = XMLReaderFactory.createXMLReader();
-	    reader.setEntityResolver(runtime.getResolver());
-	    SAXSource source = new SAXSource(reader, isource);
-	    DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
-	    builder.setLineNumbering(true);
-	    builder.setDTDValidation(false);
-	    XdmNode doc = builder.build(source);
-	    XdmNode root = S9apiUtils.getDocumentElement(doc);
-	} catch (Exception sae) {
-	    throw new BuildException("Fail requested.");
-	}
+        XProcRuntime runtime = new XProcRuntime(config);
 
 	try {
 	    XPipeline pipeline = runtime.load("pipeline.xpl");
