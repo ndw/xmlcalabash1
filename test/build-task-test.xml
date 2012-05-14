@@ -34,41 +34,63 @@
 
 
   <target name="use.basic" description="Use without 'in', 'out', and 'pipeline'." depends="use.init">
-    <calabash in="in.xml" out="out1.xml" pipeline="pipeline.xpl"/>
+    <calabash in="in.xml" out="out1.xml" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
+    </calabash>
   </target>
 
   <target name="use.in2" description="Use with different input." depends="use.init">
-    <calabash in="in2.xml" out="out2.xml" pipeline="pipeline.xpl" />
+    <calabash in="in2.xml" out="out2.xml" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
+    </calabash>
   </target>
 
   <target name="use.inport" description="Use with bogus 'inport'." depends="use.init">
-    <calabash in="in.xml" out="out3.xml" inport="bogus" pipeline="pipeline.xpl" />
+    <calabash in="in.xml" out="out3.xml" inport="bogus" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
+    </calabash>
   </target>
 
   <target name="use.inport2" description="Use with real 'inport' value." depends="use.init">
-    <calabash in="in.xml" inport="source" out="out4.xml" pipeline="pipeline.xpl" />
+    <calabash in="in.xml" inport="source" out="out4.xml" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
+    </calabash>
   </target>
 
   <target name="use.outport" description="Use with bogus 'outport'." depends="use.init">
-    <calabash in="in.xml" out="out5.xml" outport="bogus" pipeline="pipeline.xpl" />
+    <calabash in="in.xml" out="out5.xml" outport="bogus" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
+    </calabash>
   </target>
 
   <target name="use.outport2" description="Use with real 'outport' value." depends="use.init">
-    <calabash in="in.xml" out="out6.xml" outport="result" pipeline="pipeline.xpl" />
+    <calabash in="in.xml" out="out6.xml" outport="result" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
+    </calabash>
   </target>
 
   <target name="use.nestedPipeline" description="Use with nested 'pipeline'" depends="use.init">
     <calabash in="in.xml" out="out7.xml">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
       <pipeline>
 	<file file="pipeline.xpl" />
       </pipeline>
     </calabash>
   </target>
 
+  <target name="use.multiport1" description="Use with multiple input ports." depends="use.init">
+    <calabash in="doc.xml" out="out8.xml" pipeline="compare-001.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
+      <input port="alternate">
+	<file file="doc.xml" />
+      </input>
+    </calabash>
+  </target>
+
 
   <target name="use"
 	  description="Try all"
-	  depends="use.basic,use.in2,use.inport2,use.outport,use.outport2,use.nestedPipeline"
+	  depends="use.basic,use.in2,use.inport2,use.inport2,use.outport,use.outport2,use.nestedPipeline,use.multiport1"
 	  />
 
 

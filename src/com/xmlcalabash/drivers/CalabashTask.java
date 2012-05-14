@@ -10,7 +10,11 @@ import com.xmlcalabash.runtime.XPipeline;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
 import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.PropertyHelper;
+import org.apache.tools.ant.types.CommandlineJava;
+import org.apache.tools.ant.types.Environment;
 import org.apache.tools.ant.types.Mapper;
+import org.apache.tools.ant.types.PropertySet;
 import org.apache.tools.ant.types.ResourceCollection;
 import org.apache.tools.ant.types.Resource;
 import org.apache.tools.ant.types.resources.FileResource;
@@ -23,16 +27,24 @@ import net.sf.saxon.s9api.XdmNode;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.*;
 import org.xml.sax.InputSource;
 
 /**
  * Ant task to run Calabash.
+ *
+ * <p>Owes a lot to Ant's &lt;xslt> task, but this task can't become
+ * part of Ant because this task relies on Calabash, which is licensed
+ * under LGPL.
+ *
  * @author MenteaXML
  */
 public class CalabashTask extends Task {
 
+    private Vector<Input> inputs = new Vector<Input>();
+    private HashMap<String,Vector<Input>> inputsMap = new HashMap<String,Vector<Input>> ();
     /** Port of the pipeline input. As attribute. */
     private String inPort;
     public void setinPort(String port) {
@@ -116,11 +128,10 @@ public class CalabashTask extends Task {
     }
 
     /**
-     * Adds a collection of resources to style in addition to the
+     * Adds a collection of resources to process in addition to the
      * given file or the implicit fileset.
      *
      * @param rc the collection of resources to style
-     * @since Ant 1.7
      */
     public void add(ResourceCollection rc) {
         resources.add(rc);
@@ -167,6 +178,26 @@ public class CalabashTask extends Task {
         this.force = force;
     }
 
+    /**
+     * System properties to set during transformation.
+     */
+    private CommandlineJava.SysProperties sysProperties =
+        new CommandlineJava.SysProperties();
+
+    /**
+     * A system property to set during transformation.
+     */
+    public void addSysproperty(Environment.Variable sysp) {
+        sysProperties.addVariable(sysp);
+    }
+
+    /**
+     * A set of system properties to set during transformation.
+     */
+    public void addSyspropertyset(PropertySet sysp) {
+        sysProperties.addSyspropertyset(sysp);
+    }
+
 
 
     /** Do the work. */
@@ -198,10 +229,24 @@ public class CalabashTask extends Task {
 	    return;
 	}
 
-	// if we have an in file and out then process them
-	if (inResource != null && outResource != null) {
-	    process(inResource, outResource, usePipelineResource);
-	    return;
+	try {
+	    if (sysProperties.size() > 0) {
+		sysProperties.setSystem();
+	    }
+
+	    // if we have an in file and out then process them
+	    if (inResource != null && outResource != null) {
+		Input i = new Input();
+		i.setPort(inPort);
+		i.add(inResource);
+		xaddInput(i);
+		process(inputsMap, outResource, usePipelineResource);
+		return;
+	    }
+	} finally {
+            if (sysProperties.size() > 0) {
+                sysProperties.restoreSystem();
+            }
 	}
     }
 
@@ -213,44 +258,56 @@ public class CalabashTask extends Task {
      * @param pipeline the pipeline to use.
      * @exception BuildException if the processing fails.
      */
-    private void process(Resource in, Resource out, Resource pipelineResource) throws BuildException {
+    private void process(HashMap inputsMap, Resource out, Resource pipelineResource) throws BuildException {
 
 	long pipelineLastModified = pipelineResource.getLastModified();
-	log("In file " + in + " time: " + in.getLastModified(), Project.MSG_DEBUG);
+	//log("In file " + in + " time: " + in.getLastModified(), Project.MSG_DEBUG);
 	log("Out file " + out + " time: " + out.getLastModified(), Project.MSG_DEBUG);
 	log("Style file " + pipelineResource + " time: " + pipelineLastModified, Project.MSG_DEBUG);
-
+/*
 	if (!force && in.getLastModified() < out.getLastModified()
                     && pipelineLastModified < out.getLastModified()) {
 	    log("Skipping input file " + in + " because it is older than output file "
 		+ out + " and so is the stylesheet " + pipelineResource, Project.MSG_DEBUG);
 	    return;
 	}
-
-	log("Processing " + in + " to " + out, Project.MSG_INFO);
+*/
+	//log("Processing " + in + " to " + out, Project.MSG_INFO);
         XProcConfiguration config = new XProcConfiguration("he", false);
         XProcRuntime runtime = new XProcRuntime(config);
 
 	try {
 	    XPipeline pipeline =
 		runtime.load(pipelineResource.getName());
-	    XdmNode doc = runtime.parse(new InputSource(in.getInputStream()));
 
-            Set<String> ports = pipeline.getInputs();
-            for (String port : ports) {
-                if (inPort == null) {
-                    inPort = port;
-		} else if (!port.equals(inPort)) {
-		    log("You didn't specify any binding for the input port '" + port + "'.", Project.MSG_WARN);
+            Set<String> wantPorts = pipeline.getInputs();
+            Set<String> setPorts = inputsMap.keySet();
+            String defaultPort = null;
+	    for (String port : wantPorts) {
+                if (pipeline.getInput(port).getParameters()) {
+                    continue;
+                }
+		if (!setPorts.contains(port) && !pipeline.getInput(port).getParameters()) {
+                    if (defaultPort == null) {
+                        defaultPort = port;
+                        log("Binding default input port to '" + port + "'.", Project.MSG_INFO);
+                    } else {
+                        log("You didn't specify any binding for the input port '" + port + "'.", Project.MSG_WARN);
+                        continue;
+                    }
+                }
+                Vector<Input> portInputs = (Vector<Input>) inputsMap.get(port.equals(defaultPort) ? null : port);
+                for (Input in : portInputs) {
+                    Iterator<Resource> element = in.getResources().iterator();
+                    while (element.hasNext()) {
+                        Resource resource = element.next();
+                        log(resource.getName(), Project.MSG_INFO);
+                        InputStream is = resource.getInputStream();
+                        XdmNode doc = runtime.parse(new InputSource(resource.getInputStream()));
+                        pipeline.writeTo(port, doc);
+                    }
                 }
             }
-
-	    if (!ports.contains(inPort)) {
-		handleError("There is a binding for the port '" + inPort + "' but the pipeline declares no such port.");
-		return;
-	    }
-
-	    pipeline.writeTo(inPort, doc);
 	    pipeline.run();
 
             // Look for primary output port
@@ -352,5 +409,138 @@ public class CalabashTask extends Task {
             log("Caught an exception: " + ex, Project.MSG_WARN);
         }
     }
+
+    /**
+     * Add an instance of an pipeline input.
+     */
+    protected void xaddInput(Input i) {
+	String port = i.getPort();
+
+	if (!inputsMap.containsKey(port)) {
+	    inputsMap.put(port, new Vector<Input> ());
+	}
+        inputsMap.get(port).add(i);
+    }
+
+    /**
+     * Create an instance of an pipeline input for configuration by Ant.
+     *
+     * @return an instance of the Input class to be configured.
+     */
+    public void addConfiguredInput(Input i) {
+	xaddInput(i);
+    }
+
+    /**
+     * The Input inner class used to store pipeline inputs
+     */
+    public static class Input {
+        /** The input port */
+        private String port = null;
+
+        /** The input's resources */
+        private Union resources = new Union();
+
+        private Object ifCond;
+        private Object unlessCond;
+        private Project project;
+
+        /**
+         * Set the current project
+         *
+         * @input project the current project
+         */
+        public void setProject(Project project) {
+            this.project = project;
+        }
+
+        /**
+         * Set the input port.
+         *
+         * @input port the name of the port.
+         */
+        public void setPort(String port) {
+            this.port = port;
+        }
+
+	/**
+	 * Adds a collection of resources to process in addition to the
+	 * given file or the implicit fileset.
+	 *
+	 * @param rc the collection of resources to style
+	 */
+	public void add(ResourceCollection rc) {
+	    resources.add(rc);
+	}
+
+        /**
+         * Get the input port
+         *
+         * @return the input port name
+         */
+        public String getPort() throws BuildException {
+            return port;
+        }
+
+        /**
+         * Get the input's resources
+         *
+         * @return the input's resources
+         */
+        public Union getResources() {
+            return resources;
+        }
+
+        /**
+         * Set whether this input should be used.  It will be used if
+         * the expression evalutes to true or the name of a property
+         * which has been set, otherwise it won't.
+         * @input ifCond evaluated expression
+         */
+        public void setIf(Object ifCond) {
+            this.ifCond = ifCond;
+        }
+
+        /**
+         * Set whether this input should be used.  It will be used if
+         * the expression evalutes to true or the name of a property
+         * which has been set, otherwise it won't.
+         * @input ifProperty evaluated expression
+         */
+        public void setIf(String ifProperty) {
+            setIf((Object) ifProperty);
+        }
+
+        /**
+         * Set whether this input should NOT be used. It will not be
+         * used if the expression evaluates to true or the name of a
+         * property which has been set, otherwise it will be used.
+         * @input unlessCond evaluated expression
+         */
+        public void setUnless(Object unlessCond) {
+            this.unlessCond = unlessCond;
+        }
+
+        /**
+         * Set whether this input should NOT be used. It will not be
+         * used if the expression evaluates to true or the name of a
+         * property which has been set, otherwise it will be used.
+         * @input unlessProperty evaluated expression
+         */
+        public void setUnless(String unlessProperty) {
+            setUnless((Object) unlessProperty);
+        }
+
+        /**
+         * Ensures that the input passes the conditions placed
+         * on it with <code>if</code> and <code>unless</code> properties.
+         * @return true if the task passes the "if" and "unless" parameters
+         */
+        public boolean shouldUse() {
+            PropertyHelper ph = PropertyHelper.getPropertyHelper(project);
+            return ph.testIfCondition(ifCond)
+                && ph.testUnlessCondition(unlessCond);
+        }
+    } // Input
 
 }

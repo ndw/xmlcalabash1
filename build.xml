@@ -23,6 +23,8 @@
   <property name="submit.username" value="calabash"/>
   <property name="submit.password" value=""/>
 
+  <property name="javac.debug" value="true"/>
+
   <property name="izpack.dir" value="/Applications/IzPack"/>
 
   <available property="izpack.present"
@@ -118,7 +120,9 @@
 
     <javac destdir="${build.dir}"
 	   classpathref="build.classpath"
-           includeantruntime="true">
+           includeantruntime="true"
+	   debug="${javac.debug}"
+	   debuglevel="lines,vars,source">
       <!--
       <compilerarg value="-Xlint"/>
       -->
