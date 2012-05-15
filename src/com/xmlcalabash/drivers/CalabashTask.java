@@ -1,3 +1,21 @@
+/*
+ * CalabashTask.java
+ *
+ * Copyright 2012 Mentea.
+ * All rights reserved.
+ *
+ * The contents of this file are subject to the terms of either the GNU
+ * General Public License Version 2 only ("GPL") or the Common
+ * Development and Distribution License("CDDL") (collectively, the
+ * "License"). You may not use this file except in compliance with the
+ * License. You can obtain a copy of the License at
+ * https://xproc.dev.java.net/public/CDDL+GPL.html or
+ * docs/CDDL+GPL.txt in the distribution. See the License for the
+ * specific language governing permissions and limitations under the
+ * License. When distributing the software, include this License Header
+ * Notice in each file and include the License file at docs/CDDL+GPL.txt.
+ */
+
 package com.xmlcalabash.drivers;
 
 import com.xmlcalabash.core.XProcConfiguration;
@@ -43,8 +61,10 @@ import org.xml.sax.InputSource;
  */
 public class CalabashTask extends Task {
 
-    private Vector<Input> inputs = new Vector<Input>();
-    private HashMap<String,Vector<Input>> inputsMap = new HashMap<String,Vector<Input>> ();
+    /** Input ports and the resources associated with each. */
+    private HashMap<String,Union> inputsMap = new HashMap<String,Union> ();
+    /** Output ports and the resources associated with each. */
+    private HashMap<String,Union> outputsMap = new HashMap<String,Union> ();
     /** Port of the pipeline input. As attribute. */
     private String inPort;
     public void setinPort(String port) {
@@ -224,25 +244,29 @@ public class CalabashTask extends Task {
 	    handleError("input file " + inResource.getName() + " does not exist");
 	    return;
 	}
-	if (outResource == null) {
-	    handleError("'out' must be specified.");
-	    return;
-	}
 
-	try {
+        try {
 	    if (sysProperties.size() > 0) {
 		sysProperties.setSystem();
 	    }
 
 	    // if we have an in file and out then process them
-	    if (inResource != null && outResource != null) {
-		Input i = new Input();
-		i.setPort(inPort);
-		i.add(inResource);
-		xaddInput(i);
-		process(inputsMap, outResource, usePipelineResource);
+		if (inResource != null) {
+		    Port i = new Port();
+		    i.setPort(inPort);
+		    i.add(inResource);
+		    addConfiguredInput(i);
+		}
+		if (outResource != null) {
+		    Port o = new Port();
+		    o.setPort(outPort);
+		    o.add(outResource);
+		    addConfiguredOutput(o);
+		}
+            if (!inputsMap.isEmpty() || !outputsMap.isEmpty()) {
+		process(inputsMap, outputsMap, usePipelineResource);
 		return;
-	    }
+            }
 	} finally {
             if (sysProperties.size() > 0) {
                 sysProperties.restoreSystem();
@@ -253,17 +277,17 @@ public class CalabashTask extends Task {
     /**
      * Process the input file to the output file with the given pipeline.
      *
-     * @param inResource the input file to process.
-     * @param outFile the destination file.
-     * @param pipeline the pipeline to use.
+     * @param inputsMap the map of input ports to resources
+     * @param outputsMap the map of output ports to resources
+     * @param pipelineResource the pipeline to use.
      * @exception BuildException if the processing fails.
      */
-    private void process(HashMap inputsMap, Resource out, Resource pipelineResource) throws BuildException {
+    private void process(HashMap inputsMap, HashMap outputsMap, Resource pipelineResource) throws BuildException {
 
 	long pipelineLastModified = pipelineResource.getLastModified();
 	//log("In file " + in + " time: " + in.getLastModified(), Project.MSG_DEBUG);
-	log("Out file " + out + " time: " + out.getLastModified(), Project.MSG_DEBUG);
-	log("Style file " + pipelineResource + " time: " + pipelineLastModified, Project.MSG_DEBUG);
+	//log("Out file " + out + " time: " + out.getLastModified(), Project.MSG_DEBUG);
+	log("Pipeline file " + pipelineResource + " time: " + pipelineLastModified, Project.MSG_DEBUG);
 /*
 	if (!force && in.getLastModified() < out.getLastModified()
                     && pipelineLastModified < out.getLastModified()) {
@@ -280,51 +304,60 @@ public class CalabashTask extends Task {
 	    XPipeline pipeline =
 		runtime.load(pipelineResource.getName());
 
-            Set<String> wantPorts = pipeline.getInputs();
-            Set<String> setPorts = inputsMap.keySet();
-            String defaultPort = null;
-	    for (String port : wantPorts) {
+	    for (String port : pipeline.getInputs()) {
                 if (pipeline.getInput(port).getParameters()) {
                     continue;
                 }
-		if (!setPorts.contains(port) && !pipeline.getInput(port).getParameters()) {
-                    if (defaultPort == null) {
-                        defaultPort = port;
+		if (!inputsMap.containsKey(port) && !pipeline.getInput(port).getParameters()) {
+                    if (inputsMap.containsKey(null)) {
+                        inputsMap.put(port, inputsMap.remove(null));
                         log("Binding default input port to '" + port + "'.", Project.MSG_INFO);
                     } else {
                         log("You didn't specify any binding for the input port '" + port + "'.", Project.MSG_WARN);
                         continue;
                     }
                 }
-                Vector<Input> portInputs = (Vector<Input>) inputsMap.get(port.equals(defaultPort) ? null : port);
-                for (Input in : portInputs) {
-                    Iterator<Resource> element = in.getResources().iterator();
-                    while (element.hasNext()) {
-                        Resource resource = element.next();
-                        log(resource.getName(), Project.MSG_INFO);
-                        InputStream is = resource.getInputStream();
-                        XdmNode doc = runtime.parse(new InputSource(resource.getInputStream()));
-                        pipeline.writeTo(port, doc);
-                    }
+            }
+            
+	    for (String port : pipeline.getInputs()) {
+                if (inputsMap.containsKey(port)) {
+            Iterator<Resource> element = ((Union) inputsMap.get(port)).iterator();
+            while (element.hasNext()) {
+                Resource resource = element.next();
+                log(resource.getName(), Project.MSG_INFO);
+                InputStream is = resource.getInputStream();
+                XdmNode doc = runtime.parse(new InputSource(resource.getInputStream()));
+                pipeline.writeTo(port, doc);
+            }
                 }
             }
 	    pipeline.run();
 
             // Look for primary output port
+            String defaultOutput = null;
             for (String port : pipeline.getOutputs()) {
-                if (outPort == null) {
-                    outPort = port;
-		} else if (!port.equals(outPort)) {
-		    log("You didn't specify any binding for the output port '" + port + "', its output will be discarded.", Project.MSG_WARN);
-                }
+		if (!outputsMap.containsKey(port)) {
+		    if (outputsMap.containsKey(null)) {
+			outputsMap.put(port, outputsMap.remove(null));
+			log("Binding default output port to '" + port + "'.", Project.MSG_INFO);
+		    } else {
+			log("You didn't specify any binding for the output port '" + port + "': its output will be discarded.", Project.MSG_WARN);
+		    }
+		}
             }
 
             for (String port : pipeline.getOutputs()) {
                 String uri = null;
 
-                if (outPort.equals(port)) {
-                    uri = outResource.getName();
-                }
+                if (outputsMap.containsKey(port)) {
+                    Union resources = (Union) outputsMap.get(port);
+		    if (resources.size() != 1) {
+			handleError("The '" + port + "' output port must be specified with exactly one"
+                        + " nested resource.");
+		    }
+		    uri = ((Resource) resources.iterator().next()).getName();
+                    log("Writing port '" + port + "' to '" + uri + "'.", Project.MSG_INFO);
+               }
 
                 if (uri == null) {
                     // You didn't bind it, and it isn't going to stdout, so it's going into the bit bucket.
@@ -381,7 +414,7 @@ public class CalabashTask extends Task {
                 }
             }
 	} catch (Exception err) {
-	    handleError("Pipeline failed: " + err.toString());
+	   handleError("Pipeline failed: " + err.toString());
 	}
     }
 
@@ -411,30 +444,43 @@ public class CalabashTask extends Task {
     }
 
     /**
-     * Add an instance of an pipeline input.
+     * Work with an instance of an pipeline input already configured
+     * by Ant.
      */
-    protected void xaddInput(Input i) {
+    public void addConfiguredInput(Port i) {
+	if (!i.shouldUse()) {
+	    return;
+	}
+
 	String port = i.getPort();
 
 	if (!inputsMap.containsKey(port)) {
-	    inputsMap.put(port, new Vector<Input> ());
+	    inputsMap.put(port, new Union ());
 	}
-        inputsMap.get(port).add(i);
+        inputsMap.get(port).add(i.getResources());
     }
 
     /**
-     * Create an instance of an pipeline input for configuration by Ant.
-     *
-     * @return an instance of the Input class to be configured.
+     * Work with an instance of an pipeline output already configured
+     * by Ant.
      */
-    public void addConfiguredInput(Input i) {
-	xaddInput(i);
+    public void addConfiguredOutput(Port o) {
+	if (!o.shouldUse()) {
+	    return;
+	}
+
+	String port = o.getPort();
+
+	if (!outputsMap.containsKey(port)) {
+	    outputsMap.put(port, new Union ());
+	}
+        outputsMap.get(port).add(o.getResources());
     }
 
     /**
-     * The Input inner class used to store pipeline inputs
+     * The Port inner class used to represent input and output ports.
      */
-    public static class Input {
+    public static class Port {
         /** The input port */
         private String port = null;
 
@@ -541,6 +587,6 @@ public class CalabashTask extends Task {
             return ph.testIfCondition(ifCond)
                 && ph.testUnlessCondition(unlessCond);
         }
-    } // Input
+    } // Port
 
 }
