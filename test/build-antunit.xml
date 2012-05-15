@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="CalabashTask-antunit"
+	 basedir="."
+	 xmlns:au="antlib:org.apache.ant.antunit">
+
+  <dirname property="test.basedir" file="${ant.file.CalabashTask-antunit}"/>
+
+  <property name="antunit.home" value="/usr/local/src/apache-ant-antunit-1.2"/>
+
+  <taskdef 
+      uri="antlib:org.apache.ant.antunit"
+      resource="org/apache/ant/antunit/antlib.xml">
+    <classpath>
+      <pathelement location="${antunit.home}/ant-antunit-1.2.jar"/>
+    </classpath>
+  </taskdef>
+
+  <taskdef name="calabash"
+	   classname="com.xmlcalabash.drivers.CalabashTask"
+	   classpath="${test.basedir}/../calabash.jar"/>
+
+  <target name="antunit">
+    <au:antunit>
+      <file file="build-antunit.xml"/>
+      <au:plainlistener/>
+    </au:antunit>
+  </target>
+
+  <target name="testBasic" description="Use without 'in', 'out', and 'pipeline'.">
+    <calabash in="in.xml" out="out1.xml" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
+    </calabash>
+  </target>
+
+  <target name="testIn2" description="Use with different input.">
+    <calabash in="in2.xml" out="out2.xml" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
+    </calabash>
+  </target>
+
+  <target name="testInport" description="Use with bogus 'inport'.">
+    <au:expectfailure expectedmessage="0 documents appear on the 'source' port.">
+      <calabash in="in.xml" out="out3.xml" inport="bogus" pipeline="pipeline.xpl">
+	<sysproperty key="com.xmlcalabash.phonehome" value="false"/>
+      </calabash>
+    </au:expectfailure>
+  </target>
+
+  <target name="testInport2" description="Use with real 'inport' value.">
+    <calabash in="in.xml" inport="source" out="out4.xml" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
+    </calabash>
+  </target>
+
+  <target name="testOutport" description="Use with bogus 'outport'.">
+    <calabash in="in.xml" out="out5.xml" outport="bogus" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
+    </calabash>
+  </target>
+
+  <target name="testOutport2" description="Use with real 'outport' value.">
+    <calabash in="in.xml" out="out6.xml" outport="result" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
+    </calabash>
+  </target>
+
+  <target name="testOutport3" description="Use with real 'outport' value.">
+    <calabash in="in.xml" outport="result" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
+      <output>
+	<file file="out9.xml" />
+      </output>
+    </calabash>
+  </target>
+
+  <target name="testOutport4" description="Use with real 'outport' value.">
+    <calabash in="in.xml" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
+      <output port="result">
+	<file file="out10.xml" />
+      </output>
+    </calabash>
+  </target>
+
+  <target name="testNestedPipeline" description="Use with nested 'pipeline'">
+    <calabash in="in.xml" out="out7.xml">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
+      <pipeline>
+	<file file="pipeline.xpl" />
+      </pipeline>
+    </calabash>
+  </target>
+
+  <target name="TestMultiport1" description="Use with multiple input ports.">
+    <calabash in="doc.xml" out="out8.xml" pipeline="compare-001.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
+      <input port="alternate">
+	<file file="doc.xml" />
+      </input>
+    </calabash>
+  </target>
+
+</project>
