@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <project name="CalabashTask-antunit"
 	 basedir="."
+	 default="antunit"
 	 xmlns:au="antlib:org.apache.ant.antunit">
 
   <dirname property="test.basedir" file="${ant.file.CalabashTask-antunit}"/>
@@ -64,6 +65,24 @@
     </calabash>
   </target>
 
+  <target name="testNestedPipeline" description="Use with nested 'pipeline'">
+    <calabash in="in.xml" out="out7.xml">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
+      <pipeline>
+	<file file="pipeline.xpl" />
+      </pipeline>
+    </calabash>
+  </target>
+
+  <target name="TestMultiport1" description="Use with multiple input ports.">
+    <calabash in="doc.xml" out="out8.xml" pipeline="compare-001.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
+      <input port="alternate">
+	<file file="doc.xml" />
+      </input>
+    </calabash>
+  </target>
+
   <target name="testOutport3" description="Use with real 'outport' value.">
     <calabash in="in.xml" outport="result" pipeline="pipeline.xpl">
       <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
@@ -82,21 +101,48 @@
     </calabash>
   </target>
 
-  <target name="testNestedPipeline" description="Use with nested 'pipeline'">
-    <calabash in="in.xml" out="out7.xml">
+  <target name="testNestedInput1" description="Use with nested input port.">
+    <calabash out="out11.xml" pipeline="pipeline.xpl">
       <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
-      <pipeline>
-	<file file="pipeline.xpl" />
-      </pipeline>
+      <input port="source">
+	<file file="in.xml" />
+      </input>
     </calabash>
   </target>
 
-  <target name="TestMultiport1" description="Use with multiple input ports.">
-    <calabash in="doc.xml" out="out8.xml" pipeline="compare-001.xpl">
+  <target name="testNestedInput2" description="Use with nested input port.">
+    <calabash out="out12.xml" pipeline="pipeline.xpl">
       <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
+      <input>
+	<file file="in.xml" />
+      </input>
+    </calabash>
+  </target>
+
+  <target name="testMultiport2" description="Use with multiple input ports.">
+    <calabash out="out13.xml" pipeline="compare-001.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
+      <input port="source">
+	<file file="doc.xml" />
+      </input>
       <input port="alternate">
 	<file file="doc.xml" />
       </input>
+    </calabash>
+  </target>
+
+  <target name="testIncludes1" description="Use with 'includes' value.">
+    <calabash includes="in.xml" outport="result" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
+      <output>
+	<file file="out14.xml" />
+      </output>
+    </calabash>
+  </target>
+
+  <target name="testIncludes2" description="Use with 'includes' value.">
+    <calabash includes="in*.xml" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
     </calabash>
   </target>
 
