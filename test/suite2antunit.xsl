@@ -71,6 +71,7 @@
 	indent="yes">
     <project name="CalabashTask-antunit"
 	     basedir="."
+	     default="antunit"
 	     xmlns:au="antlib:org.apache.ant.antunit">
 
       <dirname property="test.basedir" file="${{ant.file.CalabashTask-antunit}}"/>
