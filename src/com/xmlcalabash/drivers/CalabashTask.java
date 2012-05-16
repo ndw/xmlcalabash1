@@ -26,9 +26,10 @@ import com.xmlcalabash.io.WritableDocument;
 import com.xmlcalabash.runtime.XPipeline;
 
 import org.apache.tools.ant.Project;
-import org.apache.tools.ant.Task;
 import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.PropertyHelper;
+import org.apache.tools.ant.taskdefs.MatchingTask;
 import org.apache.tools.ant.types.CommandlineJava;
 import org.apache.tools.ant.types.Environment;
 import org.apache.tools.ant.types.Mapper;
@@ -59,12 +60,27 @@ import org.xml.sax.InputSource;
  *
  * @author MenteaXML
  */
-public class CalabashTask extends Task {
+public class CalabashTask extends MatchingTask {
 
     /** Input ports and the resources associated with each. */
     private HashMap<String,Union> inputsMap = new HashMap<String,Union> ();
     /** Output ports and the resources associated with each. */
     private HashMap<String,Union> outputsMap = new HashMap<String,Union> ();
+
+    /** Where to find the source XML file, default is the project's
+     * basedir */
+    private File baseDir = null;
+    /**
+     * Set the base directory;
+     * optional, default is the project's basedir.
+     *
+     * @param dir the base directory
+     **/
+    public void setBasedir(File dir) {
+        baseDir = dir;
+    }
+
+
     /** Port of the pipeline input. As attribute. */
     private String inPort;
     public void setinPort(String port) {
@@ -76,6 +92,20 @@ public class CalabashTask extends Task {
     public void setIn(Resource inResource) {
         this.inResource = inResource;
     }
+
+    /**
+     * Whether the build should fail if the nested resource collection
+     * is empty.
+     */
+    private boolean failOnNoResources = true;
+    /**
+     * Whether the build should fail if the nested resource collection
+     * is empty.
+     */
+    public void setFailOnNoResources(boolean b) {
+        failOnNoResources = b;
+    }
+
 
     /** URI of the pipeline to run. As attribute. */
     String pipelineURI;
@@ -106,6 +136,19 @@ public class CalabashTask extends Task {
  	}
     }
 
+    /** destination directory */
+    private File destDir = null;
+    /**
+     * Set the destination directory into which the XSL result
+     * files should be copied to;
+     * required, unless <tt>in</tt> and <tt>out</tt> are
+     * specified.
+     * @param dir the name of the destination directory
+     **/
+    public void setDestdir(File dir) {
+        destDir = dir;
+    }
+
     /** Port of the pipeline output. As attribute. */
     String outPort;
     public void setOutPort(String port) {
@@ -116,6 +159,20 @@ public class CalabashTask extends Task {
     Resource outResource;
     public void setOut(Resource outResource) {
         this.outResource = outResource;
+    }
+
+    /** extension of the files produced by pipeline processing */
+    private String targetExtension = "-out.xml";
+    /** whether target extension has been set from build file */
+    private boolean isTargetExtensionSet = false;
+    /**
+     * Set the desired file extension to be used for the target;
+     * optional, default is '-out.xml'.
+     * @param name the extension to use
+     **/
+    public void setExtension(String name) {
+        targetExtension = name;
+	isTargetExtensionSet = true;
     }
 
     /** Whether to fail the build if an error occurs. */
@@ -131,6 +188,18 @@ public class CalabashTask extends Task {
      * Additional resource collections to process.
      */
     private Union resources = new Union();
+    /** whether resources has been set from nested resource collection */
+    private boolean isResourcesSet = false;
+    /**
+     * Adds a collection of resources to process in addition to the
+     * given file or the implicit fileset.
+     *
+     * @param rc the collection of resources to style
+     */
+    public void add(ResourceCollection rc) {
+        resources.add(rc);
+	isResourcesSet = true;
+    }
 
     /**
      * Whether to use the implicit fileset.
@@ -148,13 +217,18 @@ public class CalabashTask extends Task {
     }
 
     /**
-     * Adds a collection of resources to process in addition to the
-     * given file or the implicit fileset.
-     *
-     * @param rc the collection of resources to style
+     * Whether to process all files in the included directories as
+     * well.
      */
-    public void add(ResourceCollection rc) {
-        resources.add(rc);
+    private boolean performDirectoryScan = true;
+    /**
+     * Whether to process all files in the included directories as
+     * well; optional, default is true.
+     *
+     * @param b true if files in included directories are processed.
+     */
+    public void setScanIncludedDirectories(boolean b) {
+        performDirectoryScan = b;
     }
 
     /**
@@ -236,12 +310,60 @@ public class CalabashTask extends Task {
 	}
 
 	if (!usePipelineResource.isExists()) {
-	    handleError("pipeline file " + usePipelineResource.getName() + " does not exist");
+	    handleError("pipeline '" + usePipelineResource.getName() + "' does not exist");
 	    return;
 	}
 
 	if (inResource != null && !inResource.isExists()) {
-	    handleError("input file " + inResource.getName() + " does not exist");
+	    handleError("input file '" + inResource.getName() + "' does not exist");
+	    return;
+	}
+
+	if (inResource != null && resources.size() != 0) {
+	    handleError("'in' and explicit filesets cannot be used together.");
+	    return;
+	}
+
+	if (outResource != null && mapperElement != null) {
+	    handleError("Nested <mapper> for default output and 'out' cannot be used together.");
+	    return;
+	}
+
+	if (outResource != null && isTargetExtensionSet) {
+	    handleError("'extension' and 'out' cannot be used together.");
+	    return;
+	}
+
+	if (isTargetExtensionSet && mapperElement != null) {
+	    handleError("'extension' and nested <mapper> cannot be used together.");
+	    return;
+	}
+
+        File savedBaseDir = baseDir;
+	if (baseDir == null) {
+	    baseDir = getProject().getBaseDir();
+	}
+	//-- make sure destination directory exists...
+	checkDest();
+
+	// if we have an in file or out file then process them
+	if (inResource != null) {
+	    Port i = new Port();
+	    i.setPort(inPort);
+	    i.add(inResource);
+	    addConfiguredInput(i);
+	}
+	// Since processing specified inputs, use outResource too
+	if (outResource != null) {
+	    Port o = new Port();
+	    o.setPort(outPort);
+	    o.add(outResource);
+	    addConfiguredOutput(o);
+	}
+
+	if (outputsMap.containsKey(outPort)
+	    && (isTargetExtensionSet || mapperElement != null)) {
+	    handleError("Either 'out' or <output> corresponding to default output port and either 'extension' and nested <mapper> for naming output cannot be used together.");
 	    return;
 	}
 
@@ -250,27 +372,78 @@ public class CalabashTask extends Task {
 		sysProperties.setSystem();
 	    }
 
-	    // if we have an in file and out then process them
-		if (inResource != null) {
-		    Port i = new Port();
-		    i.setPort(inPort);
-		    i.add(inResource);
-		    addConfiguredInput(i);
-		}
-		if (outResource != null) {
-		    Port o = new Port();
-		    o.setPort(outPort);
-		    o.add(outResource);
-		    addConfiguredOutput(o);
-		}
-            if (!inputsMap.isEmpty() || !outputsMap.isEmpty()) {
+	    if (inputsMap.containsKey(inPort)) {
 		process(inputsMap, outputsMap, usePipelineResource);
 		return;
-            }
+	    } else { // Using implicit and/or explicit filesets
+		DirectoryScanner scanner;
+		String[] includedFiles;
+		String[] includedDirs;
+		if (useImplicitFileset) {
+		    resources.clear();
+		    scanner = getDirectoryScanner(baseDir);
+		    log("Pipelining into " + destDir, Project.MSG_INFO);
+
+		    // Process all the files marked for styling
+		    includedFiles = scanner.getIncludedFiles();
+		    for (int i = 0; i < includedFiles.length; ++i) {
+			resources.add(new FileResource(new File(baseDir, includedFiles[i])));
+		    }
+		    if (performDirectoryScan) {
+			// Process all the directories marked for styling
+			includedDirs = scanner.getIncludedDirectories();
+			for (int j = 0; j < includedDirs.length; ++j) {
+			    includedFiles = new File(baseDir, includedDirs[j]).list();
+			    for (int i = 0; i < includedFiles.length; ++i) {
+				resources.add(new FileResource(new File(baseDir, includedDirs[j] + File.separator + includedFiles[i])));
+			    }
+			}
+		    }
+		} else { // only resource collections, there better be some
+		    if (resources.size() == 0) {
+			if (failOnNoResources) {
+			    handleError("no resources specified");
+			}
+			return;
+		    }
+		}
+
+    		FileNameMapper mapper = null;
+		if (!outputsMap.containsKey(outPort)) {
+		    if (mapperElement != null) {
+			mapper = mapperElement.getImplementation();
+		    } else {
+			mapper = new ExtensionMapper();
+		    }
+                }
+                Iterator<Resource> element = resources.iterator();
+                while (element.hasNext()) {
+                    Resource resource = element.next();
+                    log(resource.getName(), Project.MSG_INFO);
+                    HashMap<String, Union> useInputsMap = (HashMap<String, Union>) inputsMap.clone();
+                    useInputsMap.put(inPort, new Union(resource));
+
+                    HashMap<String, Union> useOutputsMap = outputsMap;
+                    if (mapper != null) {
+                        String[] outFileName = mapper.mapFileName(resource.getName());
+                        if (outFileName == null || outFileName.length == 0) {
+                            log("Skipping '" + resource.getName() + "' as it cannot be mapped to output.", Project.MSG_VERBOSE);
+                            continue;
+                        } else if (outFileName == null || outFileName.length > 1) {
+                            log("Skipping " + resource.getName() + " as its mapping is ambiguos.", Project.MSG_VERBOSE);
+                            continue;
+                        }
+                        useOutputsMap = (HashMap<String, Union>) outputsMap.clone();
+                        useOutputsMap.put(outPort, new Union(new FileResource(new File(outFileName[0]))));
+                    }
+                    process(useInputsMap, useOutputsMap, usePipelineResource);
+                }
+	    }
 	} finally {
             if (sysProperties.size() > 0) {
                 sysProperties.restoreSystem();
             }
+            baseDir = savedBaseDir;
 	}
     }
 
@@ -308,10 +481,10 @@ public class CalabashTask extends Task {
                 if (pipeline.getInput(port).getParameters()) {
                     continue;
                 }
-		if (!inputsMap.containsKey(port) && !pipeline.getInput(port).getParameters()) {
+		if (!inputsMap.containsKey(port)) {
                     if (inputsMap.containsKey(null)) {
                         inputsMap.put(port, inputsMap.remove(null));
-                        log("Binding default input port to '" + port + "'.", Project.MSG_INFO);
+                        log("Binding unnamed input port to '" + port + "'.", Project.MSG_INFO);
                     } else {
                         log("You didn't specify any binding for the input port '" + port + "'.", Project.MSG_WARN);
                         continue;
@@ -321,25 +494,24 @@ public class CalabashTask extends Task {
             
 	    for (String port : pipeline.getInputs()) {
                 if (inputsMap.containsKey(port)) {
-            Iterator<Resource> element = ((Union) inputsMap.get(port)).iterator();
-            while (element.hasNext()) {
-                Resource resource = element.next();
-                log(resource.getName(), Project.MSG_INFO);
-                InputStream is = resource.getInputStream();
-                XdmNode doc = runtime.parse(new InputSource(resource.getInputStream()));
-                pipeline.writeTo(port, doc);
-            }
+		    Iterator<Resource> element = ((Union) inputsMap.get(port)).iterator();
+		    while (element.hasNext()) {
+			Resource resource = element.next();
+			log(resource.getName() + "::" + resource.isExists(), Project.MSG_INFO);
+			InputStream is = resource.getInputStream();
+			XdmNode doc = runtime.parse(new InputSource(resource.getInputStream()));
+			pipeline.writeTo(port, doc);
+		    }
                 }
             }
 	    pipeline.run();
 
             // Look for primary output port
-            String defaultOutput = null;
             for (String port : pipeline.getOutputs()) {
 		if (!outputsMap.containsKey(port)) {
 		    if (outputsMap.containsKey(null)) {
 			outputsMap.put(port, outputsMap.remove(null));
-			log("Binding default output port to '" + port + "'.", Project.MSG_INFO);
+			log("Binding unnamed output port to '" + port + "'.", Project.MSG_INFO);
 		    } else {
 			log("You didn't specify any binding for the output port '" + port + "': its output will be discarded.", Project.MSG_WARN);
 		    }
@@ -419,6 +591,39 @@ public class CalabashTask extends Task {
     }
 
     /**
+     * Mapper implementation that replaces file's extension.
+     *
+     * <p>If the file has an extension, chop it off.  Append whatever
+     * the user has specified as extension or "-out.xml".</p>
+     *
+     * @since Ant 1.6.2
+     */
+    private class ExtensionMapper implements FileNameMapper {
+        public void setFrom(String from) {
+        }
+        public void setTo(String to) {
+        }
+        public String[] mapFileName(String xmlFile) {
+            int dotPos = xmlFile.lastIndexOf('.');
+            if (dotPos > 0) {
+                xmlFile = xmlFile.substring(0, dotPos);
+            }
+            return new String[] {xmlFile + targetExtension};
+        }
+    }
+
+    /**
+     * Throws a BuildException if the destination directory hasn't
+     * been specified.
+     */
+    private void checkDest() {
+        if (destDir == null) {
+	    destDir = baseDir;
+            log("destdir defaulting to basedir", Project.MSG_DEBUG);
+        }
+    }
+
+    /**
      * Throws an exception with the given message if failOnError is
      * true, otherwise logs the message using the WARN level.
      */
@@ -470,6 +675,9 @@ public class CalabashTask extends Task {
 	}
 
 	String port = o.getPort();
+        if (port == null) {
+            port = outPort;
+        }
 
 	if (!outputsMap.containsKey(port)) {
 	    outputsMap.put(port, new Union ());
