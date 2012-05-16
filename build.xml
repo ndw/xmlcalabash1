@@ -67,6 +67,7 @@
 
   <target name="init" depends="saxon-version">
     <mkdir dir="${build.dir}"/>
+    <mkdir dir="docs/build"/>
     <property name="dist-version" value="${version}-${saxon-version}"/>
     <property name="install.dir" value="${dist.dir}/calabash-${dist-version}"/>
   </target>
