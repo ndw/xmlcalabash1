@@ -19,6 +19,7 @@
 package com.xmlcalabash.drivers;
 
 import com.xmlcalabash.core.XProcConfiguration;
+import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.model.Serialization;
 import com.xmlcalabash.io.ReadablePipe;
@@ -94,6 +95,24 @@ public class CalabashTask extends MatchingTask {
     }
 
     /**
+     * Work with an instance of an <input> element already configured
+     * by Ant.
+     * @param i the configured input Port
+     */
+    public void addConfiguredInput(Port i) {
+	if (!i.shouldUse()) {
+	    return;
+	}
+
+	String port = i.getPort();
+
+	if (!inputsMap.containsKey(port)) {
+	    inputsMap.put(port, new Union ());
+	}
+        inputsMap.get(port).add(i.getResources());
+    }
+
+    /**
      * Whether the build should fail if the nested resource collection
      * is empty.
      */
@@ -105,7 +124,6 @@ public class CalabashTask extends MatchingTask {
     public void setFailOnNoResources(boolean b) {
         failOnNoResources = b;
     }
-
 
     /** URI of the pipeline to run. As attribute. */
     String pipelineURI;
@@ -125,7 +143,8 @@ public class CalabashTask extends MatchingTask {
 
     /**
      * Add a nested &lt;pipeline&gt; element.
-     * @param rc the configured Resources object represented as &lt;pipeline&gt;.
+     * @param rc the configured Resources object represented as
+     * &lt;pipeline&gt;.
      */
     public void addConfiguredPipeline(Resources rc) {
  	if (rc.size() != 1) {
@@ -159,6 +178,27 @@ public class CalabashTask extends MatchingTask {
     Resource outResource;
     public void setOut(Resource outResource) {
         this.outResource = outResource;
+    }
+
+    /**
+     * Work with an instance of an <output> element already configured
+     * by Ant.
+     * @param o the configured Port
+     */
+    public void addConfiguredOutput(Port o) {
+	if (!o.shouldUse()) {
+	    return;
+	}
+
+	String port = o.getPort();
+        if (port == null) {
+            port = outPort;
+        }
+
+	if (!outputsMap.containsKey(port)) {
+	    outputsMap.put(port, new Union ());
+	}
+        outputsMap.get(port).add(o.getResources());
     }
 
     /** extension of the files produced by pipeline processing */
@@ -292,6 +332,43 @@ public class CalabashTask extends MatchingTask {
         sysProperties.addSyspropertyset(sysp);
     }
 
+    /** Namespace prefix--URI bindings */
+    private Hashtable<String, String> bindings;
+    /**
+     * Work with an instance of a <binding> element already configured
+     * by Ant.
+     * @param n the configured Namespace
+     */
+    public void addConfiguredNamespace(Namespace n) {
+	if (bindings == null) {
+	    bindings = new Hashtable<String,String>();
+	    // Default the prefix "p" to the XProc namespace
+	    bindings.put("p", XProcConstants.NS_XPROC);
+	}
+
+	if (n.getPrefix() == null) {
+	   handleError("<namespace> prefix cannot be null");
+	   return;
+	}
+
+	if (n.getURI() == null) {
+	   handleError("<namespace> URI cannot be null");
+	   return;
+	}
+
+        bindings.put(n.getPrefix(), n.getURI());
+    }
+
+    /** The <param>, ready for further processing */
+    private Vector<Parameter> parameters = new Vector<Parameter>();
+    /**
+     * Work with an instance of a <parameter> element already
+     * configured by Ant.
+     * @param p the configured Parameter
+     */
+    public void addConfiguredParameter(Parameter p) {
+	parameters.add(p);
+    }
 
 
     /** Do the work. */
@@ -376,7 +453,7 @@ public class CalabashTask extends MatchingTask {
 		process(inputsMap, outputsMap, usePipelineResource);
 		return;
 	    } else { // Using implicit and/or explicit filesets
-		DirectoryScanner scanner;
+                DirectoryScanner scanner;
 		String[] includedFiles;
 		String[] includedDirs;
 		if (useImplicitFileset) {
@@ -387,7 +464,7 @@ public class CalabashTask extends MatchingTask {
 		    // Process all the files marked for styling
 		    includedFiles = scanner.getIncludedFiles();
 		    for (int i = 0; i < includedFiles.length; ++i) {
-			resources.add(new FileResource(new File(baseDir, includedFiles[i])));
+			resources.add(new FileResource(savedBaseDir, baseDir + File.separator + includedFiles[i]));
 		    }
 		    if (performDirectoryScan) {
 			// Process all the directories marked for styling
@@ -395,7 +472,7 @@ public class CalabashTask extends MatchingTask {
 			for (int j = 0; j < includedDirs.length; ++j) {
 			    includedFiles = new File(baseDir, includedDirs[j]).list();
 			    for (int i = 0; i < includedFiles.length; ++i) {
-				resources.add(new FileResource(new File(baseDir, includedDirs[j] + File.separator + includedFiles[i])));
+				resources.add(new FileResource(savedBaseDir, baseDir + File.separator + includedDirs[j] + File.separator + includedFiles[i]));
 			    }
 			}
 		    }
@@ -430,11 +507,11 @@ public class CalabashTask extends MatchingTask {
                             log("Skipping '" + resource.getName() + "' as it cannot be mapped to output.", Project.MSG_VERBOSE);
                             continue;
                         } else if (outFileName == null || outFileName.length > 1) {
-                            log("Skipping " + resource.getName() + " as its mapping is ambiguos.", Project.MSG_VERBOSE);
+                            log("Skipping " + resource.getName() + " as its mapping is ambiguous.", Project.MSG_VERBOSE);
                             continue;
                         }
                         useOutputsMap = (HashMap<String, Union>) outputsMap.clone();
-                        useOutputsMap.put(outPort, new Union(new FileResource(new File(outFileName[0]))));
+                        useOutputsMap.put(outPort, new Union(new FileResource(savedBaseDir, destDir + File.separator + outFileName[0])));
                     }
                     process(useInputsMap, useOutputsMap, usePipelineResource);
                 }
@@ -527,7 +604,7 @@ public class CalabashTask extends MatchingTask {
 			handleError("The '" + port + "' output port must be specified with exactly one"
                         + " nested resource.");
 		    }
-		    uri = ((Resource) resources.iterator().next()).getName();
+		    uri = ((Resource) resources.iterator().next()).toString();
                     log("Writing port '" + port + "' to '" + uri + "'.", Project.MSG_INFO);
                }
 
@@ -649,43 +726,6 @@ public class CalabashTask extends MatchingTask {
     }
 
     /**
-     * Work with an instance of an pipeline input already configured
-     * by Ant.
-     */
-    public void addConfiguredInput(Port i) {
-	if (!i.shouldUse()) {
-	    return;
-	}
-
-	String port = i.getPort();
-
-	if (!inputsMap.containsKey(port)) {
-	    inputsMap.put(port, new Union ());
-	}
-        inputsMap.get(port).add(i.getResources());
-    }
-
-    /**
-     * Work with an instance of an pipeline output already configured
-     * by Ant.
-     */
-    public void addConfiguredOutput(Port o) {
-	if (!o.shouldUse()) {
-	    return;
-	}
-
-	String port = o.getPort();
-        if (port == null) {
-            port = outPort;
-        }
-
-	if (!outputsMap.containsKey(port)) {
-	    outputsMap.put(port, new Union ());
-	}
-        outputsMap.get(port).add(o.getResources());
-    }
-
-    /**
      * The Port inner class used to represent input and output ports.
      */
     public static class Port {
@@ -732,7 +772,7 @@ public class CalabashTask extends MatchingTask {
          *
          * @return the input port name
          */
-        public String getPort() throws BuildException {
+        public String getPort() {
             return port;
         }
 
@@ -797,4 +837,93 @@ public class CalabashTask extends MatchingTask {
         }
     } // Port
 
+    /**
+     * The Namespace inner class represents a namespace binding.
+     */
+    public static class Namespace {
+        /** The prefix */
+        private String prefix = null;
+        /** The URI */
+        private String uri = null;
+
+        /**
+         * Set the prefix.
+         * @input prefix prefix to which to bind the namespace
+         */
+        public void setPrefix(String prefix) {
+            this.prefix = prefix;
+        }
+
+	/**
+         * Get the prefix
+         *
+         * @return the namespace prefix
+         */
+        public String getPrefix() {
+            return prefix;
+        }
+
+       /**
+         * Set the namespace URI.
+         * @input uri the namespace URI
+         */
+        public void setURI(String uri) {
+            this.uri = uri;
+        }
+
+	/**
+         * Get the namespace URI
+         *
+         * @return the namespace URI
+         */
+        public String getURI() {
+            return uri;
+        }
+    } // Namespace
+
+    /**
+     * The Parameter inner class represents a pipeline parameter.
+     */
+    public static class Parameter {
+        /** The port */
+        private String port = "*";
+        /** The name */
+        private String name = null;
+        /** The parameter value */
+        private String value = null;
+
+        /**
+         * Set the port.
+         * @input port port to which to bind the namespace
+         */
+        public void setPort(String port) {
+            this.port = port;
+        }
+
+	/**
+         * Get the port
+         *
+         * @return the namespace port
+         */
+        public String getPort() {
+            return port;
+        }
+
+       /**
+         * Set the name.
+         * @input name the namespace name
+         */
+        public void setNAME(String name) {
+            this.name = name;
+        }
+
+	/**
+         * Get the namespace name
+         *
+         * @return the namespace name
+         */
+        public String getNAME() {
+            return name;
+        }
+    } // Namespace
 }
