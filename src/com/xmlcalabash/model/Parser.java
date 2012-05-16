@@ -1395,6 +1395,7 @@ public class Parser {
                 }
             }
 
+System.err.println("step: " + step);
             step.checkPrimaryIO();
             rest = steps;
         }

@@ -196,6 +196,10 @@ public class XProcException extends RuntimeException {
         return step;
     }
 
+    public XdmNode getNode() {
+        return node;
+    }
+
     public SourceLocator getLocator() {
         XdmNode locNode = null;
         if (step != null) locNode = step.getNode();
