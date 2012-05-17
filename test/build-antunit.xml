@@ -226,7 +226,7 @@
     </calabash>
   </target>
 
-  <target name="testParameter5" description="'p' prefix should be bound automatically.">
+  <target name="testParameter5" description="'p' prefix should be bound automatically but is an error to use it for parameters.">
     <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
       <sysproperty key="com.xmlcalabash.phonehome" value="false" />
       <parameter name="p:there" value="in your morning" />
@@ -247,10 +247,26 @@
     </calabash>
   </target>
 
+  <target name="testParameter8" description="No-namespace parameter name.">
+    <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
+      <namespace prefix="hi" uri="hi" />
+      <parameter name="{hi}there" value="a value" />
+      <parameter name="hi:there" value="a value" />
+    </calabash>
+  </target>
+
   <target name="testOption1" description="Valid no-namespace option.">
     <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
       <sysproperty key="com.xmlcalabash.phonehome" value="false" />
       <option name="no-namespace" value="a value" />
+    </calabash>
+  </target>
+
+  <target name="testOption2" description="'p' prefix should be bound automatically.">
+    <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
+      <option name="p:there" value="in your night" />
     </calabash>
   </target>
 
