@@ -102,6 +102,7 @@ public class CalabashTask extends MatchingTask {
      */
     public void addConfiguredInput(Port i) {
 	if (!i.shouldUse()) {
+	    log("Skipping input '" + i.getPort() + "' as it is configured to be unused.", Project.MSG_DEBUG);
 	    return;
 	}
 
@@ -188,6 +189,7 @@ public class CalabashTask extends MatchingTask {
      */
     public void addConfiguredOutput(Port o) {
 	if (!o.shouldUse()) {
+	    log("Skipping output '" + o.getPort() + "' as it is configured to be unused.", Project.MSG_DEBUG);
 	    return;
 	}
 
@@ -371,6 +373,11 @@ public class CalabashTask extends MatchingTask {
      * @param o the configured Option
      */
     public void addConfiguredOption(Option o) {
+	if (!o.shouldUse()) {
+	    log("Skipping option '" + o.getName() + "' as it is configured to be unused.", Project.MSG_DEBUG);
+	    return;
+	}
+
 	options.add(o);
     }
 
@@ -384,6 +391,11 @@ public class CalabashTask extends MatchingTask {
      * @param p the configured Parameter
      */
     public void addConfiguredParameter(Parameter p) {
+	if (!p.shouldUse()) {
+	    log("Skipping parameter '" + p.getName() + "' as it is configured to be unused.", Project.MSG_DEBUG);
+	    return;
+	}
+
 	parameters.add(p);
     }
 
@@ -418,6 +430,11 @@ public class CalabashTask extends MatchingTask {
 	    return;
 	}
 
+	if (inResource != null && useImplicitFileset) {
+	    handleError("'in' and implicit fileset cannot be used together.");
+	    return;
+	}
+
 	if (outResource != null && mapperElement != null) {
 	    handleError("Nested <mapper> for default output and 'out' cannot be used together.");
 	    return;
@@ -440,26 +457,11 @@ public class CalabashTask extends MatchingTask {
 
 	// Can only really work with options now bindings all present
 	for (Option o : options) {
-	    String name = o.getName();
+	    QName qname = makeQName(o.getName());
 	    String value = o.getValue();
-	    String uri = null;
-	    QName qname = null;
-
-	    int cpos = name.indexOf(":");
-	    if (cpos > 0) {
-		String prefix = name.substring(0, cpos);
-		if (!bindings.containsKey(prefix)) {
-		    handleError("Unbound prefix \"" + prefix + "\": " + name + "=" + value);
-		    continue;
-		}
-		uri = bindings.get(prefix);
-		qname = new QName(prefix, uri, name.substring(cpos+1));
-	    } else {
-		qname = new QName("", name);
-	    }
 
 	    if (optionsMap.containsKey(qname)) {
-		   handleError("Duplicate option name: " + qname.getClarkName());
+		   handleError("Duplicated option QName: " + qname.getClarkName());
 		   continue;
             }
 
@@ -469,23 +471,8 @@ public class CalabashTask extends MatchingTask {
 	// Can only really work with parameters now bindings all present
 	for (Parameter p : parameters) {
 	    String port = p.getPort();
-	    String name = p.getName();
+	    QName qname = makeQName(p.getName());
 	    String value = p.getValue();
-	    String uri = null;
-	    QName qname = null;
-
-	    int cpos = name.indexOf(":");
-	    if (cpos > 0) {
-		String prefix = name.substring(0, cpos);
-		if (!bindings.containsKey(prefix)) {
-		    handleError("Unbound prefix \"" + prefix + "\": " + name + "=" + value);
-		    continue;
-		}
-		uri = bindings.get(prefix);
-		qname = new QName(prefix, uri, name.substring(cpos+1));
-	    } else {
-		qname = new QName("", name);
-	    }
 
 	    Hashtable<QName,RuntimeValue> portParams;
 	    if (!parametersTable.containsKey(port)) {
@@ -493,7 +480,7 @@ public class CalabashTask extends MatchingTask {
 	    } else {
                portParams = parametersTable.get(port);
 	       if (portParams.containsKey(qname)) {
-		   handleError("Duplicate parameter name: " + qname.getClarkName());
+		   handleError("Duplicated parameter QName: " + qname.getClarkName());
 		   continue;
 	       }
             }
@@ -535,26 +522,25 @@ public class CalabashTask extends MatchingTask {
 		sysProperties.setSystem();
 	    }
 
-	    if (inputsMap.containsKey(inPort)) {
+	    // If neither implicit or explicit fileset, assume user
+	    // knows what they're doing even though there may be no
+	    // input or output ports.
+	    if (!useImplicitFileset && resources.size() == 0) {
 		process(inputsMap, outputsMap, usePipelineResource, optionsMap, parametersTable, force);
 		return;
 	    } else { // Using implicit and/or explicit filesets
-                DirectoryScanner scanner;
-		String[] includedFiles;
-		String[] includedDirs;
 		if (useImplicitFileset) {
-		    resources.clear();
-		    scanner = getDirectoryScanner(baseDir);
+		    DirectoryScanner scanner = getDirectoryScanner(baseDir);
 		    log("Pipelining into " + destDir, Project.MSG_INFO);
 
 		    // Process all the files marked for styling
-		    includedFiles = scanner.getIncludedFiles();
+		    String[] includedFiles = scanner.getIncludedFiles();
 		    for (int i = 0; i < includedFiles.length; ++i) {
 			resources.add(new FileResource(baseDir, includedFiles[i]));
 		    }
 		    if (performDirectoryScan) {
 			// Process all the directories marked for styling
-			includedDirs = scanner.getIncludedDirectories();
+			String[] includedDirs = scanner.getIncludedDirectories();
 			for (int j = 0; j < includedDirs.length; ++j) {
 			    includedFiles = new File(baseDir, includedDirs[j]).list();
 			    for (int i = 0; i < includedFiles.length; ++i) {
@@ -783,8 +769,6 @@ public class CalabashTask extends MatchingTask {
      *
      * <p>If the file has an extension, chop it off.  Append whatever
      * the user has specified as extension or "-out.xml".</p>
-     *
-     * @since Ant 1.6.2
      */
     private class ExtensionMapper implements FileNameMapper {
         public void setFrom(String from) {
@@ -798,6 +782,34 @@ public class CalabashTask extends MatchingTask {
             }
             return new String[] {xmlFile + targetExtension};
         }
+    }
+
+    /**
+     * Makes a QName using the bindings defined on the task.
+     * @param name possibly-prefixed name
+     * @returns QName
+     */
+    private QName makeQName(String name) {
+	String uri = null;
+	QName qname;
+
+	if (name.indexOf("{") == 0) {
+	    qname = QName.fromClarkName(name);
+	} else {
+	    int cpos = name.indexOf(":");
+	    if (cpos > 0) {
+		String prefix = name.substring(0, cpos);
+		if (!bindings.containsKey(prefix)) {
+		    handleError("Unbound prefix \"" + prefix + "\" in: " + name);
+		}
+		uri = bindings.get(prefix);
+		qname = new QName(prefix, uri, name.substring(cpos+1));
+	    } else {
+		qname = new QName("", name);
+	    }
+	}
+
+	return qname;
     }
 
     /**
@@ -872,7 +884,7 @@ public class CalabashTask extends MatchingTask {
 	 * Adds a collection of resources to process in addition to the
 	 * given file or the implicit fileset.
 	 *
-	 * @param rc the collection of resources to style
+	 * @param rc the collection of resources to use
 	 */
 	public void add(ResourceCollection rc) {
 	    resources.add(rc);
@@ -1001,6 +1013,18 @@ public class CalabashTask extends MatchingTask {
         /** The parameter value */
         private String value = null;
 
+        private Object ifCond;
+        private Object unlessCond;
+        private Project project;
+
+        /**
+         * Set the current project
+         *
+         * @input project the current project
+         */
+        public void setProject(Project project) {
+            this.project = project;
+        }
 
        /**
          * Set the name.
@@ -1034,6 +1058,37 @@ public class CalabashTask extends MatchingTask {
          */
         public String getValue() {
             return value;
+        }
+
+        /**
+         * Set whether this input should NOT be used. It will not be
+         * used if the expression evaluates to true or the name of a
+         * property which has been set, otherwise it will be used.
+         * @input unlessCond evaluated expression
+         */
+        public void setUnless(Object unlessCond) {
+            this.unlessCond = unlessCond;
+        }
+
+        /**
+         * Set whether this input should NOT be used. It will not be
+         * used if the expression evaluates to true or the name of a
+         * property which has been set, otherwise it will be used.
+         * @input unlessProperty evaluated expression
+         */
+        public void setUnless(String unlessProperty) {
+            setUnless((Object) unlessProperty);
+        }
+
+        /**
+         * Ensures that the input passes the conditions placed
+         * on it with <code>if</code> and <code>unless</code> properties.
+         * @return true if the task passes the "if" and "unless" parameters
+         */
+        public boolean shouldUse() {
+            PropertyHelper ph = PropertyHelper.getPropertyHelper(project);
+            return ph.testIfCondition(ifCond)
+                && ph.testUnlessCondition(unlessCond);
         }
     } // Option
 
