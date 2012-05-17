@@ -27,6 +27,8 @@
     </au:antunit>
   </target>
 
+  <mkdir dir="out" />
+
   <target name="testBasic" description="Use without 'in', 'out', and 'pipeline'.">
     <calabash in="in.xml" out="out1.xml" pipeline="pipeline.xpl">
       <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
@@ -141,8 +143,114 @@
   </target>
 
   <target name="testIncludes2" description="Use with 'includes' value.">
-    <calabash includes="in*.xml" pipeline="pipeline.xpl">
+    <calabash includes="in*.xml" destdir="out" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
+    </calabash>
+  </target>
+
+
+  <target name="testIncludes3" description="Use with 'includes' and 'basedir' values.">
+    <calabash includes="in*.xml" basedir="in" destdir="out" pipeline="pipeline.xpl">
       <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
+    </calabash>
+  </target>
+
+  <target name="testBinding1" description="Use with 'includes' and 'basedir' values.">
+    <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
+      <namespace prefix="hi" uri="there" />
+    </calabash>
+  </target>
+
+  <target name="testBinding2" description="Use with 'includes' and 'basedir' values.">
+    <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
+      <namespace prefix="hi" />
+    </calabash>
+  </target>
+
+  <target name="testBinding3" description="Use with 'includes' and 'basedir' values.">
+    <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
+      <namespace uri="there" />
+    </calabash>
+  </target>
+
+  <target name="testBinding4" description="Use with 'includes' and 'basedir' values.">
+    <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
+      <namespace />
+    </calabash>
+  </target>
+
+  <target name="testBinding5" description="Use with 'includes' and 'basedir' values.">
+    <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
+      <namespace prefix="hi" uri="there" />
+      <namespace prefix="hi" uri="not there" />
+    </calabash>
+  </target>
+
+  <target name="testParameter1" description="Use with 'includes' and 'basedir' values.">
+    <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
+      <namespace prefix="hi" uri="there" />
+      <parameter name="hi:there" value="a value" />
+    </calabash>
+  </target>
+
+  <target name="testParameter2" description="Use with 'includes' and 'basedir' values.">
+    <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
+      <namespace prefix="hi" uri="there" />
+      <parameter name="not:there" value="a value" />
+    </calabash>
+  </target>
+
+  <target name="testParameter3" description="Use with 'includes' and 'basedir' values.">
+    <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
+      <namespace prefix="hi" uri="there" />
+      <parameter name="hi:there" value="a value" />
+      <parameter name="hi:there" value="another value" />
+    </calabash>
+  </target>
+
+  <target name="testParameter4" description="Use with 'includes' and 'basedir' values.">
+    <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
+      <namespace prefix="hi" uri="there" />
+      <namespace prefix="not" uri="there" />
+      <parameter name="hi:there" value="a value" />
+      <parameter name="not:there" value="another value" />
+    </calabash>
+  </target>
+
+  <target name="testParameter5" description="'p' prefix should be bound automatically.">
+    <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
+      <parameter name="p:there" value="in your morning" />
+    </calabash>
+  </target>
+
+  <target name="testParameter6" description="Empty parameter name.">
+    <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
+      <parameter name="" value="a value" />
+    </calabash>
+  </target>
+
+  <target name="testParameter7" description="No-namespace parameter name.">
+    <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
+      <parameter name="no-namespace" value="a value" />
+    </calabash>
+  </target>
+
+  <target name="testOption1" description="Valid no-namespace option.">
+    <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
+      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
+      <option name="no-namespace" value="a value" />
     </calabash>
   </target>
 

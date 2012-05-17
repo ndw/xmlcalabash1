@@ -21,6 +21,7 @@ package com.xmlcalabash.drivers;
 import com.xmlcalabash.core.XProcConfiguration;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.model.Serialization;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritableDocument;
@@ -333,19 +334,15 @@ public class CalabashTask extends MatchingTask {
     }
 
     /** Namespace prefix--URI bindings */
-    private Hashtable<String, String> bindings;
+    private Hashtable<String, String> bindings = new Hashtable<String,String> ();
     /**
      * Work with an instance of a <binding> element already configured
      * by Ant.
      * @param n the configured Namespace
      */
     public void addConfiguredNamespace(Namespace n) {
-	if (bindings == null) {
-	    bindings = new Hashtable<String,String>();
-	    // Default the prefix "p" to the XProc namespace
-	    bindings.put("p", XProcConstants.NS_XPROC);
-	}
-
+	// prefix and/or uri may have been omitted in build file
+	// without Ant complaining
 	if (n.getPrefix() == null) {
 	   handleError("<namespace> prefix cannot be null");
 	   return;
@@ -356,11 +353,31 @@ public class CalabashTask extends MatchingTask {
 	   return;
 	}
 
+	if (bindings.containsKey(n.getPrefix())) {
+	    handleError("Duplicated <namespace> prefix: " + n.getPrefix());
+	   return;
+	}
+
         bindings.put(n.getPrefix(), n.getURI());
     }
 
-    /** The <param>, ready for further processing */
-    private Vector<Parameter> parameters = new Vector<Parameter>();
+    /** The <option>s, ready for further processing */
+    private Vector<Option> options = new Vector<Option> ();
+    /** The processed options, ready for passing to Calabash */
+    private Map<QName,RuntimeValue> optionsMap = new HashMap<QName,RuntimeValue> ();
+    /**
+     * Work with an instance of a <option> element already configured
+     * by Ant.
+     * @param o the configured Option
+     */
+    public void addConfiguredOption(Option o) {
+	options.add(o);
+    }
+
+    /** The <param>s, ready for further processing */
+    private Vector<Parameter> parameters = new Vector<Parameter> ();
+    /** The processed parameters, ready for passing to Calabash */
+    private Map<String,Hashtable<QName,RuntimeValue>> parametersTable = new Hashtable<String,Hashtable<QName,RuntimeValue>> ();
     /**
      * Work with an instance of a <parameter> element already
      * configured by Ant.
@@ -416,6 +433,75 @@ public class CalabashTask extends MatchingTask {
 	    return;
 	}
 
+	// When prefix "p" not set, default to the XProc namespace
+	if (!bindings.containsKey("p")) {
+	    bindings.put("p", XProcConstants.NS_XPROC);
+	}
+
+	// Can only really work with options now bindings all present
+	for (Option o : options) {
+	    String name = o.getName();
+	    String value = o.getValue();
+	    String uri = null;
+	    QName qname = null;
+
+	    int cpos = name.indexOf(":");
+	    if (cpos > 0) {
+		String prefix = name.substring(0, cpos);
+		if (!bindings.containsKey(prefix)) {
+		    handleError("Unbound prefix \"" + prefix + "\": " + name + "=" + value);
+		    continue;
+		}
+		uri = bindings.get(prefix);
+		qname = new QName(prefix, uri, name.substring(cpos+1));
+	    } else {
+		qname = new QName("", name);
+	    }
+
+	    if (optionsMap.containsKey(qname)) {
+		   handleError("Duplicate option name: " + qname.getClarkName());
+		   continue;
+            }
+
+	    optionsMap.put(qname, new RuntimeValue(value));
+	}
+
+	// Can only really work with parameters now bindings all present
+	for (Parameter p : parameters) {
+	    String port = p.getPort();
+	    String name = p.getName();
+	    String value = p.getValue();
+	    String uri = null;
+	    QName qname = null;
+
+	    int cpos = name.indexOf(":");
+	    if (cpos > 0) {
+		String prefix = name.substring(0, cpos);
+		if (!bindings.containsKey(prefix)) {
+		    handleError("Unbound prefix \"" + prefix + "\": " + name + "=" + value);
+		    continue;
+		}
+		uri = bindings.get(prefix);
+		qname = new QName(prefix, uri, name.substring(cpos+1));
+	    } else {
+		qname = new QName("", name);
+	    }
+
+	    Hashtable<QName,RuntimeValue> portParams;
+	    if (!parametersTable.containsKey(port)) {
+		portParams = new Hashtable<QName,RuntimeValue> ();
+	    } else {
+               portParams = parametersTable.get(port);
+	       if (portParams.containsKey(qname)) {
+		   handleError("Duplicate parameter name: " + qname.getClarkName());
+		   continue;
+	       }
+            }
+
+	    portParams.put(qname, new RuntimeValue(value));
+	    parametersTable.put(port, portParams);
+	}
+
         File savedBaseDir = baseDir;
 	if (baseDir == null) {
 	    baseDir = getProject().getBaseDir();
@@ -450,7 +536,7 @@ public class CalabashTask extends MatchingTask {
 	    }
 
 	    if (inputsMap.containsKey(inPort)) {
-		process(inputsMap, outputsMap, usePipelineResource);
+		process(inputsMap, outputsMap, usePipelineResource, optionsMap, parametersTable, force);
 		return;
 	    } else { // Using implicit and/or explicit filesets
                 DirectoryScanner scanner;
@@ -464,7 +550,7 @@ public class CalabashTask extends MatchingTask {
 		    // Process all the files marked for styling
 		    includedFiles = scanner.getIncludedFiles();
 		    for (int i = 0; i < includedFiles.length; ++i) {
-			resources.add(new FileResource(savedBaseDir, baseDir + File.separator + includedFiles[i]));
+			resources.add(new FileResource(baseDir, includedFiles[i]));
 		    }
 		    if (performDirectoryScan) {
 			// Process all the directories marked for styling
@@ -472,7 +558,7 @@ public class CalabashTask extends MatchingTask {
 			for (int j = 0; j < includedDirs.length; ++j) {
 			    includedFiles = new File(baseDir, includedDirs[j]).list();
 			    for (int i = 0; i < includedFiles.length; ++i) {
-				resources.add(new FileResource(savedBaseDir, baseDir + File.separator + includedDirs[j] + File.separator + includedFiles[i]));
+				resources.add(new FileResource(baseDir, includedDirs[j] + File.separator + includedFiles[i]));
 			    }
 			}
 		    }
@@ -511,9 +597,9 @@ public class CalabashTask extends MatchingTask {
                             continue;
                         }
                         useOutputsMap = (HashMap<String, Union>) outputsMap.clone();
-                        useOutputsMap.put(outPort, new Union(new FileResource(savedBaseDir, destDir + File.separator + outFileName[0])));
+                        useOutputsMap.put(outPort, new Union(new FileResource(destDir, outFileName[0])));
                     }
-                    process(useInputsMap, useOutputsMap, usePipelineResource);
+                    process(useInputsMap, useOutputsMap, usePipelineResource, optionsMap, parametersTable, force);
                 }
 	    }
 	} finally {
@@ -532,7 +618,7 @@ public class CalabashTask extends MatchingTask {
      * @param pipelineResource the pipeline to use.
      * @exception BuildException if the processing fails.
      */
-    private void process(HashMap inputsMap, HashMap outputsMap, Resource pipelineResource) throws BuildException {
+    private void process(Map<String,Union> inputsMap, Map<String,Union> outputsMap, Resource pipelineResource, Map<QName,RuntimeValue> optionsMap, Map<String,Hashtable<QName,RuntimeValue>> parametersMap, boolean force) throws BuildException {
 
 	long pipelineLastModified = pipelineResource.getLastModified();
 	//log("In file " + in + " time: " + in.getLastModified(), Project.MSG_DEBUG);
@@ -554,6 +640,7 @@ public class CalabashTask extends MatchingTask {
 	    XPipeline pipeline =
 		runtime.load(pipelineResource.getName());
 
+	    // The unnamed input is matched to one unmatched input
 	    for (String port : pipeline.getInputs()) {
                 if (pipeline.getInput(port).getParameters()) {
                     continue;
@@ -568,22 +655,46 @@ public class CalabashTask extends MatchingTask {
                     }
                 }
             }
-            
+
 	    for (String port : pipeline.getInputs()) {
                 if (inputsMap.containsKey(port)) {
 		    Iterator<Resource> element = ((Union) inputsMap.get(port)).iterator();
 		    while (element.hasNext()) {
 			Resource resource = element.next();
 			log(resource.getName() + "::" + resource.isExists(), Project.MSG_INFO);
+			if (!resource.isExists()) {
+			    log("Skipping non-existent input: " + resource, Project.MSG_DEBUG);
+			}
+
 			InputStream is = resource.getInputStream();
 			XdmNode doc = runtime.parse(new InputSource(resource.getInputStream()));
 			pipeline.writeTo(port, doc);
 		    }
                 }
             }
+
+	    // Pass any options to the pipeline
+	    for (QName name : optionsMap.keySet()) {
+		pipeline.passOption(name, optionsMap.get(name));
+	    }
+
+	    // Pass any parameters to the pipeline
+	    for (String port : parametersMap.keySet()) {
+		Hashtable<QName,RuntimeValue> useTable = parametersMap.get(port);
+		if ("*".equals(port)) { // For primary parameter input port
+		    for (QName name : useTable.keySet()) {
+			pipeline.setParameter(name, useTable.get(name));
+		    }
+		} else { // For specified parameter input port
+		    for (QName name : useTable.keySet()) {
+			pipeline.setParameter(port, name, useTable.get(name));
+		    }
+		}
+	    }
+
 	    pipeline.run();
 
-            // Look for primary output port
+            // The unamed output is matched to one unmatched output
             for (String port : pipeline.getOutputs()) {
 		if (!outputsMap.containsKey(port)) {
 		    if (outputsMap.containsKey(null)) {
@@ -882,19 +993,62 @@ public class CalabashTask extends MatchingTask {
     } // Namespace
 
     /**
-     * The Parameter inner class represents a pipeline parameter.
+     * The Option inner class represents a pipeline option.
      */
-    public static class Parameter {
-        /** The port */
-        private String port = "*";
+    public static class Option {
         /** The name */
         private String name = null;
         /** The parameter value */
         private String value = null;
 
+
+       /**
+         * Set the name.
+         * @input name the parameter name
+         */
+        public void setName(String name) {
+            this.name = name;
+        }
+
+	/**
+         * Get the parameter name
+         *
+         * @return the parameter name
+         */
+        public String getName() {
+            return name;
+        }
+
+       /**
+         * Set the value.
+         * @input value the parameter value
+         */
+        public void setValue(String value) {
+            this.value = value;
+        }
+
+	/**
+         * Get the parameter value
+         *
+         * @return the parameter value
+         */
+        public String getValue() {
+            return value;
+        }
+    } // Option
+
+    /**
+     * The Parameter inner class represents a pipeline parameter,
+     * which looks a lot like an option sent to a parameter port (or
+     * ports).
+     */
+    public static class Parameter extends Option {
+        /** The port */
+        private String port = "*";
+
         /**
          * Set the port.
-         * @input port port to which to bind the namespace
+         * @input port port to which to bind the parameter
          */
         public void setPort(String port) {
             this.port = port;
@@ -903,27 +1057,10 @@ public class CalabashTask extends MatchingTask {
 	/**
          * Get the port
          *
-         * @return the namespace port
+         * @return the parameter port
          */
         public String getPort() {
             return port;
         }
-
-       /**
-         * Set the name.
-         * @input name the namespace name
-         */
-        public void setNAME(String name) {
-            this.name = name;
-        }
-
-	/**
-         * Get the namespace name
-         *
-         * @return the namespace name
-         */
-        public String getNAME() {
-            return name;
-        }
-    } // Namespace
+    } // Parameter
 }
