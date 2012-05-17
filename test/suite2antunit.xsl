@@ -52,8 +52,9 @@
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
     xmlns:c="http://www.w3.org/ns/xproc-step"
     xmlns:err="http://www.w3.org/ns/xproc-error"
+    xmlns:au="antlib:org.apache.ant.antunit"
     version="2.0"
-    exclude-result-prefixes="xs t c err">
+    exclude-result-prefixes="xs t c err au">
 
 <xsl:strip-space elements="t:*" />
 
@@ -108,7 +109,7 @@
   <xsl:variable
       name="test-doc"
       select="document(@href, /)"
-      as="document-node()?"/>
+      as="document-node()"/>
   <xsl:variable
       name="testdir"
       select="replace(@href, '\.xml$', '')"
@@ -116,20 +117,85 @@
 
   <target name="test_{translate(replace(@href, '\.xml$', ''), '/-', '__')}" description="{$test-doc/t:test/t:title}">
     <echo message="{replace(@href, '\.xml$', '')}::{$test-doc/t:test/t:title}" />
-    <calabash pipeline="{$testdir}/pipeline.xpl">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
-      <xsl:for-each select="$test-doc/t:test/t:input">
-	<input port="{@port}">
-	  <file file="{$testdir}/input{position()}.xml" />
-	</input>
-      </xsl:for-each>
-      <xsl:for-each select="$test-doc/t:test/t:output">
-	<output port="{@port}">
-	  <file file="{$testdir}/{@port}.xml" />
-	</output>
-      </xsl:for-each>
-    </calabash>
+    <xsl:choose>
+      <xsl:when test="exists($test-doc/t:test/@error)">
+	<au:expectfailure>
+	  <xsl:call-template name="calabash-task">
+	    <xsl:with-param name="test-doc" select="$test-doc" as="document-node()" tunnel="yes" />
+	    <xsl:with-param name="testdir"
+			    select="$testdir"
+			    as="xs:string"
+			    tunnel="yes" />
+	  </xsl:call-template>
+	</au:expectfailure>
+      </xsl:when>
+      <xsl:otherwise>
+	<xsl:call-template name="calabash-task">
+	  <xsl:with-param name="test-doc"
+			  select="$test-doc"
+			  as="document-node()"
+			  tunnel="yes" />
+	  <xsl:with-param name="testdir"
+			  select="$testdir"
+			  as="xs:string"
+			  tunnel="yes" />
+	</xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>
   </target>
+</xsl:template>
+
+<xsl:template name="calabash-task">
+  <xsl:param name="test-doc" as="document-node()" tunnel="yes" required="yes" />
+  <xsl:param name="testdir" as="xs:string" tunnel="yes" required="yes" />
+  <calabash pipeline="{$testdir}/pipeline.xpl" useimplicitfileset="false">
+    <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
+    <xsl:for-each select="$test-doc/t:test/t:input">
+      <input port="{@port}">
+	<xsl:choose>
+	  <xsl:when test="exists(t:document)">
+	    <xsl:variable name="input-position"
+			  select="position()"
+			  as="xs:integer" />
+	    <xsl:for-each select="t:document">
+	      <xsl:choose>
+		<xsl:when test="exists(@href)">
+		  <file file="{$testdir}/{@href}" />
+		</xsl:when>
+		<xsl:otherwise>
+		  <file file="{$testdir}/input{$input-position}-{position()}.xml" />
+		</xsl:otherwise>
+	      </xsl:choose>
+	    </xsl:for-each>
+	  </xsl:when>
+	  <xsl:otherwise>
+	    <file file="{$testdir}/input{position()}.xml" />
+	  </xsl:otherwise>
+	</xsl:choose>
+      </input>
+    </xsl:for-each>
+    <xsl:for-each select="$test-doc/t:test/t:output">
+      <output port="{@port}">
+	<xsl:choose>
+	  <xsl:when test="exists(t:document)">
+	    <xsl:for-each select="t:document">
+	      <xsl:choose>
+		<xsl:when test="exists(@href)">
+		  <file file="{$testdir}/{@href}" />
+		</xsl:when>
+		<xsl:otherwise>
+		  <file file="{$testdir}/{@port}-{position()}.xml" />
+		</xsl:otherwise>
+	      </xsl:choose>
+	    </xsl:for-each>
+	  </xsl:when>
+	  <xsl:otherwise>
+	    <file file="{$testdir}/{@port}.xml" />
+	  </xsl:otherwise>
+	</xsl:choose>
+      </output>
+    </xsl:for-each>
+  </calabash>
 </xsl:template>
 
 <xsl:template match="t:test" mode="t:test">
@@ -167,33 +233,61 @@
   </xsl:for-each>
 
   <xsl:for-each select="$test-doc/t:test/t:input">
-    <xsl:result-document
-	href="{$testdir}/input{position()}.xml"
-	omit-xml-declaration="yes">
-      <xsl:choose>
-	<xsl:when test="exists(@href)">
-	  <xsl:copy-of select="document(@href, .)" />
-	</xsl:when>
-	<xsl:otherwise>
+    <xsl:choose>
+      <xsl:when test="exists(t:document)">
+	<xsl:variable name="input-position"
+		      select="position()"
+		      as="xs:integer" />
+	<xsl:for-each select="t:document">
+	  <xsl:choose>
+	    <!-- External document will be handled separately. -->
+	    <xsl:when test="exists(@href)" />
+	    <xsl:otherwise>
+	      <xsl:result-document
+		  href="{$testdir}/input{$input-position}-{position()}.xml"
+		  omit-xml-declaration="yes">
+		<xsl:copy-of select="*" />
+	      </xsl:result-document>
+	    </xsl:otherwise>
+	  </xsl:choose>
+	</xsl:for-each>
+      </xsl:when>
+      <xsl:otherwise>
+	<xsl:result-document
+	    href="{$testdir}/input{position()}.xml"
+	    omit-xml-declaration="yes">
 	  <xsl:copy-of select="*" />
-	</xsl:otherwise>
-      </xsl:choose>
-    </xsl:result-document>
+	</xsl:result-document>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:for-each>
 
   <xsl:for-each select="$test-doc/t:test/t:output">
-    <xsl:result-document
-	href="{$testdir}/{@port}-ref.xml"
-	omit-xml-declaration="yes">
-      <xsl:choose>
-	<xsl:when test="exists(@href)">
-	  <xsl:copy-of select="document(@href, .)" />
-	</xsl:when>
-	<xsl:otherwise>
+    <xsl:choose>
+      <xsl:when test="exists(t:document)">
+	<xsl:for-each select="t:document">
+	  <xsl:result-document
+	      href="{$testdir}/{../@port}-{position()}-ref.xml"
+	      omit-xml-declaration="yes">
+	    <xsl:choose>
+	      <xsl:when test="exists(@href)">
+		<xsl:copy-of select="document(@href, .)" />
+	      </xsl:when>
+	      <xsl:otherwise>
+		<xsl:copy-of select="*" />
+	      </xsl:otherwise>
+	    </xsl:choose>
+	  </xsl:result-document>
+	</xsl:for-each>
+      </xsl:when>
+      <xsl:otherwise>
+	<xsl:result-document
+	    href="{$testdir}/{@port}-ref.xml"
+	    omit-xml-declaration="yes">
 	  <xsl:copy-of select="*" />
-	</xsl:otherwise>
-      </xsl:choose>
-    </xsl:result-document>
+	</xsl:result-document>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:for-each>
 </xsl:template>
 
