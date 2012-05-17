@@ -624,7 +624,7 @@ public class CalabashTask extends MatchingTask {
 
 	try {
 	    XPipeline pipeline =
-		runtime.load(pipelineResource.getName());
+		runtime.load(pipelineResource.toString());
 
 	    // The unnamed input is matched to one unmatched input
 	    for (String port : pipeline.getInputs()) {
