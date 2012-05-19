@@ -26,6 +26,7 @@ import com.xmlcalabash.model.Serialization;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritableDocument;
 import com.xmlcalabash.runtime.XPipeline;
+import com.xmlcalabash.util.JSONtoXML;
 
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.BuildException;
@@ -156,6 +157,27 @@ public class CalabashTask extends MatchingTask {
     /** The processed parameters, ready for passing to Calabash */
     private Map<String,Hashtable<QName,RuntimeValue>> parametersTable =
 	new Hashtable<String,Hashtable<QName,RuntimeValue>> ();
+
+    /** whether to enable debug output */
+    private boolean debug = false;
+
+    /** whether to enable general values.  Description is about
+     * 'general values', but XProcConfiguration field is
+     * 'extensionValues'. */
+    private boolean extensionValues = false;
+
+    /** whether the xpointer attribute on an XInclude element can be
+     * used when parse="text" */
+    private boolean allowXPointerOnText = false;
+
+    /** whether to use XSLT 1.0 when ??? */
+    private boolean useXslt10 = false;
+
+    /** whether to automatically translate between JSON and XML */
+    private boolean transparentJSON = false;
+
+    /** flavor of JSON to use. As attribute. */
+    String jsonFlavor = null;
 
     /* End of fields to reset at end of execute(). */
 
@@ -455,6 +477,59 @@ public class CalabashTask extends MatchingTask {
 	parameters.add(p);
     }
 
+    /**
+     * Set whether to enable debugging output;
+     * optional, default is false.
+     *
+     * @param debug true if enable debug output
+     */
+    public void setDebug(boolean debug) {
+        this.debug = debug;
+    }
+
+    /**
+     * Set whether to enable general values;
+     * optional, default is false.
+     *
+     * See {@link http://xmlcalabash.com/docs/reference/extensions.html#ext.general-values}
+     *
+     * @param extensionValues true if enable general values
+     */
+    public void setGeneralValues(boolean generalValues) {
+        this.extensionValues = generalValues;
+    }
+
+    /**
+     * Set whether xpointer attribute on an XInclude element can be
+     * used when parse="text";
+     * optional, default is false.
+     *
+     * @param xpointerOnText true if enable XPointer on text
+     */
+    public void setXpointerOnText(boolean xpointerOnText) {
+        this.allowXPointerOnText = xpointerOnText;
+    }
+
+    /**
+     * Set whether to enable use of XSLT 1.0;
+     * optional, default is false.
+     *
+     * @param useXslt10 true if enable XSLT 1.0 support
+     */
+    public void setUseXslt10(boolean useXslt10) {
+        this.useXslt10 = useXslt10;
+    }
+
+    /**
+     * Set whether to automatically translate between JSON and XML;
+     * optional, default is false.
+     *
+     * @param transparentJSON true if enable translation
+     */
+    public void setTransparentJSON(boolean transparentJSON) {
+        this.transparentJSON = transparentJSON;
+    }
+
 
     /** Do the work. */
     public void execute() {
@@ -580,11 +655,32 @@ public class CalabashTask extends MatchingTask {
 		return;
 	    }
 
+	    XProcConfiguration config = new XProcConfiguration("he", false);
+            config.extensionValues |= extensionValues;
+            config.xpointerOnText |= allowXPointerOnText;
+            config.transparentJSON |= transparentJSON;
+            if (jsonFlavor != null) {
+		if (!JSONtoXML.knownFlavor(jsonFlavor)) {
+		    handleError("Can't parse JSON flavor '" + jsonFlavor + "' or unrecognized format: " + jsonFlavor);
+		    return;
+                    }
+                config.jsonFlavor = jsonFlavor;
+            }
+            config.useXslt10 |= useXslt10;
+
+            config.debug = debug;
+
 	    // If neither implicit or explicit fileset, assume user
 	    // knows what they're doing even though there may be no
 	    // input or output ports.
 	    if (!useImplicitFileset && resources.size() == 0) {
-		process(inputsMap, outputsMap, usePipelineResource, optionsMap, parametersTable, force);
+		process(config,
+			inputsMap,
+			outputsMap,
+			usePipelineResource,
+			optionsMap,
+			parametersTable,
+			force);
 		return;
 	    } else { // Using implicit and/or explicit filesets
 		if (useImplicitFileset) {
@@ -623,11 +719,10 @@ public class CalabashTask extends MatchingTask {
 			mapper = new ExtensionMapper();
 		    }
                 }
-                Iterator<Resource> element = resources.iterator();
-                while (element.hasNext()) {
-                    Resource resource = element.next();
+                for (Resource resource : resources.listResources()) {
                     log(resource.getName(), Project.MSG_INFO);
-                    HashMap<String, Union> useInputsMap = (HashMap<String, Union>) inputsMap.clone();
+                    HashMap<String, Union> useInputsMap = new HashMap<String, Union> ();
+		    useInputsMap.putAll(inputsMap);
                     useInputsMap.put(inPort, new Union(resource));
 
                     HashMap<String, Union> useOutputsMap = outputsMap;
@@ -640,10 +735,11 @@ public class CalabashTask extends MatchingTask {
                             log("Skipping " + resource.getName() + " as its mapping is ambiguous.", Project.MSG_VERBOSE);
                             continue;
                         }
-                        useOutputsMap = (HashMap<String, Union>) outputsMap.clone();
+                        useOutputsMap = new HashMap<String, Union> ();
+			useOutputsMap.putAll(outputsMap);
                         useOutputsMap.put(outPort, new Union(new FileResource(destDir, outFileName[0])));
                     }
-                    process(useInputsMap, useOutputsMap, usePipelineResource, optionsMap, parametersTable, force);
+                    process(config, useInputsMap, useOutputsMap, usePipelineResource, optionsMap, parametersTable, force);
                 }
 	    }
 	} finally {
@@ -679,6 +775,12 @@ public class CalabashTask extends MatchingTask {
 	    optionsMap.clear();
 	    parameters.clear();
 	    parametersTable.clear();
+	    debug = false;
+	    extensionValues = false;
+	    allowXPointerOnText = false;
+	    useXslt10 = false;
+	    transparentJSON = false;
+	    jsonFlavor = null;
 	}
     }
 
@@ -690,7 +792,13 @@ public class CalabashTask extends MatchingTask {
      * @param pipelineResource the pipeline to use.
      * @exception BuildException if the processing fails.
      */
-    private void process(Map<String,Union> inputsMap, Map<String,Union> outputsMap, Resource pipelineResource, Map<QName,RuntimeValue> optionsMap, Map<String,Hashtable<QName,RuntimeValue>> parametersMap, boolean force) throws BuildException {
+    private void process(XProcConfiguration config,
+			 Map<String,Union> inputsMap,
+			 Map<String,Union> outputsMap,
+			 Resource pipelineResource,
+			 Map<QName,RuntimeValue> optionsMap,
+			 Map<String,Hashtable<QName,RuntimeValue>> parametersMap,
+			 boolean force) throws BuildException {
 
 	long pipelineLastModified = pipelineResource.getLastModified();
 	//log("In file " + in + " time: " + in.getLastModified(), Project.MSG_DEBUG);
@@ -705,7 +813,6 @@ public class CalabashTask extends MatchingTask {
 	}
 */
 	//log("Processing " + in + " to " + out, Project.MSG_INFO);
-        XProcConfiguration config = new XProcConfiguration("he", false);
         XProcRuntime runtime = new XProcRuntime(config);
 
 	XPipeline pipeline = null;
@@ -731,9 +838,7 @@ public class CalabashTask extends MatchingTask {
 
 	    for (String port : pipeline.getInputs()) {
                 if (inputsMap.containsKey(port)) {
-		    Iterator<Resource> element = ((Union) inputsMap.get(port)).iterator();
-		    while (element.hasNext()) {
-			Resource resource = element.next();
+		    for (Resource resource : inputsMap.get(port).listResources()) {
 			log(resource.getName() + "::" + resource.isExists(), Project.MSG_INFO);
 			if (!resource.isExists()) {
 			    log("Skipping non-existent input: " + resource, Project.MSG_DEBUG);
@@ -783,7 +888,7 @@ public class CalabashTask extends MatchingTask {
                 String uri = null;
 
                 if (outputsMap.containsKey(port)) {
-                    Union resources = (Union) outputsMap.get(port);
+                    Union resources = outputsMap.get(port);
 		    if (resources.size() != 1) {
 			handleError("The '" + port + "' output port must be specified with exactly one"
                         + " nested resource.");
