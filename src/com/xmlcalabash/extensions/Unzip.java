@@ -152,13 +152,18 @@ public class Unzip extends DefaultStep {
                     XdmNode doc = runtime.parse(isource);
                     result.write(doc);
                 } else {
+                    boolean storeText = (contentType != null && contentType.startsWith("text/") && charset != null);
+
                     tree.startDocument(step.getNode().getBaseURI());
                     tree.addStartElement(XProcConstants.c_data);
                     tree.addAttribute(_name,name);
                     tree.addAttribute(_content_type, contentType);
+                    if (!storeText) {
+                        tree.addAttribute(_encoding, "base64");
+                    }
                     tree.startContent();
 
-                    if (contentType != null && contentType.startsWith("text/") && charset != null) {
+                    if (storeText) {
                         InputStreamReader reader = new InputStreamReader(zipFile, charset);
                         int maxlen = 4096;
                         char[] chars = new char[maxlen];
