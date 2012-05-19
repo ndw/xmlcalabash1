@@ -23,7 +23,8 @@
   <property name="submit.username" value="calabash"/>
   <property name="submit.password" value=""/>
 
-  <property name="javac.debug" value="true"/>
+  <!-- Whether to include debugging information when compiling. -->
+  <property name="javac.debug" value="false"/>
 
   <property name="izpack.dir" value="/Applications/IzPack"/>
 
@@ -45,6 +46,7 @@
     <fileset dir="${lib.dir}">
       <include name="*.jar"/>
     </fileset>
+    <pathelement location="${ant.library.dir}/ant.jar"/>
   </path>
 
   <path id="full.classpath">
@@ -121,9 +123,8 @@
 
     <javac destdir="${build.dir}"
 	   classpathref="build.classpath"
-           includeantruntime="true"
-	   debug="${javac.debug}"
-	   debuglevel="lines,vars,source">
+           includeantruntime="false"
+	   debug="${javac.debug}">
       <!--
       <compilerarg value="-Xlint"/>
       -->
