@@ -162,36 +162,44 @@
     </calabash>
   </target>
 
-  <target name="testBinding2" description="Use with 'includes' and 'basedir' values.">
-    <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
-      <namespace prefix="hi" />
-    </calabash>
+  <target name="testBinding2" description="Namespace prefix but no URI">
+    <au:expectfailure expectedmessage="&lt;namespace> URI cannot be null">
+      <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
+	<sysproperty key="com.xmlcalabash.phonehome" value="false" />
+	<namespace prefix="hi" />
+      </calabash>
+    </au:expectfailure>
   </target>
 
   <target name="testBinding3" description="Use with 'includes' and 'basedir' values.">
-    <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
-      <namespace uri="there" />
-    </calabash>
+    <au:expectfailure expectedmessage="&lt;namespace> prefix cannot be null">
+      <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
+	<sysproperty key="com.xmlcalabash.phonehome" value="false" />
+	<namespace uri="there" />
+      </calabash>
+    </au:expectfailure>
   </target>
 
-  <target name="testBinding4" description="Use with 'includes' and 'basedir' values.">
-    <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
-      <namespace />
-    </calabash>
+  <target name="testBinding4" description="No prefix, no URI.">
+    <au:expectfailure expectedmessage="cannot be null">
+      <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
+	<sysproperty key="com.xmlcalabash.phonehome" value="false" />
+	<namespace />
+      </calabash>
+    </au:expectfailure>
   </target>
 
-  <target name="testBinding5" description="Use with 'includes' and 'basedir' values.">
-    <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
-      <namespace prefix="hi" uri="there" />
-      <namespace prefix="hi" uri="not there" />
-    </calabash>
+  <target name="testBinding5" description="Duplicated namespace prefix.">
+    <au:expectfailure expectedmessage="Duplicated &lt;namespace> prefix">
+      <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
+	<sysproperty key="com.xmlcalabash.phonehome" value="false" />
+	<namespace prefix="hi" uri="there" />
+	<namespace prefix="hi" uri="not there" />
+      </calabash>
+    </au:expectfailure>
   </target>
 
-  <target name="testParameter1" description="Use with 'includes' and 'basedir' values.">
+  <target name="testParameter1" description="Bound prefix.">
     <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
       <sysproperty key="com.xmlcalabash.phonehome" value="false" />
       <namespace prefix="hi" uri="there" />
@@ -200,37 +208,46 @@
   </target>
 
   <target name="testParameter2" description="Use with 'includes' and 'basedir' values.">
-    <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
-      <namespace prefix="hi" uri="there" />
-      <parameter name="not:there" value="a value" />
-    </calabash>
+    <au:expectfailure expectedmessage="Unbound prefix">
+      <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
+	<sysproperty key="com.xmlcalabash.phonehome" value="false" />
+	<namespace prefix="hi" uri="there" />
+	<parameter name="not:there" value="a value" />
+      </calabash>
+    </au:expectfailure>
   </target>
 
-  <target name="testParameter3" description="Use with 'includes' and 'basedir' values.">
-    <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
-      <namespace prefix="hi" uri="there" />
-      <parameter name="hi:there" value="a value" />
-      <parameter name="hi:there" value="another value" />
-    </calabash>
+  <target name="testParameter3" description="Duplicated parameter QName.">
+    <au:expectfailure expectedmessage="Duplicated parameter QName">
+      <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
+	<sysproperty key="com.xmlcalabash.phonehome" value="false" />
+	<namespace prefix="hi" uri="there" />
+	<parameter name="hi:there" value="a value" />
+	<parameter name="hi:there" value="another value" />
+      </calabash>
+    </au:expectfailure>
   </target>
 
-  <target name="testParameter4" description="Use with 'includes' and 'basedir' values.">
-    <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
-      <namespace prefix="hi" uri="there" />
-      <namespace prefix="not" uri="there" />
-      <parameter name="hi:there" value="a value" />
-      <parameter name="not:there" value="another value" />
-    </calabash>
+  <target name="testParameter4" description="Duplicated parameter QName: same URI, different prefixes.">
+    <au:expectfailure expectedmessage="Duplicated parameter QName">
+      <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
+	<sysproperty key="com.xmlcalabash.phonehome" value="false" />
+	<namespace prefix="hi" uri="there" />
+	<namespace prefix="not" uri="there" />
+	<parameter name="hi:there" value="a value" />
+	<parameter name="not:there" value="another value" />
+      </calabash>
+    </au:expectfailure>
   </target>
 
-  <target name="testParameter5" description="'p' prefix should be bound automatically but is an error to use it for parameters.">
-    <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
-      <parameter name="p:there" value="in your morning" />
-    </calabash>
+  <target name="testParameter5"
+	  description="'p' prefix should be bound automatically but is an error to use it for parameters.  Should fail with 'XD0031'.">
+    <au:expectfailure expectedmessage="XD0031">
+      <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
+	<sysproperty key="com.xmlcalabash.phonehome" value="false" />
+	<parameter name="p:there" value="in your morning" />
+      </calabash>
+    </au:expectfailure>
   </target>
 
   <target name="testParameter6" description="Empty parameter name.">
@@ -247,13 +264,34 @@
     </calabash>
   </target>
 
-  <target name="testParameter8" description="No-namespace parameter name.">
+  <target name="testParameter8" description="Clack notation in parameter name.">
     <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
       <sysproperty key="com.xmlcalabash.phonehome" value="false" />
-      <namespace prefix="hi" uri="hi" />
+      <namespace prefix="hi" uri="low" />
       <parameter name="{hi}there" value="a value" />
       <parameter name="hi:there" value="a value" />
     </calabash>
+  </target>
+
+  <target name="testParameter9" description="Clack notation in duplicate parameter names.">
+    <au:expectfailure expectedmessage="Duplicated parameter QName">
+      <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
+	<sysproperty key="com.xmlcalabash.phonehome" value="false" />
+	<parameter name="{hi}there" value="a value" />
+	<parameter name="{hi}there" value="another value" />
+      </calabash>
+    </au:expectfailure>
+  </target>
+
+  <target name="testParameter10" description="Duplicate QName in bound and Clack notation parameter names.">
+    <au:expectfailure expectedmessage="Duplicated parameter QName">
+      <calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
+	<sysproperty key="com.xmlcalabash.phonehome" value="false" />
+	<namespace prefix="hi" uri="low" />
+	<parameter name="{low}there" value="a value" />
+	<parameter name="hi:there" value="a value" />
+      </calabash>
+    </au:expectfailure>
   </target>
 
   <target name="testOption1" description="Valid no-namespace option.">
