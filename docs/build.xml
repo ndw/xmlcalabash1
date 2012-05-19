@@ -28,6 +28,7 @@
       </classpath>
       <jvmarg value="-Xmx1024m"/>
       <arg value="-D"/>
+      <arg value="-Xxpointer-on-text"/>
       <arg value="-isource=src/ref.xml"/>
       <arg value="style/format.xpl"/>
     </java>
