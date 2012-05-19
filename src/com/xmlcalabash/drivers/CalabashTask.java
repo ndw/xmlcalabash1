@@ -402,7 +402,12 @@ public class CalabashTask extends MatchingTask {
 
     /** Do the work. */
     public void execute() {
-	Resource usePipelineResource;
+	File savedBaseDir = baseDir;
+	if (baseDir == null) {
+	    baseDir = getProject().getBaseDir();
+	}
+
+	Resource usePipelineResource = null;
 	if (pipelineURI != null) {
 	    // If we enter here, it means that the pipeline is supplied
 	    // via 'pipeline' attribute
@@ -430,9 +435,9 @@ public class CalabashTask extends MatchingTask {
 	    return;
 	}
 
-	if (inResource != null && useImplicitFileset) {
-	    handleError("'in' and implicit fileset cannot be used together.");
-	    return;
+	if ((inResource != null || outResource != null) && useImplicitFileset) {
+	    log("'in' and/or 'out' cannot be used with implicit fileset: ignoring implicit fileset.", Project.MSG_INFO);
+	    useImplicitFileset = false;
 	}
 
 	if (outResource != null && mapperElement != null) {
@@ -450,76 +455,72 @@ public class CalabashTask extends MatchingTask {
 	    return;
 	}
 
-	// When prefix "p" not set, default to the XProc namespace
-	if (!bindings.containsKey("p")) {
-	    bindings.put("p", XProcConstants.NS_XPROC);
-	}
-
-	// Can only really work with options now bindings all present
-	for (Option o : options) {
-	    QName qname = makeQName(o.getName());
-	    String value = o.getValue();
-
-	    if (optionsMap.containsKey(qname)) {
-		   handleError("Duplicated option QName: " + qname.getClarkName());
-		   continue;
-            }
-
-	    optionsMap.put(qname, new RuntimeValue(value));
-	}
-
-	// Can only really work with parameters now bindings all present
-	for (Parameter p : parameters) {
-	    String port = p.getPort();
-	    QName qname = makeQName(p.getName());
-	    String value = p.getValue();
-
-	    Hashtable<QName,RuntimeValue> portParams;
-	    if (!parametersTable.containsKey(port)) {
-		portParams = new Hashtable<QName,RuntimeValue> ();
-	    } else {
-               portParams = parametersTable.get(port);
-	       if (portParams.containsKey(qname)) {
-		   handleError("Duplicated parameter QName: " + qname.getClarkName());
-		   continue;
-	       }
-            }
-
-	    portParams.put(qname, new RuntimeValue(value));
-	    parametersTable.put(port, portParams);
-	}
-
-        File savedBaseDir = baseDir;
-	if (baseDir == null) {
-	    baseDir = getProject().getBaseDir();
-	}
-	//-- make sure destination directory exists...
-	checkDest();
-
-	// if we have an in file or out file then process them
-	if (inResource != null) {
-	    Port i = new Port();
-	    i.setPort(inPort);
-	    i.add(inResource);
-	    addConfiguredInput(i);
-	}
-	// Since processing specified inputs, use outResource too
-	if (outResource != null) {
-	    Port o = new Port();
-	    o.setPort(outPort);
-	    o.add(outResource);
-	    addConfiguredOutput(o);
-	}
-
-	if (outputsMap.containsKey(outPort)
-	    && (isTargetExtensionSet || mapperElement != null)) {
-	    handleError("Either 'out' or <output> corresponding to default output port and either 'extension' and nested <mapper> for naming output cannot be used together.");
-	    return;
-	}
-
         try {
 	    if (sysProperties.size() > 0) {
 		sysProperties.setSystem();
+	    }
+
+	    // When prefix "p" not set, default to the XProc namespace
+	    if (!bindings.containsKey("p")) {
+		bindings.put("p", XProcConstants.NS_XPROC);
+	    }
+
+	    // Can only really work with options now bindings all present
+	    for (Option o : options) {
+		QName qname = makeQName(o.getName());
+		String value = o.getValue();
+
+		if (optionsMap.containsKey(qname)) {
+		    handleError("Duplicated option QName: " + qname.getClarkName());
+		    continue;
+		}
+
+		optionsMap.put(qname, new RuntimeValue(value));
+	    }
+
+	    // Can only really work with parameters now bindings all present
+	    for (Parameter p : parameters) {
+		String port = p.getPort();
+		QName qname = makeQName(p.getName());
+		String value = p.getValue();
+
+		Hashtable<QName,RuntimeValue> portParams;
+		if (!parametersTable.containsKey(port)) {
+		    portParams = new Hashtable<QName,RuntimeValue> ();
+		} else {
+		    portParams = parametersTable.get(port);
+		    if (portParams.containsKey(qname)) {
+			handleError("Duplicated parameter QName: " + qname.getClarkName());
+			continue;
+		    }
+		}
+
+		portParams.put(qname, new RuntimeValue(value));
+		parametersTable.put(port, portParams);
+	    }
+
+	    //-- make sure destination directory exists...
+	    checkDest();
+
+	    // if we have an in file or out file then process them
+	    if (inResource != null) {
+		Port i = new Port();
+		i.setPort(inPort);
+		i.add(inResource);
+		addConfiguredInput(i);
+	    }
+	    // Since processing specified inputs, use outResource too
+	    if (outResource != null) {
+		Port o = new Port();
+		o.setPort(outPort);
+		o.add(outResource);
+		addConfiguredOutput(o);
+	    }
+
+	    if (outputsMap.containsKey(outPort)
+		&& (isTargetExtensionSet || mapperElement != null)) {
+		handleError("Either 'out' or <output> corresponding to default output port and either 'extension' and nested <mapper> for naming output cannot be used together.");
+		return;
 	    }
 
 	    // If neither implicit or explicit fileset, assume user
@@ -592,7 +593,21 @@ public class CalabashTask extends MatchingTask {
             if (sysProperties.size() > 0) {
                 sysProperties.restoreSystem();
             }
+	    sysProperties = new CommandlineJava.SysProperties();
+
             baseDir = savedBaseDir;
+
+	    // Same instance is reused when Ant runs this task
+	    // multiple times, so reset everything.
+	    inputsMap.clear();
+	    outputsMap.clear();
+	    bindings.clear();
+	    options.clear();
+	    optionsMap.clear();
+	    parameters.clear();
+	    parametersTable.clear();
+	    mapperElement = null;
+	    pipelineURI = null;
 	}
     }
 
@@ -622,8 +637,9 @@ public class CalabashTask extends MatchingTask {
         XProcConfiguration config = new XProcConfiguration("he", false);
         XProcRuntime runtime = new XProcRuntime(config);
 
+	XPipeline pipeline = null;
 	try {
-	    XPipeline pipeline =
+	    pipeline =
 		runtime.load(pipelineResource.toString());
 
 	    // The unnamed input is matched to one unmatched input
@@ -761,6 +777,10 @@ public class CalabashTask extends MatchingTask {
             }
 	} catch (Exception err) {
 	   handleError("Pipeline failed: " + err.toString());
+	} finally {
+	    pipeline = null;
+	    runtime = null;
+	    config = null;
 	}
     }
 
