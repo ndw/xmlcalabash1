@@ -63,15 +63,102 @@ import org.xml.sax.InputSource;
  * @author MenteaXML
  */
 public class CalabashTask extends MatchingTask {
+    /*
+     * Ant can reuse a Task multiple times in the one build file, so
+     * all of these fields need to be reset to their initial values
+     * at the end of evaluate().
+     *
+     * Fields with null or false initial value are explicitly set so
+     * it's obvious what to reset them to at the end of evaluate().
+     */
 
     /** Input ports and the resources associated with each. */
     private HashMap<String,Union> inputsMap = new HashMap<String,Union> ();
+
     /** Output ports and the resources associated with each. */
     private HashMap<String,Union> outputsMap = new HashMap<String,Union> ();
 
     /** Where to find the source XML file, default is the project's
      * basedir */
     private File baseDir = null;
+
+    /** Port of the pipeline input. As attribute. */
+    private String inPort = null;
+
+    /** URI of the input XML. As attribute. */
+    private Resource inResource = null;
+
+    /** Whether the build should fail if the nested resource
+     * collection is empty. */
+    private boolean failOnNoResources = true;
+
+    /** URI of the pipeline to run. As attribute. */
+    String pipelineURI = null;
+
+    /** Pipeline as a {@link org.apache.tools.ant.types.Resource} */
+    private Resource pipelineResource = null;
+
+    /** destination directory */
+    private File destDir = null;
+
+    /** Port of the pipeline output. As attribute. */
+    String outPort = null;
+
+    /** Resource of the output XML. As attribute. */
+    Resource outResource = null;
+
+    /** extension of the files produced by pipeline processing */
+    private String targetExtension = "-out.xml";
+
+    /** whether target extension has been set from build file */
+    private boolean isTargetExtensionSet = false;
+
+    /** Whether to fail the build if an error occurs. */
+    private boolean failOnError = true;
+
+    /** Additional resource collections to process. */
+    private Union resources = new Union();
+
+    /** whether resources has been set from nested resource collection */
+    private boolean isResourcesSet = false;
+
+    /** Whether to use the implicit fileset. */
+    private boolean useImplicitFileset = true;
+
+    /** Whether to process all files in the included directories as
+     * well. */
+    private boolean performDirectoryScan = true;
+
+    /** Mapper to use when a set of files gets processed. */
+    private Mapper mapperElement = null;
+
+    /** force output of target files even if they already exist */
+    private boolean force = false;
+
+    /** System properties to set during transformation. */
+    private CommandlineJava.SysProperties sysProperties =
+        new CommandlineJava.SysProperties();
+
+    /** Namespace prefix--URI bindings */
+    private Hashtable<String, String> bindings =
+	new Hashtable<String,String> ();
+
+    /** The <option>s, ready for further processing */
+    private Vector<Option> options = new Vector<Option> ();
+
+    /** The processed options, ready for passing to Calabash */
+    private Map<QName,RuntimeValue> optionsMap =
+	new HashMap<QName,RuntimeValue> ();
+
+    /** The <param>s, ready for further processing */
+    private Vector<Parameter> parameters = new Vector<Parameter> ();
+
+    /** The processed parameters, ready for passing to Calabash */
+    private Map<String,Hashtable<QName,RuntimeValue>> parametersTable =
+	new Hashtable<String,Hashtable<QName,RuntimeValue>> ();
+
+    /* End of fields to reset at end of execute(). */
+
     /**
      * Set the base directory;
      * optional, default is the project's basedir.
@@ -82,15 +169,23 @@ public class CalabashTask extends MatchingTask {
         baseDir = dir;
     }
 
-
-    /** Port of the pipeline input. As attribute. */
-    private String inPort;
+    /**
+     * Set the input port name.
+     * optional, default is the first unmatched pipeline input port.
+     *
+     * @param port the port name
+     **/
     public void setinPort(String port) {
         inPort = port;
     }
 
-    /** URI of the input XML. As attribute. */
-    private Resource inResource;
+    /**
+     * Set the input resource.
+     * optional, implicit and/or explicit filest will be used if this
+     * and outResource are not set.
+     *
+     * @param inResource the {@link org.apache.tools.ant.types.Resource}
+     **/
     public void setIn(Resource inResource) {
         this.inResource = inResource;
     }
@@ -118,23 +213,20 @@ public class CalabashTask extends MatchingTask {
      * Whether the build should fail if the nested resource collection
      * is empty.
      */
-    private boolean failOnNoResources = true;
-    /**
-     * Whether the build should fail if the nested resource collection
-     * is empty.
-     */
     public void setFailOnNoResources(boolean b) {
         failOnNoResources = b;
     }
 
-    /** URI of the pipeline to run. As attribute. */
-    String pipelineURI;
+    /**
+     * Set the pipeline.
+     * optional, nested &lt;pipeline> will be used if not set.
+     *
+     * @param uri pipeline location
+     **/
     public void setPipeline(String uri) {
         pipelineURI = uri;
     }
 
-    /** Pipeline as a {@link org.apache.tools.ant.types.Resource} */
-    private Resource pipelineResource = null;
     /**
      * API method to set the pipeline Resource.
      * @param pipelineResource Resource to set as the pipeline.
@@ -157,8 +249,6 @@ public class CalabashTask extends MatchingTask {
  	}
     }
 
-    /** destination directory */
-    private File destDir = null;
     /**
      * Set the destination directory into which the XSL result
      * files should be copied to;
@@ -170,14 +260,23 @@ public class CalabashTask extends MatchingTask {
         destDir = dir;
     }
 
-    /** Port of the pipeline output. As attribute. */
-    String outPort;
+    /**
+     * Set the output port name.
+     * optional, default is the first unmatched pipeline output port.
+     *
+     * @param port the port name
+     **/
     public void setOutPort(String port) {
         outPort = port;
     }
 
-    /** Resource of the output XML. As attribute. */
-    Resource outResource;
+    /**
+     * Set the output resource.
+     * optional, implicit and/or explicit filest will be used if this
+     * and inResource are not set.
+     *
+     * @param outResource the {@link org.apache.tools.ant.types.Resource}
+     **/
     public void setOut(Resource outResource) {
         this.outResource = outResource;
     }
@@ -204,10 +303,6 @@ public class CalabashTask extends MatchingTask {
         outputsMap.get(port).add(o.getResources());
     }
 
-    /** extension of the files produced by pipeline processing */
-    private String targetExtension = "-out.xml";
-    /** whether target extension has been set from build file */
-    private boolean isTargetExtensionSet = false;
     /**
      * Set the desired file extension to be used for the target;
      * optional, default is '-out.xml'.
@@ -218,8 +313,6 @@ public class CalabashTask extends MatchingTask {
 	isTargetExtensionSet = true;
     }
 
-    /** Whether to fail the build if an error occurs. */
-    private boolean failOnError = true;
     /**
      * Whether any errors should make the build fail.
      */
@@ -227,12 +320,6 @@ public class CalabashTask extends MatchingTask {
         failOnError = b;
     }
 
-    /**
-     * Additional resource collections to process.
-     */
-    private Union resources = new Union();
-    /** whether resources has been set from nested resource collection */
-    private boolean isResourcesSet = false;
     /**
      * Adds a collection of resources to process in addition to the
      * given file or the implicit fileset.
@@ -246,24 +333,16 @@ public class CalabashTask extends MatchingTask {
 
     /**
      * Whether to use the implicit fileset.
-     */
-    private boolean useImplicitFileset = true;
-    /**
-     * Whether to use the implicit fileset.
      *
      * <p>Set this to false if you want explicit control with nested
      * resource collections.</p>
-     * @param useimplicitfileset set to true if you want to use implicit fileset
+     * @param useimplicitfileset set to true if you want to use
+     * implicit fileset
      */
     public void setUseImplicitFileset(boolean useimplicitfileset) {
         useImplicitFileset = useimplicitfileset;
     }
 
-    /**
-     * Whether to process all files in the included directories as
-     * well.
-     */
-    private boolean performDirectoryScan = true;
     /**
      * Whether to process all files in the included directories as
      * well; optional, default is true.
@@ -273,11 +352,6 @@ public class CalabashTask extends MatchingTask {
     public void setScanIncludedDirectories(boolean b) {
         performDirectoryScan = b;
     }
-
-    /**
-     * Mapper to use when a set of files gets processed.
-     */
-    private Mapper mapperElement = null;
 
     /**
      * Defines the mapper to map source to destination files.
@@ -303,8 +377,6 @@ public class CalabashTask extends MatchingTask {
        addMapper(mapper);
     }
 
-    /** force output of target files even if they already exist */
-    private boolean force = false;
     /**
      * Set whether to check dependencies, or always generate;
      * optional, default is false.
@@ -314,12 +386,6 @@ public class CalabashTask extends MatchingTask {
     public void setForce(boolean force) {
         this.force = force;
     }
-
-    /**
-     * System properties to set during transformation.
-     */
-    private CommandlineJava.SysProperties sysProperties =
-        new CommandlineJava.SysProperties();
 
     /**
      * A system property to set during transformation.
@@ -335,8 +401,6 @@ public class CalabashTask extends MatchingTask {
         sysProperties.addSyspropertyset(sysp);
     }
 
-    /** Namespace prefix--URI bindings */
-    private Hashtable<String, String> bindings = new Hashtable<String,String> ();
     /**
      * Work with an instance of a <binding> element already configured
      * by Ant.
@@ -363,10 +427,6 @@ public class CalabashTask extends MatchingTask {
         bindings.put(n.getPrefix(), n.getURI());
     }
 
-    /** The <option>s, ready for further processing */
-    private Vector<Option> options = new Vector<Option> ();
-    /** The processed options, ready for passing to Calabash */
-    private Map<QName,RuntimeValue> optionsMap = new HashMap<QName,RuntimeValue> ();
     /**
      * Work with an instance of a <option> element already configured
      * by Ant.
@@ -381,10 +441,6 @@ public class CalabashTask extends MatchingTask {
 	options.add(o);
     }
 
-    /** The <param>s, ready for further processing */
-    private Vector<Parameter> parameters = new Vector<Parameter> ();
-    /** The processed parameters, ready for passing to Calabash */
-    private Map<String,Hashtable<QName,RuntimeValue>> parametersTable = new Hashtable<String,Hashtable<QName,RuntimeValue>> ();
     /**
      * Work with an instance of a <parameter> element already
      * configured by Ant.
@@ -403,59 +459,60 @@ public class CalabashTask extends MatchingTask {
     /** Do the work. */
     public void execute() {
 	File savedBaseDir = baseDir;
-	if (baseDir == null) {
-	    baseDir = getProject().getBaseDir();
-	}
-
-	Resource usePipelineResource = null;
-	if (pipelineURI != null) {
-	    // If we enter here, it means that the pipeline is supplied
-	    // via 'pipeline' attribute
-	    File pipelineFile = getProject().resolveFile(pipelineURI);
-	    FileResource fr = new FileResource();
-	    fr.setProject(getProject());
-	    fr.setFile(pipelineFile);
-	    usePipelineResource = fr;
-	} else {
-	    usePipelineResource = pipelineResource;
-	}
-
-	if (!usePipelineResource.isExists()) {
-	    handleError("pipeline '" + usePipelineResource.getName() + "' does not exist");
-	    return;
-	}
-
-	if (inResource != null && !inResource.isExists()) {
-	    handleError("input file '" + inResource.getName() + "' does not exist");
-	    return;
-	}
-
-	if (inResource != null && resources.size() != 0) {
-	    handleError("'in' and explicit filesets cannot be used together.");
-	    return;
-	}
-
-	if ((inResource != null || outResource != null) && useImplicitFileset) {
-	    log("'in' and/or 'out' cannot be used with implicit fileset: ignoring implicit fileset.", Project.MSG_INFO);
-	    useImplicitFileset = false;
-	}
-
-	if (outResource != null && mapperElement != null) {
-	    handleError("Nested <mapper> for default output and 'out' cannot be used together.");
-	    return;
-	}
-
-	if (outResource != null && isTargetExtensionSet) {
-	    handleError("'extension' and 'out' cannot be used together.");
-	    return;
-	}
-
-	if (isTargetExtensionSet && mapperElement != null) {
-	    handleError("'extension' and nested <mapper> cannot be used together.");
-	    return;
-	}
 
         try {
+	    if (baseDir == null) {
+		baseDir = getProject().getBaseDir();
+	    }
+
+	    Resource usePipelineResource = null;
+	    if (pipelineURI != null) {
+		// If we enter here, it means that the pipeline is supplied
+		// via 'pipeline' attribute
+		File pipelineFile = getProject().resolveFile(pipelineURI);
+		FileResource fr = new FileResource();
+		fr.setProject(getProject());
+		fr.setFile(pipelineFile);
+		usePipelineResource = fr;
+	    } else {
+		usePipelineResource = pipelineResource;
+	    }
+
+	    if (!usePipelineResource.isExists()) {
+		handleError("pipeline '" + usePipelineResource.getName() + "' does not exist");
+		return;
+	    }
+
+	    if (inResource != null && !inResource.isExists()) {
+		handleError("input file '" + inResource.getName() + "' does not exist");
+		return;
+	    }
+
+	    if (inResource != null && resources.size() != 0) {
+		handleError("'in' and explicit filesets cannot be used together.");
+		return;
+	    }
+
+	    if ((inResource != null || outResource != null) && useImplicitFileset) {
+		log("'in' and/or 'out' cannot be used with implicit fileset: ignoring implicit fileset.", Project.MSG_INFO);
+		useImplicitFileset = false;
+	    }
+
+	    if (outResource != null && mapperElement != null) {
+		handleError("Nested <mapper> for default output and 'out' cannot be used together.");
+		return;
+	    }
+
+	    if (outResource != null && isTargetExtensionSet) {
+		handleError("'extension' and 'out' cannot be used together.");
+		return;
+	    }
+
+	    if (isTargetExtensionSet && mapperElement != null) {
+		handleError("'extension' and nested <mapper> cannot be used together.");
+		return;
+	    }
+
 	    if (sysProperties.size() > 0) {
 		sysProperties.setSystem();
 	    }
@@ -590,24 +647,38 @@ public class CalabashTask extends MatchingTask {
                 }
 	    }
 	} finally {
-            if (sysProperties.size() > 0) {
-                sysProperties.restoreSystem();
-            }
-	    sysProperties = new CommandlineJava.SysProperties();
-
-            baseDir = savedBaseDir;
-
 	    // Same instance is reused when Ant runs this task
 	    // multiple times, so reset everything.
 	    inputsMap.clear();
 	    outputsMap.clear();
+            baseDir = null;
+	    inPort = null;
+	    inResource = null;
+	    failOnNoResources = true;
+	    pipelineURI = null;
+	    pipelineResource = null;
+	    destDir = null;
+	    outPort = null;
+	    outResource = null;
+	    targetExtension = "-out.xml";
+	    isTargetExtensionSet = false;
+	    failOnError = true;
+	    resources = new Union();
+	    isResourcesSet = false;
+	    useImplicitFileset = true;
+	    performDirectoryScan = true;
+	    mapperElement = null;
+	    force = false;
+            if (sysProperties.size() > 0) {
+                sysProperties.restoreSystem();
+		// No way to clear CommandlineJava.SysProperties
+		sysProperties = new CommandlineJava.SysProperties();
+            }
 	    bindings.clear();
 	    options.clear();
 	    optionsMap.clear();
 	    parameters.clear();
 	    parametersTable.clear();
-	    mapperElement = null;
-	    pipelineURI = null;
 	}
     }
 
