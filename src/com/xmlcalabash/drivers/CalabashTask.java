@@ -799,16 +799,18 @@ public class CalabashTask extends MatchingTask {
 			for (String port : outputMappers.keySet()) {
 			    FileNameMapper outputMapper = outputMappers.get(port);
 
-			    Union outputResources = new Union();
 			    String[] outputFileNames =
 				outputMapper.mapFileName(resource.getName());
 			    // Mapper may produce zero or more filenames,
 			    // which may or may not be what was wanted but
 			    // only the user will know that.
-			    for (String fileName : outputFileNames) {
-				outputResources.add(new FileResource(baseDir, fileName));
+			    if (outputFileNames != null) {
+				Union outputResources = new Union();
+				for (String fileName : outputFileNames) {
+				    outputResources.add(new FileResource(baseDir, fileName));
+				}
+				useOutputResources.put(port, outputResources);
 			    }
-			    useOutputResources.put(port, outputResources);
 			}
 		    }
 		}
@@ -878,11 +880,13 @@ public class CalabashTask extends MatchingTask {
 			// Mapper may produce zero or more filenames,
 			// which may or may not be what was wanted but
 			// only the user will know that.
-			Union mappedResources = new Union();
-			for (String fileName : inputFileNames) {
-			    mappedResources.add(new FileResource(baseDir, fileName));
+			if (inputFileNames != null) {
+			    Union mappedResources = new Union();
+			    for (String fileName : inputFileNames) {
+				mappedResources.add(new FileResource(baseDir, fileName));
+			    }
+			    useInputResources.put(port, mappedResources);
 			}
-			useInputResources.put(port, mappedResources);
 		    }
 
                     HashMap<String, Union> useOutputResources =
@@ -907,16 +911,18 @@ public class CalabashTask extends MatchingTask {
 		    for (String port : outputMappers.keySet()) {
 			FileNameMapper outputMapper = outputMappers.get(port);
 
-			Union outputResources = new Union();
                         String[] outputFileNames =
 			    outputMapper.mapFileName(resource.getName());
 			// Mapper may produce zero or more filenames,
 			// which may or may not be what was wanted but
 			// only the user will know that.
-			for (String fileName : outputFileNames) {
-			    outputResources.add(new FileResource(baseDir, fileName));
+			if (outputFileNames != null) {
+			    Union outputResources = new Union();
+			    for (String fileName : outputFileNames) {
+				outputResources.add(new FileResource(baseDir, fileName));
+			    }
+			    useOutputResources.put(port, outputResources);
 			}
-			useOutputResources.put(port, outputResources);
 		    }
                     process(config, useInputResources, useOutputResources, usePipelineResource, optionsMap, parametersTable, force);
                 }
@@ -996,16 +1002,19 @@ public class CalabashTask extends MatchingTask {
 		outputsLastModified.add(resource.getLastModified());
 	    }
 	}
-	long oldestOutputLastModified = Collections.min(outputsLastModified);
+	long oldestOutputLastModified =
+	    outputsLastModified.isEmpty() ? 0 : Collections.min(outputsLastModified);
 
 	log("Newest input time: " + newestInputLastModified, Project.MSG_DEBUG);
 	log("Oldest output time: " + oldestOutputLastModified, Project.MSG_DEBUG);
 	log("Pipeline file " + pipelineResource + " time: " + pipelineLastModified, Project.MSG_DEBUG);
 
-	if (!force && newestInputLastModified < oldestOutputLastModified
-	    && pipelineLastModified < oldestOutputLastModified) {
-	    log("Skipping because all outputs are newer than inputs and newer than pipeline", Project.MSG_DEBUG);
-	    return;
+	if (!force) {
+	    if (newestInputLastModified < oldestOutputLastModified &&
+		pipelineLastModified < oldestOutputLastModified) {
+		log("Skipping because all outputs are newer than inputs and newer than pipeline", Project.MSG_DEBUG);
+		return;
+	    }
 	}
 
 	//log("Processing " + in + " to " + out, Project.MSG_INFO);
