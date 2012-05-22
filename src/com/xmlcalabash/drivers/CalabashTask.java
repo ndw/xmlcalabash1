@@ -613,66 +613,66 @@ public class CalabashTask extends MatchingTask {
 
     /** Do the work. */
     public void execute() {
+	Resource usePipelineResource = null;
+	if (pipelineURI != null) {
+	    // If we enter here, it means that the pipeline is supplied
+	    // via 'pipeline' attribute
+	    File pipelineFile = getProject().resolveFile(pipelineURI);
+	    FileResource fr = new FileResource();
+	    fr.setProject(getProject());
+	    fr.setFile(pipelineFile);
+	    usePipelineResource = fr;
+	} else {
+	    usePipelineResource = pipelineResource;
+	}
+
+	if (!usePipelineResource.isExists()) {
+	    handleError("pipeline '" + usePipelineResource.getName() + "' does not exist");
+	    return;
+	}
+
+	if (inResource != null && !inResource.isExists()) {
+	    handleError("input file '" + inResource.getName() + "' does not exist");
+	    return;
+	}
+
+	if (inResource != null && resources.size() != 0) {
+	    handleError("'in' and explicit filesets cannot be used together.");
+	    return;
+	}
+
+	if ((inResource != null || outResource != null) && useImplicitFileset) {
+	    log("'in' and/or 'out' cannot be used with implicit fileset: ignoring implicit fileset.", Project.MSG_VERBOSE);
+	    useImplicitFileset = false;
+	}
+
+	if (outResource != null && mapper != null) {
+	    handleError("Nested <mapper> for default output and 'out' cannot be used together.");
+	    return;
+	}
+
+	if ((outputMappers.containsKey(outPort) ||
+	     outputResources.containsKey(outPort)) &&
+	    mapper != null) {
+	    handleError("Nested <mapper> and port for default output cannot be used together.");
+	    return;
+	}
+
+	if (outResource != null && isTargetExtensionSet) {
+	    handleError("'extension' and 'out' cannot be used together.");
+	    return;
+	}
+
+	if (isTargetExtensionSet && mapper != null) {
+	    handleError("'extension' and nested <mapper> cannot be used together.");
+	    return;
+	}
+
 	File savedBaseDir = baseDir;
 
         try {
 	    if (baseDir == null) {
 		baseDir = getProject().getBaseDir();
-	    }
-
-	    Resource usePipelineResource = null;
-	    if (pipelineURI != null) {
-		// If we enter here, it means that the pipeline is supplied
-		// via 'pipeline' attribute
-		File pipelineFile = getProject().resolveFile(pipelineURI);
-		FileResource fr = new FileResource();
-		fr.setProject(getProject());
-		fr.setFile(pipelineFile);
-		usePipelineResource = fr;
-	    } else {
-		usePipelineResource = pipelineResource;
-	    }
-
-	    if (!usePipelineResource.isExists()) {
-		handleError("pipeline '" + usePipelineResource.getName() + "' does not exist");
-		return;
-	    }
-
-	    if (inResource != null && !inResource.isExists()) {
-		handleError("input file '" + inResource.getName() + "' does not exist");
-		return;
-	    }
-
-	    if (inResource != null && resources.size() != 0) {
-		handleError("'in' and explicit filesets cannot be used together.");
-		return;
-	    }
-
-	    if ((inResource != null || outResource != null) && useImplicitFileset) {
-		log("'in' and/or 'out' cannot be used with implicit fileset: ignoring implicit fileset.", Project.MSG_VERBOSE);
-		useImplicitFileset = false;
-	    }
-
-	    if (outResource != null && mapper != null) {
-		handleError("Nested <mapper> for default output and 'out' cannot be used together.");
-		return;
-	    }
-
-	    if ((outputMappers.containsKey(outPort) ||
-		 outputResources.containsKey(outPort)) &&
-		mapper != null) {
-		handleError("Nested <mapper> and port for default output cannot be used together.");
-		return;
-	    }
-
-	    if (outResource != null && isTargetExtensionSet) {
-		handleError("'extension' and 'out' cannot be used together.");
-		return;
-	    }
-
-	    if (isTargetExtensionSet && mapper != null) {
-		handleError("'extension' and nested <mapper> cannot be used together.");
-		return;
 	    }
 
 	    if (sysProperties.size() > 0) {
@@ -819,7 +819,7 @@ public class CalabashTask extends MatchingTask {
 			optionsMap,
 			parametersTable,
 			force);
-		return;
+		//return;
 	    } else { // Using implicit and/or explicit filesets
 		if (useImplicitFileset) {
 		    DirectoryScanner scanner = getDirectoryScanner(baseDir);
@@ -923,7 +923,7 @@ public class CalabashTask extends MatchingTask {
 	    }
 	} finally {
 	    // Same instance is reused when Ant runs this task
-	    // multiple times, so reset everything.
+	    // again, so reset everything.
 	    inputResources.clear();
 	    inputMappers.clear();
 	    outputResources.clear();
