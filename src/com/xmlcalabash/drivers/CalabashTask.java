@@ -71,13 +71,16 @@ public class CalabashTask extends MatchingTask {
      *
      * Fields with null or false initial value are explicitly set so
      * it's obvious what to reset them to at the end of evaluate().
+     *
+     * Fields vaguely follow the sequence input, pipeline, output,
+     * then the rest.
      */
 
     /** Input ports and the resources associated with each. */
-    private HashMap<String,Union> inputsMap = new HashMap<String,Union> ();
+    private HashMap<String,Union> inputResources = new HashMap<String,Union> ();
 
-    /** Output ports and the resources associated with each. */
-    private HashMap<String,Union> outputsMap = new HashMap<String,Union> ();
+    /** Input ports and the mapper associated with each. */
+    private Map<String,FileNameMapper> inputMappers = new HashMap<String,FileNameMapper> ();
 
     /** Where to find the source XML file, default is the project's
      * basedir */
@@ -94,7 +97,7 @@ public class CalabashTask extends MatchingTask {
     private boolean failOnNoResources = true;
 
     /** URI of the pipeline to run. As attribute. */
-    String pipelineURI = null;
+    private String pipelineURI = null;
 
     /** Pipeline as a {@link org.apache.tools.ant.types.Resource} */
     private Resource pipelineResource = null;
@@ -103,10 +106,16 @@ public class CalabashTask extends MatchingTask {
     private File destDir = null;
 
     /** Port of the pipeline output. As attribute. */
-    String outPort = null;
+    private String outPort = null;
 
     /** Resource of the output XML. As attribute. */
-    Resource outResource = null;
+    private  Resource outResource = null;
+
+    /** Output ports and the resources associated with each. */
+    private HashMap<String,Union> outputResources = new HashMap<String,Union> ();
+
+    /** Output ports and the mapper associated with each. */
+    private Map<String,FileNameMapper> outputMappers = new HashMap<String,FileNameMapper> ();
 
     /** extension of the files produced by pipeline processing */
     private String targetExtension = "-out.xml";
@@ -131,7 +140,7 @@ public class CalabashTask extends MatchingTask {
     private boolean performDirectoryScan = true;
 
     /** Mapper to use when a set of files gets processed. */
-    private Mapper mapperElement = null;
+    private FileNameMapper mapper = null;
 
     /** force output of target files even if they already exist */
     private boolean force = false;
@@ -224,11 +233,46 @@ public class CalabashTask extends MatchingTask {
 	}
 
 	String port = i.getPort();
+	FileNameMapper inputMapper = i.getMapper();
+	Union resources = i.getResources();
 
-	if (!inputsMap.containsKey(port)) {
-	    inputsMap.put(port, new Union ());
+	if (port == null) {
+            port = inPort;
+        }
+
+	if (inputMapper != null && resources.size() != 0) {
+	    handleError("Both mapper and fileset on input port: " + port);
+	    return;
 	}
-        inputsMap.get(port).add(i.getResources());
+
+	if (inputMapper != null) {
+	    if (port.equals(inPort)) {
+		handleError("Cannot use mapper on main input port: " + port);
+		return;
+	    }
+	    if (inputResources.containsKey(port)) {
+		handleError("Mapper used on input port that already has resources: " + port);
+		return;
+	    }
+
+	    if (inputMappers.containsKey(port)) {
+		handleError("Mapper used on input port that already has a mapper: " + port);
+		return;
+	    }
+
+	    inputMappers.put(port, inputMapper);
+	} else {
+	    if (inputMappers.containsKey(port)) {
+		handleError("Resources used on input port that already has a mapper: " + port);
+		return;
+	    }
+
+	    if (!inputResources.containsKey(port)) {
+		inputResources.put(port, new Union ());
+	    }
+
+	    inputResources.get(port).add(resources);
+	}
     }
 
     /**
@@ -315,14 +359,41 @@ public class CalabashTask extends MatchingTask {
 	}
 
 	String port = o.getPort();
-        if (port == null) {
+ 	FileNameMapper outputMapper = o.getMapper();
+	Union resources = o.getResources();
+
+	if (port == null) {
             port = outPort;
         }
 
-	if (!outputsMap.containsKey(port)) {
-	    outputsMap.put(port, new Union ());
+	if (outputMapper != null && resources.size() != 0) {
+	    handleError("Both mapper and fileset on input port: " + port);
+	    return;
 	}
-        outputsMap.get(port).add(o.getResources());
+
+	if (outputMapper != null) {
+	    if (outputResources.containsKey(port)) {
+		handleError("Mapper used on output port that already has resources: " + port);
+		return;
+	    }
+
+	    if (outputMappers.containsKey(port)) {
+		handleError("Mapper used on output port that already has a mapper: " + port);
+		return;
+	    }
+
+	    outputMappers.put(port, outputMapper);
+	} else {
+	    if (outputMappers.containsKey(port)) {
+		handleError("Resources used on output port that already has a mapper: " + port);
+		return;
+	    }
+
+	    if (!outputResources.containsKey(port)) {
+		outputResources.put(port, new Union ());
+	    }
+	    outputResources.get(port).add(o.getResources());
+	}
     }
 
     /**
@@ -380,12 +451,8 @@ public class CalabashTask extends MatchingTask {
      * @param mapper the mapper to use
      * @exception BuildException if more than one mapper is defined
      */
-    public void addMapper(Mapper mapper) {
-        if (mapperElement != null) {
-            handleError("Cannot define more than one mapper");
-        } else {
-            mapperElement = mapper;
-        }
+    public void addMapper(Mapper mapper) throws BuildException {
+	add(mapper.getImplementation());
     }
 
     /**
@@ -394,9 +461,12 @@ public class CalabashTask extends MatchingTask {
      * @exception BuildException if more than one mapper is defined
      */
     public void add(FileNameMapper fileNameMapper) throws BuildException {
-       Mapper mapper = new Mapper(getProject());
-       mapper.add(fileNameMapper);
-       addMapper(mapper);
+        if (mapper != null) {
+            handleError("Cannot define more than one mapper");
+	    return;
+        }
+
+	mapper = fileNameMapper;
     }
 
     /**
@@ -506,7 +576,7 @@ public class CalabashTask extends MatchingTask {
      *
      * @param xpointerOnText true if enable XPointer on text
      */
-    public void setXpointerOnText(boolean xpointerOnText) {
+    public void setXPointerOnText(boolean xpointerOnText) {
         this.allowXPointerOnText = xpointerOnText;
     }
 
@@ -528,6 +598,16 @@ public class CalabashTask extends MatchingTask {
      */
     public void setTransparentJSON(boolean transparentJSON) {
         this.transparentJSON = transparentJSON;
+    }
+
+    /**
+     * Set whether to automatically translate between JSON and XML;
+     * optional, default is false.
+     *
+     * @param transparentJSON true if enable translation
+     */
+    public void setJSONFlavor(String jsonFlavor) {
+        this.jsonFlavor = jsonFlavor;
     }
 
 
@@ -569,12 +649,19 @@ public class CalabashTask extends MatchingTask {
 	    }
 
 	    if ((inResource != null || outResource != null) && useImplicitFileset) {
-		log("'in' and/or 'out' cannot be used with implicit fileset: ignoring implicit fileset.", Project.MSG_INFO);
+		log("'in' and/or 'out' cannot be used with implicit fileset: ignoring implicit fileset.", Project.MSG_VERBOSE);
 		useImplicitFileset = false;
 	    }
 
-	    if (outResource != null && mapperElement != null) {
+	    if (outResource != null && mapper != null) {
 		handleError("Nested <mapper> for default output and 'out' cannot be used together.");
+		return;
+	    }
+
+	    if ((outputMappers.containsKey(outPort) ||
+		 outputResources.containsKey(outPort)) &&
+		mapper != null) {
+		handleError("Nested <mapper> and port for default output cannot be used together.");
 		return;
 	    }
 
@@ -583,7 +670,7 @@ public class CalabashTask extends MatchingTask {
 		return;
 	    }
 
-	    if (isTargetExtensionSet && mapperElement != null) {
+	    if (isTargetExtensionSet && mapper != null) {
 		handleError("'extension' and nested <mapper> cannot be used together.");
 		return;
 	    }
@@ -649,13 +736,15 @@ public class CalabashTask extends MatchingTask {
 		addConfiguredOutput(o);
 	    }
 
-	    if (outputsMap.containsKey(outPort)
-		&& (isTargetExtensionSet || mapperElement != null)) {
+	    if (outputResources.containsKey(outPort)
+		&& (isTargetExtensionSet || mapper != null)) {
 		handleError("Either 'out' or <output> corresponding to default output port and either 'extension' and nested <mapper> for naming output cannot be used together.");
 		return;
 	    }
 
-	    XProcConfiguration config = new XProcConfiguration("he", false);
+	    // Set up Calabash config.
+	    XProcConfiguration config =
+		new XProcConfiguration("he", false);
             config.extensionValues |= extensionValues;
             config.xpointerOnText |= allowXPointerOnText;
             config.transparentJSON |= transparentJSON;
@@ -674,9 +763,58 @@ public class CalabashTask extends MatchingTask {
 	    // knows what they're doing even though there may be no
 	    // input or output ports.
 	    if (!useImplicitFileset && resources.size() == 0) {
+		HashMap<String, Union> useInputResources =
+		    new HashMap<String, Union> ();
+		// Any fixed resources on any input ports.
+		useInputResources.putAll(inputResources);
+		// Any mapped resources on non-inPort input ports.
+		for (String port : inputMappers.keySet()) {
+		    FileNameMapper inputMapper = inputMappers.get(port);
+		    for (Resource resource : inputResources.get(inPort).listResources()) {
+			String[] inputFileNames =
+			    inputMapper.mapFileName(resource.getName());
+			// Mapper may produce zero or more filenames,
+			// which may or may not be what was wanted but
+			// only the user will know that.
+			Union mappedResources = new Union();
+			for (String fileName : inputFileNames) {
+			    FileResource mappedResource =
+				new FileResource(baseDir, fileName);
+			    if (mappedResource.isExists()) {
+				mappedResources.add(mappedResource);
+			    } else {
+				log("Skipping non-exstent mapped resource: " + mappedResource.toString(), Project.MSG_DEBUG);
+			    }
+			}
+			useInputResources.put(port, mappedResources);
+		    }
+		}
+		HashMap<String, Union> useOutputResources =
+		    new HashMap<String, Union> ();
+		useOutputResources.putAll(outputResources);
+
+		if (outputMappers.size() != 0) {
+		    for (Resource resource : inputResources.get(inPort).listResources()) {
+			// Aadd any mapped resources on output ports.
+			for (String port : outputMappers.keySet()) {
+			    FileNameMapper outputMapper = outputMappers.get(port);
+
+			    Union outputResources = new Union();
+			    String[] outputFileNames =
+				outputMapper.mapFileName(resource.getName());
+			    // Mapper may produce zero or more filenames,
+			    // which may or may not be what was wanted but
+			    // only the user will know that.
+			    for (String fileName : outputFileNames) {
+				outputResources.add(new FileResource(baseDir, fileName));
+			    }
+			    useOutputResources.put(port, outputResources);
+			}
+		    }
+		}
 		process(config,
-			inputsMap,
-			outputsMap,
+			useInputResources,
+			useOutputResources,
 			usePipelineResource,
 			optionsMap,
 			parametersTable,
@@ -711,23 +849,50 @@ public class CalabashTask extends MatchingTask {
 		    }
 		}
 
-    		FileNameMapper mapper = null;
-		if (!outputsMap.containsKey(outPort)) {
-		    if (mapperElement != null) {
-			mapper = mapperElement.getImplementation();
+    		FileNameMapper useMapper = null;
+		if (!outputResources.containsKey(outPort)) {
+		    if (mapper != null) {
+			useMapper = mapper;
 		    } else {
-			mapper = new ExtensionMapper();
+			useMapper = new ExtensionMapper();
 		    }
                 }
-                for (Resource resource : resources.listResources()) {
-                    log(resource.getName(), Project.MSG_INFO);
-                    HashMap<String, Union> useInputsMap = new HashMap<String, Union> ();
-		    useInputsMap.putAll(inputsMap);
-                    useInputsMap.put(inPort, new Union(resource));
 
-                    HashMap<String, Union> useOutputsMap = outputsMap;
-                    if (mapper != null) {
-                        String[] outFileName = mapper.mapFileName(resource.getName());
+		// Process implicit and/or explicit resources one at a
+		// time.
+                for (Resource resource : resources.listResources()) {
+                    log("Resource: " + resource.getName(), Project.MSG_DEBUG);
+                    HashMap<String, Union> useInputResources =
+			new HashMap<String, Union> ();
+
+		    // Any fixed resources on other input ports.
+		    useInputResources.putAll(inputResources);
+		    // The resource.
+                    useInputResources.put(inPort, new Union(resource));
+		    // Any mapped resources on other input ports.
+		    for (String port : inputMappers.keySet()) {
+			FileNameMapper inputMapper = inputMappers.get(port);
+
+                        String[] inputFileNames =
+			    inputMapper.mapFileName(resource.getName());
+			// Mapper may produce zero or more filenames,
+			// which may or may not be what was wanted but
+			// only the user will know that.
+			Union mappedResources = new Union();
+			for (String fileName : inputFileNames) {
+			    mappedResources.add(new FileResource(baseDir, fileName));
+			}
+			useInputResources.put(port, mappedResources);
+		    }
+
+                    HashMap<String, Union> useOutputResources =
+			new HashMap<String, Union> ();
+		    useOutputResources.putAll(outputResources);
+		    // FIXME: Why is it necessary to check for null?
+                    if (useMapper != null) {
+                        String[] outFileName = useMapper.mapFileName(resource.getName());
+			// Require exactly one output for each mapped
+			// input.
                         if (outFileName == null || outFileName.length == 0) {
                             log("Skipping '" + resource.getName() + "' as it cannot be mapped to output.", Project.MSG_VERBOSE);
                             continue;
@@ -735,18 +900,33 @@ public class CalabashTask extends MatchingTask {
                             log("Skipping " + resource.getName() + " as its mapping is ambiguous.", Project.MSG_VERBOSE);
                             continue;
                         }
-                        useOutputsMap = new HashMap<String, Union> ();
-			useOutputsMap.putAll(outputsMap);
-                        useOutputsMap.put(outPort, new Union(new FileResource(destDir, outFileName[0])));
+                        useOutputResources.put(outPort, new Union(new FileResource(destDir, outFileName[0])));
                     }
-                    process(config, useInputsMap, useOutputsMap, usePipelineResource, optionsMap, parametersTable, force);
+
+		    // Any mapped resources on other output ports.
+		    for (String port : outputMappers.keySet()) {
+			FileNameMapper outputMapper = outputMappers.get(port);
+
+			Union outputResources = new Union();
+                        String[] outputFileNames =
+			    outputMapper.mapFileName(resource.getName());
+			// Mapper may produce zero or more filenames,
+			// which may or may not be what was wanted but
+			// only the user will know that.
+			for (String fileName : outputFileNames) {
+			    outputResources.add(new FileResource(baseDir, fileName));
+			}
+			useOutputResources.put(port, outputResources);
+		    }
+                    process(config, useInputResources, useOutputResources, usePipelineResource, optionsMap, parametersTable, force);
                 }
 	    }
 	} finally {
 	    // Same instance is reused when Ant runs this task
 	    // multiple times, so reset everything.
-	    inputsMap.clear();
-	    outputsMap.clear();
+	    inputResources.clear();
+	    inputMappers.clear();
+	    outputResources.clear();
             baseDir = null;
 	    inPort = null;
 	    inResource = null;
@@ -763,7 +943,7 @@ public class CalabashTask extends MatchingTask {
 	    isResourcesSet = false;
 	    useImplicitFileset = true;
 	    performDirectoryScan = true;
-	    mapperElement = null;
+	    mapper = null;
 	    force = false;
             if (sysProperties.size() > 0) {
                 sysProperties.restoreSystem();
@@ -787,31 +967,47 @@ public class CalabashTask extends MatchingTask {
     /**
      * Process the input file to the output file with the given pipeline.
      *
-     * @param inputsMap the map of input ports to resources
-     * @param outputsMap the map of output ports to resources
+     * @param inputResources the map of input ports to resources
+     * @param outputResources the map of output ports to resources
      * @param pipelineResource the pipeline to use.
      * @exception BuildException if the processing fails.
      */
     private void process(XProcConfiguration config,
-			 Map<String,Union> inputsMap,
-			 Map<String,Union> outputsMap,
+			 Map<String,Union> inputResources,
+			 Map<String,Union> outputResources,
 			 Resource pipelineResource,
 			 Map<QName,RuntimeValue> optionsMap,
 			 Map<String,Hashtable<QName,RuntimeValue>> parametersMap,
 			 boolean force) throws BuildException {
 
 	long pipelineLastModified = pipelineResource.getLastModified();
-	//log("In file " + in + " time: " + in.getLastModified(), Project.MSG_DEBUG);
-	//log("Out file " + out + " time: " + out.getLastModified(), Project.MSG_DEBUG);
+	Collection<Long> inputsLastModified = new Vector<Long> ();
+	for (String port : inputResources.keySet()) {
+	    for (Resource resource : inputResources.get(port).listResources()) {
+		inputsLastModified.add(resource.getLastModified());
+	    }
+	}
+	long newestInputLastModified =
+	    inputsLastModified.isEmpty() ? 0 : Collections.max(inputsLastModified);
+
+	Collection<Long> outputsLastModified = new Vector<Long> ();
+	for (String port : outputResources.keySet()) {
+	    for (Resource resource : outputResources.get(port).listResources()) {
+		outputsLastModified.add(resource.getLastModified());
+	    }
+	}
+	long oldestOutputLastModified = Collections.min(outputsLastModified);
+
+	log("Newest input time: " + newestInputLastModified, Project.MSG_DEBUG);
+	log("Oldest output time: " + oldestOutputLastModified, Project.MSG_DEBUG);
 	log("Pipeline file " + pipelineResource + " time: " + pipelineLastModified, Project.MSG_DEBUG);
-/*
-	if (!force && in.getLastModified() < out.getLastModified()
-                    && pipelineLastModified < out.getLastModified()) {
-	    log("Skipping input file " + in + " because it is older than output file "
-		+ out + " and so is the stylesheet " + pipelineResource, Project.MSG_DEBUG);
+
+	if (!force && newestInputLastModified < oldestOutputLastModified
+	    && pipelineLastModified < oldestOutputLastModified) {
+	    log("Skipping because all outputs are newer than inputs and newer than pipeline", Project.MSG_DEBUG);
 	    return;
 	}
-*/
+
 	//log("Processing " + in + " to " + out, Project.MSG_INFO);
         XProcRuntime runtime = new XProcRuntime(config);
 
@@ -825,9 +1021,9 @@ public class CalabashTask extends MatchingTask {
                 if (pipeline.getInput(port).getParameters()) {
                     continue;
                 }
-		if (!inputsMap.containsKey(port)) {
-                    if (inputsMap.containsKey(null)) {
-                        inputsMap.put(port, inputsMap.remove(null));
+		if (!inputResources.containsKey(port)) {
+                    if (inputResources.containsKey(null)) {
+                        inputResources.put(port, inputResources.remove(null));
                         log("Binding unnamed input port to '" + port + "'.", Project.MSG_INFO);
                     } else {
                         log("You didn't specify any binding for the input port '" + port + "'.", Project.MSG_WARN);
@@ -837,8 +1033,8 @@ public class CalabashTask extends MatchingTask {
             }
 
 	    for (String port : pipeline.getInputs()) {
-                if (inputsMap.containsKey(port)) {
-		    for (Resource resource : inputsMap.get(port).listResources()) {
+                if (inputResources.containsKey(port)) {
+		    for (Resource resource : inputResources.get(port).listResources()) {
 			log(resource.getName() + "::" + resource.isExists(), Project.MSG_INFO);
 			if (!resource.isExists()) {
 			    log("Skipping non-existent input: " + resource, Project.MSG_DEBUG);
@@ -874,9 +1070,9 @@ public class CalabashTask extends MatchingTask {
 
             // The unamed output is matched to one unmatched output
             for (String port : pipeline.getOutputs()) {
-		if (!outputsMap.containsKey(port)) {
-		    if (outputsMap.containsKey(null)) {
-			outputsMap.put(port, outputsMap.remove(null));
+		if (!outputResources.containsKey(port)) {
+		    if (outputResources.containsKey(null)) {
+			outputResources.put(port, outputResources.remove(null));
 			log("Binding unnamed output port to '" + port + "'.", Project.MSG_INFO);
 		    } else {
 			log("You didn't specify any binding for the output port '" + port + "': its output will be discarded.", Project.MSG_WARN);
@@ -887,8 +1083,8 @@ public class CalabashTask extends MatchingTask {
             for (String port : pipeline.getOutputs()) {
                 String uri = null;
 
-                if (outputsMap.containsKey(port)) {
-                    Union resources = outputsMap.get(port);
+                if (outputResources.containsKey(port)) {
+                    Union resources = outputResources.get(port);
 		    if (resources.size() != 1) {
 			handleError("The '" + port + "' output port must be specified with exactly one"
                         + " nested resource.");
@@ -1054,6 +1250,9 @@ public class CalabashTask extends MatchingTask {
         /** The input's resources */
         private Union resources = new Union();
 
+	/** Mapper to inPort files. */
+	private FileNameMapper mapper = null;
+
         private Object ifCond;
         private Object unlessCond;
         private Project project;
@@ -1086,22 +1285,53 @@ public class CalabashTask extends MatchingTask {
 	    resources.add(rc);
 	}
 
+	/**
+	 * Defines the mapper to map source to destination files.
+	 * @param mapper the mapper to use
+	 * @exception BuildException if more than one mapper is defined
+	 */
+	public void addMapper(Mapper mapper) throws BuildException {
+	    add(mapper.getImplementation());
+	}
+
+	/**
+	 * Adds a nested filenamemapper.
+	 * @param fileNameMapper the mapper to add
+	 * @exception BuildException if more than one mapper is defined
+	 */
+	public void add(FileNameMapper fileNameMapper) throws BuildException {
+	    if (mapper != null) {
+		throw new BuildException("Cannot define more than one mapper");
+	    }
+
+	    mapper = fileNameMapper;
+	}
+
         /**
-         * Get the input port
+         * Get the port name
          *
-         * @return the input port name
+         * @return the port name
          */
         public String getPort() {
             return port;
         }
 
         /**
-         * Get the input's resources
+         * Get the port's resources
          *
-         * @return the input's resources
+         * @return the port's resources
          */
         public Union getResources() {
             return resources;
+        }
+
+        /**
+         * Get the port's Mapper element, if any
+         *
+         * @return the ports's mapper
+         */
+        public FileNameMapper getMapper() {
+            return mapper;
         }
 
         /**
