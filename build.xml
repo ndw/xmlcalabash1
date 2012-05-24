@@ -92,12 +92,12 @@
 
   <target name="jar" depends="compile">
     <taskdef resource="aQute/bnd/ant/taskdef.properties"
-      classpath="osgi/bnd.jar"/> 
-    <bnd 
-      classpath="${build.dir}" 
-      eclipse="false" 
-      failok="false" 
-      exceptions="true" 
+      classpath="osgi/bnd.jar"/>
+    <bnd
+      classpath="${build.dir}"
+      eclipse="false"
+      failok="false"
+      exceptions="true"
       files="osgi/calabash.bnd"
       output="calabash.jar"/>
   </target>
