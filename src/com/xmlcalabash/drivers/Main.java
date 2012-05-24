@@ -432,7 +432,8 @@ public class Main {
             System.out.println(" edition.");
         }
         System.out.println("Copyright (c) 2007-2012 Norman Walsh");
-        System.out.println("See http://xmlcalabash.com/");
+        System.out.println("See docs/notices/NOTICES in the distribution for licensing");
+        System.out.println("See also http://xmlcalabash.com/ for more information");
         System.out.println("");
     }
     

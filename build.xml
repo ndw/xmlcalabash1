@@ -65,6 +65,7 @@
 
   <target name="init" depends="saxon-version">
     <mkdir dir="${build.dir}"/>
+    <mkdir dir="docs/build"/>
     <property name="dist-version" value="${version}-${saxon-version}"/>
     <property name="install.dir" value="${dist.dir}/calabash-${dist-version}"/>
   </target>
@@ -91,12 +92,12 @@
 
   <target name="jar" depends="compile">
     <taskdef resource="aQute/bnd/ant/taskdef.properties"
-      classpath="osgi/bnd.jar"/> 
-    <bnd 
-      classpath="${build.dir}" 
-      eclipse="false" 
-      failok="false" 
-      exceptions="true" 
+      classpath="osgi/bnd.jar"/>
+    <bnd
+      classpath="${build.dir}"
+      eclipse="false"
+      failok="false"
+      exceptions="true"
       files="osgi/calabash.bnd"
       output="calabash.jar"/>
   </target>

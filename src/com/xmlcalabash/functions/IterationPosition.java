@@ -9,6 +9,7 @@ import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.om.SequenceIterator;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.core.XProcData;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.runtime.XStep;
 import net.sf.saxon.tree.iter.SingletonIterator;
@@ -80,7 +81,8 @@ public class IterationPosition extends ExtensionFunctionDefinition {
     private class IterationPositionCall extends ExtensionFunctionCall {
         public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
             XProcRuntime runtime = tl_runtime.get();
-            XStep step = runtime.getXProcData().getStep();
+            XProcData data = runtime.getXProcData();
+            XStep step = data.getStep();
             // FIXME: this can't be the best way to do this...
             // step == null in use-when
             if (step != null && !(step instanceof XCompoundStep)) {

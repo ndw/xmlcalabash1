@@ -109,11 +109,7 @@ public class Error extends DefaultStep {
 
         step.reportError(treeWriter.getResult());
 
-        if (errorCode != null) {
-            throw new XProcException(errorCode, doc.getStringValue());
-        } else {
-            throw new XProcException();
-        }
+        throw new XProcException(errorCode, doc, doc.getStringValue());
     }
 }
 
