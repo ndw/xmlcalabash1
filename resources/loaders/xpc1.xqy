@@ -3961,4 +3961,5 @@ declare function p:parse-document($s as xs:string) as item()*
       subsequence($state, $p:result)
 };
 
-(: End :)
+p:parse-document(string(.))
+
