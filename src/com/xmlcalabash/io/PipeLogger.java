@@ -84,7 +84,13 @@ public class PipeLogger {
                     stream = System.out;
                 } else {
                     try {
-                        stream = new PrintStream(new File(log.getHref()));
+                        String href = log.getHref().toASCIIString();
+                        if (href.startsWith("file:///")) {
+                            href = href.substring(7);
+                        } else if (href.startsWith("file:/")) {
+                            href = href.substring(5);
+                        }
+                        stream = new PrintStream(new File(href));
                     } catch (FileNotFoundException fnfe) {
                         System.err.println("Failed to create log: " + log.getHref());
                         stream = System.err;

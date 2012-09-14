@@ -1,0 +1,175 @@
+/* EBNF for XProc Compact Syntax (flavor 2), process with http://www.bottlecaps.de/rex/ */
+
+document    ::= namespace* ( declareStep | pipeline | library ) EOF
+
+namespace   ::= ('namespace' prefix quotedstr) | ('default' 'namespace' quotedstr)
+
+prefix      ::= NCName ':' /* ws: explicit */
+
+pipeline    ::= (QName '=')? 'pipeline' CName? inports? '{' subpipeline '}' ('=>' outports)?
+declareStep ::= (QName '=')? 'step' CName? inports? '{' subpipeline '}' ('=>' outports)?
+
+inports     ::= '(' (input | option)? (',' (input | option))* ')'
+outports    ::= '(' output? (',' output)* ')'
+
+input       ::= ('primary') | ('primary' NCName ('sequence'|'item')?)
+output      ::= ('primary') | ('primary' NCName ('sequence'|'item')? serialization?)
+option      ::= '$' QName ( '=' quotedstr )?
+
+serialization ::= 'serialized' 'with' '[' (NCName '=' quotedstr)? (',' NCName '=' quotedstr)* ']'
+
+subpipeline ::= ( variable | forEachStep | viewportStep
+                  | chooseStep | tryStep | groupStep | atomicStep )+
+
+atomicStep      ::= (NCName '=')?
+                    (( 'add-xml-base' | 'add-attribute' | 'compare' | 'count' | 'delete'
+                       | 'directory-list' | 'error' | 'escape-markup' | 'exec' | 'filter'
+                       | 'hash' | 'http-request' | 'identity' | 'insert' | 'label-elements'
+                       | 'load' | 'make-absolute-uris' | 'namespace-rename' | 'pack'
+                       | 'parameters' | 'rename' | 'replace' | 'set-attributes' | 'sink'
+                       | 'split-sequence' | 'store' | 'string-replace' | 'unescape-markup'
+                       | 'unwrap' | 'uuid' | 'validate-with-relax-ng'
+                       | 'validate-with-schematron' | 'validate-with-xml-schema'
+                       | 'wrap' | 'wrap-sequence' | 'www-form-urldecode' | 'www-form-urlencode'
+                       | 'xinclude' | 'xquery' | 'xslt' | 'xsl-formatter' ) | CName)
+                    inports?
+
+forEachStep   ::= 'for-each' ( parExpression )? from? '{' subpipeline '}'
+
+viewportStep  ::= 'viewport' ( parExpression )? from? '{' subpipeline '}'
+
+chooseStep    ::= 'if' parExpression from? '{' subpipeline '}' whenStep* otherwiseStep? ('=>' outports)?
+
+whenStep      ::= 'else' 'if' parExpression from? '{' subpipeline '}'
+
+otherwiseStep ::= 'else' '{' subpipeline '}'
+
+tryStep       ::= 'try' '{' subpipeline '}' 'catch' '{' subpipeline '}'
+
+groupStep     ::= '{' subpipeline '}'
+
+variable      ::= QName '=' 'variable' parExpression
+
+expr          ::= (noParExpression | parExpression)+ /* ws:explicit */
+
+from          ::= fromPipe | fromDocument | fromEmpty
+
+fromPipe      ::= 'from' 'pipe' NCName '/' NCName
+
+fromDocument  ::= 'from' 'document'  quotedstr
+
+fromEmpty     ::= 'from' 'empty'
+
+parExpression   ::= '(' expr ')' /* ws:explicit */
+
+library ::= 'library'
+
+CName    ::= (NCName ':' NCName) /* ws:explicit */
+
+QName    ::= NCName | CName
+
+      NCName   ::= NCName^Token
+                 | "add-attribute" | "add-xml-base" | 'compare' | 'count' | 'delete'
+                 | 'directory-list' | 'error' | 'escape-markup' | 'exec' | 'filter'
+                 | 'hash' | 'http-request' | 'identity' | 'insert' | 'label-elements'
+                 | 'load' | 'make-absolute-uris' | 'namespace-rename' | 'pack'
+                 | 'parameters' | 'rename' | 'replace' | 'set-attributes' | 'sink'
+                 | 'split-sequence' | 'store' | 'string-replace' | 'unescape-markup'
+                 | 'unwrap' | 'uuid' | 'validate-with-relax-ng'
+                 | 'validate-with-schematron' | 'validate-with-xml-schema'
+                 | 'wrap' | 'wrap-sequence' | 'www-form-urldecode' | 'www-form-urlencode'
+                 | 'xinclude' | 'xquery' | 'xslt' | 'xsl-formatter'
+                 | "if" | "for-each" | "try" | "viewport"
+                 | "default" | "library" | "namespace" | "pipeline" | "step"
+                 | "variable"
+                 | "else"
+
+
+<?TOKENS?>
+
+EOF ::= $
+
+noParExpression ::= [^()]*
+
+quotedstr ::= '"' ( [^"] )* '"'
+            | "'" ( [^'] )* "'"
+
+NameStartChar
+         ::= [A-Z]
+           | '_'
+           | [a-z]
+           | [#x00C0-#x00D6]
+           | [#x00D8-#x00F6]
+           | [#x00F8-#x02FF]
+           | [#x0370-#x037D]
+           | [#x037F-#x1FFF]
+           | [#x200C-#x200D]
+           | [#x2070-#x218F]
+           | [#x2C00-#x2FEF]
+           | [#x3001-#xD7FF]
+           | [#xF900-#xFDCF]
+           | [#xFDF0-#xFFFD]
+NameChar ::= NameStartChar
+           | '-'
+           | '.'
+           | [0-9]
+           | #x00B7
+           | [#x0300-#x036F]
+           | [#x203F-#x2040]
+NCName   ::= NameStartChar NameChar*
+
+      NCName^Token
+                << "add-attribute"
+                   "add-xml-base"
+                   "compare"
+                   "count"
+                   "delete"
+                   "directory-list"
+                   "error"
+                   "escape-markup"
+                   "exec"
+                   "filter"
+                   "hash"
+                   "http-request"
+                   "identity"
+                   "insert"
+                   "label-elements"
+                   "load"
+                   "make-absolute-uris"
+                   "namespace-rename"
+                   "pack"
+                   "parameters"
+                   "rename"
+                   "replace"
+                   "set-attributes"
+                   "sink"
+                   "split-sequence"
+                   "store"
+                   "string-replace"
+                   "unescape-markup"
+                   "unwrap"
+                   "uuid"
+                   "validate-with-relax-ng"
+                   "validate-with-schematron"
+                   "validate-with-xml-schema"
+                   "wrap"
+                   "wrap-sequence"
+                   "www-form-urldecode"
+                   "www-form-urlencode"
+                   "xinclude"
+                   "xquery"
+                   "xslt"
+                   "xsl-formatter"
+                   "if"
+                   "try"
+                   "viewport"
+                   "for-each"
+                   "default"
+                   "library"
+                   "namespace"
+                   "pipeline"
+                   "step"
+                   "variable"
+                   "else"
+
+Whitespace ::= [#x9#xA#xD#x20]+ /* ws:definition */

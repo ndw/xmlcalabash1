@@ -1,0 +1,176 @@
+/* EBNF for XProc Compact Syntax (flavor 1), process with http://www.bottlecaps.de/rex/ */
+
+document    ::= xpcMarker namespace* ( declareStep | pipeline | library ) EOF
+
+xpcMarker   ::= 'xproc' version
+
+version     ::= '1.0'
+
+namespace   ::= ('namespace' prefix '=' quotedstr)
+              | ('default' 'namespace' '=' quotedstr)
+
+prefix      ::= NCName
+
+declareStep ::= 'declare-step' stepName? withExtra? pipelineBody
+
+stepName    ::= 'named' quotedstr
+
+withExtra   ::= 'with' attr (',' attr)*
+
+attr        ::= QName '=' (QName | quotedstr)
+
+pipelineBody ::= '{'
+     ( input | output | option | log | serialization )*
+     ( declareStep | pipeline | imports )*
+     subpipeline?
+     '}'
+
+input       ::= 'input' quotedstr withExtra? ( '{' binding* '}' )?
+
+output      ::= 'output' quotedstr withExtra? ( '{' binding* '}' )?
+
+option      ::= 'required' 'option' QName withExtra?
+              | 'option' QName withExtra?
+
+log         ::= 'log' quotedstr 'to' quotedstr
+
+serialization ::= 'serialization' quotedstr withExtra?
+
+imports     ::= 'import' quotedstr
+
+variable    ::= 'variable' QName '=' quotedstr variableBody?
+
+variableBody ::= '{' ( binding | namespaces )* '}'
+
+namespaces  ::= 'namespaces' withExtra? nsBody?
+
+nsBody      ::= '{' namespace '}'
+
+binding     ::= ( comment | pi )*
+                ( emptyBinding | documentBinding | dataBinding | pipeBinding | inlineBinding )
+
+emptyBinding    ::= 'empty' withExtra?
+documentBinding ::= 'document' quotedstr withExtra?
+dataBinding     ::= 'data' quotedstr withExtra?
+pipeBinding     ::= quotedstr 'on' quotedstr withExtra?
+inlineBinding   ::= 'inline' withExtra? inlineXML
+
+inlineXML       ::= '<![XML[' Char* ']]>'
+
+subpipeline     ::= ( variable | documentation | pipeinfo | forEachStep | viewportStep
+                     | chooseStep | tryStep | groupStep | atomicStep | comment | pi )+
+
+documentation   ::= 'documentation' withExtra? '{' inlineXML '}'
+
+pipeinfo        ::= 'pipeinfo' withExtra? '{' inlineXML '}'
+
+named           ::= 'named' quotedstr
+
+forEachStep     ::= 'for-each' named? withExtra? forEachBody
+
+forEachBody     ::= '{' ( iterationSource | output | log )* subpipeline '}'
+
+iterationSource ::= 'iteration-source' withExtra? ( '{' binding* '}' )?
+
+viewportStep    ::= 'viewport' named? withExtra? viewportBody
+
+viewportBody    ::= '{' ( viewportSource | output | log )* subpipeline '}'
+
+viewportSource  ::= 'viewport-source' withExtra? ( '{' binding* '}' )?
+
+chooseStep      ::= 'choose' named? withExtra? chooseBody
+
+chooseBody      ::= '{' xpathContext? variable* whenStep* otherwiseStep? '}'
+
+xpathContext    ::= 'xpath-context' withExtra? ( '{' binding* '}' )?
+
+whenStep        ::= 'when' quotedstr withExtra? whenBody
+
+whenBody        ::= ( xpathContext | output | log )* subpipeline
+
+otherwiseStep   ::= 'otherwise' withExtra? otherwiseBody
+
+otherwiseBody   ::= ( output | log )* subpipeline
+
+tryStep         ::= 'try' named? withExtra? tryBody
+
+tryBody         ::= '{' variable* groupStep catchStep '}'
+
+groupStep       ::= 'group' named? withExtra? groupBody
+
+groupBody       ::= '{' ( output | log )* subpipeline '}'
+
+catchStep       ::= 'catch' named? withExtra? catchBody
+
+catchBody       ::= '{' ( output | log )* subpipeline '}'
+
+atomicStep      ::= ( 'add-xml-base' | 'add-attribute' | 'compare' | 'count' | 'delete'
+                      | 'directory-list' | 'error' | 'escape-markup' | 'exec' | 'filter'
+                      | 'hash' | 'http-request' | 'identity' | 'insert' | 'label-elements'
+                      | 'load' | 'make-absolute-uris' | 'namespace-rename' | 'pack'
+                      | 'parameters' | 'rename' | 'replace' | 'set-attributes' | 'sink'
+                      | 'split-sequence' | 'store' | 'string-replace' | 'unescape-markup'
+                      | 'unwrap' | 'uuid' | 'validate-with-relax-ng'
+                      | 'validate-with-schematron' | 'validate-with-xml-schema'
+                      | 'wrap' | 'wrap-sequence' | 'www-form-urldecode' | 'www-form-urlencode'
+                      | 'xinclude' | 'xquery' | 'xslt' | 'xsl-formatter' )
+                    named? withExtra? atomicStepBody?
+                  | CName named? withExtra? atomicStepBody?
+
+atomicStepBody  ::= '{' ( input | withOption | withParam | log )* '}'
+
+withOption      ::= 'with-option' QName '=' quotedstr withExtra? withOptionBody?
+
+withOptionBody  ::= '{' ( binding | namespaces )* '}'
+
+withParam       ::= 'with-param' QName '=' quotedstr withExtra? withParamBody?
+
+withParamBody   ::= '{' ( binding | namespaces )* '}'
+
+pipeline        ::= 'pipeline' named? withExtra? pipelineBody
+
+library         ::= 'library' withExtra? libraryBody
+
+libraryBody     ::= '{' ( imports | declareStep | pipeline )* '}'
+
+<?TOKENS?>
+
+EOF ::= $
+
+comment  ::= '<!--' ( ( Char - '-' ) | '-' ( Char - '-' ) )* '-->'
+pi       ::= '<?' pitarget ( S ( [^?] | '?'+ [^?>] )* '?'* )? '?>' /* ws: explicit */
+pitarget ::= NCName
+S        ::= ( #x0020 | #x0009 | #x000D | #x000A )+ /* ws: definition */
+
+quotedstr ::= '"' ( [^"] )* '"'
+            | "'" ( [^'] )* "'"
+
+NameStartChar
+         ::= [A-Z]
+           | '_'
+           | [a-z]
+           | [#x00C0-#x00D6]
+           | [#x00D8-#x00F6]
+           | [#x00F8-#x02FF]
+           | [#x0370-#x037D]
+           | [#x037F-#x1FFF]
+           | [#x200C-#x200D]
+           | [#x2070-#x218F]
+           | [#x2C00-#x2FEF]
+           | [#x3001-#xD7FF]
+           | [#xF900-#xFDCF]
+           | [#xFDF0-#xFFFD]
+NameChar ::= NameStartChar
+           | '-'
+           | '.'
+           | [0-9]
+           | #x00B7
+           | [#x0300-#x036F]
+           | [#x203F-#x2040]
+NCName   ::= NameStartChar NameChar*
+CName    ::= (NCName ':' NCName)
+QName    ::= NCName | CName
+
+Char     ::= [#x0021-#xD7FF]
+           | [#xE000-#xFFFD]
+           | [#x10000-#x10FFFF]

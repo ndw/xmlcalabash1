@@ -1,8 +1,8 @@
 xquery version "1.0" encoding "UTF-8";
 
-(: This file was generated on Wed Feb 15, 2012 21:38 by REx v5.12
+(: This file was generated on Wed Jul 4, 2012 12:27 (UTC-05) by REx v5.16
    which is Copyright (c) 1979-2012 by Gunther Rademacher <grd@gmx.net> :)
-(: REx command line: xpc.ebnf -smaller -xquery -tree :)
+(: REx command line: xpc.ebnf -xquery -tree -smaller :)
 
 (: Lightly edited by ndw@nwalsh.com to make it a main module. :)
 
@@ -803,8 +803,11 @@ declare function p:error-message($input as xs:string, $error as element(error)) 
       (
         "syntax error, found ", $p:TOKEN[$error/@o + 1], "&#10;",
         "while expecting ", $p:TOKEN[$error/@x + 1], "&#10;",
-        "after scanning ", string($error/@e - $begin), " characters at line ",
-        string($line), ", column ", string($column), "&#10;",
+        if ($error/@e = $begin) then
+          ""
+        else
+          concat("after successfully scanning ", string($error/@e - $begin), " characters "),
+        "at line ", string($line), ", column ", string($column), "&#10;",
         "...", substring($input, $begin, 32), "..."
       )
     else
@@ -818,8 +821,11 @@ declare function p:error-message($input as xs:string, $error as element(error)) 
           string-join($expected, ", "),
           "]"[exists($expected[2])],
           "&#10;",
-          "after scanning ", string($error/@e - $begin), " characters at line ",
-          string($line), ", column ", string($column), "&#10;",
+          if ($error/@e = $begin) then
+            ""
+          else
+            concat("after successfully scanning ", string($error/@e - $begin), " characters "),
+          "at line ", string($line), ", column ", string($column), "&#10;",
           "...", substring($input, $begin, 32), "..."
         )
 };
@@ -3956,3 +3962,4 @@ declare function p:parse-document($s as xs:string) as item()*
 };
 
 p:parse-document(string(.))
+
