@@ -1,3 +1,5 @@
+/* EBNF for XProc Compact Syntax (flavor 1), process with http://www.bottlecaps.de/rex/ */
+
 document    ::= xpcMarker namespace* ( declareStep | pipeline | library ) EOF
 
 xpcMarker   ::= 'xproc' version

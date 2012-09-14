@@ -1,3 +1,5 @@
+/* EBNF for XProc Compact Syntax (flavor 2), process with http://www.bottlecaps.de/rex/ */
+
 document    ::= namespace* ( declareStep | pipeline | library ) EOF
 
 namespace   ::= ('namespace' prefix quotedstr) | ('default' 'namespace' quotedstr)
@@ -11,8 +13,10 @@ inports     ::= '(' (input | option)? (',' (input | option))* ')'
 outports    ::= '(' output? (',' output)* ')'
 
 input       ::= ('primary') | ('primary' NCName ('sequence'|'item')?)
-output      ::= ('primary') | ('primary' NCName ('sequence'|'item')?)
+output      ::= ('primary') | ('primary' NCName ('sequence'|'item')? serialization?)
 option      ::= '$' QName ( '=' quotedstr )?
+
+serialization ::= 'serialized' 'with' '[' (NCName '=' quotedstr)? (',' NCName '=' quotedstr)* ']'
 
 subpipeline ::= ( variable | forEachStep | viewportStep
                   | chooseStep | tryStep | groupStep | atomicStep )+
