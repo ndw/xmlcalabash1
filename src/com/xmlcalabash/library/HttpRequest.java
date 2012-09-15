@@ -504,6 +504,16 @@ public class HttpRequest extends DefaultStep {
                 String charset = body.getAttributeValue(_charset);
                 // FIXME: is utf-8 the right default?
                 if (charset == null) { charset = "utf-8"; }
+
+                // Make sure it's all characters
+                XdmSequenceIterator iter = body.axisIterator(Axis.CHILD);
+                while (iter.hasNext()) {
+                    XdmNode node = (XdmNode) iter.next();
+                    if (node.getNodeKind() != XdmNodeKind.TEXT) {
+                        throw XProcException.stepError(28);
+                    }
+                }
+
                 String escapedContent = decodeBase64(body, charset);
                 StringWriter writer = new StringWriter();
                 writer.write(escapedContent);
