@@ -220,6 +220,10 @@ public class Parser {
             }
         }
 
+        for (DeclareStep decl : library.declaredSteps.values()) {
+            parseDeclareStepBodyPassTwo(decl);
+        }
+
         checkExtensionAttributes(node, library);
 
         return library;
