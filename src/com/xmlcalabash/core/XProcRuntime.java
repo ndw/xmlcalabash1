@@ -190,7 +190,6 @@ public class XProcRuntime {
 
     public XProcRuntime(XProcRuntime runtime) {
         processor = runtime.processor;
-        parser = runtime.parser;
         uriResolver = runtime.uriResolver;
         config = runtime.config;
         staticBaseURI = runtime.staticBaseURI;
@@ -205,6 +204,7 @@ public class XProcRuntime {
         allowXPointerOnText = runtime.allowXPointerOnText;
         transparentJSON = runtime.transparentJSON;
         jsonFlavor = runtime.jsonFlavor;
+        reset();
     }
 
     public XProcConfigurer getConfigurer() {
