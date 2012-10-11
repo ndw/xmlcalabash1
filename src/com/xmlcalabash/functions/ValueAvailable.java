@@ -45,18 +45,10 @@ import java.util.Hashtable;
 
 public class ValueAvailable extends ExtensionFunctionDefinition {
     private static StructuredQName funcname = new StructuredQName("p", XProcConstants.NS_XPROC, "value-available");
-    private ThreadLocal<XProcRuntime> tl_runtime = new ThreadLocal<XProcRuntime>() {
-        protected synchronized XProcRuntime initialValue() {
-            return null;
-        }
-    };
-
-    protected ValueAvailable() {
-        // you can't call this one
-    }
+    private final XProcRuntime runtime;
 
     public ValueAvailable(XProcRuntime runtime) {
-        tl_runtime.set(runtime);
+        this.runtime = runtime;
     }
 
     public StructuredQName getFunctionQName() {
@@ -93,7 +85,6 @@ public class ValueAvailable extends ExtensionFunctionDefinition {
         public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
             StructuredQName sVarName = null;
 
-            XProcRuntime runtime = tl_runtime.get();
             XStep step = runtime.getXProcData().getStep();
             // FIXME: this can't be the best way to do this...
             // step == null in use-when

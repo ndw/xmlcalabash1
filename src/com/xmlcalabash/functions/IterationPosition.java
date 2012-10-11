@@ -40,18 +40,10 @@ import net.sf.saxon.value.SequenceType;
 
 public class IterationPosition extends ExtensionFunctionDefinition {
     private static StructuredQName funcname = new StructuredQName("p", XProcConstants.NS_XPROC, "iteration-position");
-    private ThreadLocal<XProcRuntime> tl_runtime = new ThreadLocal<XProcRuntime>() {
-        protected synchronized XProcRuntime initialValue() {
-            return null;
-        }
-    };
-
-    protected IterationPosition() {
-        // you can't call this one
-    }
+    private final XProcRuntime runtime;
 
     public IterationPosition(XProcRuntime runtime) {
-        tl_runtime.set(runtime);
+        this.runtime = runtime;
     }
 
     public StructuredQName getFunctionQName() {
@@ -80,7 +72,6 @@ public class IterationPosition extends ExtensionFunctionDefinition {
 
     private class IterationPositionCall extends ExtensionFunctionCall {
         public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
-            XProcRuntime runtime = tl_runtime.get();
             XProcData data = runtime.getXProcData();
             XStep step = data.getStep();
             // FIXME: this can't be the best way to do this...
