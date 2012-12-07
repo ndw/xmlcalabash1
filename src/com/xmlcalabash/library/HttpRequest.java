@@ -322,11 +322,11 @@ public class HttpRequest extends DefaultStep {
         }
 
         TreeWriter tree = new TreeWriter(runtime);
-        tree.startDocument(requestURI);
 
         try {
             // Execute the method.
             int statusCode = client.executeMethod(httpResult);
+            tree.startDocument(URI.create(httpResult.getURI().getURI()));
 
             // Deal with cookies
             if (saveCookieKey != null) {
