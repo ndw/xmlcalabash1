@@ -220,10 +220,6 @@ public class Parser {
             }
         }
 
-        for (DeclareStep decl : library.declaredSteps.values()) {
-            parseDeclareStepBodyPassTwo(decl);
-        }
-
         checkExtensionAttributes(node, library);
 
         return library;
@@ -940,6 +936,7 @@ public class Parser {
             QName nodeName = snode.getNodeName();
 
             if (XProcConstants.p_namespaces.equals(nodeName)) {
+                hadNamespaceBinding = true;
                 NamespaceBinding nsbinding = new NamespaceBinding(runtime, snode);
                 checkAttributes(snode, new String[]{"binding", "element", "except-prefixes"}, false);
 
