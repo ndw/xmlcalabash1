@@ -247,7 +247,6 @@ public class Main {
                         if (uri.startsWith("xml:")) {
                             uri = uri.substring(4);
 
-                            SAXSource source = null;
                             if ("-".equals(uri)) {
                                 doc = runtime.parse(new InputSource(System.in));
                             } else {

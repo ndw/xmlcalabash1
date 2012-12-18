@@ -28,6 +28,8 @@ import com.xmlcalabash.model.ComputableValue;
 import com.xmlcalabash.model.NamespaceBinding;
 import com.xmlcalabash.model.DeclareStep;
 import com.xmlcalabash.model.Option;
+import net.sf.saxon.om.NamePool;
+import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -43,6 +45,8 @@ import net.sf.saxon.s9api.XdmValue;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.SaxonApiUncheckedException;
+import net.sf.saxon.tree.iter.NamespaceIterator;
+import org.apache.batik.dom.util.HashTable;
 
 import java.util.Vector;
 import java.util.Hashtable;
@@ -546,7 +550,13 @@ public class XAtomicStep extends XStep {
         try {
             if (var.getBinding().size() > 0) {
                 Binding binding = var.getBinding().firstElement();
-                ReadablePipe pipe = getPipeFromBinding(binding);
+
+                ReadablePipe pipe = null;
+                if (binding.getBindingType() == Binding.ERROR_BINDING) {
+                    pipe = ((XCatch) this).errorPipe;
+                } else {
+                    pipe = getPipeFromBinding(binding);
+                }
                 doc = pipe.read();
                 if (pipe.moreDocuments()) {
                     throw XProcException.dynamicError(step, 8, "More than one document in context for parameter '" + var.getName() + "'");
@@ -575,6 +585,23 @@ public class XAtomicStep extends XStep {
 
                     for (QName varname : globals.keySet()) {
                         xcomp.declareVariable(varname);
+                    }
+
+                    // Make sure the namespace bindings for evaluating the XPath expr are correct
+                    // FIXME: Surely there's a better way to do this?
+                    Hashtable<String,String> lclnsBindings = new Hashtable<String, String>();
+                    NodeInfo inode = nsbinding.getNode().getUnderlyingNode();
+                    NamePool pool = inode.getNamePool();
+                    int inscopeNS[] = NamespaceIterator.getInScopeNamespaceCodes(inode);
+                    for (int pos = 0; pos < inscopeNS.length; pos++) {
+                        int ns = inscopeNS[pos];
+                        String nspfx = pool.getPrefixFromNamespaceCode(ns);
+                        String nsuri = pool.getURIFromNamespaceCode(ns);
+                        lclnsBindings.put(nspfx, nsuri);
+                    }
+
+                    for (String prefix : lclnsBindings.keySet()) {
+                        xcomp.declareNamespace(prefix, lclnsBindings.get(prefix));
                     }
 
                     XPathExecutable xexec = xcomp.compile(nsbinding.getXPath());

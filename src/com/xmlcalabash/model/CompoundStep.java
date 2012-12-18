@@ -485,8 +485,10 @@ public class CompoundStep extends Step {
     }
 
     protected void checkForBindings(HashSet<Output> outputs) {
-        for (Input input : inputs()) {
-            for (Binding binding : input.bindings) {
+        super.checkForBindings(outputs);
+
+        for (Variable var : getVariables()) {
+            for (Binding binding : var.bindings) {
                 if (binding.getBindingType() == Binding.PIPE_NAME_BINDING) {
                     PipeNameBinding b = (PipeNameBinding) binding;
                     Output output = env.readablePort(b.getStep(), b.getPort());

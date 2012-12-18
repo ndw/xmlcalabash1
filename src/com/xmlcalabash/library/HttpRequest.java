@@ -488,6 +488,62 @@ public class HttpRequest extends DefaultStep {
             throw new XProcException(step.getNode(), "Content-type on c:body is required.");
         }
 
+        String bodyId = body.getAttributeValue(_id);
+        String bodyDescription = body.getAttributeValue(_description);
+        String bodyDisposition = body.getAttributeValue(_disposition);
+
+        boolean descriptionHeader = false;
+        boolean idHeader = false;
+        boolean dispositionHeader = false;
+
+        if (bodyDescription != null) {
+            for (Header header : headers) {
+                if (header.getName().toLowerCase().equals("content-description")) {
+                    String headDescription = header.getValue();
+                    descriptionHeader = true;
+                    if (!bodyDescription.equals(headDescription)) {
+                        throw XProcException.stepError(20);
+                    }
+                }
+            }
+
+            if (!descriptionHeader) {
+                headers.add(new Header("Content-Description", bodyDescription));
+            }
+        }
+
+        if (bodyId != null) {
+            for (Header header : headers) {
+                if (header.getName().toLowerCase().equals("content-id")) {
+                    String headId = header.getValue();
+                    idHeader = true;
+                    if (!bodyId.equals(headId)) {
+                        throw XProcException.stepError(20);
+                    }
+                }
+            }
+
+            if (!idHeader) {
+                headers.add(new Header("Content-Id", bodyId));
+            }
+        }
+
+        if (bodyDisposition != null) {
+            for (Header header : headers) {
+                if (header.getName().toLowerCase().equals("content-disposition")) {
+                    String headDisposition = header.getValue();
+                    dispositionHeader = true;
+                    if (!bodyDisposition.equals(headDisposition)) {
+                        throw XProcException.stepError(20);
+                    }
+                }
+            }
+
+            if (!dispositionHeader) {
+                headers.add(new Header("Content-Disposition", bodyDisposition));
+            }
+        }
+
         if (headerContentType != null && !headerContentType.equals(contentType.toLowerCase())) {
             throw XProcException.stepError(20);
         }
@@ -499,11 +555,26 @@ public class HttpRequest extends DefaultStep {
         // FIXME: This sucks rocks. I want to write the data to be posted, not provide some way to read it
         String postContent = null;
         String encoding = body.getAttributeValue(_encoding);
+
+        if (encoding != null && !"base64".equals(encoding)) {
+            throw XProcException.stepError(52);
+        }
+
         try {
             if ("base64".equals(encoding)) {
                 String charset = body.getAttributeValue(_charset);
                 // FIXME: is utf-8 the right default?
                 if (charset == null) { charset = "utf-8"; }
+
+                // Make sure it's all characters
+                XdmSequenceIterator iter = body.axisIterator(Axis.CHILD);
+                while (iter.hasNext()) {
+                    XdmNode node = (XdmNode) iter.next();
+                    if (node.getNodeKind() != XdmNodeKind.TEXT) {
+                        throw XProcException.stepError(28);
+                    }
+                }
+
                 String escapedContent = decodeBase64(body, charset);
                 StringWriter writer = new StringWriter();
                 writer.write(escapedContent);
