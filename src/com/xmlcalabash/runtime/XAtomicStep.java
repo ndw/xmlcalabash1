@@ -28,6 +28,7 @@ import com.xmlcalabash.model.ComputableValue;
 import com.xmlcalabash.model.NamespaceBinding;
 import com.xmlcalabash.model.DeclareStep;
 import com.xmlcalabash.model.Option;
+import net.sf.saxon.om.InscopeNamespaceResolver;
 import net.sf.saxon.om.NamePool;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.trans.XPathException;
@@ -45,15 +46,11 @@ import net.sf.saxon.s9api.XdmValue;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.SaxonApiUncheckedException;
-import net.sf.saxon.tree.iter.NamespaceIterator;
-import org.apache.batik.dom.util.HashTable;
 
 import java.util.Vector;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.HashSet;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.regex.Matcher;
@@ -592,11 +589,11 @@ public class XAtomicStep extends XStep {
                     Hashtable<String,String> lclnsBindings = new Hashtable<String, String>();
                     NodeInfo inode = nsbinding.getNode().getUnderlyingNode();
                     NamePool pool = inode.getNamePool();
-                    int inscopeNS[] = NamespaceIterator.getInScopeNamespaceCodes(inode);
-                    for (int pos = 0; pos < inscopeNS.length; pos++) {
-                        int ns = inscopeNS[pos];
-                        String nspfx = pool.getPrefixFromNamespaceCode(ns);
-                        String nsuri = pool.getURIFromNamespaceCode(ns);
+                    InscopeNamespaceResolver inscopeNS = new InscopeNamespaceResolver(inode);
+                    Iterator<String> pfxiter = inscopeNS.iteratePrefixes();
+                    while (pfxiter.hasNext()) {
+                        String nspfx = pfxiter.next();
+                        String nsuri = inscopeNS.getURIForPrefix(nspfx, "".equals(nspfx));
                         lclnsBindings.put(nspfx, nsuri);
                     }
 
