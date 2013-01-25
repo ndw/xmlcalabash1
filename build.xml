@@ -401,6 +401,21 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
   </target>
 
 
+  <target name="test" depends="jar">
+    <echo>Running test...</echo>
+    <java fork="true" classname="com.xmlcalabash.drivers.RunTestReport">
+      <classpath>
+        <pathelement location="calabash.jar"/>
+        <path refid="full.classpath"/>
+      </classpath>
+      <jvmarg value="-Xmx1024m"/>
+      <jvmarg value="-Djava.util.logging.config.file=/Users/ndw/java/logging.properties"/>
+      <arg value="-D"/>
+      <arg value="-a"/>
+      <arg value="http://tests.xproc.org/tests/serialization/version-001.xml"/>
+    </java>
+  </target>
+
   <target name="test-suite" depends="jar">
     <echo>Running test-suite...this may take a few minutes...</echo>
     <echo>  Sending report to ${test.report}; errors to ${test.errors}</echo>
