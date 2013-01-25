@@ -91,6 +91,8 @@ public class XProcURIResolver implements URIResolver, EntityResolver {
             }
         }
 
+        runtime.finest(null,null,"Resolved: " + uri);
+
         if (cache.containsKey(uri)) {
             runtime.finest(null ,null,"Returning cached document.");
             return cache.get(uri).asSource();
@@ -106,10 +108,14 @@ public class XProcURIResolver implements URIResolver, EntityResolver {
                 } else {
                     absoluteURI = new URL(new URL(base), href);
                 }
+
+                runtime.finest(null,null,"Resolved again: " + absoluteURI);
+
             } catch (MalformedURLException mue) {
                 throw new XProcException(mue);
             }
 
+            runtime.finest(null,null,"uriResolver.resolve(" + absoluteURI.toString() + "," + base + ")");
             Source resolved = uriResolver.resolve(absoluteURI.toString(), base);
 
             // FIXME: This is a grotesque hack. This is wrong. Wrong. Wrong.
