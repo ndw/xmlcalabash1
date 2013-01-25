@@ -43,7 +43,7 @@ public class DefaultStep implements XProcStep {
     public static final QName _normalization_form = new QName("", "normalization-form");
     public static final QName _omit_xml_declaration = new QName("", "omit-xml-declaration");
     public static final QName _standalone = new QName("", "standalone");
-    public static final QName _undeclare_prefixes = new QName("", "undeclare_prefixes");
+    public static final QName _undeclare_prefixes = new QName("", "undeclare-prefixes");
     public static final QName _version = new QName("", "version");
 
     private Hashtable<QName,RuntimeValue> options = null;
