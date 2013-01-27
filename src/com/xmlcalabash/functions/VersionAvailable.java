@@ -38,13 +38,8 @@ import com.xmlcalabash.core.XProcRuntime;
  * Implementation of the XSLT system-property() function
  */
 
-public class VersionAvailable extends ExtensionFunctionDefinition {
+public class VersionAvailable extends XProcExtensionFunctionDefinition {
     private static StructuredQName funcname = new StructuredQName("p", XProcConstants.NS_XPROC, "version-available");
-    private ThreadLocal<XProcRuntime> tl_runtime = new ThreadLocal<XProcRuntime>() {
-        protected synchronized XProcRuntime initialValue() {
-            return null;
-        }
-    };
 
     protected VersionAvailable() {
         // you can't call this one

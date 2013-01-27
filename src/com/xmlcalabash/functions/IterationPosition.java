@@ -38,13 +38,8 @@ import net.sf.saxon.value.SequenceType;
  * Implementation of the XProc p:iteration-position function
  */
 
-public class IterationPosition extends ExtensionFunctionDefinition {
+public class IterationPosition extends XProcExtensionFunctionDefinition {
     private static StructuredQName funcname = new StructuredQName("p", XProcConstants.NS_XPROC, "iteration-position");
-    private ThreadLocal<XProcRuntime> tl_runtime = new ThreadLocal<XProcRuntime>() {
-        protected synchronized XProcRuntime initialValue() {
-            return null;
-        }
-    };
 
     protected IterationPosition() {
         // you can't call this one

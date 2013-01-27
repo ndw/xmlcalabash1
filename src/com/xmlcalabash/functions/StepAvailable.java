@@ -42,13 +42,8 @@ import com.xmlcalabash.model.DeclareStep;
  * Implementation of the XProc p:step-available function
  */
 
-public class StepAvailable extends ExtensionFunctionDefinition {
+public class StepAvailable extends XProcExtensionFunctionDefinition {
     private static StructuredQName funcname = new StructuredQName("p", XProcConstants.NS_XPROC, "step-available");
-    private ThreadLocal<XProcRuntime> tl_runtime = new ThreadLocal<XProcRuntime>() {
-        protected synchronized XProcRuntime initialValue() {
-            return null;
-        }
-    };
 
     protected StepAvailable() {
         // you can't call this one

@@ -21,13 +21,8 @@ import com.xmlcalabash.core.XProcRuntime;
  * Implementation of the XSLT system-property() function
  */
 
-public class SystemProperty extends ExtensionFunctionDefinition {
+public class SystemProperty extends XProcExtensionFunctionDefinition {
     private static StructuredQName funcname = new StructuredQName("p", XProcConstants.NS_XPROC, "system-property");
-    private ThreadLocal<XProcRuntime> tl_runtime = new ThreadLocal<XProcRuntime>() {
-        protected synchronized XProcRuntime initialValue() {
-            return null;
-        }
-    };
 
      protected SystemProperty() {
          // you can't call this one
@@ -61,7 +56,7 @@ public class SystemProperty extends ExtensionFunctionDefinition {
          return new SystemPropertyCall();
      }
 
-     private class SystemPropertyCall extends ExtensionFunctionCall {
+    private class SystemPropertyCall extends ExtensionFunctionCall {
          private StaticContext staticContext = null;
 
          public void supplyStaticContext(StaticContext context, int locationId, Expression[] arguments) throws XPathException {
