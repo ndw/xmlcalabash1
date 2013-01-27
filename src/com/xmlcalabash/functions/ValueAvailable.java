@@ -43,13 +43,8 @@ import java.util.Hashtable;
  * Implementation of the XProc p:step-available function
  */
 
-public class ValueAvailable extends ExtensionFunctionDefinition {
+public class ValueAvailable extends XProcExtensionFunctionDefinition {
     private static StructuredQName funcname = new StructuredQName("p", XProcConstants.NS_XPROC, "value-available");
-    private ThreadLocal<XProcRuntime> tl_runtime = new ThreadLocal<XProcRuntime>() {
-        protected synchronized XProcRuntime initialValue() {
-            return null;
-        }
-    };
 
     protected ValueAvailable() {
         // you can't call this one

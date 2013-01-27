@@ -42,13 +42,8 @@ import java.net.URISyntaxException;
  * Implementation of the XSLT system-property() function
  */
 
-public class ResolveURI extends ExtensionFunctionDefinition {
+public class ResolveURI extends XProcExtensionFunctionDefinition {
     private static StructuredQName funcname = new StructuredQName("p", XProcConstants.NS_XPROC, "resolve-uri");
-    private ThreadLocal<XProcRuntime> tl_runtime = new ThreadLocal<XProcRuntime>() {
-        protected synchronized XProcRuntime initialValue() {
-            return null;
-        }
-    };
 
     protected ResolveURI() {
         // you can't call this one

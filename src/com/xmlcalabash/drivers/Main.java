@@ -386,6 +386,10 @@ public class Main {
                 }
             }
 
+            // Here all memory should be freed by the next gc, right?
+            pipeline = null;
+            runtime.close();
+
             if (stdio != null) {
                 // It's just sooo much nicer if there's a newline at the end.
                 System.out.println();

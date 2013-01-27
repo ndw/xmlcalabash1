@@ -21,16 +21,7 @@
 package com.xmlcalabash.core;
 
 import com.xmlcalabash.config.XProcConfigurer;
-import com.xmlcalabash.functions.BaseURI;
-import com.xmlcalabash.functions.Cwd;
-import com.xmlcalabash.functions.IterationPosition;
-import com.xmlcalabash.functions.IterationSize;
-import com.xmlcalabash.functions.ResolveURI;
-import com.xmlcalabash.functions.StepAvailable;
-import com.xmlcalabash.functions.SystemProperty;
-import com.xmlcalabash.functions.ValueAvailable;
-import com.xmlcalabash.functions.VersionAvailable;
-import com.xmlcalabash.functions.XPathVersionAvailable;
+import com.xmlcalabash.functions.*;
 import com.xmlcalabash.io.ReadableData;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.runtime.XLibrary;
@@ -41,7 +32,6 @@ import com.xmlcalabash.util.DefaultXProcConfigurer;
 import com.xmlcalabash.util.DefaultXProcMessageListener;
 import com.xmlcalabash.util.JSONtoXML;
 import com.xmlcalabash.util.StepErrorListener;
-import com.xmlcalabash.util.TreeWriter;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
 import net.sf.saxon.s9api.Processor;
@@ -106,6 +96,7 @@ public class XProcRuntime {
     private Hashtable<String,Vector<Cookie>> cookieHash = new Hashtable<String,Vector<Cookie>> ();
     private XProcConfigurer configurer = null;
     private String htmlParser = null;
+    private Vector<XProcExtensionFunctionDefinition> exFuncs = new Vector<XProcExtensionFunctionDefinition>();
 
     public XProcRuntime(XProcConfiguration config) {
         this.config = config;
@@ -125,16 +116,20 @@ public class XProcRuntime {
 
         xprocData = new XProcData(this);
 
-        processor.registerExtensionFunction(new Cwd(this));
-        processor.registerExtensionFunction(new BaseURI(this));
-        processor.registerExtensionFunction(new ResolveURI(this));
-        processor.registerExtensionFunction(new SystemProperty(this));
-        processor.registerExtensionFunction(new StepAvailable(this));
-        processor.registerExtensionFunction(new IterationSize(this));
-        processor.registerExtensionFunction(new IterationPosition(this));
-        processor.registerExtensionFunction(new ValueAvailable(this));
-        processor.registerExtensionFunction(new VersionAvailable(this));
-        processor.registerExtensionFunction(new XPathVersionAvailable(this));
+        exFuncs.add(new Cwd(this));
+        exFuncs.add(new BaseURI(this));
+        exFuncs.add(new ResolveURI(this));
+        exFuncs.add(new SystemProperty(this));
+        exFuncs.add(new StepAvailable(this));
+        exFuncs.add(new IterationSize(this));
+        exFuncs.add(new IterationPosition(this));
+        exFuncs.add(new ValueAvailable(this));
+        exFuncs.add(new VersionAvailable(this));
+        exFuncs.add(new XPathVersionAvailable(this));
+
+        for (XProcExtensionFunctionDefinition xf : exFuncs) {
+            processor.registerExtensionFunction(xf);
+        }
 
         log = Logger.getLogger(this.getClass().getName());
 
@@ -205,6 +200,12 @@ public class XProcRuntime {
         transparentJSON = runtime.transparentJSON;
         jsonFlavor = runtime.jsonFlavor;
         reset();
+    }
+
+    public void close() {
+        for (XProcExtensionFunctionDefinition xf : exFuncs) {
+            xf.close();
+        }
     }
 
     public XProcConfigurer getConfigurer() {

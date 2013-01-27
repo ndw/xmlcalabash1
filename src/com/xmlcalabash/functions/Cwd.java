@@ -38,13 +38,8 @@ import com.xmlcalabash.core.XProcRuntime;
  * Implementation of the exf:cwd() function
  */
 
-public class Cwd extends ExtensionFunctionDefinition {
+public class Cwd extends XProcExtensionFunctionDefinition {
     private static StructuredQName funcname = new StructuredQName("exf", XProcConstants.NS_EXPROC_FUNCTIONS,"cwd");
-    private ThreadLocal<XProcRuntime> tl_runtime = new ThreadLocal<XProcRuntime>() {
-        protected synchronized XProcRuntime initialValue() {
-            return null;
-        }
-    };
 
     protected Cwd() {
         // you can't call this one

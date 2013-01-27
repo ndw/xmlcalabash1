@@ -37,13 +37,8 @@ import com.xmlcalabash.core.XProcConstants;
  * Implementation of the XProc p:iteration-position function
  */
 
-public class IterationSize extends ExtensionFunctionDefinition {
+public class IterationSize extends XProcExtensionFunctionDefinition {
     private static StructuredQName funcname = new StructuredQName("p", XProcConstants.NS_XPROC, "iteration-size");
-    private ThreadLocal<XProcRuntime> tl_runtime = new ThreadLocal<XProcRuntime>() {
-        protected synchronized XProcRuntime initialValue() {
-            return null;
-        }
-    };
 
     protected IterationSize() {
         // you can't call this one
