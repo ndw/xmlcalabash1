@@ -91,6 +91,8 @@ public class XCCInvokeModule extends DefaultStep {
             throw new XProcException(e);
         }
 
+        contentSource.setAuthenticationPreemptive(true);
+
         Session session;
 
         try {
