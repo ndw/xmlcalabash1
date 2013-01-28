@@ -24,6 +24,7 @@ import java.net.URI;
 public class Delete extends DefaultStep {
     private static final QName _href = new QName("href");
     private static final QName _recursive = new QName("recursive");
+    private static final QName _fail_on_error = new QName("fail-on-error");
 
     private WritablePipe result = null;
 
@@ -50,6 +51,7 @@ public class Delete extends DefaultStep {
         }
 
         boolean recursive = getOption(_recursive, false);
+        boolean fail_on_error = getOption(_fail_on_error, true);
         
         RuntimeValue href = getOption(_href);
         URI uri = href.getBaseURI().resolve(href.getString());
@@ -61,32 +63,35 @@ public class Delete extends DefaultStep {
         }
 
         if (!file.exists()) {
-             throw new XProcException(step.getNode(), "Cannot delete: file does not exist: " + file.getAbsolutePath());
+            if (fail_on_error) {
+                throw new XProcException(step.getNode(), "Cannot delete: file does not exist: " + file.getAbsolutePath());
+            }
+        } else {
+
+            TreeWriter tree = new TreeWriter(runtime);
+            tree.startDocument(step.getNode().getBaseURI());
+            tree.addStartElement(XProcConstants.c_result);
+            tree.startContent();
+
+            tree.addText(file.toURI().toASCIIString());
+
+            performDelete(file, recursive, fail_on_error);
+
+            tree.addEndElement();
+            tree.endDocument();
+
+            result.write(tree.getResult());
         }
-
-        TreeWriter tree = new TreeWriter(runtime);
-        tree.startDocument(step.getNode().getBaseURI());
-        tree.addStartElement(XProcConstants.c_result);
-        tree.startContent();
-
-        tree.addText(file.toURI().toASCIIString());
-
-        performDelete(file, recursive);
-
-        tree.addEndElement();
-        tree.endDocument();
-
-        result.write(tree.getResult());
     }
     
-    private void performDelete(File file, boolean recursive) {
+    private void performDelete(File file, boolean recursive, boolean fail_on_error) {
         if (recursive && file.isDirectory()) {
             for (File f : file.listFiles()) {
-                performDelete(f, recursive);
+                performDelete(f, recursive, fail_on_error);
             }
         }
 
-        if (!file.delete()) {
+        if (!file.delete() && fail_on_error) {
             throw new XProcException(step.getNode(), "Delete failed for: " + file.getAbsolutePath());
         }
     }
