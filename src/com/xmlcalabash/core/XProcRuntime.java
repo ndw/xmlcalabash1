@@ -34,6 +34,7 @@ import com.xmlcalabash.util.JSONtoXML;
 import com.xmlcalabash.util.StepErrorListener;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
+import net.sf.saxon.s9api.ExtensionFunction;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmNode;
@@ -168,9 +169,14 @@ public class XProcRuntime {
 
         for (String className : config.extensionFunctions) {
             try {
-                ExtensionFunctionDefinition def = (ExtensionFunctionDefinition) Class.forName(className).newInstance();
+                Object def = Class.forName(className).newInstance();
                 finer(null, null, "Instantiated: " + className);
-                processor.registerExtensionFunction(def);
+                if (def instanceof ExtensionFunctionDefinition)
+                    processor.registerExtensionFunction((ExtensionFunctionDefinition) def);
+                else if (def instanceof ExtensionFunction)
+                    processor.registerExtensionFunction((ExtensionFunction) def);
+                else
+                    finer(null, null, "Failed to instantiate extension function " + className + " because that class implements neither ExtensionFunction nor ExtensionFunctionDefinition.");
             } catch (NoClassDefFoundError ncdfe) {
                 finer(null, null, "Failed to instantiate extension function: " + className);
             } catch (Exception e) {
