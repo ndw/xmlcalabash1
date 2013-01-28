@@ -21,6 +21,6 @@ public abstract class XProcExtensionFunctionDefinition extends ExtensionFunction
     };
 
     public void close() {
-        tl_runtime.set(null);
+        tl_runtime.remove();
     }
 }
