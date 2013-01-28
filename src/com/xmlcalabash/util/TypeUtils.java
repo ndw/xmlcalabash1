@@ -44,8 +44,6 @@ public class TypeUtils {
     private static final QName err_XD0045 = new QName(XProcConstants.NS_XPROC_ERROR, "XD0045");
 
     private static int anonTypeCount = 0;
-    private static ItemTypeFactory typeFactory = null;
-    private static Hashtable<QName, ItemType> types = null;
 
     public static QName generateUniqueType(String baseName) {
         anonTypeCount++;
@@ -92,22 +90,14 @@ public class TypeUtils {
             return;
         }
 
-        if (typeFactory == null) {
-            typeFactory = new ItemTypeFactory(runtime.getProcessor());
-            types = new Hashtable<QName,ItemType> ();
-        }
+        ItemTypeFactory typeFactory = new ItemTypeFactory(runtime.getProcessor());
 
         ItemType itype = null;
 
-        if (types.containsKey(type)) {
-            itype = types.get(type);
-        } else {
-            try {
-                itype = typeFactory.getAtomicType(type);
-            } catch (SaxonApiException sae) {
-                throw new XProcException("Unexpected type: " + type);
-            }
-            types.put(type,itype);
+        try {
+            itype = typeFactory.getAtomicType(type);
+        } catch (SaxonApiException sae) {
+            throw new XProcException("Unexpected type: " + type);
         }
 
         // FIXME: There's probably a less expensive expensive way to do this
