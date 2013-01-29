@@ -63,6 +63,7 @@ import com.xmlcalabash.util.LogOptions;
 public class Main {
     private static boolean errors = false;
     private static QName _code = new QName("code");
+    private static int exitStatus = 0;
     private XProcRuntime runtime = null;
     private boolean readStdin = false;
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -74,6 +75,7 @@ public class Main {
     public static void main(String[] args) throws SaxonApiException, IOException, URISyntaxException {
         Main main = new Main();
         main.run(args);
+        System.exit(exitStatus);
     }
 
     public void run(String[] args) throws SaxonApiException, IOException, URISyntaxException {
@@ -414,6 +416,7 @@ public class Main {
                 err.printStackTrace();
             }
         } catch (Exception err) {
+            exitStatus = 1;
             error(logger, null, "Pipeline failed: " + err.toString(), null);
             if (err.getCause() != null) {
                 Throwable cause = err.getCause();
