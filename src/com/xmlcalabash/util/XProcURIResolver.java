@@ -129,7 +129,9 @@ public class XProcURIResolver implements URIResolver, EntityResolver {
                 XMLReader reader = ssource.getXMLReader();
                 if (reader == null) {
                     try {
-                        reader = SAXParserFactory.newInstance().newSAXParser().getXMLReader();
+                        SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
+                        saxParserFactory.setNamespaceAware(true); // Must be namespace aware
+                        reader = saxParserFactory.newSAXParser().getXMLReader();
                         reader.setEntityResolver(this);
                         ssource.setXMLReader(reader);
                     } catch (SAXException se) {
