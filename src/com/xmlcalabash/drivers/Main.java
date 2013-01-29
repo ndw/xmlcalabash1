@@ -274,6 +274,22 @@ public class Main {
 
             String stdio = null;
 
+            // Implicit binding for stdin?
+            String implicitPort = null;
+            for (String port : pipeline.getInputs()) {
+                if (!allPorts.contains(port)) {
+                    if (pipeline.getDeclareStep().getInput(port).getPrimary()
+                            && !pipeline.getDeclareStep().getInput(port).getParameterInput()) {
+                        implicitPort = port;
+                    }
+                }
+            }
+
+            if (implicitPort != null) {
+                XdmNode doc = runtime.parse(new InputSource(System.in));
+                pipeline.writeTo(implicitPort, doc);
+            }
+
             // Look for explicit binding to "-"
             for (String port : pipeline.getOutputs()) {
                 String uri = null;
