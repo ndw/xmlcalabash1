@@ -110,13 +110,15 @@ public class XProcURIResolver implements URIResolver, EntityResolver {
                 }
 
                 runtime.finest(null,null,"Resolved again: " + absoluteURI);
-
             } catch (MalformedURLException mue) {
-                throw new XProcException(mue);
+                // Ignore this. We want to give the URIResolver a chance to deal with
+                // schemes that the URL class might not know anything about...
             }
 
-            runtime.finest(null,null,"uriResolver.resolve(" + absoluteURI.toString() + "," + base + ")");
-            Source resolved = uriResolver.resolve(absoluteURI.toString(), base);
+            String resolvedUri = absoluteURI == null ? href : absoluteURI.toString();
+
+            runtime.finest(null,null,"uriResolver.resolve(" + href + "," + base + ")");
+            Source resolved = uriResolver.resolve(href, base);
 
             // FIXME: This is a grotesque hack. This is wrong. Wrong. Wrong.
             // To support caching, XMLResolver (xmlresolver.org) returns a Source even when it hasn't
