@@ -413,6 +413,7 @@ public class Main {
                 System.out.println();
             }
         } catch (XProcException err) {
+            exitStatus = 1;
             if (err.getErrorCode() != null) {
                 error(logger, null, errorMessage(err.getErrorCode()), err.getErrorCode());
             } else {
