@@ -13,6 +13,7 @@ import java.net.URLConnection;
 import java.net.URISyntaxException;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
+import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TimeZone;
@@ -29,6 +30,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.RelevantNodes;
@@ -69,6 +71,24 @@ public class Zip extends DefaultStep {
     private static final QName _status = new QName("status");
     private static final QName _value = new QName("value");
     private final static int bufsize = 8192;
+
+    private final static QName serializerAttrs[] = {
+            _byte_order_mark,
+            _cdata_section_elements,
+            _doctype_public,
+            _doctype_system,
+            _encoding,
+            _escape_uri_attributes,
+            _include_content_type,
+            _indent,
+            _media_type,
+            _method,
+            _normalization_form,
+            _omit_xml_declaration,
+            _standalone,
+            _undeclare_prefixes,
+            _version
+    };
 
     private ReadablePipe source = null;
     private ReadablePipe manifest = null;
@@ -261,7 +281,7 @@ public class Zip extends DefaultStep {
                         method = ZipEntry.STORED;
                     }
 
-                    zipManifest.put(name, new FileToZip(name, hrefuri, method, level, comment));
+                    zipManifest.put(name, new FileToZip(name, hrefuri, method, level, comment, child));
                 } else {
                     throw new XProcException(step.getNode(), "Unexpected element in cx:zip manifest: " + child.getNodeName());
                 }
@@ -331,7 +351,7 @@ public class Zip extends DefaultStep {
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     if (srcManifest.containsKey(uri.toString())) {
                         XdmNode doc = srcManifest.get(href);
-                        Serializer serializer = new Serializer();
+                        Serializer serializer = makeSerializer(file.getOptions());
                         serializer.setOutputStream(baos);
                         S9apiUtils.serialize(runtime, doc, serializer);
                     } else {
@@ -355,7 +375,7 @@ public class Zip extends DefaultStep {
 
                 if (srcManifest.containsKey(href)) {
                     XdmNode doc = srcManifest.get(href);
-                    Serializer serializer = new Serializer();
+                    Serializer serializer = makeSerializer(file.getOptions());
                     serializer.setOutputStream(outZip);
                     S9apiUtils.serialize(runtime, doc, serializer);
                 } else {
@@ -422,8 +442,9 @@ public class Zip extends DefaultStep {
         private int level = -1;
         private String comment = null;
         private long lastModified = -1;
+        private Hashtable<QName,String> options = null;
 
-        public FileToZip(String zipName, String href, int method, int level, String comment) {
+        public FileToZip(String zipName, String href, int method, int level, String comment, XdmNode entry) {
             try {
                 this.zipName = zipName;
                 this.href = new URI(href);
@@ -432,6 +453,17 @@ public class Zip extends DefaultStep {
                 this.comment = comment;
 
                 lastModified = readLastModified(this.href);
+
+                // FIXME: There's no validation here...
+                for (QName attr : serializerAttrs) {
+                    String value = entry.getAttributeValue(attr);
+                    if (value != null) {
+                        if (options == null) {
+                            options = new Hashtable<QName, String> ();
+                        }
+                        options.put(attr, value);
+                    }
+                }
             } catch (URISyntaxException use) {
                 throw new XProcException(use);
             }
@@ -459,6 +491,10 @@ public class Zip extends DefaultStep {
 
         public long getLastModified() {
             return lastModified;
+        }
+
+        public Hashtable<QName,String> getOptions() {
+            return options;
         }
 
         private long readLastModified(URI uri) {
@@ -543,5 +579,93 @@ public class Zip extends DefaultStep {
                 }
             }
         }
+    }
+
+    public Serializer makeSerializer(Hashtable<QName,String> options) {
+        Serializer serializer = new Serializer();
+
+        if (options == null) {
+            return serializer;
+        }
+
+        if (options.containsKey(_byte_order_mark)) {
+            serializer.setOutputProperty(Serializer.Property.BYTE_ORDER_MARK, "false".equals(options.get(_byte_order_mark)) ? "yes" : "no");
+        }
+
+        if (options.containsKey(_cdata_section_elements)) {
+            String list = options.get(_cdata_section_elements);
+
+            // FIXME: Why is list="" sometimes?
+            if (!"".equals(list)) {
+                String[] names = list.split("\\s+");
+                list = "";
+                for (String name : names) {
+                    QName q = new QName(name, step.getNode());
+                    list += q.getClarkName() + " ";
+                }
+
+                serializer.setOutputProperty(Serializer.Property.CDATA_SECTION_ELEMENTS, list);
+            }
+        }
+
+        if (options.containsKey(_doctype_public)) {
+            serializer.setOutputProperty(Serializer.Property.DOCTYPE_PUBLIC, options.get(_doctype_public));
+        }
+
+        if (options.containsKey(_doctype_system)) {
+            serializer.setOutputProperty(Serializer.Property.DOCTYPE_SYSTEM, options.get(_doctype_system));
+        }
+
+        if (options.containsKey(_encoding)) {
+            serializer.setOutputProperty(Serializer.Property.ENCODING, options.get(_encoding));
+        }
+
+        if (options.containsKey(_escape_uri_attributes)) {
+            serializer.setOutputProperty(Serializer.Property.ESCAPE_URI_ATTRIBUTES, "true".equals(options.get(_escape_uri_attributes)) ? "yes" : "no");
+        }
+
+        if (options.containsKey(_include_content_type)) {
+            serializer.setOutputProperty(Serializer.Property.INCLUDE_CONTENT_TYPE, "true".equals(options.get(_include_content_type)) ? "yes" : "no");
+        }
+
+        if (options.containsKey(_indent)) {
+            serializer.setOutputProperty(Serializer.Property.INDENT, "true".equals(options.get(_indent)) ? "yes" : "no");
+        }
+
+        if (options.containsKey(_media_type)) {
+            serializer.setOutputProperty(Serializer.Property.MEDIA_TYPE, options.get(_media_type));
+        }
+
+        if (options.containsKey(_method)) {
+            serializer.setOutputProperty(Serializer.Property.METHOD, options.get(_method));
+        }
+
+        if (options.containsKey(_normalization_form)) {
+            serializer.setOutputProperty(Serializer.Property.NORMALIZATION_FORM, options.get(_normalization_form));
+        }
+
+        if (options.containsKey(_omit_xml_declaration)) {
+            serializer.setOutputProperty(Serializer.Property.OMIT_XML_DECLARATION, "true".equals(options.get(_omit_xml_declaration)) ? "yes" : "no");
+        }
+
+        if (options.containsKey(_standalone)) {
+            String standalone = options.get(_standalone);
+            if ("true".equals(standalone)) {
+                serializer.setOutputProperty(Serializer.Property.STANDALONE, "yes");
+            } else if ("false".equals(standalone)) {
+                serializer.setOutputProperty(Serializer.Property.STANDALONE, "no");
+            }
+            // What about omit?
+        }
+
+        if (options.containsKey(_undeclare_prefixes)) {
+            serializer.setOutputProperty(Serializer.Property.UNDECLARE_PREFIXES, "true".equals(options.get(_undeclare_prefixes)) ? "yes" : "no");
+        }
+
+        if (options.containsKey(_version)) {
+            serializer.setOutputProperty(Serializer.Property.VERSION, options.get(_version));
+        }
+
+        return serializer;
     }
 }
