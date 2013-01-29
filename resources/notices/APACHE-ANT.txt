@@ -1,0 +1,11 @@
+This notice is included in the distribution of XML Calabash because
+the XML Calabash distribution includes a copy of ant.jar.
+Source code, documentation, and further resources are available from
+http://ant.apache.org/
+
+   Apache Ant
+   Copyright 1999-2012 The Apache Software Foundation
+
+   The <sync> task is based on code Copyright (c) 2002, Landmark
+   Graphics Corp that has been kindly donated to the Apache Software
+   Foundation.
