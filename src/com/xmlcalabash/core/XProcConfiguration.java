@@ -194,40 +194,57 @@ public class XProcConfiguration {
         cfgProcessor.getUnderlyingConfiguration().setStripsAllWhiteSpace(false);
         cfgProcessor.getUnderlyingConfiguration().setStripsWhiteSpace(Whitespace.NONE);
 
+        String cfg = System.getProperty("com.xmlcalabash.config.global");
         try {
-            InputStream instream = getClass().getResourceAsStream("/etc/configuration.xml");
-            if (instream == null) {
-                throw new UnsupportedOperationException("Failed to load configuration from JAR file");
+            InputStream instream = null;
+
+            if (cfg == null) {
+                instream = getClass().getResourceAsStream("/etc/configuration.xml");
+                if (instream == null) {
+                    throw new UnsupportedOperationException("Failed to load configuration from JAR file");
+                }
+                // No resolver, we don't have one yet
+                SAXSource source = new SAXSource(new InputSource(instream));
+                DocumentBuilder builder = cfgProcessor.newDocumentBuilder();
+                builder.setLineNumbering(true);
+                builder.setBaseURI(puri);
+                parse(builder.build(source));
+            } else {
+                parse(readXML(cfg, cwd.toASCIIString()));
             }
-            // No resolver, we don't have one yet
-            SAXSource source = new SAXSource(new InputSource(instream));
-            DocumentBuilder builder = cfgProcessor.newDocumentBuilder();
-            builder.setLineNumbering(true);
-            builder.setBaseURI(puri);
-            parse(builder.build(source));
         } catch (SaxonApiException sae) {
             throw new XProcException(sae);
         }
 
-        try {
-            XdmNode cnode = readXML(".calabash", home.toASCIIString());
-            parse(cnode);
-        } catch (XProcException xe) {
-            if (XProcConstants.dynamicError(11).equals(xe.getErrorCode())) {
-                // nop; file not found is ok
-            } else {
-                throw xe;
+        cfg = System.getProperty("com.xmlcalabash.config.user", ".calabash");
+        if ("".equals(cfg)) {
+            // skip loading the user configuration
+        } else {
+            try {
+                XdmNode cnode = readXML(cfg, home.toASCIIString());
+                parse(cnode);
+            } catch (XProcException xe) {
+                if (XProcConstants.dynamicError(11).equals(xe.getErrorCode())) {
+                    // nop; file not found is ok
+                } else {
+                    throw xe;
+                }
             }
         }
 
-        try {
-            XdmNode cnode = readXML(".calabash", cwd.toASCIIString());
-            parse(cnode);
-        } catch (XProcException xe) {
-            if (XProcConstants.dynamicError(11).equals(xe.getErrorCode())) {
-                // nop; file not found is ok
-            } else {
-                throw xe;
+        cfg = System.getProperty("com.xmlcalabash.config.local", ".calabash");
+        if ("".equals(cfg)) {
+            // skip loading the local configuration
+        } else {
+            try {
+                XdmNode cnode = readXML(cfg, cwd.toASCIIString());
+                parse(cnode);
+            } catch (XProcException xe) {
+                if (XProcConstants.dynamicError(11).equals(xe.getErrorCode())) {
+                    // nop; file not found is ok
+                } else {
+                    throw xe;
+                }
             }
         }
 
