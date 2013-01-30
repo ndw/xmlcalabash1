@@ -1,5 +1,7 @@
 package com.xmlcalabash.util;
 
+import net.sf.saxon.lib.UnparsedTextURIResolver;
+import net.sf.saxon.trans.XPathException;
 import org.xml.sax.InputSource;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.SAXException;
@@ -14,7 +16,6 @@ import javax.xml.parsers.SAXParserFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import net.sf.saxon.s9api.DocumentBuilder;
-import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.Configuration;
@@ -22,13 +23,17 @@ import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcRuntime;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.Hashtable;
 import java.util.logging.Logger;
-import java.io.IOException;
 
 /**
  * Created by IntelliJ IDEA.
@@ -37,9 +42,10 @@ import java.io.IOException;
  * Time: 4:04:27 PM
  * To change this template use File | Settings | File Templates.
  */
-public class XProcURIResolver implements URIResolver, EntityResolver {
+public class XProcURIResolver implements URIResolver, EntityResolver, UnparsedTextURIResolver {
     private URIResolver uriResolver = null;
     private EntityResolver entityResolver = null;
+    private UnparsedTextURIResolver unparsedTextResolver = null;
     private XProcRuntime runtime = null;
     private Hashtable<String,XdmNode> cache = new Hashtable<String,XdmNode> ();
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -50,11 +56,15 @@ public class XProcURIResolver implements URIResolver, EntityResolver {
     }
 
     public void setUnderlyingURIResolver(URIResolver resolver) {
-        this.uriResolver = resolver;
+        uriResolver = resolver;
     }
 
     public void setUnderlyingEntityResolver(EntityResolver resolver) {
-        this.entityResolver = resolver;
+        entityResolver = resolver;
+    }
+
+    public void setUnderlyingUnparsedTextURIResolver(UnparsedTextURIResolver resolver) {
+        unparsedTextResolver = resolver;
     }
 
     public void cache(XdmNode doc, URI baseURI) {
@@ -244,6 +254,23 @@ public class XProcURIResolver implements URIResolver, EntityResolver {
             return r;
         } else {
             return null;
+        }
+    }
+
+    @Override
+    public Reader resolve(URI uri, String s, Configuration configuration) throws XPathException {
+        if (unparsedTextResolver != null) {
+            return unparsedTextResolver.resolve(uri, s, configuration);
+        }
+
+        // Ack. Apparently I have to do this if there isn't a resolver...
+        try {
+            URL url = uri.toURL();
+            URLConnection conn = url.openConnection();
+            InputStream stream = conn.getInputStream();
+            return new InputStreamReader(stream);
+        } catch (Exception e) {
+            throw new XProcException(e);
         }
     }
 }

@@ -21,7 +21,17 @@
 package com.xmlcalabash.core;
 
 import com.xmlcalabash.config.XProcConfigurer;
-import com.xmlcalabash.functions.*;
+import com.xmlcalabash.functions.BaseURI;
+import com.xmlcalabash.functions.Cwd;
+import com.xmlcalabash.functions.IterationPosition;
+import com.xmlcalabash.functions.IterationSize;
+import com.xmlcalabash.functions.ResolveURI;
+import com.xmlcalabash.functions.StepAvailable;
+import com.xmlcalabash.functions.SystemProperty;
+import com.xmlcalabash.functions.ValueAvailable;
+import com.xmlcalabash.functions.VersionAvailable;
+import com.xmlcalabash.functions.XPathVersionAvailable;
+import com.xmlcalabash.functions.XProcExtensionFunctionDefinition;
 import com.xmlcalabash.io.ReadableData;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.runtime.XLibrary;
