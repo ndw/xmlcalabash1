@@ -95,8 +95,11 @@
   </target>
 
   <target name="jar" depends="compile">
-    <taskdef resource="aQute/bnd/ant/taskdef.properties"
-      classpath="osgi/bnd.jar"/>
+    <taskdef resource="aQute/bnd/ant/taskdef.properties">
+      <classpath>
+        <fileset dir="osgi" includes="bnd-*.jar"/>
+      </classpath>
+    </taskdef>
     <bnd
       classpath="${build.dir}"
       eclipse="false"
