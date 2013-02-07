@@ -11,6 +11,7 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URISyntaxException;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.Hashtable;
@@ -130,13 +131,13 @@ public class Zip extends DefaultStep {
             throw new XProcException(step.getNode(), "The cx:zip manifest must be a c:zip-manifest.");
         }
 
-        parseManifest(man);
-
         while (source.moreDocuments()) {
             XdmNode doc = source.read();
             XdmNode root = S9apiUtils.getDocumentElement(doc);
             srcManifest.put(root.getBaseURI().toASCIIString(), doc);
         }
+
+        parseManifest(man);
 
         File zipFile = null;
         try {
@@ -438,6 +439,7 @@ public class Zip extends DefaultStep {
     private class FileToZip {
         private String zipName = null;
         private URI href = null;
+        private String origHref = null;
         private int method = -1;
         private int level = -1;
         private String comment = null;
@@ -446,6 +448,7 @@ public class Zip extends DefaultStep {
 
         public FileToZip(String zipName, String href, int method, int level, String comment, XdmNode entry) {
             try {
+                origHref = href;
                 this.zipName = zipName;
                 this.href = new URI(href);
                 this.method = method;
@@ -498,6 +501,14 @@ public class Zip extends DefaultStep {
         }
 
         private long readLastModified(URI uri) {
+            if (srcManifest.containsKey(origHref)) {
+                // If the document to be zipped is in the set of source documents,
+                // don't try to read its timestamp from the disk or the web.
+                // Use "now".
+                Date date = new Date();
+                return date.getTime();
+            }
+
             if (uri.getScheme().equals("file")) {
                 String fn = uri.toASCIIString();
                 if (fn.startsWith("file:")) {
