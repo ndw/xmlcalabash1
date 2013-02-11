@@ -82,6 +82,18 @@ public class XAtomicStep extends XStep {
         return parent;
     }
 
+    public boolean hasReadablePipes(String port) {
+        if (inputs.containsKey(port)) {
+            return inputs.get(port).size() > 0;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean hasWriteablePipe(String port) {
+        return outputs.containsKey(port);
+    }
+
     public RuntimeValue optionAvailable(QName optName) {
         if (!inScopeOptions.containsKey(optName)) {
             return null;

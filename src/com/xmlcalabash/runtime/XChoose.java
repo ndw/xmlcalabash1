@@ -8,7 +8,6 @@ import com.xmlcalabash.io.Pipe;
 import com.xmlcalabash.model.*;
 
 import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XdmNode;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcData;

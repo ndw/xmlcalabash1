@@ -285,7 +285,7 @@ public class Main {
                 }
             }
 
-            if (implicitPort != null) {
+            if (implicitPort != null && !pipeline.hasReadablePipes(implicitPort)) {
                 XdmNode doc = runtime.parse(new InputSource(System.in));
                 pipeline.writeTo(implicitPort, doc);
             }

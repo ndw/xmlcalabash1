@@ -2,7 +2,6 @@ package com.xmlcalabash.runtime;
 
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcConstants;
-import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcData;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
