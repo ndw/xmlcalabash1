@@ -11,6 +11,8 @@ import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.Hashtable;
 import java.util.Vector;
 
@@ -251,9 +253,11 @@ public class XCompoundStep extends XAtomicStep {
             inScopeOptions.put(var.getName(), value);
         }
 
+        runtime.start(this);
         for (XStep step : subpipeline) {
             step.run();
         }
+        runtime.finish(this);
 
         for (String port : inputs.keySet()) {
             if (port.startsWith("|")) {

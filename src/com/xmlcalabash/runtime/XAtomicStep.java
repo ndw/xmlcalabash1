@@ -12,7 +12,6 @@ import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.io.ReadableInline;
 import com.xmlcalabash.io.ReadableDocument;
-import com.xmlcalabash.io.ReadableData;
 import com.xmlcalabash.io.Pipe;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.model.Step;
@@ -47,6 +46,8 @@ import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.SaxonApiUncheckedException;
 
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.Vector;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -376,7 +377,9 @@ public class XAtomicStep extends XStep {
         XProcData data = runtime.getXProcData();
         data.openFrame(this);
 
+        runtime.start(this);
         xstep.run();
+        runtime.finish(this);
 
         // FIXME: Is it sufficient to only do this for atomic steps?
         String cache = getInheritedExtensionAttribute(XProcConstants.cx_cache);

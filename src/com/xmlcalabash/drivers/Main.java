@@ -157,6 +157,10 @@ public class Main {
                 config.debug = cmd.debug;
             }
 
+            if (cmd.profileFile != null) {
+                config.profileFile = cmd.profileFile;
+            }
+
             config.extensionValues |= cmd.extensionValues;
             config.xpointerOnText |= cmd.allowXPointerOnText;
             config.transparentJSON |= cmd.transparentJSON;

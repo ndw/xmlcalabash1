@@ -84,6 +84,8 @@ public class XForEach extends XCompoundStep {
 
         runtime.getXProcData().setIterationSize(sequenceLength);
 
+        runtime.start(this);
+
         for (XdmNode is_doc : nodes) {
             // Setup the current port before we compute variables!
             current.resetWriter();
@@ -145,6 +147,8 @@ public class XForEach extends XCompoundStep {
                 step.reset();
             }
         }
+
+        runtime.finish(this);
 
         for (String port : inputs.keySet()) {
             if (port.startsWith("|")) {

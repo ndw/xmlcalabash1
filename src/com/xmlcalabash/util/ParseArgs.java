@@ -4,7 +4,6 @@ import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.runtime.XLibrary;
-import com.xmlcalabash.runtime.XPipeline;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -25,6 +24,7 @@ import java.util.Vector;
 public class ParseArgs {
     public boolean debugExplicit = false;
     public boolean debug = false;
+    public String profileFile = null;
     public boolean showVersion = false;
 
     public String saxonProcessor = null;
@@ -92,6 +92,11 @@ public class ParseArgs {
             if (arg.startsWith("-D") || arg.startsWith("--debug")) {
                 debug = parseBoolean("D","debug");
                 debugExplicit = true;
+                continue;
+            }
+
+            if (arg.startsWith("--profile")) {
+                profileFile = parseString(null, "profile");
                 continue;
             }
 

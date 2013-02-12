@@ -66,6 +66,7 @@ public class XProcConfiguration {
     public String saxonConfigFile = null;
     public Hashtable<String,String> nsBindings = new Hashtable<String,String> ();
     public boolean debug = false;
+    public String profileFile = null;
     public Hashtable<String,Vector<ReadablePipe>> inputs = new Hashtable<String,Vector<ReadablePipe>> ();
     public ReadablePipe pipeline = null;
     public Hashtable<String,String> outputs = new Hashtable<String,String> ();
@@ -259,6 +260,7 @@ public class XProcConfiguration {
 
         schemaAware = "true".equals(System.getProperty("com.xmlcalabash.schema-aware", ""+schemaAware));
         debug = "true".equals(System.getProperty("com.xmlcalabash.debug", ""+debug));
+        profileFile = System.getProperty("com.xmlcalabash.profile", profileFile);
         extensionValues = "true".equals(System.getProperty("com.xmlcalabash.general-values", ""+extensionValues));
         xpointerOnText = "true".equals(System.getProperty("com.xmlcalabash.xpointer-on-text", ""+xpointerOnText));
         transparentJSON = "true".equals(System.getProperty("com.xmlcalabash.transparent-json", ""+transparentJSON));
@@ -349,6 +351,8 @@ public class XProcConfiguration {
                     parseNamespaceBinding(node);
                 } else if ("debug".equals(localName)) {
                     parseDebug(node);
+                } else if ("profile".equals(localName)) {
+                    parseProfile(node);
                 } else if ("entity-resolver".equals(localName)) {
                     parseEntityResolver(node);
                 } else if ("input".equals(localName)) {
@@ -470,6 +474,10 @@ public class XProcConfiguration {
         if (!"true".equals(value) && !"false".equals(value)) {
             throw new XProcException(node, "Invalid configuration value for debug: "+ value);
         }
+    }
+
+    private void parseProfile(XdmNode node) {
+        profileFile = node.getStringValue().trim();
     }
 
     private void parseEntityResolver(XdmNode node) {
