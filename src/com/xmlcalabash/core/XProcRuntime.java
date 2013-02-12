@@ -97,7 +97,6 @@ public class XProcRuntime {
     private Parser parser = null;
     private XProcURIResolver uriResolver = null;
     private XProcConfiguration config = null;
-    private Vector<XStep> reported = new Vector<XStep> ();
     private QName errorCode = null;
     private XdmNode errorNode = null;
     private String errorMessage = null;
@@ -445,7 +444,6 @@ public class XProcRuntime {
     }
 
     private void reset() {
-        reported = new Vector<XStep> ();
         errorCode = null;
         errorMessage = null;
         declaredSteps = new Hashtable<QName,DeclareStep> ();
@@ -783,10 +781,6 @@ public class XProcRuntime {
 
     // ===========================================================
 
-    public void reportStep(XStep step) {
-        reported.add(step);
-    }
-
     public void start(XStep step) {
         if (profileFile == null) {
             return;
@@ -843,6 +837,13 @@ public class XProcRuntime {
                 serializer.setOutputStream(outstr);
                 S9apiUtils.serialize(this, result.getXdmNode(), serializer);
                 outstr.close();
+
+                profileWriter = new TreeWriter(this);
+                try {
+                    profileWriter.startDocument(new URI("http://xmlcalabash.com/output/profile.xml"));
+                } catch (URISyntaxException use) {
+                    // nop;
+                }
             } catch (SaxonApiException sae) {
                 throw new XProcException(sae);
             } catch (FileNotFoundException fnfe) {
