@@ -65,7 +65,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Constructor;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.logging.Logger;
 import java.util.Hashtable;
 import java.util.Vector;
@@ -786,9 +789,25 @@ public class XProcRuntime {
             return;
         }
 
+        boolean first = profileHash.isEmpty();
+
         Calendar start = GregorianCalendar.getInstance();
         profileHash.put(step, start);
         profileWriter.addStartElement(profileProfile);
+
+        if (first) {
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+            profileWriter.addAttribute(new QName("", "timestamp"), df.format(new Date()));
+            profileWriter.addAttribute(new QName("", "episode"), getEpisode());
+            profileWriter.addAttribute(new QName("", "language"), getLanguage());
+            profileWriter.addAttribute(new QName("", "product-name"), getProductName());
+            profileWriter.addAttribute(new QName("", "product-version"), getProductVersion());
+            profileWriter.addAttribute(new QName("", "product-vendor"), getVendor());
+            profileWriter.addAttribute(new QName("", "product-vendor-uri"), getVendorURI());
+            profileWriter.addAttribute(new QName("", "xproc-version"), getXProcVersion());
+            profileWriter.addAttribute(new QName("", "xpath-version"), getXPathVersion());
+            profileWriter.addAttribute(new QName("", "psvi-supported"), ""+getPSVISupported());
+        }
 
         String name = step.getType().getClarkName();
         profileWriter.addAttribute(profileType, name);
@@ -833,7 +852,13 @@ public class XProcRuntime {
                 Serializer serializer = new Serializer();
                 serializer.setOutputProperty(Serializer.Property.INDENT, "yes");
 
-                OutputStream outstr = new FileOutputStream(new File(profileFile));
+                OutputStream outstr = null;
+                if ("-".equals(profileFile)) {
+                    outstr = System.out;
+                } else {
+                    outstr = new FileOutputStream(new File(profileFile));
+                }
+
                 serializer.setOutputStream(outstr);
                 S9apiUtils.serialize(this, result.getXdmNode(), serializer);
                 outstr.close();
