@@ -100,7 +100,7 @@ public class SplitSequence extends DefaultStep {
             Item item = null;
 
             try {
-                XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
+                XPathCompiler xcomp = runtime.newXPathCompiler();
                 xcomp.setBaseURI(step.getNode().getBaseURI());
 
                 for (String prefix : test.getNamespaceBindings().keySet()) {

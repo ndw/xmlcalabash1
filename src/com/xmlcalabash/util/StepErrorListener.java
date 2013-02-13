@@ -34,10 +34,14 @@ public class StepErrorListener implements ErrorListener {
     private XProcRuntime runtime = null;
     private URI baseURI = null;
 
+    protected StepErrorListener() {
+        // only subclasses can do this
+    }
+
     public StepErrorListener(XProcRuntime runtime) {
         super();
         this.runtime = runtime;
-        baseURI = runtime.getStaticBaseURI();
+        baseURI = runtime.getXProcProcessor().getStaticBaseURI();
     }
 
     public void error(TransformerException exception) throws TransformerException {
@@ -69,7 +73,7 @@ public class StepErrorListener implements ErrorListener {
                 return true;
             }
         }
-        
+
         TreeWriter writer = new TreeWriter(runtime);
 
         writer.startDocument(baseURI);

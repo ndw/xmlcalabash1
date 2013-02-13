@@ -354,7 +354,7 @@ public class Zip extends DefaultStep {
                         XdmNode doc = srcManifest.get(href);
                         Serializer serializer = makeSerializer(file.getOptions());
                         serializer.setOutputStream(baos);
-                        S9apiUtils.serialize(runtime, doc, serializer);
+                        runtime.serialize(doc, serializer);
                     } else {
                         URLConnection connection = uri.toURL().openConnection();
                         InputStream stream = connection.getInputStream();
@@ -378,7 +378,7 @@ public class Zip extends DefaultStep {
                     XdmNode doc = srcManifest.get(href);
                     Serializer serializer = makeSerializer(file.getOptions());
                     serializer.setOutputStream(outZip);
-                    S9apiUtils.serialize(runtime, doc, serializer);
+                    runtime.serialize(doc, serializer);
                 } else {
                     URL url = uri.toURL();
                     URLConnection connection = url.openConnection();

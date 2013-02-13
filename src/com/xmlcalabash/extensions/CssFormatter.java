@@ -1,7 +1,6 @@
 package com.xmlcalabash.extensions;
 
 import com.xmlcalabash.config.CssProcessor;
-import com.xmlcalabash.config.FoProcessor;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
@@ -21,7 +20,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Properties;
-import java.util.Vector;
 
 /**
  * Created by IntelliJ IDEA.
@@ -69,7 +67,7 @@ public class CssFormatter extends DefaultStep {
     public void run() throws SaxonApiException {
         super.run();
 
-        String cssClass = runtime.getConfiguration().cssProcessor;
+        String cssClass = runtime.getXProcProcessor().getConfiguration().cssProcessor;
         if (cssClass == null) {
             throw new XProcException("No CSS processor class defined");
         }

@@ -180,10 +180,10 @@ public class XSLT extends DefaultStep {
             outputBaseURI = opt.getString();
         }
 
-        Processor processor = runtime.getProcessor();
+        Processor processor = runtime.getXProcProcessor().getProcessor();
         Configuration config = processor.getUnderlyingConfiguration();
 
-        runtime.getConfigurer().getSaxonConfigurer().configXSLT(config);
+        runtime.getXProcProcessor().getConfigurer().getSaxonConfigurer().configXSLT(config);
 
         OutputURIResolver uriResolver = config.getOutputURIResolver();
         CollectionURIResolver collectionResolver = config.getCollectionURIResolver();
@@ -192,7 +192,7 @@ public class XSLT extends DefaultStep {
         config.setOutputURIResolver(new OutputResolver());
         config.setCollectionURIResolver(new CollectionResolver(runtime, defaultCollection, collectionResolver));
 
-        XsltCompiler compiler = runtime.getProcessor().newXsltCompiler();
+        XsltCompiler compiler = runtime.getXProcProcessor().getProcessor().newXsltCompiler();
         compiler.setSchemaAware(processor.isSchemaAware());
         XsltExecutable exec = compiler.compile(stylesheet.asSource());
         XsltTransformer transformer = exec.load();
@@ -248,7 +248,7 @@ public class XSLT extends DefaultStep {
     
     public void run10(XdmNode stylesheet, XdmNode document) {
         try {
-            InputSource is = S9apiUtils.xdmToInputSource(runtime, stylesheet);
+            InputSource is = runtime.xdmToInputSource(stylesheet);
             
             TransformerFactory tfactory = TransformerFactory.newInstance();
             Transformer transformer = tfactory.newTransformer(new SAXSource(is));
@@ -261,10 +261,10 @@ public class XSLT extends DefaultStep {
             }
 
             DOMResult result = new DOMResult();
-            is = S9apiUtils.xdmToInputSource(runtime, document);
+            is = runtime.xdmToInputSource(document);
             transformer.transform(new SAXSource(is), result);
 
-            DocumentBuilder xdmBuilder = runtime.getConfiguration().getProcessor().newDocumentBuilder();
+            DocumentBuilder xdmBuilder = runtime.newDocumentBuilder();
             XdmNode xformed = xdmBuilder.build(new DOMSource(result.getNode()));
 
             // Can be null when nothing is written to the principle result tree...
@@ -304,7 +304,7 @@ public class XSLT extends DefaultStep {
             try {
                 XdmDestination xdmResult = new XdmDestination();
                 secondaryResults.put(baseURI.toASCIIString(), xdmResult);
-                Receiver receiver = xdmResult.getReceiver(runtime.getProcessor().getUnderlyingConfiguration());
+                Receiver receiver = xdmResult.getReceiver(runtime.getXProcProcessor().getProcessor().getUnderlyingConfiguration());
                 receiver.setSystemId(baseURI.toASCIIString());
                 return receiver;
             } catch (SaxonApiException sae) {

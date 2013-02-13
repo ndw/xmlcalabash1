@@ -4,7 +4,6 @@ import com.xmlcalabash.runtime.XCompoundStep;
 import com.xmlcalabash.runtime.XStep;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
-import net.sf.saxon.lib.ExtensionFunctionDefinition;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.om.StructuredQName;
@@ -99,7 +98,7 @@ public class ResolveURI extends XProcExtensionFunctionDefinition {
                 iter = arguments[1];
                 baseURI = iter.next().getStringValue();
             } else {
-                baseURI = runtime.getStaticBaseURI().toASCIIString();
+                baseURI = runtime.getXProcProcessor().getStaticBaseURI().toASCIIString();
                 try {
                     // FIXME: TinyDocumentImpl? Surely we can do better than that!
                     Item item = context.getContextItem();

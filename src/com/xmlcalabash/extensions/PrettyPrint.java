@@ -69,7 +69,7 @@ public class PrettyPrint extends DefaultStep {
     public void run() throws SaxonApiException {
         super.run();
 
-        XsltCompiler compiler = runtime.getProcessor().newXsltCompiler();
+        XsltCompiler compiler = runtime.newXsltCompiler();
         XsltExecutable exec = compiler.compile(prettyPrint.asSource());
         XsltTransformer transformer = exec.load();
         transformer.setInitialContextNode(source.read());

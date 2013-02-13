@@ -5,6 +5,7 @@ import com.xmlcalabash.config.JingConfigurer;
 import com.xmlcalabash.config.SaxonConfigurer;
 import com.xmlcalabash.config.XMLCalabashConfigurer;
 import com.xmlcalabash.config.XProcConfigurer;
+import com.xmlcalabash.core.XProcProcessor;
 import com.xmlcalabash.core.XProcRuntime;
 
 /**
@@ -20,8 +21,8 @@ public class DefaultXProcConfigurer implements XProcConfigurer {
     private static final SaxonConfigurer defSaxonConfigurer = new DefaultSaxonConfigurer();
     private XMLCalabashConfigurer configurer = null;
 
-    public DefaultXProcConfigurer(XProcRuntime runtime) {
-        configurer = new DefaultXMLCalabashConfigurer(runtime);
+    public DefaultXProcConfigurer(XProcProcessor xproc) {
+        configurer = new DefaultXMLCalabashConfigurer(xproc);
     }
 
     public XMLCalabashConfigurer getXMLCalabashConfigurer() {

@@ -3,16 +3,11 @@ package com.xmlcalabash.library;
 import net.sf.saxon.om.StandardNames;
 import net.sf.saxon.s9api.*;
 import net.sf.saxon.Configuration;
-import net.sf.saxon.sxpath.IndependentContext;
 import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.functions.FunctionLibraryList;
-import net.sf.saxon.functions.SystemFunctionLibrary;
-import net.sf.saxon.functions.ConstructorFunctionLibrary;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
-import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.model.RuntimeValue;
@@ -112,7 +107,7 @@ public class ValidateWithSCH extends DefaultStep {
             throw new UnsupportedOperationException("Failed to load iso_schematron_skeleton_for_saxon.xsl from JAR file.");
         }
 
-        compiler = runtime.getProcessor().newXsltCompiler();
+        compiler = runtime.getXProcProcessor().getProcessor().newXsltCompiler();
         compiler.setSchemaAware(schemaAware);
         compiler.setURIResolver(new UResolver());
         exec = compiler.compile(getSchematronXSLT("iso_svrl_for_xslt2.xsl"));
@@ -132,7 +127,7 @@ public class ValidateWithSCH extends DefaultStep {
         result = new XdmDestination();
         schemaCompiler.setDestination(result);
 
-        runtime.getConfigurer().getSaxonConfigurer().configSchematron(schemaCompiler.getUnderlyingController().getConfiguration());
+        runtime.getXProcProcessor().getConfigurer().getSaxonConfigurer().configSchematron(schemaCompiler.getUnderlyingController().getConfiguration());
 
         schemaCompiler.transform();
 
@@ -147,9 +142,9 @@ public class ValidateWithSCH extends DefaultStep {
 
         XsltTransformer transformer;
 
-        compiler = runtime.getProcessor().newXsltCompiler();
+        compiler = runtime.getXProcProcessor().getProcessor().newXsltCompiler();
         compiler.setSchemaAware(schemaAware);
-        exec = compiler.compile(new SAXSource(S9apiUtils.xdmToInputSource(runtime, compiledSchema)));
+        exec = compiler.compile(new SAXSource(runtime.xdmToInputSource(compiledSchema)));
         transformer = exec.load();
         transformer.setInitialContextNode(sourceXML);
         result = new XdmDestination();
@@ -174,10 +169,10 @@ public class ValidateWithSCH extends DefaultStep {
         String xpath = "//svrl:failed-assert";
         Vector<XdmItem> results = new Vector<XdmItem> ();
 
-        Configuration config = runtime.getProcessor().getUnderlyingConfiguration();
+        Configuration config = runtime.getXProcProcessor().getProcessor().getUnderlyingConfiguration();
 
         try {
-            XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
+            XPathCompiler xcomp = runtime.newXPathCompiler();
             xcomp.setBaseURI(step.getNode().getBaseURI());
 
             for (String prefix : nsBindings.keySet()) {
@@ -241,7 +236,7 @@ public class ValidateWithSCH extends DefaultStep {
     }
 
     private XdmNode transform(XdmNode source, SAXSource stylesheet) throws SaxonApiException {
-        XsltCompiler compiler = runtime.getProcessor().newXsltCompiler();
+        XsltCompiler compiler = runtime.getXProcProcessor().getProcessor().newXsltCompiler();
         compiler.setSchemaAware(schemaAware);
         compiler.setURIResolver(new UResolver());
         XsltExecutable exec = compiler.compile(stylesheet);

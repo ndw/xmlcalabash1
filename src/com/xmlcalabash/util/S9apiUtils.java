@@ -22,6 +22,7 @@ package com.xmlcalabash.util;
 
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcProcessor;
 import net.sf.saxon.om.*;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.Destination;
@@ -77,7 +78,7 @@ public class S9apiUtils {
      */
 
     public static void writeXdmValue(XProcRuntime runtime, Vector<XdmValue> values, Destination destination, URI baseURI) throws SaxonApiException {
-        writeXdmValue(runtime.getProcessor(), values, destination, baseURI);
+        writeXdmValue(runtime.getXProcProcessor().getProcessor(), values, destination, baseURI);
     }
 
     public static void writeXdmValue(Processor proc, Vector<XdmValue> values, Destination destination, URI baseURI) throws SaxonApiException {
@@ -109,7 +110,7 @@ public class S9apiUtils {
 
     public static void writeXdmValue(XProcRuntime runtime, XdmItem node, Destination destination, URI baseURI) throws SaxonApiException {
         try {
-            Processor proc = runtime.getProcessor();
+            Processor proc = runtime.getXProcProcessor().getProcessor();
             Configuration config = proc.getUnderlyingConfiguration();
             PipelineConfiguration pipeConfig = config.makePipelineConfiguration();
 
@@ -143,13 +144,13 @@ public class S9apiUtils {
         }
     }
 
-    public static void serialize(XProcRuntime xproc, XdmNode node, Serializer serializer) throws SaxonApiException {
+    public static void serialize(XProcProcessor xproc, XdmNode node, Serializer serializer) throws SaxonApiException {
         Vector<XdmNode> nodes = new Vector<XdmNode> ();
         nodes.add(node);
         serialize(xproc, nodes, serializer);
     }
 
-    public static void serialize(XProcRuntime xproc, Vector<XdmNode> nodes, Serializer serializer) throws SaxonApiException {
+    public static void serialize(XProcProcessor xproc, Vector<XdmNode> nodes, Serializer serializer) throws SaxonApiException {
         Processor qtproc = xproc.getProcessor();
         XQueryCompiler xqcomp = qtproc.newXQueryCompiler();
 
@@ -192,11 +193,11 @@ public class S9apiUtils {
     }
 
     // FIXME: THIS METHOD IS A GROTESQUE HACK!
-    public static InputSource xdmToInputSource(XProcRuntime runtime, XdmNode node) throws SaxonApiException {
+    public static InputSource xdmToInputSource(XProcProcessor xproc, XdmNode node) throws SaxonApiException {
         StringWriter sw = new StringWriter();
         Serializer serializer = new Serializer();
         serializer.setOutputWriter(sw);
-        serialize(runtime, node, serializer);
+        serialize(xproc, node, serializer);
 
         String serxml = sw.toString();
 
@@ -252,7 +253,7 @@ public class S9apiUtils {
     }
 
     public static XdmNode removeNamespaces(XProcRuntime runtime, XdmNode node, HashSet<String> excludeNS, boolean preserveUsed) {
-        return removeNamespaces(runtime.getProcessor(), node, excludeNS, preserveUsed);
+        return removeNamespaces(runtime.getXProcProcessor().getProcessor(), node, excludeNS, preserveUsed);
     }
 
     public static XdmNode removeNamespaces(Processor proc, XdmNode node, HashSet<String> excludeNS, boolean preserveUsed) {

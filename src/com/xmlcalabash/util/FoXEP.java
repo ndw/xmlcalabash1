@@ -50,7 +50,7 @@ public class FoXEP implements FoProcessor {
         }
 
         try {
-            InputSource fodoc = S9apiUtils.xdmToInputSource(runtime, doc);
+            InputSource fodoc = runtime.xdmToInputSource(doc);
             SAXSource source = new SAXSource(fodoc);
             xep.render(source, new FOTarget(out, outputFormat));
         } catch (Exception e) {

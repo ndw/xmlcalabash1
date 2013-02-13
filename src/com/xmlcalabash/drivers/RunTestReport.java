@@ -28,6 +28,7 @@ import java.net.URISyntaxException;
 import java.util.*;
 
 import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcProcessor;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcConfiguration;
@@ -91,6 +92,7 @@ public class RunTestReport {
     private static XdmNode prettyPrint = null;
     private static String defaultLog = null;
 
+    private XProcProcessor xproc = null;
     private XProcRuntime runtime = null;
 
     /** Creates a new instance of RunTest */
@@ -150,7 +152,8 @@ public class RunTestReport {
     public void runTests(Vector<String> tests) {
         // We create this runtime for startReport(), I know it never actually gets used...
         XProcConfiguration config = new XProcConfiguration("ee", schemaAware);
-        runtime = new XProcRuntime(config);
+        xproc = new XProcProcessor(config);
+        runtime = new XProcRuntime(xproc);
 
         startReport();
 
@@ -165,8 +168,9 @@ public class RunTestReport {
         Vector<TestResult> results = new Vector<TestResult> ();
 
         XProcConfiguration config = new XProcConfiguration("ee", schemaAware);
-        runtime = new XProcRuntime(config);
-        runtime.getConfiguration().debug = debug;
+        xproc = new XProcProcessor(config);
+        runtime = new XProcRuntime(xproc);
+        xproc.getConfiguration().debug = debug;
 
         XdmNode doc, root;
         try {
@@ -183,7 +187,7 @@ public class RunTestReport {
             XMLReader reader = XMLReaderFactory.createXMLReader();
             reader.setEntityResolver(runtime.getResolver());
             SAXSource source = new SAXSource(reader,isource);
-            DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
+            DocumentBuilder builder = xproc.getProcessor().newDocumentBuilder();
             builder.setLineNumbering(true);
             builder.setDTDValidation(false);
 
@@ -235,7 +239,7 @@ public class RunTestReport {
                 XMLReader reader = XMLReaderFactory.createXMLReader();
                 reader.setEntityResolver(runtime.getResolver());
                 SAXSource source = new SAXSource(reader, isource);
-                DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
+                DocumentBuilder builder = xproc.getProcessor().newDocumentBuilder();
                 builder.setLineNumbering(true);
                 builder.setDTDValidation(false);
                 XdmNode doc = builder.build(source);
@@ -387,7 +391,7 @@ public class RunTestReport {
                         XdmNode tdoc = pexp.get(pos);
                         XdmNode pdoc = pres.get(pos);
 
-                        XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
+                        XPathCompiler xcomp = runtime.newXPathCompiler();
                         xcomp.declareVariable(doca);
                         xcomp.declareVariable(docb);
 
@@ -548,7 +552,7 @@ private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
         System.out.println("<language>" + runtime.getLanguage() + "</language>");
         System.out.println("<xproc-version>" + runtime.getXProcVersion() + "</xproc-version>");
         System.out.println("<xpath-version>" + runtime.getXPathVersion() + "</xpath-version>");
-        System.out.println("<psvi-supported>" + runtime.getPSVISupported() + "</psvi-supported>");
+        System.out.println("<psvi-supported>" + xproc.getPSVISupported() + "</psvi-supported>");
         System.out.println("</processor>");
     }
 
@@ -623,7 +627,7 @@ private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
             ByteArrayOutputStream os = new ByteArrayOutputStream();
             serializer.setOutputStream(os);
 
-            S9apiUtils.serialize(runtime, node, serializer);
+            runtime.serialize(node, serializer);
             String result = os.toString();
 
             return result;

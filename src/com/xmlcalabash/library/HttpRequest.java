@@ -28,7 +28,6 @@ import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.Serializer;
-import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.XdmNodeKind;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcRuntime;
@@ -43,7 +42,6 @@ import com.xmlcalabash.util.Base64;
 import com.xmlcalabash.util.RelevantNodes;
 
 import javax.xml.XMLConstants;
-import javax.xml.transform.sax.SAXSource;
 import java.io.UnsupportedEncodingException;
 import java.util.Vector;
 import java.util.List;
@@ -600,7 +598,7 @@ public class HttpRequest extends DefaultStep {
                     // FIXME: set serializer properties appropriately!
                     StringWriter writer = new StringWriter();
                     serializer.setOutputWriter(writer);
-                    S9apiUtils.serialize(runtime, content, serializer);
+                    runtime.serialize(content, serializer);
                     writer.close();
                     postContent = writer.toString();
                 } else {
@@ -751,7 +749,7 @@ public class HttpRequest extends DefaultStep {
                     // FIXME: set serializer properties appropriately!
                     StringWriter writer = new StringWriter();
                     serializer.setOutputWriter(writer);
-                    S9apiUtils.serialize(runtime, content, serializer);
+                    runtime.serialize(content, serializer);
                     writer.close();
                     //postContent += writer.toString();
                     byteContent.append(writer.toString());
@@ -1050,7 +1048,7 @@ public class HttpRequest extends DefaultStep {
         } else if (jsonContentType(contentType)) {
             InputStreamReader reader = new InputStreamReader(bodyStream);
             JSONTokener jt = new JSONTokener(reader);
-            XdmNode jsonDoc = JSONtoXML.convert(runtime.getProcessor(), jt, runtime.jsonFlavor());
+            XdmNode jsonDoc = JSONtoXML.convert(runtime.getXProcProcessor().getProcessor(), jt, runtime.jsonFlavor());
             tree.addSubtree(jsonDoc);
         } else {
             // Read it as binary

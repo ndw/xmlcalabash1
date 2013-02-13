@@ -151,7 +151,7 @@ public class Parser {
             XMLReader reader = XMLReaderFactory.createXMLReader();
             reader.setEntityResolver(runtime.getResolver());
             SAXSource source = new SAXSource(reader, new InputSource(instream));
-            DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
+            DocumentBuilder builder = runtime.newDocumentBuilder();
             builder.setLineNumbering(true);
             builder.setDTDValidation(false);
             builder.setBaseURI(baseURI);

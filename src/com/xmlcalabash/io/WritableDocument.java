@@ -184,7 +184,7 @@ public class WritableDocument implements WritablePipe {
                 }
             }
 
-            S9apiUtils.serialize(runtime, doc, serializer);
+            runtime.serialize(doc, serializer);
 
             if (uri == null && runtime.getDebug()) {
                 System.out.println("\n--<document boundary>--------------------------------------------------------------------------");

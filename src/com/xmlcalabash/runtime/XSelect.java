@@ -80,7 +80,7 @@ public class XSelect implements ReadablePipe {
 
         try {
             NamespaceBinding bindings = new NamespaceBinding(runtime,context);
-            XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
+            XPathCompiler xcomp = runtime.newXPathCompiler();
             xcomp.setBaseURI(context.getBaseURI());
 
             IndependentContext icontext = (IndependentContext) xcomp.getUnderlyingStaticContext();

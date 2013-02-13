@@ -39,9 +39,6 @@ import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 
-import javax.xml.transform.Source;
-import javax.xml.transform.sax.SAXSource;
-
 import org.xml.sax.InputSource;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -50,7 +47,6 @@ import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.XQueryCompiler;
 import net.sf.saxon.s9api.XQueryExecutable;
 import net.sf.saxon.s9api.XQueryEvaluator;
-import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.XdmNode;
 
 /**
@@ -212,7 +208,7 @@ public class Exec extends DefaultStep {
                     serializer.setOutputProperty(Serializer.Property.OMIT_XML_DECLARATION, "yes");
                 }
 
-                Processor qtproc = runtime.getProcessor();
+                Processor qtproc = runtime.getXProcProcessor().getProcessor();
                 XQueryCompiler xqcomp = qtproc.newXQueryCompiler();
                 XQueryExecutable xqexec = xqcomp.compile(queryexpr);
                 XQueryEvaluator xqeval = xqexec.load();

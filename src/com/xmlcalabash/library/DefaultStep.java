@@ -7,7 +7,6 @@ import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcStep;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.model.RuntimeValue;
-import com.xmlcalabash.runtime.XStep;
 import net.sf.saxon.s9api.*;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.trans.XPathException;
@@ -19,8 +18,6 @@ import java.util.logging.Logger;
 
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.util.S9apiUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * Created by IntelliJ IDEA.
@@ -251,10 +248,10 @@ public class DefaultStep implements XProcStep {
     public Vector<XdmItem> evaluateXPath(XdmNode doc, Hashtable<String,String> nsBindings, String xpath, Hashtable<QName,RuntimeValue> globals) {
         Vector<XdmItem> results = new Vector<XdmItem> ();
 
-        Configuration config = runtime.getProcessor().getUnderlyingConfiguration();
+        Configuration config = runtime.getXProcProcessor().getProcessor().getUnderlyingConfiguration();
 
         try {
-            XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
+            XPathCompiler xcomp = runtime.newXPathCompiler();
             xcomp.setBaseURI(step.getNode().getBaseURI());
             // Extension functions are not available here...
 

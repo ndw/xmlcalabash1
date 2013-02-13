@@ -39,12 +39,9 @@ import net.sf.saxon.s9api.SchemaManager;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SchemaValidator;
 import net.sf.saxon.s9api.XdmDestination;
-import net.sf.saxon.s9api.XdmSequenceIterator;
-import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.Controller;
-import net.sf.saxon.om.NodeInfo;
 
 import com.xmlcalabash.runtime.XAtomicStep;
 
@@ -52,7 +49,6 @@ import javax.xml.transform.ErrorListener;
 import javax.xml.transform.SourceLocator;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.sax.SAXSource;
-import javax.xml.transform.Source;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Schema;
 import javax.xml.validation.Validator;
@@ -107,7 +103,7 @@ public class ValidateWithXSD extends DefaultStep {
     public void run() throws SaxonApiException {
         super.run();
 
-        Processor proc = runtime.getProcessor();
+        Processor proc = runtime.getXProcProcessor().getProcessor();
         SchemaManager manager = proc.getSchemaManager();
 
         if (manager == null) {
@@ -120,9 +116,9 @@ public class ValidateWithXSD extends DefaultStep {
     public void validateWithSaxonSA(SchemaManager manager) throws SaxonApiException {
         fine(step.getNode(), "Validating with Saxon");
 
-        Configuration config = runtime.getProcessor().getUnderlyingConfiguration();
+        Configuration config = runtime.getXProcProcessor().getProcessor().getUnderlyingConfiguration();
 
-        runtime.getConfigurer().getSaxonConfigurer().configXSD(config);
+        runtime.getXProcProcessor().getConfigurer().getSaxonConfigurer().configXSD(config);
 
         // Saxon 9.2.0.4j introduces a clearSchemaCache method on Configuration.
         // Call it if it's available.
@@ -175,7 +171,7 @@ public class ValidateWithXSD extends DefaultStep {
 
         // FIXME: HACK! Do this the right way
         for (XdmNode schemaNode : schemaDocuments) {
-            InputSource schemaSource = S9apiUtils.xdmToInputSource(runtime, schemaNode);
+            InputSource schemaSource = runtime.xdmToInputSource(schemaNode);
             schemaSource.setSystemId(schemaNode.getBaseURI().toASCIIString());
             SAXSource source = new SAXSource(schemaSource);
             manager.load(source);
@@ -200,7 +196,7 @@ public class ValidateWithXSD extends DefaultStep {
         
         try {
             finer(step.getNode(), "Validating: " + doc.getBaseURI().toASCIIString());
-            validator.validate(new SAXSource(S9apiUtils.xdmToInputSource(runtime, doc)));
+            validator.validate(new SAXSource(runtime.xdmToInputSource(doc)));
             if (validationException != null) {
                 throw (SaxonApiException) validationException;
             }
@@ -230,16 +226,16 @@ public class ValidateWithXSD extends DefaultStep {
         try {
             SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 
-            runtime.getConfigurer().getJaxpConfigurer().configSchemaFactory(factory);
+            runtime.getXProcProcessor().getConfigurer().getJaxpConfigurer().configSchemaFactory(factory);
 
             XdmNode schemaNode = schemaDocuments.get(0);
-            InputSource is = S9apiUtils.xdmToInputSource(runtime, schemaNode);
+            InputSource is = runtime.xdmToInputSource(schemaNode);
             is.setSystemId(schemaNode.getBaseURI().toASCIIString());
             Schema schema = factory.newSchema(new SAXSource(is));
             Validator validator = schema.newValidator();
             validator.setErrorHandler(new XSDErrorHandler());
 
-            InputSource docSource = S9apiUtils.xdmToInputSource(runtime, doc);
+            InputSource docSource = runtime.xdmToInputSource(doc);
             docSource.setSystemId(doc.getBaseURI().toASCIIString());
 
             try {

@@ -102,15 +102,15 @@ public class XQuery extends DefaultStep {
             queryString = root.getStringValue();
         }
 
-        Configuration config = runtime.getProcessor().getUnderlyingConfiguration();
+        Configuration config = runtime.getXProcProcessor().getProcessor().getUnderlyingConfiguration();
 
-        runtime.getConfigurer().getSaxonConfigurer().configXQuery(config);
+        runtime.getXProcProcessor().getConfigurer().getSaxonConfigurer().configXQuery(config);
 
         CollectionURIResolver collectionResolver = config.getCollectionURIResolver();
 
         config.setCollectionURIResolver(new CollectionResolver(runtime, defaultCollection, collectionResolver));
 
-        Processor qtproc = runtime.getProcessor();
+        Processor qtproc = runtime.getXProcProcessor().getProcessor();
         XQueryCompiler xqcomp = qtproc.newXQueryCompiler();
         xqcomp.setBaseURI(root.getBaseURI());
         XQueryExecutable xqexec = xqcomp.compile(queryString);

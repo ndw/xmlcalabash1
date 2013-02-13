@@ -3,6 +3,7 @@ package com.xmlcalabash.util;
 import com.xmlcalabash.config.XMLCalabashConfigurer;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcProcessor;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.ReadableData;
 import com.xmlcalabash.io.ReadableDocument;
@@ -25,10 +26,10 @@ public class DefaultXMLCalabashConfigurer implements XMLCalabashConfigurer {
     private static final QName _href = new QName("href");
     private static final QName _dtd_validate = new QName("dtd-validate");
     private final static QName cx_filemask = new QName("cx", XProcConstants.NS_CALABASH_EX,"filemask");
-    protected XProcRuntime runtime = null;
+    protected XProcProcessor xproc = null;
 
-    public DefaultXMLCalabashConfigurer(XProcRuntime runtime) {
-        this.runtime = runtime;
+    public DefaultXMLCalabashConfigurer(XProcProcessor xproc) {
+        this.xproc = xproc;
     }
 
     public void configRuntime(XProcRuntime runtime) {
@@ -39,10 +40,10 @@ public class DefaultXMLCalabashConfigurer implements XMLCalabashConfigurer {
         boolean      validate = load.getOption(_dtd_validate, false);
         RuntimeValue href     = load.getOption(_href);
         String       base     = href.getBaseURI().toASCIIString();
-        if (runtime.getSafeMode() && base.startsWith("file:")) {
+        if (xproc.getSafeMode() && base.startsWith("file:")) {
             throw XProcException.dynamicError(21);
         }
-        return runtime.parse(href.getString(), base, validate);
+        return xproc.parse(href.getString(), base, validate);
     }
 
     public ReadablePipe makeReadableData(XProcRuntime runtime, DataBinding binding) {

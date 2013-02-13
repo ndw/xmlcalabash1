@@ -46,8 +46,6 @@ import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.SaxonApiUncheckedException;
 
-import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.Vector;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -122,10 +120,10 @@ public class XAtomicStep extends XStep {
             pipe = new ReadableDocument(runtime);
         } else if (binding.getBindingType() == Binding.DOCUMENT_BINDING) {
             DocumentBinding dbinding = (DocumentBinding) binding;
-            pipe = runtime.getConfigurer().getXMLCalabashConfigurer().makeReadableDocument(runtime, dbinding);
+            pipe = runtime.getXProcProcessor().getConfigurer().getXMLCalabashConfigurer().makeReadableDocument(runtime, dbinding);
         } else if (binding.getBindingType() == Binding.DATA_BINDING) {
             DataBinding dbinding = (DataBinding) binding;
-            pipe = runtime.getConfigurer().getXMLCalabashConfigurer().makeReadableData(runtime, dbinding);
+            pipe = runtime.getXProcProcessor().getConfigurer().getXMLCalabashConfigurer().makeReadableData(runtime, dbinding);
         } else if (binding.getBindingType() == Binding.ERROR_BINDING) {
             XCompoundStep step = parent;
             while (! (step instanceof XCatch)) {
@@ -288,7 +286,7 @@ public class XAtomicStep extends XStep {
     }
 
     public void run() throws SaxonApiException {
-        XProcStep xstep = runtime.getConfiguration().newStep(runtime, this);
+        XProcStep xstep = runtime.newStep(this);
 
         // If there's more than one reader, collapse them all into a single reader
         for (String port : inputs.keySet()) {
@@ -529,7 +527,7 @@ public class XAtomicStep extends XStep {
                         if (baseURI == null) {
                             baseURI = new URI("http://example.com/"); // FIXME: do I need this?
                         }
-                        S9apiUtils.writeXdmValue(runtime.getProcessor(), nodes, dest, baseURI);
+                        S9apiUtils.writeXdmValue(runtime.getXProcProcessor().getProcessor(), nodes, dest, baseURI);
                         XdmNode doc = dest.getXdmNode();
                         stringValue += doc.getStringValue();
                         items.add(doc);
@@ -592,7 +590,7 @@ public class XAtomicStep extends XStep {
                 localBindings = nsv.getNamespaceBindings();
             } else if (nsbinding.getXPath() != null) {
                 try {
-                    XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
+                    XPathCompiler xcomp = runtime.newXPathCompiler();
                     xcomp.setBaseURI(step.getNode().getBaseURI());
 
                     for (QName varname : globals.keySet()) {
@@ -780,7 +778,7 @@ public class XAtomicStep extends XStep {
         }
 
         try {
-            XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
+            XPathCompiler xcomp = runtime.newXPathCompiler();
             xcomp.setBaseURI(step.getNode().getBaseURI());
 
             for (QName varname : boundOpts.keySet()) {

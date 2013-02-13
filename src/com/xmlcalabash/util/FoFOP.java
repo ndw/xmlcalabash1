@@ -134,7 +134,7 @@ public class FoFOP implements FoProcessor {
         }
 
         try {
-            InputSource fodoc = S9apiUtils.xdmToInputSource(runtime, doc);
+            InputSource fodoc = runtime.xdmToInputSource(doc);
             SAXSource source = new SAXSource(fodoc);
             Fop fop = fopFactory.newFop(outputFormat, out);
             FOUserAgent userAgent = fop.getUserAgent();

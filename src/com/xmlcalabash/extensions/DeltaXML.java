@@ -61,7 +61,7 @@ public class DeltaXML extends DefaultStep {
         XdmNode dxpdoc = dxp.read();
 
         try {
-            DXPConfiguration dxpconfig = new DXPConfiguration(S9apiUtils.xdmToInputSource(runtime, dxpdoc), null, false);
+            DXPConfiguration dxpconfig = new DXPConfiguration(runtime.xdmToInputSource(dxpdoc), null, false);
             PipelinedComparator comparator = dxpconfig.generate();
 
             // FIXME: Grotesque hackery!
@@ -69,14 +69,14 @@ public class DeltaXML extends DefaultStep {
             StringWriter sw = new StringWriter();
             Serializer serializer = new Serializer();
             serializer.setOutputWriter(sw);
-            S9apiUtils.serialize(runtime, docA, serializer);
+            runtime.serialize(docA, serializer);
 
             String docAxml = sw.toString();
 
             sw = new StringWriter();
             serializer = new Serializer();
             serializer.setOutputWriter(sw);
-            S9apiUtils.serialize(runtime, docB, serializer);
+            runtime.serialize(docB, serializer);
 
             String docBxml = sw.toString();
 

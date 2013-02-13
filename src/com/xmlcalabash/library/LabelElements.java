@@ -172,7 +172,7 @@ public class LabelElements extends DefaultStep implements ProcessMatchingNodes {
     }
 
     private String computedLabel(XdmNode node) throws SaxonApiException {
-        XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
+        XPathCompiler xcomp = runtime.newXPathCompiler();
         xcomp.setBaseURI(step.getNode().getBaseURI());
 
         // Make sure any namespace bindings in-scope for the label are available for the expression

@@ -90,7 +90,7 @@ public class ValidateWithRNG extends DefaultStep {
 
             Verifier verifier = null;
             XdmNode schemaNode = schema.read();
-            InputSource schemaSource = S9apiUtils.xdmToInputSource(runtime, schemaNode);
+            InputSource schemaSource = runtime.xdmToInputSource(schemaNode);
             schemaSource.setSystemId(schemaNode.getBaseURI().toASCIIString());
 
             Schema docSchema = vfactory.compileSchema(schemaSource);
@@ -100,7 +100,7 @@ public class ValidateWithRNG extends DefaultStep {
             doc = source.read();
             docBaseURI = doc.getBaseURI();
 
-            if (verifier != null && !verifier.verify(S9apiUtils.xdmToInputSource(runtime, doc))) {
+            if (verifier != null && !verifier.verify(runtime.xdmToInputSource(doc))) {
                 throw new XProcException(XProcException.err_E0001, "Document is not valid");
             }
 

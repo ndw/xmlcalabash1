@@ -94,7 +94,7 @@ public class NodeToBytes {
 
         try {
             serializer.setOutputStream(stream);
-            S9apiUtils.serialize(runtime, doc, serializer);
+            runtime.serialize(doc, serializer);
             stream.close();
         } catch (IOException ioe) {
             throw new XProcException("Failed to serialize as XML: " + doc, ioe);

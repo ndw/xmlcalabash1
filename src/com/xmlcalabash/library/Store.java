@@ -180,7 +180,7 @@ public class Store extends DefaultStep {
             }
 
             serializer.setOutputStream(outstr);
-            S9apiUtils.serialize(runtime, doc, serializer);
+            runtime.serialize(doc, serializer);
             outstr.close();
 
             if (href == null) {

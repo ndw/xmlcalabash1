@@ -139,7 +139,7 @@ public class WrapSequence extends DefaultStep {
             Item item = null;
 
             try {
-                XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
+                XPathCompiler xcomp = runtime.newXPathCompiler();
                 xcomp.setBaseURI(step.getNode().getBaseURI());
 
                 for (String prefix : groupAdjacent.getNamespaceBindings().keySet()) {

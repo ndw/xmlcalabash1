@@ -144,7 +144,7 @@ public class XUntilUnchanged extends XCompoundStep {
                         step.reset();
                     }
 
-                    XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
+                    XPathCompiler xcomp = runtime.newXPathCompiler();
                     xcomp.declareVariable(doca);
                     xcomp.declareVariable(docb);
 

@@ -50,10 +50,10 @@ public class Serialization extends SourceArtifact {
     String version;
 
     /** Creates a new instance of Serialization */
-    public Serialization(XProcRuntime xproc, XdmNode node) {
-        super(xproc,node);
+    public Serialization(XProcRuntime runtime, XdmNode node) {
+        super(runtime,node);
 
-        config = xproc.getConfiguration();
+        config = runtime.getXProcProcessor().getConfiguration();
 
         byteOrderMark = defValue("byte-order-mark", false);
         cdataSectionElements = null; // FIXME: support cdata-section-elements

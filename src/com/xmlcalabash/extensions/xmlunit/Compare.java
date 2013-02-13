@@ -107,7 +107,7 @@ public class Compare extends DefaultStep
 		Serializer serializer = makeSerializer();
 		ByteArrayOutputStream stream = new ByteArrayOutputStream();
 		serializer.setOutputStream(stream);
-        S9apiUtils.serialize(runtime, saxonNode, serializer);
+        runtime.serialize(saxonNode, serializer);
 
 		try {
 			return stream.toString("UTF-8");

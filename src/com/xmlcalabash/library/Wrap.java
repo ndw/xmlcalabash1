@@ -244,7 +244,7 @@ public class Wrap extends DefaultStep implements ProcessMatchingNodes {
 
             if (matcher.matches(chk)) {
                 XdmItem nextValue = computeGroup(chk);
-                boolean same = S9apiUtils.xpathEqual(runtime.getProcessor(), nodeValue, nextValue);
+                boolean same = S9apiUtils.xpathEqual(runtime.getXProcProcessor().getProcessor(), nodeValue, nextValue);
                 return same;
             }
 
@@ -258,7 +258,7 @@ public class Wrap extends DefaultStep implements ProcessMatchingNodes {
 
     private XdmItem computeGroup(XdmNode node) {
         try {
-            XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
+            XPathCompiler xcomp = runtime.newXPathCompiler();
             xcomp.setBaseURI(step.getNode().getBaseURI());
 
             for (String prefix : groupAdjacent.getNamespaceBindings().keySet()) {

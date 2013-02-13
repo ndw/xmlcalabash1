@@ -20,6 +20,7 @@ package com.xmlcalabash.drivers;
 
 import com.xmlcalabash.core.XProcConfiguration;
 import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.core.XProcProcessor;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.model.Serialization;
@@ -1018,7 +1019,8 @@ public class CalabashTask extends MatchingTask {
 	}
 
 	//log("Processing " + in + " to " + out, Project.MSG_INFO);
-        XProcRuntime runtime = new XProcRuntime(config);
+        XProcProcessor xproc = new XProcProcessor(config);
+        XProcRuntime runtime = new XProcRuntime(xproc);
 
 	XPipeline pipeline = null;
 	try {

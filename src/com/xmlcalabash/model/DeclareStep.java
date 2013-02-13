@@ -225,7 +225,7 @@ public class DeclareStep extends CompoundStep {
         DeclareStep decl = this;
         boolean debug = runtime.getDebug();
 
-        if (decl.psviRequired && !runtime.getPSVISupported()) {
+        if (decl.psviRequired && !runtime.getXProcProcessor().getPSVISupported()) {
             throw XProcException.dynamicError(22);
         }
         

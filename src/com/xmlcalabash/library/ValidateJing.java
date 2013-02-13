@@ -39,7 +39,6 @@ import com.thaiopensource.validate.ValidationDriver;
 import com.thaiopensource.validate.prop.rng.RngProperty;
 import com.thaiopensource.validate.auto.AutoSchemaReader;
 import com.thaiopensource.validate.rng.CompactSchemaReader;
-import com.thaiopensource.xml.sax.ErrorHandlerImpl;
 import com.thaiopensource.util.PropertyMapBuilder;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
@@ -126,7 +125,7 @@ public class ValidateJing extends DefaultStep {
         }
 
         InputSource schemaInputSource = null;
-        JingConfigurer configurer = runtime.getConfigurer().getJingConfigurer();
+        JingConfigurer configurer = runtime.getXProcProcessor().getConfigurer().getJingConfigurer();
 
         if (compact) {
             // Compact syntax
@@ -141,13 +140,13 @@ public class ValidateJing extends DefaultStep {
             // XML syntax
             configurer.configRNG(properties);
             sr = new AutoSchemaReader();
-            schemaInputSource = S9apiUtils.xdmToInputSource(runtime, schema);
+            schemaInputSource = runtime.xdmToInputSource(schema);
         }
 
         ValidationDriver driver = new ValidationDriver(properties.toPropertyMap(), sr);
         try {
             if (driver.loadSchema(schemaInputSource)) {
-                InputSource din = S9apiUtils.xdmToInputSource(runtime, doc);
+                InputSource din = runtime.xdmToInputSource(doc);
                 if (!driver.validate(din)) {
                     if (assertValid) {
                         throw XProcException.stepError(53);

@@ -86,8 +86,8 @@ public class NVDL extends DefaultStep {
 
         ValidationDriver driver = new ValidationDriver(properties.toPropertyMap());
 
-        InputSource nvdl = S9apiUtils.xdmToInputSource(runtime, nvdldoc);
-        InputSource doc = S9apiUtils.xdmToInputSource(runtime, srcdoc);
+        InputSource nvdl = runtime.xdmToInputSource(nvdldoc);
+        InputSource doc = runtime.xdmToInputSource(srcdoc);
 
         try {
             driver.loadSchema(nvdl);

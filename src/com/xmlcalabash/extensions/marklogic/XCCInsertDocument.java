@@ -99,7 +99,7 @@ public class XCCInsertDocument extends DefaultStep {
             Serializer serializer = makeSerializer();
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             serializer.setOutputStream(stream);
-            S9apiUtils.serialize(runtime, doc, serializer);
+            runtime.serialize(doc, serializer);
 
             try {
                 docstring = stream.toString("UTF-8");

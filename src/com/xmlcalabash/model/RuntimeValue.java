@@ -110,7 +110,7 @@ public class RuntimeValue {
 
     public XdmAtomicValue getUntypedAtomic(XProcRuntime runtime) {
         try {
-            ItemTypeFactory itf = new ItemTypeFactory(runtime.getProcessor());
+            ItemTypeFactory itf = new ItemTypeFactory(runtime.getXProcProcessor().getProcessor());
             ItemType untypedAtomic = itf.getAtomicType(new QName(NamespaceConstant.SCHEMA, "xs:untypedAtomic"));
             XdmAtomicValue val = new XdmAtomicValue(value, untypedAtomic);
             return val;

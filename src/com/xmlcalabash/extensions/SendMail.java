@@ -92,13 +92,13 @@ public class SendMail extends DefaultStep {
         }
 
         Properties props = new Properties();
-        if (runtime.getSendmailHost() != null) {
-            props.put("mail.smtp.host", runtime.getSendmailHost());
+        if (runtime.getXProcProcessor().getSendmailHost() != null) {
+            props.put("mail.smtp.host", runtime.getXProcProcessor().getSendmailHost());
         }
-        if (runtime.getSendmailPort() != null) {
-            props.put("mail.smtp.port", runtime.getSendmailPort());
+        if (runtime.getXProcProcessor().getSendmailPort() != null) {
+            props.put("mail.smtp.port", runtime.getXProcProcessor().getSendmailPort());
         }
-        if (runtime.getSendmailUsername() != null) {
+        if (runtime.getXProcProcessor().getSendmailUsername() != null) {
             props.put("mail.smtp.auth", "true");
         }
 
@@ -170,7 +170,7 @@ public class SendMail extends DefaultStep {
                         serializer.setOutputProperty(Serializer.Property.OMIT_XML_DECLARATION, "yes");
                         serializer.setOutputProperty(Serializer.Property.METHOD, "html");
                         serializer.setOutputStream(stream);
-                        S9apiUtils.serialize(runtime, nodes, serializer);
+                        runtime.serialize(nodes, serializer);
                         content = stream.toString();
                         contentType = "text/html; charset=utf-8";
                     } else {
@@ -315,7 +315,7 @@ public class SendMail extends DefaultStep {
 
     private class SMTPAuthenticator extends javax.mail.Authenticator {
         public PasswordAuthentication getPasswordAuthentication() {
-            return new PasswordAuthentication(runtime.getSendmailUsername(), runtime.getSendmailPassword());
+            return new PasswordAuthentication(runtime.getXProcProcessor().getSendmailUsername(), runtime.getXProcProcessor().getSendmailPassword());
         }
     }
 

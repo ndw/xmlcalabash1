@@ -7,7 +7,6 @@ import net.sf.saxon.expr.Expression;
 import net.sf.saxon.expr.StaticContext;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
-import net.sf.saxon.lib.ExtensionFunctionDefinition;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.trans.XPathException;
@@ -126,9 +125,9 @@ public class SystemProperty extends XProcExtensionFunctionDefinition {
                  } else if ("use-xslt-1.0".equals(local) || "use-xslt-10".equals(local)) {
                      value = runtime.getUseXslt10Processor() ? "true" : "false";
                  } else if ("saxon-version".equals(local)) {
-                     value = runtime.getConfiguration().getProcessor().getSaxonProductVersion();
+                     value = runtime.getXProcProcessor().getConfiguration().getProcessor().getSaxonProductVersion();
                  } else if ("saxon-edition".equals(local)) {
-                     value = runtime.getConfiguration().saxonProcessor;
+                     value = runtime.getXProcProcessor().getConfiguration().saxonProcessor;
                  }
              }
 

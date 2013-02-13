@@ -150,7 +150,7 @@ public class UnescapeMarkup extends DefaultStep {
             }
         } else if ("application/json".equals(contentType) || "text/json".equals(contentType)) {
             JSONTokener jt = new JSONTokener(escapedContent);
-            XdmNode jsonDoc = JSONtoXML.convert(runtime.getProcessor(), jt, runtime.jsonFlavor());
+            XdmNode jsonDoc = JSONtoXML.convert(runtime.getXProcProcessor().getProcessor(), jt, runtime.jsonFlavor());
             tree.addSubtree(jsonDoc);
         } else if (!"application/xml".equals(contentType)) {
             throw XProcException.stepError(51);
@@ -279,7 +279,7 @@ public class UnescapeMarkup extends DefaultStep {
         Parser parser = new Parser();
         parser.setEntityResolver(runtime.getResolver());
         SAXSource saxSource = new SAXSource(parser, source);
-        DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
+        DocumentBuilder builder = runtime.newDocumentBuilder();
         try {
             XdmNode doc = builder.build(saxSource);
             return doc;
@@ -294,7 +294,7 @@ public class UnescapeMarkup extends DefaultStep {
         try {
             InputSource src = new InputSource(new StringReader(text));
             Document html = htmlBuilder.parse(src);
-            DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
+            DocumentBuilder builder = runtime.newDocumentBuilder();
             XdmNode doc = builder.build(new DOMSource(html));
             return doc;
         } catch (Exception e) {

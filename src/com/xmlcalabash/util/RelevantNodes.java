@@ -175,7 +175,7 @@ public class RelevantNodes implements Iterable<XdmNode> {
             }
 
             try {
-                XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
+                XPathCompiler xcomp = runtime.newXPathCompiler();
                 // FIXME: Static base URI here?
 
                 XdmSequenceIterator nsIter = element.axisIterator(Axis.NAMESPACE);

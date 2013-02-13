@@ -19,6 +19,7 @@
 
 package com.xmlcalabash.drivers;
 
+import com.xmlcalabash.core.XProcProcessor;
 import com.xmlcalabash.io.ReadableData;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
@@ -64,6 +65,7 @@ public class Main {
     private static boolean errors = false;
     private static QName _code = new QName("code");
     private static int exitStatus = 0;
+    private XProcProcessor xproc = null;
     private XProcRuntime runtime = null;
     private boolean readStdin = false;
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -171,16 +173,14 @@ public class Main {
 
             debug = config.debug;
 
-            runtime = new XProcRuntime(config);
-
-            XPipeline pipeline = null;
+            xproc = new XProcProcessor(config);
 
             if (cmd.showVersion) {
                 showVersion();
             }
 
             if (cmd.pipelineURI != null) {
-                pipeline = runtime.load(cmd.pipelineURI);
+                runtime = xproc.load(cmd.pipelineURI);
             } else if (cmd.impliedPipeline()) {
                 XdmNode implicitPipeline = cmd.implicitPipeline(runtime);
 
@@ -194,19 +194,20 @@ public class Main {
 
                     serializer.setOutputStream(System.err);
 
-                    S9apiUtils.serialize(runtime, implicitPipeline, serializer);
+                    runtime.serialize(implicitPipeline, serializer);
                 }
 
-                pipeline=runtime.use(implicitPipeline);
-                
+                runtime = xproc.use(implicitPipeline);
             } else if (config.pipeline != null) {
                 XdmNode doc = config.pipeline.read();
-                pipeline = runtime.use(doc);
+                runtime = xproc.use(doc);
             }
             
-            if (errors || pipeline == null) {
+            if (errors || runtime == null) {
                 usage();
             }
+
+            XPipeline pipeline = runtime.getPipeline();
 
             // Process parameters from the configuration...
             for (String port : config.params.keySet()) {
@@ -453,9 +454,9 @@ public class Main {
         System.out.println("XML Calabash version " + XProcConstants.XPROC_VERSION + ", an XProc processor.");
         if (runtime != null) {
             System.out.print("Running on Saxon version ");
-            System.out.print(runtime.getConfiguration().getProcessor().getSaxonProductVersion());
+            System.out.print(xproc.getConfiguration().getProcessor().getSaxonProductVersion());
             System.out.print(", ");
-            System.out.print(runtime.getConfiguration().getProcessor().getUnderlyingConfiguration().getEditionCode());
+            System.out.print(xproc.getConfiguration().getProcessor().getUnderlyingConfiguration().getEditionCode());
             System.out.println(" edition.");
         }
         System.out.println("Copyright (c) 2007-2012 Norman Walsh");

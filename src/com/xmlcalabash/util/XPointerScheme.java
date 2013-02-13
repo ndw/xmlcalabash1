@@ -73,7 +73,7 @@ public class XPointerScheme {
         Vector<XdmNode> selectedNodes = new Vector<XdmNode> ();
 
         XPathSelector selector = null;
-        XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
+        XPathCompiler xcomp = runtime.newXPathCompiler();
         for (String prefix : nsBindings.keySet()) {
             xcomp.declareNamespace(prefix, nsBindings.get(prefix));
         }

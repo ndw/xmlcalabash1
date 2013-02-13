@@ -24,8 +24,6 @@ import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 
-import java.util.Hashtable;
-
 import net.sf.saxon.s9api.*;
 
 /**
@@ -90,7 +88,7 @@ public class TypeUtils {
             return;
         }
 
-        ItemTypeFactory typeFactory = new ItemTypeFactory(runtime.getProcessor());
+        ItemTypeFactory typeFactory = new ItemTypeFactory(runtime.getXProcProcessor().getProcessor());
 
         ItemType itype = null;
 

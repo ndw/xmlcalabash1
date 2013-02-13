@@ -1,5 +1,6 @@
 package com.xmlcalabash.util;
 
+import com.xmlcalabash.core.XProcProcessor;
 import net.sf.saxon.lib.UnparsedTextURIResolver;
 import net.sf.saxon.trans.XPathException;
 import org.xml.sax.InputSource;
@@ -21,7 +22,6 @@ import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.Configuration;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcConstants;
-import com.xmlcalabash.core.XProcRuntime;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,13 +46,13 @@ public class XProcURIResolver implements URIResolver, EntityResolver, UnparsedTe
     private URIResolver uriResolver = null;
     private EntityResolver entityResolver = null;
     private UnparsedTextURIResolver unparsedTextResolver = null;
-    private XProcRuntime runtime = null;
+    private XProcProcessor xproc = null;
     private Hashtable<String,XdmNode> cache = new Hashtable<String,XdmNode> ();
     private Logger logger = Logger.getLogger(this.getClass().getName());
     private static boolean useCache = true; // FIXME: this is supposed to be temporary!
 
-    public XProcURIResolver(XProcRuntime runtime) {
-        this.runtime = runtime;
+    public XProcURIResolver(XProcProcessor xproc) {
+        this.xproc = xproc;
     }
 
     public void setUnderlyingURIResolver(URIResolver resolver) {
@@ -80,7 +80,7 @@ public class XProcURIResolver implements URIResolver, EntityResolver, UnparsedTe
     }
 
     public Source resolve(String href, String base) throws TransformerException {
-        runtime.finest(null,null,"URIResolver(" + href + "," + base + ")");
+        xproc.finest("URIResolver(" + href + "," + base + ")");
 
         String uri = null;
         if (base == null) {
@@ -88,23 +88,23 @@ public class XProcURIResolver implements URIResolver, EntityResolver, UnparsedTe
                 URL url = new URL(href);
                 uri = url.toURI().toASCIIString();
             } catch (MalformedURLException mue) {
-                runtime.finest(null,null,"MalformedURLException on " + href);
+                xproc.finest("MalformedURLException on " + href);
             } catch (URISyntaxException use) {
-                runtime.finest(null,null,"URISyntaxException on " + href);
+                xproc.finest("URISyntaxException on " + href);
             }
         } else {
             try {
                 URI baseURI = new URI(base);
                 uri = baseURI.resolve(href).toASCIIString();
             } catch (URISyntaxException use) {
-                runtime.finest(null,null,"URISyntaxException resolving base and href: " + base + " : " + href);
+                xproc.finest("URISyntaxException resolving base and href: " + base + " : " + href);
             }
         }
 
-        runtime.finest(null,null,"Resolved: " + uri);
+        xproc.finest("Resolved: " + uri);
 
         if (cache.containsKey(uri)) {
-            runtime.finest(null ,null,"Returning cached document.");
+            xproc.finest("Returning cached document.");
             return cache.get(uri).asSource();
         }
 
@@ -119,7 +119,7 @@ public class XProcURIResolver implements URIResolver, EntityResolver, UnparsedTe
                     absoluteURI = new URL(new URL(base), href);
                 }
 
-                runtime.finest(null,null,"Resolved again: " + absoluteURI);
+                xproc.finest("Resolved again: " + absoluteURI);
             } catch (MalformedURLException mue) {
                 // Ignore this. We want to give the URIResolver a chance to deal with
                 // schemes that the URL class might not know anything about...
@@ -127,7 +127,7 @@ public class XProcURIResolver implements URIResolver, EntityResolver, UnparsedTe
 
             String resolvedUri = absoluteURI == null ? href : absoluteURI.toString();
 
-            runtime.finest(null,null,"uriResolver.resolve(" + href + "," + base + ")");
+            xproc.finest("uriResolver.resolve(" + href + "," + base + ")");
             Source resolved = uriResolver.resolve(href, base);
 
             // FIXME: This is a grotesque hack. This is wrong. Wrong. Wrong.
@@ -164,7 +164,7 @@ public class XProcURIResolver implements URIResolver, EntityResolver, UnparsedTe
     public XdmNode parse(String href, String base, boolean dtdValidate) {
         Source source = null;
         href = URIUtils.encode(href);
-        runtime.finest(null,null,"Attempting to parse: " + href + " (" + base + ")");
+        xproc.finest("Attempting to parse: " + href + " (" + base + ")");
 
         try {
             source = resolve(href, base);
@@ -191,7 +191,7 @@ public class XProcURIResolver implements URIResolver, EntityResolver, UnparsedTe
             }
         }
 
-        DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
+        DocumentBuilder builder = xproc.getProcessor().newDocumentBuilder();
         builder.setDTDValidation(dtdValidate);
         builder.setLineNumbering(true);
 
@@ -215,7 +215,7 @@ public class XProcURIResolver implements URIResolver, EntityResolver, UnparsedTe
             XMLReader reader = XMLReaderFactory.createXMLReader();
             reader.setEntityResolver(this);
             SAXSource source = new SAXSource(reader, isource);
-            DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
+            DocumentBuilder builder = xproc.getProcessor().newDocumentBuilder();
             builder.setLineNumbering(true);
             builder.setDTDValidation(false);
             return builder.build(source);
@@ -234,17 +234,17 @@ public class XProcURIResolver implements URIResolver, EntityResolver, UnparsedTe
     }
 
     public InputSource resolveEntity(String publicId, String systemId) throws SAXException, IOException {
-        runtime.finest(null,null,"ResolveEntity(" + publicId + "," + systemId + ")");
+        xproc.finest("ResolveEntity(" + publicId + "," + systemId + ")");
 
         try {
             URI baseURI = new URI(systemId);
             String uri = baseURI.toASCIIString();
             if (cache.containsKey(uri)) {
-                runtime.finest(null,null,"Returning cached document.");
-                return S9apiUtils.xdmToInputSource(runtime, cache.get(uri));
+                xproc.finest("Returning cached document.");
+                return S9apiUtils.xdmToInputSource(xproc, cache.get(uri));
             }
         } catch (URISyntaxException use) {
-            runtime.finest(null,null,"URISyntaxException resolving entityResolver systemId: " + systemId);
+            xproc.finest("URISyntaxException resolving entityResolver systemId: " + systemId);
         } catch (SaxonApiException sae) {
             throw new XProcException(sae);
         }

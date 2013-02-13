@@ -124,7 +124,7 @@ public class ReadableData implements ReadablePipe {
                 }
                 InputStreamReader reader = new InputStreamReader(stream, charset);
                 JSONTokener jt = new JSONTokener(reader);
-                XdmNode jsonDoc = JSONtoXML.convert(runtime.getProcessor(), jt, runtime.jsonFlavor());
+                XdmNode jsonDoc = JSONtoXML.convert(runtime.getXProcProcessor().getProcessor(), jt, runtime.jsonFlavor());
                 tree.addSubtree(jsonDoc);
             } else {
                 tree.addStartElement(wrapper);

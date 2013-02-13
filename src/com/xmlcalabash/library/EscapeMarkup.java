@@ -93,7 +93,7 @@ public class EscapeMarkup extends DefaultStep {
                 // otherwise namespace fixup messes with the namespace bindings
                 ByteArrayOutputStream outstr = new ByteArrayOutputStream();
                 serializer.setOutputStream(outstr);
-                S9apiUtils.serialize(runtime, child, serializer);
+                runtime.serialize(child, serializer);
                 String data = outstr.toString();
 
                 data = data.replaceAll("^<.*?>",""); // Strip off the start tag...

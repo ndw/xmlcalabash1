@@ -43,7 +43,6 @@ import net.sf.saxon.type.SimpleType;
 
 import java.net.URI;
 import java.util.Iterator;
-import java.util.Vector;
 
 /**
  *
@@ -66,7 +65,7 @@ public class TreeWriter {
      */
     public TreeWriter(XProcRuntime xproc) {
         runtime = xproc;
-        controller = new Controller(runtime.getProcessor().getUnderlyingConfiguration());
+        controller = new Controller(runtime.getXProcProcessor().getProcessor().getUnderlyingConfiguration());
         pool = controller.getNamePool();
         xLocationProvider = new XProcLocationProvider();
     }

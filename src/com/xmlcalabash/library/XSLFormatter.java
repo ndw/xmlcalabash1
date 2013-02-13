@@ -7,7 +7,6 @@ import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.model.RuntimeValue;
 
@@ -19,7 +18,6 @@ import java.io.BufferedOutputStream;
 import java.util.Vector;
 
 import com.xmlcalabash.util.URIUtils;
-import org.xml.sax.InputSource;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 
@@ -65,8 +63,8 @@ public class XSLFormatter extends DefaultStep {
         super.run();
 
         Vector<String> foClasses = new Vector<String> ();
-        if (runtime.getConfiguration().foProcessor != null) {
-            foClasses.add(runtime.getConfiguration().foProcessor);
+        if (runtime.getXProcProcessor().getConfiguration().foProcessor != null) {
+            foClasses.add(runtime.getXProcProcessor().getConfiguration().foProcessor);
         }
         foClasses.add("com.xmlcalabash.util.FoFOP");
 

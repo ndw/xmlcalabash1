@@ -1,7 +1,6 @@
 package com.xmlcalabash.io;
 
 import com.xmlcalabash.model.Log;
-import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.LogOptions;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcConfiguration;
@@ -15,7 +14,6 @@ import java.io.File;
 import java.io.PrintStream;
 import java.io.FileNotFoundException;
 import java.util.GregorianCalendar;
-import java.net.URI;
 
 /**
  * Created by IntelliJ IDEA.
@@ -42,7 +40,7 @@ public class PipeLogger {
     public PipeLogger(XProcRuntime xproc, Log log) {
         runtime = xproc;
         this.log = log;
-        config = xproc.getConfiguration();
+        config = xproc.getXProcProcessor().getConfiguration();
 
         basename = runtime.getEpisode();
         logstyle = config.logOpt;
@@ -202,7 +200,7 @@ public class PipeLogger {
             case WRAPPED:
                 stream.print("<px:document>");
                 try {
-                    S9apiUtils.serialize(runtime, node, serializer);
+                    runtime.serialize(node, serializer);
                 } catch (SaxonApiException sae) {
                     System.err.println("Logging failed: " + sae);
                 }
@@ -210,7 +208,7 @@ public class PipeLogger {
                 break;
             case PLAIN:
                 try {
-                    S9apiUtils.serialize(runtime, node, serializer);
+                    runtime.serialize(node, serializer);
                 } catch (SaxonApiException sae) {
                     System.err.println("Logging failed: " + sae);
                 }
@@ -230,7 +228,7 @@ public class PipeLogger {
                 stream.println("<!-- Start of Calabash output " + log + " on " + dateTime() + " -->");
 
                 try {
-                    S9apiUtils.serialize(runtime, node, serializer);
+                    runtime.serialize(node, serializer);
                 } catch (SaxonApiException sae) {
                     System.err.println("Logging failed: " + sae);
                 }

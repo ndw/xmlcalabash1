@@ -64,7 +64,7 @@ public class Load extends DefaultStep {
         super.run();
 
         try {
-            XdmNode doc = runtime.getConfigurer().getXMLCalabashConfigurer().loadDocument(this);
+            XdmNode doc = runtime.getXProcProcessor().getConfigurer().getXMLCalabashConfigurer().loadDocument(this);
             result.write(doc);
         } catch (XProcException e) {
             if (runtime.getDebug()) {

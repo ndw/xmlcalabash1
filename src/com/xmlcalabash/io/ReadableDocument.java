@@ -162,7 +162,7 @@ public class ReadableDocument implements ReadablePipe {
                                 URLConnection conn = url.openConnection();
                                 InputStreamReader reader = new InputStreamReader(conn.getInputStream());
                                 JSONTokener jt = new JSONTokener(reader);
-                                doc = JSONtoXML.convert(runtime.getProcessor(), jt, runtime.jsonFlavor());
+                                doc = JSONtoXML.convert(runtime.getXProcProcessor().getProcessor(), jt, runtime.jsonFlavor());
                                 documents.add(doc);
                                 return;
                             } catch (Exception e) {
