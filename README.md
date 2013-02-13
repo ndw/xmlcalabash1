@@ -1,7 +1,8 @@
-* **Version:** 1.0.x
+* **Version:** 1.1.x
 * **Author:** Norman Walsh
-* **Date:** 20 February 2012
+* **Date:** 13 Feb 2013
 
-# XML Calabash (1.0.xx)
+# XML Calabash (1.1.xx)
 
-These are the sources for the "1.0" branch for XML Calabash.
+These are the sources for the "1.1" development branch for XML Calabash.
+
