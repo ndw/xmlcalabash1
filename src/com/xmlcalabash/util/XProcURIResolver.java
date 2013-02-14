@@ -236,6 +236,10 @@ public class XProcURIResolver implements URIResolver, EntityResolver, UnparsedTe
     public InputSource resolveEntity(String publicId, String systemId) throws SAXException, IOException {
         xproc.finest("ResolveEntity(" + publicId + "," + systemId + ")");
 
+        if (systemId == null) {
+            return null;
+        }
+
         try {
             URI baseURI = new URI(systemId);
             String uri = baseURI.toASCIIString();
