@@ -115,6 +115,7 @@ public class TreeWriter {
     public void endDocument() {
         try {
             receiver.endDocument();
+            receiver.close();
         } catch (XPathException e) {
             throw new XProcException(e);
         }
