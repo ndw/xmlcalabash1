@@ -129,9 +129,6 @@ public class CalabashTask extends MatchingTask {
     /** Additional resource collections to process. */
     private Union resources = new Union();
 
-    /** whether resources has been set from nested resource collection */
-    private boolean isResourcesSet = false;
-
     /** Whether to use the implicit fileset. */
     private boolean useImplicitFileset = true;
 
@@ -421,7 +418,6 @@ public class CalabashTask extends MatchingTask {
      */
     public void add(ResourceCollection rc) {
         resources.add(rc);
-	isResourcesSet = true;
     }
 
     /**
@@ -944,7 +940,6 @@ public class CalabashTask extends MatchingTask {
 	    isTargetExtensionSet = false;
 	    failOnError = true;
 	    resources = new Union();
-	    isResourcesSet = false;
 	    useImplicitFileset = true;
 	    performDirectoryScan = true;
 	    mapper = null;
