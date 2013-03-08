@@ -656,7 +656,6 @@ Calabash</citetitle> from the Apache Ant using the
                   <section>
                            <title>QNames</title>
                            <programlisting>&lt;calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
-      &lt;sysproperty key="com.xmlcalabash.phonehome" value="false" />
       &lt;namespace prefix="hi" uri="low" />
       &lt;parameter name="{hi}there" value="a value" />
       &lt;parameter name="hi:there" value="a value" />
