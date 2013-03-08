@@ -30,6 +30,7 @@
 
 <xi:include href="preface.xml"/>
 <xi:include href="running.xml"/>
+<xi:include href="anttask.xml"/>
 <xi:include href="configuration.xml"/>
 <xi:include href="extensions.xml"/>
 
