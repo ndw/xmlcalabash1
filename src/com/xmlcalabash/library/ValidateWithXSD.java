@@ -196,7 +196,7 @@ public class ValidateWithXSD extends DefaultStep {
         
         try {
             finer(step.getNode(), "Validating: " + doc.getBaseURI().toASCIIString());
-            validator.validate(new SAXSource(runtime.xdmToInputSource(doc)));
+            validator.validate(doc.asSource());
             if (validationException != null) {
                 throw (SaxonApiException) validationException;
             }

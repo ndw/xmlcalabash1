@@ -166,7 +166,25 @@ public class XProcRuntime {
         xStandardLibrary = runtime.xStandardLibrary;
         cookieHash = runtime.cookieHash;
         profileFile = runtime.profileFile;
+
+        exFuncs.add(new Cwd(this));
+        exFuncs.add(new BaseURI(this));
+        exFuncs.add(new ResolveURI(this));
+        exFuncs.add(new SystemProperty(this));
+        exFuncs.add(new StepAvailable(this));
+        exFuncs.add(new IterationSize(this));
+        exFuncs.add(new IterationPosition(this));
+        exFuncs.add(new ValueAvailable(this));
+        exFuncs.add(new VersionAvailable(this));
+        exFuncs.add(new XPathVersionAvailable(this));
+
         reset();
+    }
+
+    public void resetExtensionFunctions() {
+        for (XProcExtensionFunctionDefinition xf : exFuncs) {
+            xproc.getProcessor().registerExtensionFunction(xf);
+        }
     }
 
     public void close() {

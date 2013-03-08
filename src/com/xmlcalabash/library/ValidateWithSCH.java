@@ -144,7 +144,7 @@ public class ValidateWithSCH extends DefaultStep {
 
         compiler = runtime.getXProcProcessor().getProcessor().newXsltCompiler();
         compiler.setSchemaAware(schemaAware);
-        exec = compiler.compile(new SAXSource(runtime.xdmToInputSource(compiledSchema)));
+        exec = compiler.compile(compiledSchema.asSource());
         transformer = exec.load();
         transformer.setInitialContextNode(sourceXML);
         result = new XdmDestination();

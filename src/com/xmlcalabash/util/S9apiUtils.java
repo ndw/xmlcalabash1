@@ -49,12 +49,13 @@ import net.sf.saxon.event.NamespaceReducer;
 import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.Configuration;
 import com.xmlcalabash.core.XProcRuntime;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.Iterator;
 import java.util.Vector;
 import java.util.HashSet;
 import java.net.URI;
-import java.io.StringWriter;
-import java.io.StringReader;
 
 import net.sf.saxon.tree.util.NamespaceIterator;
 import org.xml.sax.InputSource;
@@ -194,16 +195,14 @@ public class S9apiUtils {
 
     // FIXME: THIS METHOD IS A GROTESQUE HACK!
     public static InputSource xdmToInputSource(XProcProcessor xproc, XdmNode node) throws SaxonApiException {
-        StringWriter sw = new StringWriter();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
         Serializer serializer = new Serializer();
-        serializer.setOutputWriter(sw);
+        serializer.setOutputStream(out);
         serialize(xproc, node, serializer);
-
-        String serxml = sw.toString();
-
-        StringReader sr = new StringReader(serxml);
-        InputSource isource = new InputSource(sr);
-        isource.setSystemId(node.getBaseURI().toASCIIString());
+        InputSource isource = new InputSource(new ByteArrayInputStream(out.toByteArray()));
+        if (node.getBaseURI() != null) {
+            isource.setSystemId(node.getBaseURI().toASCIIString());
+        }
         return isource;
     }
 

@@ -687,7 +687,8 @@ public class XAtomicStep extends XStep {
                     value += item.getStringValue();
                 } else {
                     XdmNode node = (XdmNode) item;
-                    if (node.getNodeKind() == XdmNodeKind.ATTRIBUTE) {
+                    if (node.getNodeKind() == XdmNodeKind.ATTRIBUTE
+                            || node.getNodeKind() == XdmNodeKind.NAMESPACE) {
                         value += node.getStringValue();
                     } else {
                         XdmDestination dest = new XdmDestination();
