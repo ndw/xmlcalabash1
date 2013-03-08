@@ -1004,8 +1004,8 @@ public class CalabashTask extends MatchingTask {
 	log("Pipeline file " + pipelineResource + " time: " + pipelineLastModified, Project.MSG_DEBUG);
 
 	if (!force) {
-	    if (newestInputLastModified < oldestOutputLastModified &&
-		pipelineLastModified < oldestOutputLastModified) {
+	    if (newestInputLastModified <= oldestOutputLastModified &&
+		pipelineLastModified <= oldestOutputLastModified) {
 		log("Skipping because all outputs are newer than inputs and newer than pipeline", Project.MSG_DEBUG);
 		return;
 	    }
