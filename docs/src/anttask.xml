@@ -287,7 +287,7 @@ Calabash</citetitle> from the Apache Ant using the
                                              <td>Whether the build should fail if the explicit
                                                   fileset from a nested resource collection is
                                                   empty</td>
-                                             <td>No; default is <literal>false</literal></td>
+                                             <td>No; default is <literal>true</literal></td>
                                     </tr>
                                     <tr>
                                              <td>force</td>
@@ -299,7 +299,7 @@ Calabash</citetitle> from the Apache Ant using the
                                              <td>failonerror</td>
                                              <td>Whether the build should fail if any errors
                                                   occur</td>
-                                             <td>No; default is <literal>false</literal></td>
+                                             <td>No; default is <literal>true</literal></td>
                                     </tr>
                                     <tr>
                                              <td>debug</td>
@@ -334,7 +334,7 @@ Calabash</citetitle> from the Apache Ant using the
                                     </tr>
                                     <tr>
                                              <td>jsonflavor</td>
-                                             <td>Desired XML flavor</td>
+                                             <td>Desired JSON flavor</td>
                                              <td>No</td>
                                     </tr>
                            </tbody>
@@ -398,7 +398,7 @@ Calabash</citetitle> from the Apache Ant using the
                                              <para>You cannot use a mapper on the <tag class="attribute">inport</tag> port.</para>
                                     </section>
                            </section>
-                           
+
                   </section>
                   <section>
                            <title>pipeline</title>
@@ -779,7 +779,7 @@ Calabash</citetitle> from the Apache Ant using the
                                                   mapping prefixes to URIs</para>
                                     </listitem>
                            </varlistentry>
-                           
+
                   </variablelist>
          </section>
 </chapter>

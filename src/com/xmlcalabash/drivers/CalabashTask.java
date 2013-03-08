@@ -600,8 +600,7 @@ public class CalabashTask extends MatchingTask {
     }
 
     /**
-     * Set whether to automatically translate between JSON and XML;
-     * optional, default is false.
+     * Set the desired JSON flavor.
      *
      * @param jsonFlavor the flavor of JSON/XML transformation to use
      */
@@ -1076,7 +1075,7 @@ public class CalabashTask extends MatchingTask {
 
 	    pipeline.run();
 
-            // The unamed output is matched to one unmatched output
+            // The unnamed output is matched to one unmatched output
             for (String port : pipeline.getOutputs()) {
 		if (!outputResources.containsKey(port)) {
 		    if (outputResources.containsKey(null)) {
@@ -1213,8 +1212,8 @@ public class CalabashTask extends MatchingTask {
     }
 
     /**
-     * Throws a BuildException if the destination directory hasn't
-     * been specified.
+     * Sets the destination directory to the base directory
+     * if it is not set explicitly.
      */
     private void checkDest() {
         if (destDir == null) {
