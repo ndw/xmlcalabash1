@@ -664,7 +664,17 @@ public class Step extends SourceArtifact {
                     }
                 }
 
-                if (port == null) {
+                if (input.getPrimary() && port != null) {
+                    String stepName = port.getStep().getName();
+                    String portName = port.getPort();
+
+                    PipeNameBinding binding = new PipeNameBinding(runtime, node);
+                    binding.setStep(stepName);
+                    binding.setPort(portName);
+
+                    //errhandler.warning(node, "Manufactured binding for " + input.getPort() + " to " + portName + " on " + stepName);
+                    input.addBinding(binding);
+                } else {
                     // If there's a default binding, use it. FIXME: Is it safe to copy the binding like this?
                     Input declIn = declaration.getInput(input.getPort());
                     if (declIn.getBinding().size() != 0) {
@@ -676,16 +686,6 @@ public class Step extends SourceArtifact {
                         valid = false;
                         error("Input " + input.getPort() + " unbound on " + getType() + " step named " + getName() + " and no default binding available.", XProcConstants.staticError(32));
                     }
-                } else {
-                    String stepName = port.getStep().getName();
-                    String portName = port.getPort();
-
-                    PipeNameBinding binding = new PipeNameBinding(runtime, node);
-                    binding.setStep(stepName);
-                    binding.setPort(portName);
-
-                    //errhandler.warning(node, "Manufactured binding for " + input.getPort() + " to " + portName + " on " + stepName);
-                    input.addBinding(binding);
                 }
             }
         }
