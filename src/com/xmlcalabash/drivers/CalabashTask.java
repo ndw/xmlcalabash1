@@ -926,7 +926,6 @@ public class CalabashTask extends MatchingTask {
 	    // again, so reset everything.
 	    inputResources.clear();
 	    inputMappers.clear();
-	    outputResources.clear();
             baseDir = null;
 	    inPort = null;
 	    inResource = null;
@@ -936,6 +935,8 @@ public class CalabashTask extends MatchingTask {
 	    destDir = null;
 	    outPort = null;
 	    outResource = null;
+	    outputResources.clear();
+	    outputMappers.clear();
 	    targetExtension = "-out.xml";
 	    isTargetExtensionSet = false;
 	    failOnError = true;
