@@ -1188,7 +1188,9 @@ public class CalabashTask extends MatchingTask {
 	String uri = null;
 	QName qname;
 
-	if (name.indexOf("{") == 0) {
+	if (name == null) {
+	    qname = new QName("");
+	} else if (name.indexOf("{") == 0) {
 	    qname = QName.fromClarkName(name);
 	} else {
 	    int cpos = name.indexOf(":");
