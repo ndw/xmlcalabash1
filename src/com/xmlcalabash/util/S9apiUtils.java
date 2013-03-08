@@ -205,7 +205,9 @@ public class S9apiUtils {
         Serializer serializer = new Serializer();
         serializer.setOutputStream(out);
         serialize(runtime, node, serializer);
-        return new InputSource(new ByteArrayInputStream(out.toByteArray()));
+        InputSource isource = new InputSource(new ByteArrayInputStream(out.toByteArray()));
+        isource.setSystemId(node.getBaseURI().toASCIIString());
+        return isource;
     }
 
     public static HashSet<String> excludeInlinePrefixes(XdmNode node, String prefixList) {
