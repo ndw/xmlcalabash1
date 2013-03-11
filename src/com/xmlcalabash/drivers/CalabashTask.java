@@ -264,7 +264,7 @@ public class CalabashTask extends MatchingTask {
      *
      * @param port the port name
      */
-    public void setinPort(String port) {
+    public void setInPort(String port) {
         inPort = port;
     }
 
