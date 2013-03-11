@@ -120,15 +120,15 @@ public class FoFOP implements FoProcessor {
     public void format(XdmNode doc, OutputStream out, String contentType) {
         String outputFormat = null;
         if (contentType == null || "application/pdf".equalsIgnoreCase(contentType)) {
-            outputFormat = MimeConstants.MIME_PDF; // "PDF";
+            outputFormat = "application/pdf"; // "PDF";
         } else if ("application/PostScript".equalsIgnoreCase(contentType)) {
-            outputFormat = MimeConstants.MIME_POSTSCRIPT; //"PostScript";
+            outputFormat = "application/postscript"; //"PostScript";
         } else if ("application/afp".equalsIgnoreCase(contentType)) {
-            outputFormat =  MimeConstants.MIME_AFP;  //"AFP";
+            outputFormat =  "application/x-afp";  //"AFP";
         } else if ("application/rtf".equalsIgnoreCase(contentType)) {
-            outputFormat = MimeConstants.MIME_RTF;
+            outputFormat = "application/rtf";
         } else if ("text/plain".equalsIgnoreCase(contentType)) {
-           outputFormat = MimeConstants.MIME_PLAIN_TEXT;
+           outputFormat = "text/plain";
         } else {
             throw new XProcException(step.getNode(), "Unsupported content-type on p:xsl-formatter: " + contentType);
         }
