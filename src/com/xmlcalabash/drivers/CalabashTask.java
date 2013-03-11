@@ -269,7 +269,7 @@ public class CalabashTask extends MatchingTask {
     }
 
     /**
-     * Set the input resource. optional, implicit and/or explicit filest will be used if this and outResource are not
+     * Set the input resource. optional, implicit and/or explicit fileset will be used if this and outResource are not
      * set.
      *
      * @param inResource the {@link org.apache.tools.ant.types.Resource}
@@ -395,7 +395,7 @@ public class CalabashTask extends MatchingTask {
 
     /**
      * Set the output resource.
-     * optional, implicit and/or explicit filest will be used if this
+     * optional, implicit and/or explicit fileset will be used if this
      * and inResource are not set.
      *
      * @param outResource the {@link org.apache.tools.ant.types.Resource}
@@ -513,7 +513,7 @@ public class CalabashTask extends MatchingTask {
     }
 
     /**
-     * Adds a nested filenamemapper.
+     * Adds a nested FileNameMapper.
      *
      * @param fileNameMapper the mapper to add
      * @throws BuildException if more than one mapper is defined
@@ -843,7 +843,7 @@ public class CalabashTask extends MatchingTask {
 
                 if (outputMappers.size() != 0) {
                     for (Resource resource : inputResources.get(inPort).listResources()) {
-                        // Aadd any mapped resources on output ports.
+                        // Add any mapped resources on output ports.
                         for (String port : outputMappers.keySet()) {
                             FileNameMapper outputMapper = outputMappers.get(port);
 
@@ -1226,7 +1226,7 @@ public class CalabashTask extends MatchingTask {
      * Makes a QName using the bindings defined on the task.
      *
      * @param name possibly-prefixed name
-     * @returns QName
+     * @return QName
      */
     private QName makeQName(String name) {
         QName qname;
@@ -1346,7 +1346,7 @@ public class CalabashTask extends MatchingTask {
         }
 
         /**
-         * Adds a nested filenamemapper.
+         * Adds a nested FileNameMapper.
          *
          * @param fileNameMapper the mapper to add
          * @throws BuildException if more than one mapper is defined
@@ -1380,15 +1380,15 @@ public class CalabashTask extends MatchingTask {
         /**
          * Get the port's Mapper element, if any
          *
-         * @return the ports's mapper
+         * @return the ports' mapper
          */
         public FileNameMapper getMapper() {
             return mapper;
         }
 
         /**
-         * Set whether this input should be used.  It will be used if
-         * the expression evalutes to true or the name of a property
+         * Set whether this input should be used. It will be used if
+         * the expression evaluates to true or the name of a property
          * which has been set, otherwise it won't.
          *
          * @param ifCond evaluated expression
@@ -1398,8 +1398,8 @@ public class CalabashTask extends MatchingTask {
         }
 
         /**
-         * Set whether this input should be used.  It will be used if
-         * the expression evalutes to true or the name of a property
+         * Set whether this input should be used. It will be used if
+         * the expression evaluates to true or the name of a property
          * which has been set, otherwise it won't.
          *
          * @param ifProperty evaluated expression
@@ -1556,7 +1556,7 @@ public class CalabashTask extends MatchingTask {
         }
 
         /**
-         * Set whether this input should NOT be used. It will not be
+         * Set whether this option should NOT be used. It will not be
          * used if the expression evaluates to true or the name of a
          * property which has been set, otherwise it will be used.
          *
@@ -1567,7 +1567,7 @@ public class CalabashTask extends MatchingTask {
         }
 
         /**
-         * Set whether this input should NOT be used. It will not be
+         * Set whether this option should NOT be used. It will not be
          * used if the expression evaluates to true or the name of a
          * property which has been set, otherwise it will be used.
          *
@@ -1578,7 +1578,7 @@ public class CalabashTask extends MatchingTask {
         }
 
         /**
-         * Ensures that the input passes the conditions placed
+         * Ensures that the option passes the conditions placed
          * on it with <code>if</code> and <code>unless</code> properties.
          *
          * @return true if the task passes the "if" and "unless" parameters
