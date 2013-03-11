@@ -1556,6 +1556,28 @@ public class CalabashTask extends MatchingTask {
         }
 
         /**
+         * Set whether this option should be used. It will be used if
+         * the expression evaluates to true or the name of a property
+         * which has been set, otherwise it won't.
+         *
+         * @param ifCond evaluated expression
+         */
+        public void setIf(Object ifCond) {
+            this.ifCond = ifCond;
+        }
+
+        /**
+         * Set whether this option should be used. It will be used if
+         * the expression evaluates to true or the name of a property
+         * which has been set, otherwise it won't.
+         *
+         * @param ifProperty evaluated expression
+         */
+        public void setIf(String ifProperty) {
+            setIf((Object) ifProperty);
+        }
+
+        /**
          * Set whether this option should NOT be used. It will not be
          * used if the expression evaluates to true or the name of a
          * property which has been set, otherwise it will be used.
