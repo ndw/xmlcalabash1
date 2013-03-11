@@ -1134,7 +1134,7 @@ public class CalabashTask extends MatchingTask {
             }
 
             for (String port : pipeline.getOutputs()) {
-                String uri = null;
+                String ouputResource = null;
 
                 if (outputResources.containsKey(port)) {
                     Union resources = outputResources.get(port);
@@ -1142,11 +1142,11 @@ public class CalabashTask extends MatchingTask {
                         handleError("The '" + port + "' output port must be specified with exactly one"
                                     + " nested resource.");
                     }
-                    uri = ((Resource) resources.iterator().next()).toString();
-                    log("Writing port '" + port + "' to '" + uri + "'.", Project.MSG_INFO);
+                    ouputResource = resources.iterator().next().toString();
+                    log("Writing port '" + port + "' to '" + ouputResource + "'.", Project.MSG_INFO);
                 }
 
-                if (uri == null) {
+                if (ouputResource == null) {
                     // You didn't bind it, and it isn't going to stdout, so it's going into the bit bucket.
                     continue;
                 }
@@ -1182,13 +1182,13 @@ public class CalabashTask extends MatchingTask {
 
                 // ndw wonders if there's a better way...
                 WritableDocument wd = null;
-                if (uri != null) {
-                    URI furi = new URI(uri);
+                if (ouputResource != null) {
+                    URI furi = new File(ouputResource).toURI();
                     String filename = furi.getPath();
                     FileOutputStream outfile = new FileOutputStream(filename);
                     wd = new WritableDocument(runtime, filename, serial, outfile);
                 } else {
-                    wd = new WritableDocument(runtime, uri, serial);
+                    wd = new WritableDocument(runtime, ouputResource, serial);
                 }
 
                 ReadablePipe rpipe = pipeline.readFrom(port);
@@ -1196,7 +1196,7 @@ public class CalabashTask extends MatchingTask {
                     wd.write(rpipe.read());
                 }
 
-                if (uri != null) {
+                if (ouputResource != null) {
                     wd.close();
                 }
             }
