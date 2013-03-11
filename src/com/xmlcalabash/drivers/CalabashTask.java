@@ -425,7 +425,7 @@ public class CalabashTask extends MatchingTask {
         }
 
         if (outputMapper != null && resources.size() != 0) {
-            handleError("Both mapper and fileset on input port: " + port);
+            handleError("Both mapper and fileset on output port: " + port);
             return;
         }
 
@@ -794,7 +794,7 @@ public class CalabashTask extends MatchingTask {
 
             if (outputResources.containsKey(outPort)
                 && (isTargetExtensionSet || mapper != null)) {
-                handleError("Either 'out' or <output> corresponding to default output port and either 'extension' and nested <mapper> for naming output cannot be used together.");
+                handleError("Either 'out' or <output> corresponding to default output port and either 'extension' or nested <mapper> for naming output cannot be used together.");
                 return;
             }
 
