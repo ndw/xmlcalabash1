@@ -20,7 +20,6 @@ package com.xmlcalabash.drivers;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
@@ -669,7 +668,7 @@ public class CalabashTask extends MatchingTask {
      * Do the work.
      */
     public void execute() {
-        Resource usePipelineResource = null;
+        Resource usePipelineResource;
         if (pipelineURI != null) {
             // If we enter here, it means that the pipeline is supplied
             // via 'pipeline' attribute
@@ -723,8 +722,6 @@ public class CalabashTask extends MatchingTask {
             handleError("'extension' and nested <mapper> cannot be used together.");
             return;
         }
-
-        File savedBaseDir = baseDir;
 
         try {
             if (baseDir == null) {
@@ -1064,7 +1061,7 @@ public class CalabashTask extends MatchingTask {
         //log("Processing " + in + " to " + out, Project.MSG_INFO);
         XProcRuntime runtime = new XProcRuntime(config);
 
-        XPipeline pipeline = null;
+        XPipeline pipeline;
         try {
             pipeline = runtime.load(pipelineResource.toString());
 
@@ -1079,7 +1076,6 @@ public class CalabashTask extends MatchingTask {
                         log("Binding unnamed input port to '" + port + "'.", Project.MSG_INFO);
                     } else {
                         log("You didn't specify any binding for the input port '" + port + "'.", Project.MSG_WARN);
-                        continue;
                     }
                 }
             }
@@ -1092,7 +1088,6 @@ public class CalabashTask extends MatchingTask {
                             log("Skipping non-existent input: " + resource, Project.MSG_DEBUG);
                         }
 
-                        InputStream is = resource.getInputStream();
                         XdmNode doc = runtime.parse(new InputSource(resource.getInputStream()));
                         pipeline.writeTo(port, doc);
                     }
@@ -1181,7 +1176,7 @@ public class CalabashTask extends MatchingTask {
                 }
 
                 // ndw wonders if there's a better way...
-                WritableDocument wd = null;
+                WritableDocument wd;
                 if (ouputResource != null) {
                     URI furi = new File(ouputResource).toURI();
                     String filename = furi.getPath();
@@ -1202,10 +1197,6 @@ public class CalabashTask extends MatchingTask {
             }
         } catch (Exception err) {
             handleError("Pipeline failed: " + err.toString());
-        } finally {
-            pipeline = null;
-            runtime = null;
-            config = null;
         }
     }
 
@@ -1238,7 +1229,6 @@ public class CalabashTask extends MatchingTask {
      * @returns QName
      */
     private QName makeQName(String name) {
-        String uri = null;
         QName qname;
 
         if (name == null) {
@@ -1252,7 +1242,7 @@ public class CalabashTask extends MatchingTask {
                 if (!bindings.containsKey(prefix)) {
                     handleError("Unbound prefix \"" + prefix + "\" in: " + name);
                 }
-                uri = bindings.get(prefix);
+                String uri = bindings.get(prefix);
                 qname = new QName(prefix, uri, name.substring(cpos + 1));
             } else {
                 qname = new QName("", name);
