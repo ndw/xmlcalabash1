@@ -109,12 +109,7 @@ public class CalabashTask extends MatchingTask {
     private boolean failOnNoResources = true;
 
     /**
-     * URI of the pipeline to run. As attribute.
-     */
-    private String pipelineURI = null;
-
-    /**
-     * Pipeline as a {@link org.apache.tools.ant.types.Resource}
+     * The pipeline to run as a {@link org.apache.tools.ant.types.Resource}
      */
     private Resource pipelineResource = null;
 
@@ -342,19 +337,14 @@ public class CalabashTask extends MatchingTask {
     /**
      * Set the pipeline. optional, nested &lt;pipeline> will be used if not set.
      *
-     * @param uri pipeline location
+     * @param pipeline pipeline location
      */
-    public void setPipeline(String uri) {
-        pipelineURI = uri;
-    }
+    public void setPipeline(Resource pipeline) {
+        if (pipelineResource != null) {
+            handleError("Only one pipeline attribute or nested element can be specified.");
+        }
 
-    /**
-     * API method to set the pipeline Resource.
-     *
-     * @param pipelineResource Resource to set as the pipeline.
-     */
-    public void setPipelineResource(Resource pipelineResource) {
-        this.pipelineResource = pipelineResource;
+        this.pipelineResource = pipeline;
     }
 
     /**
@@ -367,7 +357,7 @@ public class CalabashTask extends MatchingTask {
             throw new BuildException("The pipeline element must be specified with exactly one"
                                      + " nested resource.");
         } else {
-            setPipelineResource((Resource) rc.iterator().next());
+            setPipeline((Resource) rc.iterator().next());
         }
     }
 
@@ -668,21 +658,8 @@ public class CalabashTask extends MatchingTask {
      * Do the work.
      */
     public void execute() {
-        Resource usePipelineResource;
-        if (pipelineURI != null) {
-            // If we enter here, it means that the pipeline is supplied
-            // via 'pipeline' attribute
-            File pipelineFile = getProject().resolveFile(pipelineURI);
-            FileResource fr = new FileResource();
-            fr.setProject(getProject());
-            fr.setFile(pipelineFile);
-            usePipelineResource = fr;
-        } else {
-            usePipelineResource = pipelineResource;
-        }
-
-        if (!usePipelineResource.isExists()) {
-            handleError("pipeline '" + usePipelineResource.getName() + "' does not exist");
+        if (!pipelineResource.isExists()) {
+            handleError("pipeline '" + pipelineResource.getName() + "' does not exist");
             return;
         }
 
@@ -864,7 +841,7 @@ public class CalabashTask extends MatchingTask {
                 process(config,
                         useInputResources,
                         useOutputResources,
-                        usePipelineResource,
+                        pipelineResource,
                         optionsMap,
                         parametersTable,
                         force);
@@ -967,7 +944,7 @@ public class CalabashTask extends MatchingTask {
                             useOutputResources.put(port, outputResources);
                         }
                     }
-                    process(config, useInputResources, useOutputResources, usePipelineResource, optionsMap, parametersTable, force);
+                    process(config, useInputResources, useOutputResources, pipelineResource, optionsMap, parametersTable, force);
                 }
             }
         } finally {
@@ -979,7 +956,6 @@ public class CalabashTask extends MatchingTask {
             inPort = null;
             inResource = null;
             failOnNoResources = true;
-            pipelineURI = null;
             pipelineResource = null;
             destDir = null;
             outPort = null;
