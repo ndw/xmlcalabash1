@@ -51,18 +51,6 @@ public class XProcProcessor {
 
         staticBaseURI = URIUtils.cwdAsURI();
 
-        if (config.xprocConfigurer != null) {
-            try {
-                String className = config.xprocConfigurer;
-                Constructor constructor = Class.forName(className).getConstructor(XProcRuntime.class);
-                configurer = (XProcConfigurer) constructor.newInstance(this);
-            } catch (Exception e) {
-                throw new XProcException(e);
-            }
-        } else {
-            configurer = new DefaultXProcConfigurer(this);
-        }
-
         uriResolver = new XProcURIResolver(this);
         try {
             if (config.uriResolver != null) {
@@ -79,6 +67,18 @@ public class XProcProcessor {
             }
         } catch (Exception e) {
             throw new XProcException(e);
+        }
+
+        if (config.xprocConfigurer != null) {
+            try {
+                String className = config.xprocConfigurer;
+                Constructor constructor = Class.forName(className).getConstructor(XProcRuntime.class);
+                configurer = (XProcConfigurer) constructor.newInstance(this);
+            } catch (Exception e) {
+                throw new XProcException(e);
+            }
+        } else {
+            configurer = new DefaultXProcConfigurer(this);
         }
 
         Configuration saxonConfig = processor.getUnderlyingConfiguration();
