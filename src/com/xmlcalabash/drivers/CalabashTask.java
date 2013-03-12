@@ -657,6 +657,11 @@ public class CalabashTask extends MatchingTask {
      * Do the work.
      */
     public void execute() {
+        if (pipelineResource == null) {
+            handleError("no pipeline given, pipeline is mandatory");
+            return;
+        }
+
         if (!pipelineResource.isExists()) {
             handleError("pipeline '" + pipelineResource.getName() + "' does not exist");
             return;
