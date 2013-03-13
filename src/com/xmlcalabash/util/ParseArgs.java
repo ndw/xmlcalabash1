@@ -212,8 +212,8 @@ public class ParseArgs {
             }
         }
 
-        if (stepName != null && argpos < args.length && !args[argpos].contains("=")) {
-            throw new XProcException("Bad command line. You can specify a step or a pipeline, not both.");
+        if ((libraries.size() > 0 || stepName != null) && argpos < args.length && !args[argpos].contains("=")) {
+            throw new XProcException("Bad command line. You can specify a library/step or a pipeline, not both.");
         }
 
         // FIXME: What about running the first pipeline in a library by default?
@@ -373,7 +373,7 @@ public class ParseArgs {
                     } else {
                         throw new UnsupportedOperationException("Unexpected URI type: " + uri);
                     }
-                    
+
                     if ("p:empty".equals(uri)) {
                         tree.addStartElement(XProcConstants.p_empty);
                         tree.startContent();
