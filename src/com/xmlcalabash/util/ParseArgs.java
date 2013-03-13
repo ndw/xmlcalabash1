@@ -498,6 +498,30 @@ public class ParseArgs {
         throw new XProcException("Unparseable command line argument: " + arg);
     }
 
+    private QName makeQName(String name) {
+        QName qname;
+
+        if (name == null) {
+            qname = new QName("");
+        } else if (name.indexOf("{") == 0) {
+            qname = QName.fromClarkName(name);
+        } else {
+            int cpos = name.indexOf(":");
+            if (cpos > 0) {
+                String prefix = name.substring(0, cpos);
+                if (!bindings.containsKey(prefix)) {
+                    throw new XProcException("Unbound prefix \"" + prefix + "\" in: " + name);
+                }
+                String uri = bindings.get(prefix);
+                qname = new QName(prefix, uri, name.substring(cpos + 1));
+            } else {
+                qname = new QName("", name);
+            }
+        }
+
+        return qname;
+    }
+
     private QName parseQName(String shortName, String longName) {
         String sOpt = "-" + shortName;
         String lOpt = "--" + longName;
@@ -525,21 +549,7 @@ public class ParseArgs {
             throw new XProcException("Unparseable command line argument: " + arg);
         }
 
-        QName qname = null;
-
-        int cpos = value.indexOf(":");
-        if (cpos > 0) {
-            String prefix = value.substring(0, cpos);
-            if (!bindings.containsKey(prefix)) {
-                throw new XProcException("Unbound prefix \"" + prefix + "\": " + value);
-            }
-            String uri = bindings.get(prefix);
-            qname = new QName(prefix, uri, value.substring(cpos+1));
-        } else {
-            qname = new QName("", value);
-        }
-
-        return qname;
+        return makeQName(value);
     }
 
     private KeyValuePair parseKeyValue(String shortName, String longName) {
@@ -654,8 +664,6 @@ public class ParseArgs {
 
         String port = "*";
         String name = v.key;
-        String uri = null;
-        QName qname = null;
 
         int cpos = name.indexOf("@");
         if (cpos > 0) {
@@ -663,19 +671,7 @@ public class ParseArgs {
             name = name.substring(cpos+1);
         }
 
-        cpos = name.indexOf(":");
-        if (cpos > 0) {
-            String prefix = name.substring(0, cpos);
-            if (!bindings.containsKey(prefix)) {
-                throw new XProcException("Unbound prefix \"" + prefix + "\": " + v.key + "=" + v.value);
-            }
-            uri = bindings.get(prefix);
-            qname = new QName(prefix, uri, name.substring(cpos+1));
-        } else {
-            qname = new QName("", name);
-        }
-
-        curStep.addParameter(port, qname, v.value);
+        curStep.addParameter(port, makeQName(name), v.value);
     }
 
     private void parseOption(String opt) {
@@ -695,21 +691,7 @@ public class ParseArgs {
             throw new XProcException("Unparseable option: " + opt);
         }
 
-        String uri = null;
-        QName qname = null;
-
-        int cpos = key.indexOf(":");
-        if (cpos > 0) {
-            String prefix = key.substring(0, cpos);
-            if (!bindings.containsKey(prefix)) {
-                throw new XProcException("Unbound prefix \"" + prefix + "\": " + key + "=" + value);
-            }
-            uri = bindings.get(prefix);
-            qname = new QName(uri, key.substring(cpos+1), prefix);
-        } else {
-            qname = new QName("", key);
-        }
-
+        QName qname = makeQName(key);
         if (lastStep != null) {
             lastStep.addOption(qname, value);
         } else {
