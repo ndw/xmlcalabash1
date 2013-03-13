@@ -152,7 +152,7 @@ public class Main {
             if (cmd.safeModeExplicit) {
                 config.safeMode = cmd.safeMode;
             }
-            
+
             if (cmd.debugExplicit) {
                 config.debug = cmd.debug;
             }
@@ -198,12 +198,12 @@ public class Main {
                 }
 
                 pipeline=runtime.use(implicitPipeline);
-                
+
             } else if (config.pipeline != null) {
                 XdmNode doc = config.pipeline.read();
                 pipeline = runtime.use(doc);
             }
-            
+
             if (errors || pipeline == null) {
                 usage();
             }
@@ -463,8 +463,9 @@ public class Main {
         System.out.println("See also http://xmlcalabash.com/ for more information");
         System.out.println("");
     }
-    
+
     private void usage() throws IOException {
+        System.out.println();
         showVersion();
 
         InputStream instream = getClass().getResourceAsStream("/etc/usage.txt");
