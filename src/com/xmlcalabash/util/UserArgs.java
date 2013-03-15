@@ -511,14 +511,8 @@ public class UserArgs {
             for (String port : step.params.keySet()) {
                 for (QName pname : step.params.get(port).keySet()) {
                     String value = step.params.get(port).get(pname);
-
-                    if (value.contains("'") && value.contains("\"")) {
-                        throw new IllegalArgumentException("I haven't figured out how to handle parameter values with both double and single quotes.");
-                    } else if (value.contains("'")) {
-                        value = "\"" + value + "\"";
-                    } else {
-                        value = "'" + value + "'";
-                    }
+                    // Double single quotes to escape them between the enclosing single quotes
+                    value = "'" + value.replace("'", "''") + "'";
 
                     tree.addStartElement(p_with_param);
                     if (!"*".equals(port)) {
