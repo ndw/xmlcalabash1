@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.xml.transform.sax.SAXSource;
@@ -174,7 +175,7 @@ public class UserArgs {
 
     public void setCurStepName(String name) {
         needsCheck = true;
-        curStep.setName(makeQName(name));
+        curStep.setName(name);
         steps.add(curStep);
         lastStep = curStep;
         curStep = new StepArgs();
@@ -226,6 +227,7 @@ public class UserArgs {
     }
 
     public void addParam(String name, String value) {
+        needsCheck = true;
         String port = "*";
 
         int cpos = name.indexOf("@");
@@ -234,7 +236,7 @@ public class UserArgs {
             name = name.substring(cpos + 1);
         }
 
-        curStep.addParameter(port, makeQName(name), value);
+        curStep.addParameter(port, name, value);
     }
 
     public Set<QName> getOptionNames() {
@@ -256,11 +258,11 @@ public class UserArgs {
     }
 
     public void addOption(String name, String value) {
-        QName qname = makeQName(name);
+        needsCheck = true;
         if (lastStep != null) {
-            lastStep.addOption(qname, value);
+            lastStep.addOption(name, value);
         } else {
-            curStep.addOption(qname, value);
+            curStep.addOption(name, value);
         }
     }
 
@@ -310,6 +312,14 @@ public class UserArgs {
                 if (saxonProcessor != null) {
                     throw new XProcException("Specifying a processor type is an error if you specify a Saxon configuration file.");
                 }
+            }
+
+            for (StepArgs step : steps) {
+                step.checkArgs();
+            }
+
+            if (!steps.contains(curStep)) {
+                curStep.checkArgs();
             }
 
             needsCheck = false;
@@ -414,7 +424,8 @@ public class UserArgs {
         if (steps.size() == 0 && libraries.size() == 1) {
             try {
                 XLibrary library = runtime.loadLibrary(libraries.get(0));
-                curStep.setName(library.getFirstPipelineType());
+                curStep.setName(library.getFirstPipelineType().getClarkName());
+                curStep.checkArgs();
                 steps.add(curStep);
             } catch (SaxonApiException sae) {
                 throw new XProcException(sae);
@@ -545,38 +556,18 @@ public class UserArgs {
         return fn;
     }
 
-    private QName makeQName(String name) {
-        QName qname;
-
-        if (name == null) {
-            qname = new QName("");
-        } else if (name.indexOf("{") == 0) {
-            qname = fromClarkName(name);
-        } else {
-            int cpos = name.indexOf(":");
-            if (cpos > 0) {
-                String prefix = name.substring(0, cpos);
-                if (!bindings.containsKey(prefix)) {
-                    throw new XProcException("Unbound prefix '" + prefix + "' in: '" + name + "'.");
-                }
-                String uri = bindings.get(prefix);
-                qname = new QName(prefix, uri, name.substring(cpos + 1));
-            } else {
-                qname = new QName("", name);
-            }
-        }
-
-        return qname;
-    }
-
     private class StepArgs {
+        public String plainStepName = null;
         public QName stepName = null;
         public Map<String, List<String>> inputs = new HashMap<String, List<String>>();
-        public Map<String, Map<QName,String>> params = new HashMap<String, Map<QName, String>>();
+        public Map<String, Map<String, String>> plainParams = new HashMap<String, Map<String, String>>();
+        public Map<String, Map<QName, String>> params = new HashMap<String, Map<QName, String>>();
+        public Map<String, String> plainOptions = new HashMap<String, String>();
         public Map<QName, String> options = new HashMap<QName, String>();
 
-        public void setName(QName name) {
-            this.stepName = name;
+        public void setName(String name) {
+            needsCheck = true;
+            this.plainStepName = name;
         }
 
         public void addInput(String port, String uri, String type) {
@@ -587,20 +578,22 @@ public class UserArgs {
             inputs.get(port).add(type + ":" + uri);
         }
 
-        public void addOption(QName optname, String value) {
-            if (options.containsKey(optname)) {
+        public void addOption(String optname, String value) {
+            needsCheck = true;
+            if (plainOptions.containsKey(optname)) {
                 throw new XProcException("Duplicate option name: '" + optname + "'.");
             }
 
-            options.put(optname, value);
+            plainOptions.put(optname, value);
         }
 
-        public void addParameter(String port, QName name, String value) {
-            Map<QName,String> portParams;
-            if (!params.containsKey(port)) {
-                portParams = new HashMap<QName,String> ();
+        public void addParameter(String port, String name, String value) {
+            needsCheck = true;
+            Map<String, String> portParams;
+            if (!plainParams.containsKey(port)) {
+                portParams = new HashMap<String, String>();
             } else {
-                portParams = params.get(port);
+                portParams = plainParams.get(port);
             }
 
             if (portParams.containsKey(name)) {
@@ -608,7 +601,49 @@ public class UserArgs {
             }
 
             portParams.put(name, value);
-            params.put(port, portParams);
+            plainParams.put(port, portParams);
+        }
+
+        private QName makeQName(String name) {
+            QName qname;
+
+            if (name == null) {
+                qname = new QName("");
+            } else if (name.indexOf("{") == 0) {
+                qname = fromClarkName(name);
+            } else {
+                int cpos = name.indexOf(":");
+                if (cpos > 0) {
+                    String prefix = name.substring(0, cpos);
+                    if (!bindings.containsKey(prefix)) {
+                        throw new XProcException("Unbound prefix '" + prefix + "' in: '" + name + "'.");
+                    }
+                    String uri = bindings.get(prefix);
+                    qname = new QName(prefix, uri, name.substring(cpos + 1));
+                } else {
+                    qname = new QName("", name);
+                }
+            }
+
+            return qname;
+        }
+
+        public void checkArgs() {
+            stepName = makeQName(plainStepName);
+
+            options.clear();
+            for (Entry<String, String> plainOption : plainOptions.entrySet()) {
+                options.put(makeQName(plainOption.getKey()), plainOption.getValue());
+            }
+
+            params.clear();
+            for (Entry<String, Map<String, String>> plainParam : plainParams.entrySet()) {
+                Map<QName, String> portParams = new HashMap<QName, String>();
+                for (Entry<String, String> portParam : plainParam.getValue().entrySet()) {
+                    portParams.put(makeQName(portParam.getKey()), portParam.getValue());
+                }
+                params.put(plainParam.getKey(), portParams);
+            }
         }
     }
 }
