@@ -1,18 +1,6 @@
 package com.xmlcalabash.util;
 
-import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
-import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.runtime.XLibrary;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XdmNode;
-
-import java.io.File;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Set;
-import java.util.Vector;
 
 /**
  * Created by IntelliJ IDEA.
@@ -22,48 +10,14 @@ import java.util.Vector;
  * To change this template use File | Settings | File Templates.
  */
 public class ParseArgs {
-    public boolean debugExplicit = false;
-    public boolean debug = false;
-    public String profileFile = null;
-    public boolean showVersion = false;
-
-    public String saxonProcessor = null;
-    public String saxonConfigFile = null;
-    public boolean schemaAwareExplicit = false;
-    public boolean schemaAware = false;
-
-    public boolean safeModeExplicit = false;
-    public boolean safeMode = false;
-
-    public String configFile = null;
-    public String logStyle = null;
-    public String entityResolverClass = null;
-    public String uriResolverClass = null;
-    private QName stepName = null;
-    public String pipelineURI = null;
-    private Vector<String> libraries = new Vector<String> ();
-    public Hashtable<String, String> outputs = new Hashtable<String,String> ();
-    private Hashtable<String, String> bindings = new Hashtable<String, String> ();
-    private Vector<StepArgs> steps = new Vector<StepArgs> ();
-    private StepArgs curStep = new StepArgs();
-    private StepArgs lastStep = null;
-
-    public boolean extensionValues = false;
-    public boolean allowXPointerOnText = false;
-    public boolean transparentJSON = false;
-    public String jsonFlavor = null;
-    public boolean useXslt10 = false;
-
     private String[] args = null;
     private int argpos = 0;
     private String arg = null;
+    private UserArgs userArgs = new UserArgs();
 
-    public void parse(String[] args) {
+    public UserArgs parse(String[] args) {
         this.args = args;
         argpos = 0;
-
-        // Default the prefix "p" to the XProc namespace
-        bindings.put("p", XProcConstants.NS_XPROC);
 
         while (arg != null || argpos < args.length) {
             if (arg == null) {
@@ -71,127 +25,112 @@ public class ParseArgs {
             }
 
             if (arg.startsWith("-P") || arg.startsWith("--saxon-processor")) {
-                saxonProcessor = parseString("P","saxon-processor");
-                if ( !("he".equals(saxonProcessor) || "pe".equals(saxonProcessor) || "ee".equals(saxonProcessor)) ) {
-                    throw new XProcException("Invalid Saxon processor option: " + saxonProcessor + ". Must be 'he', 'pe', or 'ee'.");
-                }
+                userArgs.setSaxonProcessor(parseString("P","saxon-processor"));
                 continue;
             }
 
             if (arg.startsWith("--saxon-configuration")) {
-                saxonConfigFile = parseString(null, "saxon-configuration");
+                userArgs.setSaxonConfigFile(parseString(null, "saxon-configuration"));
                 continue;
             }
 
             if (arg.startsWith("-a") || arg.startsWith("--schema-aware")) {
-                schemaAware = parseBoolean("a","schema-aware");
-                schemaAwareExplicit = true;
+                userArgs.setSchemaAware(parseBoolean("a","schema-aware"));
                 continue;
             }
 
             if (arg.startsWith("-D") || arg.startsWith("--debug")) {
-                debug = parseBoolean("D","debug");
-                debugExplicit = true;
+                userArgs.setDebug(parseBoolean("D","debug"));
                 continue;
             }
 
             if (arg.startsWith("--profile")) {
-                profileFile = parseString(null, "profile");
+                userArgs.setProfileFile(parseString(null, "profile"));
                 continue;
             }
 
             if (arg.startsWith("-S") || arg.startsWith("--safe-mode")) {
-                safeMode = parseBoolean("S","safe-mode");
-                safeModeExplicit = true;
+                userArgs.setSafeMode(parseBoolean("S","safe-mode"));
                 continue;
             }
 
             if (arg.startsWith("-c") || arg.startsWith("--config")) {
-                configFile = parseString("c","config");
+                userArgs.setConfigFile(parseString("c","config"));
                 continue;
             }
 
             if (arg.startsWith("-G") || arg.startsWith("--log-style")) {
-                logStyle = parseString("G","log-style");
-                if ("off".equals(logStyle) || "plain".equals(logStyle)
-                        || "wrapped".equals(logStyle) || "directory".equals(logStyle)) {
-                    // ok
-                } else {
-                    throw new XProcException("Invalid log style: " + logStyle);
-                }
+                userArgs.setLogStyle(parseString("G","log-style"));
                 continue;
             }
 
             if (arg.startsWith("-E") || arg.startsWith("--entity-resolver")) {
-                entityResolverClass = parseString("E","entity-resolver");
+                userArgs.setEntityResolverClass(parseString("E","entity-resolver"));
                 continue;
             }
 
             if (arg.startsWith("-U") || arg.startsWith("--uri-resolver")) {
-                uriResolverClass = parseString("U","uri-resolver");
+                userArgs.setUriResolverClass(parseString("U","uri-resolver"));
                 continue;
             }
 
             if (arg.startsWith("-i") || arg.equals("--input")) {
-                parseInput("i", "input");
+                KeyValuePair v = parseKeyValue("i", "input");
+                userArgs.addInput(v.key, v.value, "xml");
                 continue;
             }
 
             if (arg.startsWith("-d") || arg.equals("--data-input")) {
-                parseDataInput("d", "data-input");
+                KeyValuePair v = parseKeyValue("d", "data-input");
+                userArgs.addInput(v.key, v.value, "data");
                 continue;
             }
 
             if (arg.startsWith("-o") || arg.equals("--output")) {
-                parseOutput("o", "output");
+                KeyValuePair v = parseKeyValue("o", "output");
+                userArgs.addOutput(v.key, v.value);
                 continue;
             }
 
             if (arg.startsWith("-b") || arg.equals("--binding")) {
-                parseBinding("b","binding");
+                KeyValuePair v = parseKeyValue("b", "binding");
+                userArgs.addBinding(v.key, v.value);
                 continue;
             }
 
             if (arg.startsWith("-p") || arg.equals("--with-param")) {
-                parseParam("p","with-param");
+                KeyValuePair v = parseKeyValue("p", "with-param");
+                userArgs.addParam(v.key, v.value);
                 continue;
             }
 
             if (arg.startsWith("-v") || arg.equals("--version")) {
-                showVersion = parseBoolean("v","version");
+                userArgs.setShowVersion(parseBoolean("v","version"));
                 continue;
             }
 
             if (arg.startsWith("-s") || arg.startsWith("--step")) {
-                stepName = parseQName("s","step");
-                curStep.setName(stepName);
-                steps.add(curStep);
-                lastStep = curStep;
-                curStep = new StepArgs();
+                userArgs.setCurStepName(parseString("s","step"));
                 continue;
             }
 
             if (arg.startsWith("-l") || arg.startsWith("--library")) {
-                String libraryURI = parseString("l","library");
-                libraries.add(libraryURI);
+                userArgs.addLibrary(parseString("l","library"));
                 continue;
             }
 
             if (arg.startsWith("-X") || arg.startsWith("--extension")) {
                 String ext = parseString("X", "extension");
                 if ("general-values".equals(ext)) {
-                    extensionValues = true;
+                    userArgs.setExtensionValues(true);
                 } else if ("xpointer-on-text".equals(ext)) {
-                    allowXPointerOnText = true;
+                    userArgs.setAllowXPointerOnText(true);
                 } else if ("use-xslt-1.0".equals(ext) || "use-xslt-10".equals(ext)) {
-                    useXslt10 = true;
+                    userArgs.setUseXslt10(true);
                 } else if ("transparent-json".equals(ext)) {
-                    transparentJSON = true;
+                    userArgs.setTransparentJSON(true);
                 } else if (ext.startsWith("json-flavor=")) {
-                    jsonFlavor = ext.substring(12);
-                    if (!JSONtoXML.knownFlavor(jsonFlavor)) {
-                        throw new XProcException("Can't parse JSON flavor '" + ext + "' or unrecognized format: " + jsonFlavor);
-                    }
+                    userArgs.setJsonFlavor(ext.substring(12));
                 } else {
                     throw new XProcException("Unexpected extension: " + ext);
                 }
@@ -199,226 +138,34 @@ public class ParseArgs {
             }
 
             if (arg.startsWith("-")) {
-                throw new XProcException("Unrecognized option: " + arg);
+                throw new XProcException("Unrecognized option: '" + arg + "'.");
             }
 
             if (arg.contains("=")) {
-                parseOption(arg);
+                KeyValuePair v = parseOption(arg);
+                userArgs.addOption(v.key, v.value);
                 arg = null;
                 argpos++;
-                continue;
             } else {
                 break;
             }
         }
 
-        if ((libraries.size() > 0 || stepName != null) && argpos < args.length && !args[argpos].contains("=")) {
-            throw new XProcException("Bad command line. You can specify a library/step or a pipeline, not both.");
-        }
-
-        // FIXME: What about running the first pipeline in a library by default?
-        if (libraries.size() == 0 && stepName == null && argpos < args.length) {
-            pipelineURI = args[argpos++];
+        if (argpos < args.length) {
+            userArgs.setPipelineURI(args[argpos++]);
         }
 
         while (argpos < args.length) {
             if (args[argpos].startsWith("-")) {
                 throw new XProcException("Only options can occur on the command line after the pipeline document.");
             }
-            parseOption(args[argpos++]);
-        }
-    }
-
-    public Set<String> getInputPorts() {
-        if (steps.size() != 0) {
-            // If we built a compound pipeline from the command line, then there aren't any pipeline inputs
-            return new HashSet<String>();
-        }
-        return curStep.inputs.keySet();
-    }
-
-    public Vector<String> getInputs(String port) {
-        if (steps.size() != 0) {
-            // If we built a compound pipeline from the command line, then there aren't any pipeline inputs
-            return new Vector<String> ();
-        }
-        return curStep.inputs.get(port);
-    }
-
-    public Set<QName> getOptionNames() {
-        if (steps.size() != 0) {
-            // If we built a compound pipeline from the command line, then there aren't any pipeline inputs
-            return new HashSet<QName>();
-        }
-        return curStep.options.keySet();
-    }
-
-    public String getOption(QName name) {
-        if (steps.size() != 0) {
-            // If we built a compound pipeline from the command line, then there aren't any pipeline inputs
-            return null;
-        }
-        return curStep.options.get(name);
-    }
-
-    public Set<String> getParameterPorts() {
-        if (steps.size() != 0) {
-            // If we built a compound pipeline from the command line, then there aren't any pipeline inputs
-            return new HashSet<String>();
-        }
-        return curStep.params.keySet();
-    }
-
-    public Set<QName> getParameterNames(String port) {
-        if (steps.size() != 0) {
-            // If we built a compound pipeline from the command line, then there aren't any pipeline inputs
-            return new HashSet<QName>();
-        }
-        return curStep.params.get(port).keySet();
-    }
-
-    public String getParameter(String port, QName name) {
-        if (steps.size() != 0) {
-            // If we built a compound pipeline from the command line, then there aren't any pipeline inputs
-            return null;
-        }
-        return curStep.params.get(port).get(name);
-    }
-
-    public boolean impliedPipeline() {
-        return steps.size() > 0 || libraries.size() > 0;
-    }
-
-    public XdmNode implicitPipeline(XProcRuntime runtime) {
-        // This is a bit of a hack...
-        if (steps.size() == 0 && libraries.size() == 1) {
-            try {
-                XLibrary library = runtime.loadLibrary(libraries.get(0));
-                curStep.setName(library.getFirstPipelineType());
-                steps.add(curStep);
-            } catch (SaxonApiException sae) {
-                throw new XProcException(sae);
-            }
+            KeyValuePair v = parseOption(args[argpos++]);
+            userArgs.addOption(v.key, v.value);
         }
 
-        TreeWriter tree = new TreeWriter(runtime);
-        tree.startDocument(runtime.getStaticBaseURI());
-        tree.addStartElement(XProcConstants.p_declare_step);
-        tree.addAttribute(new QName("version"), "1.0");
-        tree.startContent();
+        userArgs.checkArgs();
 
-        tree.addStartElement(XProcConstants.p_input);
-        tree.addAttribute(new QName("port"), "source");
-        tree.addAttribute(new QName("sequence"), "true");
-        tree.startContent();
-        tree.addEndElement();
-
-        tree.addStartElement(XProcConstants.p_input);
-        tree.addAttribute(new QName("port"), "parameters");
-        tree.addAttribute(new QName("kind"), "parameter");
-        tree.startContent();
-        tree.addEndElement();
-
-        // This is a hack too. If there are no outputs, fake one.
-        // Implicit pipelines default to having a single primary output port names "result"
-        if (outputs.size() == 0) {
-            outputs.put("result", "-");
-        }
-
-        String lastStepName = "cmdlineStep" + steps.size();
-        for (String port : outputs.keySet()) {
-            tree.addStartElement(XProcConstants.p_output);
-            tree.addAttribute(new QName("port"), port);
-            tree.startContent();
-            tree.addStartElement(XProcConstants.p_pipe);
-            tree.addAttribute(new QName("step"), lastStepName);
-            tree.addAttribute(new QName("port"), port);
-            tree.startContent();
-            tree.addEndElement();
-            tree.addEndElement();
-        }
-
-        for (String library : libraries) {
-            tree.addStartElement(XProcConstants.p_import);
-            tree.addAttribute(new QName("href"), library);
-            tree.startContent();
-            tree.addEndElement();
-        }
-
-        int stepNum = 0;
-        for (StepArgs step : steps) {
-            stepNum ++;
-
-            tree.addStartElement(step.stepName);
-            tree.addAttribute(new QName("name"), "cmdlineStep" + stepNum);
-
-            for (QName optname : step.options.keySet()) {
-                tree.addAttribute(optname, step.options.get(optname));
-            }
-
-            tree.startContent();
-
-            for (String port : step.inputs.keySet()) {
-                tree.addStartElement(XProcConstants.p_input);
-                tree.addAttribute(new QName("port"), port);
-                tree.startContent();
-
-                for (String uri : step.inputs.get(port)) {
-                    QName qname = XProcConstants.p_document;
-                    if (uri.startsWith("xml:")) {
-                        uri = uri.substring(4);
-                    } else if (uri.startsWith("data:")) {
-                        qname = XProcConstants.p_data;
-                        uri = uri.substring(5);
-                    } else {
-                        throw new UnsupportedOperationException("Unexpected URI type: " + uri);
-                    }
-
-                    if ("p:empty".equals(uri)) {
-                        tree.addStartElement(XProcConstants.p_empty);
-                        tree.startContent();
-                        tree.addEndElement();
-                    } else {
-                        tree.addStartElement(qname);
-                        tree.addAttribute(new QName("href"), uri);
-                        tree.startContent();
-                        tree.addEndElement();
-                    }
-                }
-                tree.addEndElement();
-            }
-
-            for (String port : step.params.keySet()) {
-                for (QName pname : step.params.get(port).keySet()) {
-                    String value = step.params.get(port).get(pname);
-
-                    if (value.contains("'") && value.contains("\"")) {
-                        throw new IllegalArgumentException("I haven't figured out how to handle parameter values with both double and single quotes.");
-                    } else if (value.contains("'")) {
-                        value = "\"" + value + "\"";
-                    } else {
-                        value = "'" + value + "'";
-                    }
-
-                    tree.addStartElement(XProcConstants.p_with_param);
-                    if (!"*".equals(port)) {
-                        tree.addAttribute(new QName("port"), port);
-                    }
-                    tree.addAttribute(new QName("name"), pname.toString());
-                    tree.addAttribute(new QName("select"), value);
-                    tree.startContent();
-                    tree.addEndElement();
-                }
-            }
-
-            tree.addEndElement();
-            tree.endDocument();
-        }
-
-        tree.addEndElement();
-        tree.endDocument();
-
-        return tree.getResult();
+        return userArgs;
     }
 
     private boolean parseBoolean(String shortName, String longName) {
@@ -498,65 +245,10 @@ public class ParseArgs {
         throw new XProcException("Unparseable command line argument: " + arg);
     }
 
-    private QName makeQName(String name) {
-        QName qname;
-
-        if (name == null) {
-            qname = new QName("");
-        } else if (name.indexOf("{") == 0) {
-            qname = QName.fromClarkName(name);
-        } else {
-            int cpos = name.indexOf(":");
-            if (cpos > 0) {
-                String prefix = name.substring(0, cpos);
-                if (!bindings.containsKey(prefix)) {
-                    throw new XProcException("Unbound prefix \"" + prefix + "\" in: " + name);
-                }
-                String uri = bindings.get(prefix);
-                qname = new QName(prefix, uri, name.substring(cpos + 1));
-            } else {
-                qname = new QName("", name);
-            }
-        }
-
-        return qname;
-    }
-
-    private QName parseQName(String shortName, String longName) {
-        String sOpt = "-" + shortName;
-        String lOpt = "--" + longName;
-        String value = null;
-
-        if (arg.startsWith(sOpt)) {
-            if (arg.equals(sOpt)) {
-                value = args[++argpos];
-                arg = null;
-                argpos++;
-            } else {
-                value = arg.substring(2);
-                arg = null;
-                argpos++;
-            }
-        } else if (arg.equals(lOpt)) {
-            value = args[++argpos];
-            arg = null;
-            argpos++;
-        } else if (arg.startsWith(lOpt + "=")) {
-            value = arg.substring(lOpt.length()+1);
-            arg = null;
-            argpos++;
-        } else {
-            throw new XProcException("Unparseable command line argument: " + arg);
-        }
-
-        return makeQName(value);
-    }
-
     private KeyValuePair parseKeyValue(String shortName, String longName) {
         String sOpt = "-" + (shortName == null ? "" : shortName);
         String lOpt = "--" + longName;
         String opt = null;
-        String oarg = arg;
 
         if (shortName != null && arg.startsWith(sOpt)) {
             if (arg.equals(sOpt)) {
@@ -573,9 +265,13 @@ public class ParseArgs {
             arg = null;
             argpos++;
         } else {
-            throw new XProcException("Unparseable command line argument: " + arg);
+            throw new XProcException("Unparseable command line argument: '" + arg + "'.");
         }
 
+        return parseOption(opt);
+    }
+
+    private KeyValuePair parseOption(String opt) {
         String key = null;
         String value = null;
 
@@ -584,119 +280,10 @@ public class ParseArgs {
             key = opt.substring(0,eqpos);
             value = opt.substring(eqpos+1);
         } else {
-            key = opt;
-            value = null;
-        }
-
-        if (value == null) {
-            throw new XProcException("Unparseable command line argument: " + oarg);
+            throw new XProcException("Unparseable option: '" + opt + "'.");
         }
 
         return new KeyValuePair(key, value);
-    }
-
-
-    private void parseInput(String shortName, String longName) {
-        KeyValuePair v = parseKeyValue(shortName, longName);
-
-        String uri = v.value;
-        if ("-".equals(uri) || uri.startsWith("http:") || uri.startsWith("https:") || uri.startsWith("file:")
-                || "p:empty".equals(uri)) {
-            curStep.addInput(v.key, uri, "xml");
-        } else {
-            File f = new File(uri);
-            String fn = URIUtils.encode(f.getAbsolutePath());
-            // FIXME: HACK!
-            if ("\\".equals(System.getProperty("file.separator"))) {
-                fn = "/" + fn;
-            }
-            curStep.addInput(v.key, "file://" + fn, "xml");
-        }
-    }
-
-    private void parseDataInput(String shortName, String longName) {
-        KeyValuePair v = parseKeyValue(shortName, longName);
-
-        String uri = v.value;
-        if ("-".equals(uri) || uri.startsWith("http:") || uri.startsWith("https:") || uri.startsWith("file:")
-                || "p:empty".equals(uri)) {
-            curStep.addInput(v.key, uri, "data");
-        } else {
-            File f = new File(uri);
-            String fn = URIUtils.encode(f.getAbsolutePath());
-            // FIXME: HACK!
-            if ("\\".equals(System.getProperty("file.separator"))) {
-                fn = "/" + fn;
-            }
-            curStep.addInput(v.key, "file://" + fn, "data");
-        }
-    }
-
-    private void parseOutput(String shortName, String longName) {
-        KeyValuePair v = parseKeyValue(shortName, longName);
-
-        if (outputs.containsKey(v.key)) {
-            throw new XProcException("Duplicate output binding: " + v.key);
-        }
-
-        String uri = v.value;
-        if ("-".equals(uri)) {
-            outputs.put(v.key, uri);
-        } else {
-            File f = new File(uri);
-            String fn = URIUtils.encode(f.getAbsolutePath());
-            // FIXME: HACK!
-            if ("\\".equals(System.getProperty("file.separator"))) {
-                fn = "/" + fn;
-            }
-            outputs.put(v.key, "file://" + fn);
-        }
-    }
-
-    private void parseBinding(String shortName, String longName) {
-        KeyValuePair v = parseKeyValue(shortName, longName);
-
-        bindings.put(v.key, v.value);
-    }
-
-    private void parseParam(String shortName, String longName) {
-        KeyValuePair v = parseKeyValue(shortName, longName);
-
-        String port = "*";
-        String name = v.key;
-
-        int cpos = name.indexOf("@");
-        if (cpos > 0) {
-            port = name.substring(0, cpos);
-            name = name.substring(cpos+1);
-        }
-
-        curStep.addParameter(port, makeQName(name), v.value);
-    }
-
-    private void parseOption(String opt) {
-        String key = null;
-        String value = null;
-
-        int eqpos = opt.indexOf("=");
-        if (eqpos > 0) {
-            key = opt.substring(0,eqpos);
-            value = opt.substring(eqpos+1);
-        } else {
-            key = opt;
-            value = null;
-        }
-
-        if (value == null) {
-            throw new XProcException("Unparseable option: " + opt);
-        }
-
-        QName qname = makeQName(key);
-        if (lastStep != null) {
-            lastStep.addOption(qname, value);
-        } else {
-            curStep.addOption(qname, value);
-        }
     }
 
     private class KeyValuePair {
@@ -706,52 +293,6 @@ public class ParseArgs {
         public KeyValuePair(String key, String value) {
             this.key = key;
             this.value = value;
-        }
-    }
-
-    private class StepArgs {
-        public QName stepName = null;
-        public Hashtable<String, Vector<String>> inputs = new Hashtable<String,Vector<String>> ();
-        public Hashtable<String, Hashtable<QName,String>> params = new Hashtable<String, Hashtable<QName,String>> ();
-        public Hashtable<QName, String> options = new Hashtable<QName,String> ();
-
-        public StepArgs() {
-        }
-
-        public void setName(QName name) {
-            this.stepName = name;
-        }
-
-        public void addInput(String port, String uri, String type) {
-            if (!inputs.containsKey(port)) {
-                inputs.put(port, new Vector<String> ());
-            }
-
-            inputs.get(port).add(type + ":" + uri);
-        }
-
-        public void addOption(QName optname, String value) {
-            if (options.containsKey(optname)) {
-                throw new XProcException("Duplicate option name: " + optname);
-            }
-
-            options.put(optname, value);
-        }
-
-        public void addParameter(String port, QName name, String value) {
-            Hashtable<QName,String> portParams;
-            if (!params.containsKey(port)) {
-                portParams = new Hashtable<QName,String> ();
-            } else {
-                portParams = params.get(port);
-            }
-
-            if (portParams.containsKey(name)) {
-                throw new XProcException("Duplicate parameter name: " + name);
-            }
-
-            portParams.put(name, value);
-            params.put(port, portParams);
         }
     }
 }
