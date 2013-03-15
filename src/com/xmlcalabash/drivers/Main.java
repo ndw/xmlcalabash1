@@ -322,11 +322,7 @@ public class Main {
                 }
 
                 if (uri == null) {
-                    if (stdio.isEmpty()) {
-                        stdio.add(port);
-                    } else {
-                        warning(logger, null, "You didn't specify any binding for the output port '" + port + "', its output will be discard.");
-                    }
+                    stdio.add(port);
                 }
             }
 
