@@ -72,7 +72,7 @@ public class XProcProcessor {
         if (config.xprocConfigurer != null) {
             try {
                 String className = config.xprocConfigurer;
-                Constructor constructor = Class.forName(className).getConstructor(XProcRuntime.class);
+                Constructor constructor = Class.forName(className).getConstructor(XProcProcessor.class);
                 configurer = (XProcConfigurer) constructor.newInstance(this);
             } catch (Exception e) {
                 throw new XProcException(e);
