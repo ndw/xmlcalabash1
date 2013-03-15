@@ -224,6 +224,7 @@
    <p:option name="password"/>
    <p:option name="content-base"/>
    <p:option name="wrapper" cx:type="xsd:QName"/>
+   <p:option name="auth-method"/>
 </p:declare-step>
 
 <p:declare-step type="ml:insert-document">
@@ -240,6 +241,7 @@
    <p:option name="format" cx:type="xml|text|binary"/>
    <p:option name="language"/>
    <p:option name="locale"/>
+   <p:option name="auth-method"/>
 </p:declare-step>
 
 <p:declare-step type="ml:invoke-module">
@@ -252,6 +254,7 @@
    <p:option name="password"/>
    <p:option name="content-base"/>
    <p:option name="wrapper" cx:type="xsd:QName"/>
+   <p:option name="auth-method"/>
 </p:declare-step>
 
 <p:declare-step type="pos:cwd">
