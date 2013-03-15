@@ -32,6 +32,7 @@ import com.xmlcalabash.io.WritableDocument;
 import com.xmlcalabash.util.S9apiUtils;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.DocumentBuilder;
+import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.Serializer;
@@ -56,6 +57,9 @@ import com.xmlcalabash.runtime.XPipeline;
 import com.xmlcalabash.util.URIUtils;
 import com.xmlcalabash.util.ParseArgs;
 import com.xmlcalabash.util.LogOptions;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.XMLReaderFactory;
 
 /**
  *
@@ -486,13 +490,24 @@ public class Main {
     private String errorMessage(QName code) {
         InputStream instream = getClass().getResourceAsStream("/etc/error-list.xml");
         if (instream != null) {
-            XdmNode doc = runtime.parse(new InputSource(instream));
-            XdmSequenceIterator iter = doc.axisIterator(Axis.DESCENDANT, new QName(XProcConstants.NS_XPROC_ERROR,"error"));
-            while (iter.hasNext()) {
-                XdmNode error = (XdmNode) iter.next();
-                if (code.getLocalName().equals(error.getAttributeValue(_code))) {
-                    return error.getStringValue();
+            try {
+                XMLReader reader = XMLReaderFactory.createXMLReader();
+                SAXSource source = new SAXSource(reader, new InputSource(instream));
+                DocumentBuilder builder = xproc.getProcessor().newDocumentBuilder();
+                builder.setLineNumbering(true);
+                builder.setDTDValidation(false);
+                XdmNode doc = builder.build(source);
+                XdmSequenceIterator iter = doc.axisIterator(Axis.DESCENDANT, new QName(XProcConstants.NS_XPROC_ERROR,"error"));
+                while (iter.hasNext()) {
+                    XdmNode error = (XdmNode) iter.next();
+                    if (code.getLocalName().equals(error.getAttributeValue(_code))) {
+                        return error.getStringValue();
+                    }
                 }
+            } catch (SAXException se) {
+                throw new XProcException(se);
+            } catch (SaxonApiException sae) {
+                throw new XProcException(sae);
             }
         }
         return "Unknown error";
