@@ -48,7 +48,6 @@ public class XProcURIResolver implements URIResolver, EntityResolver, UnparsedTe
     private UnparsedTextURIResolver unparsedTextResolver = null;
     private XProcRuntime runtime = null;
     private Hashtable<String,XdmNode> cache = new Hashtable<String,XdmNode> ();
-    private Logger logger = Logger.getLogger(this.getClass().getName());
     private static boolean useCache = true; // FIXME: this is supposed to be temporary!
 
     public XProcURIResolver(XProcRuntime runtime) {
@@ -109,24 +108,6 @@ public class XProcURIResolver implements URIResolver, EntityResolver, UnparsedTe
         }
 
         if (uriResolver != null) {
-            URL absoluteURI = null;
-
-            // This is an attempt to deal with jar: URIs, pipelines run from inside jar files.
-            try {
-                if (base == null) {
-                    absoluteURI = new URL(href);
-                } else {
-                    absoluteURI = new URL(new URL(base), href);
-                }
-
-                runtime.finest(null,null,"Resolved again: " + absoluteURI);
-            } catch (MalformedURLException mue) {
-                // Ignore this. We want to give the URIResolver a chance to deal with
-                // schemes that the URL class might not know anything about...
-            }
-
-            String resolvedUri = absoluteURI == null ? href : absoluteURI.toString();
-
             runtime.finest(null,null,"uriResolver.resolve(" + href + "," + base + ")");
             Source resolved = uriResolver.resolve(href, base);
 
@@ -175,7 +156,9 @@ public class XProcURIResolver implements URIResolver, EntityResolver, UnparsedTe
         if (source == null) {
             try {
                 URI baseURI = new URI(base);
-                source = new SAXSource(new InputSource(baseURI.resolve(href).toASCIIString()));
+                URI resURI = baseURI.resolve(href);
+                source = new SAXSource(new InputSource(resURI.toASCIIString()));
+
                 XMLReader reader = ((SAXSource) source).getXMLReader();
                 if (reader == null) {
                     try {
