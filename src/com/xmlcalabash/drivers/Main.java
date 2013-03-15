@@ -45,7 +45,9 @@ import java.io.InputStream;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.logging.Logger;
@@ -276,7 +278,7 @@ public class Main {
                 }
             }
 
-            String stdio = null;
+            List<String> stdio = new ArrayList<String>();
 
             // Implicit binding for stdin?
             String implicitPort = null;
@@ -304,8 +306,8 @@ public class Main {
                     uri = config.outputs.get(port);
                 }
 
-                if ("-".equals(uri) && stdio == null) {
-                    stdio = port;
+                if ("-".equals(uri)) {
+                    stdio.add(port);
                 }
             }
 
@@ -320,8 +322,8 @@ public class Main {
                 }
 
                 if (uri == null) {
-                    if (stdio == null) {
-                        stdio = port;
+                    if (stdio.isEmpty()) {
+                        stdio.add(port);
                     } else {
                         warning(logger, null, "You didn't specify any binding for the output port '" + port + "', its output will be discard.");
                     }
@@ -348,7 +350,7 @@ public class Main {
                     uri = config.outputs.get(port);
                 }
 
-                if (port.equals(stdio)) {
+                if (stdio.contains(port)) {
                     finest(logger, null, "Copy output from " + port + " to stdout");
                     uri = null;
                 } else if (uri == null) {
@@ -412,7 +414,7 @@ public class Main {
             pipeline = null;
             runtime.close();
 
-            if (stdio != null) {
+            if (!stdio.isEmpty()) {
                 // It's just sooo much nicer if there's a newline at the end.
                 System.out.println();
             }
