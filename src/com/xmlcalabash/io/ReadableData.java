@@ -54,7 +54,7 @@ public class ReadableData implements ReadablePipe {
     private int pos = 0;
     private QName wrapper = null;
     private String uri = null;
-    private String serverContentType = null;
+    private String serverContentType = "content/unknown";
     private XProcRuntime runtime = null;
     private DocumentSequence documents = null;
     private Step reader = null;
@@ -88,7 +88,7 @@ public class ReadableData implements ReadablePipe {
         InputStream stream;
 
         try {
-            stream = getStream(dataURI);
+            stream = "-".equals(uri) ? System.in : getStream(dataURI);
             String serverContentType = getContentType();
 
             if ("content/unknown".equals(serverContentType) && contentType != null) {
@@ -111,7 +111,7 @@ public class ReadableData implements ReadablePipe {
             // FIXME: provide some way to override this!!!
 
             String charset = serverCharset;
-            if ("file".equals(dataURI.getScheme())
+            if (("-".equals(uri) || "file".equals(dataURI.getScheme()))
                     && serverCharset == null
                     && serverBaseContentType.equals(userContentType)) {
                 charset = userCharset;
