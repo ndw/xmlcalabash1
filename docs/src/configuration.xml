@@ -506,6 +506,9 @@ specified will appear on that port as a sequence of documents.</para>
 the specified URI. The string
 “<literal>-</literal>” may be used for exactly one output URI to bind
 that output to <literal>stdout</literal>.</para>
+
+<para>If the uri does not contain an equals sign, the port specification can be
+left out and the output will be applied to the primary output port.</para>
 </section>
 
 <section xml:id="cfg.library">

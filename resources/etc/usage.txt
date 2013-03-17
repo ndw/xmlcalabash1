@@ -12,7 +12,8 @@ Where switches are:
                                        Must be 'off', 'plain', 'wrapped' (default), or 'directory'
   -i, --input port=uri                 Bind the specified input port
   -l, --library library.xpl            Load the specified library
-  -o, --output port=uri                Bind the specified output port
+  -o, --output [port=]uri              Bind the specified output port, if no port is specified,
+                                       the first unbound output port is used
   -p, --with-param [port@]param=value  Specify a parameter
       --profile file                   Specify a file, or '-' for console output,
                                        where to write profiling information of the

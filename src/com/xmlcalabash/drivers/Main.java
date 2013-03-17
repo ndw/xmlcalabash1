@@ -238,12 +238,16 @@ public class Main {
 
         Map<String, String> userArgsOutputs = userArgs.getOutputs();
         for (String port : pipeline.getOutputs()) {
+            // Bind to "-" implicitly
             String uri = null;
 
             if (userArgsOutputs.containsKey(port)) {
                 uri = userArgsOutputs.get(port);
             } else if (config.outputs.containsKey(port)) {
                 uri = config.outputs.get(port);
+            } else if (userArgsOutputs.containsKey(null)
+                       && pipeline.getDeclareStep().getOutput(port).getPrimary()) {
+                uri = userArgsOutputs.get(null);
             }
 
             // Look for explicit binding to "-"
@@ -270,11 +274,11 @@ public class Main {
             String uri;
             if (portOutputs.containsKey(port)) {
                 uri = portOutputs.get(port);
-                finest(logger, null, "Copy output from " + port + " to " + ((uri == null) ? "stdout" : uri));
             } else {
                 // You didn't bind it, and it isn't going to stdout, so it's going into the bit bucket.
                 continue;
             }
+            finest(logger, null, "Copy output from " + port + " to " + ((uri == null) ? "stdout" : uri));
 
             Serialization serial = pipeline.getSerialization(port);
 

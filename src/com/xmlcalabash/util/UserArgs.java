@@ -159,7 +159,11 @@ public class UserArgs {
 
     public void addOutput(String port, String uri) {
         if (outputs.containsKey(port)) {
-            throw new XProcException("Duplicate output binding: '" + port + "'.");
+            if (port == null) {
+                throw new XProcException("Duplicate output binding for default output port.");
+            } else {
+                throw new XProcException("Duplicate output binding: '" + port + "'.");
+            }
         }
 
         if ("-".equals(uri)) {
@@ -458,6 +462,9 @@ public class UserArgs {
 
         String lastStepName = "cmdlineStep" + steps.size();
         for (String port : outputs.keySet()) {
+            if (port == null) {
+                port = "result";
+            }
             tree.addStartElement(p_output);
             tree.addAttribute(new QName("port"), port);
             tree.startContent();

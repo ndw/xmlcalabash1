@@ -87,8 +87,13 @@ public class ParseArgs {
             }
 
             if (arg.startsWith("-o") || arg.equals("--output")) {
-                KeyValuePair v = parseKeyValue("o", "output");
-                userArgs.addOutput(v.key, v.value);
+                String s = parseString("o", "output");
+                if (s.contains("=")) {
+                    KeyValuePair v = parseOption(s);
+                    userArgs.addOutput(v.key, v.value);
+                } else {
+                    userArgs.addOutput(null, s);
+                }
                 continue;
             }
 
@@ -280,7 +285,7 @@ public class ParseArgs {
             key = opt.substring(0,eqpos);
             value = opt.substring(eqpos+1);
         } else {
-            throw new XProcException("Unparseable option: '" + opt + "'.");
+            throw new XProcException("Unparseable command line argument: '" + opt + "'.");
         }
 
         return new KeyValuePair(key, value);
