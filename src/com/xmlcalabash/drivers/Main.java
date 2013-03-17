@@ -26,9 +26,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -235,11 +234,9 @@ public class Main {
             pipeline.writeTo(implicitPort, doc);
         }
 
+        Map<String, String> portOutputs = new HashMap<String, String>();
+
         Map<String, String> userArgsOutputs = userArgs.getOutputs();
-
-        List<String> stdoutPorts = new ArrayList<String>();
-
-        // Look for explicit binding to "-"
         for (String port : pipeline.getOutputs()) {
             String uri = null;
 
@@ -249,24 +246,12 @@ public class Main {
                 uri = config.outputs.get(port);
             }
 
+            // Look for explicit binding to "-"
             if ("-".equals(uri)) {
-                stdoutPorts.add(port);
-            }
-        }
-
-        // Look for implicit binding to "-"
-        for (String port : pipeline.getOutputs()) {
-            String uri = null;
-
-            if (userArgsOutputs.containsKey(port)) {
-                uri = userArgsOutputs.get(port);
-            } else if (config.outputs.containsKey(port)) {
-                uri = config.outputs.get(port);
+                uri = null;
             }
 
-            if (uri == null) {
-                stdoutPorts.add(port);
-            }
+            portOutputs.put(port, uri);
         }
 
         for (QName optname : config.options.keySet()) {
@@ -282,21 +267,13 @@ public class Main {
         pipeline.run();
 
         for (String port : pipeline.getOutputs()) {
-            String uri = null;
-            if (userArgsOutputs.containsKey(port)) {
-                uri = userArgsOutputs.get(port);
-            } else if (config.outputs.containsKey(port)) {
-                uri = config.outputs.get(port);
-            }
-
-            if (stdoutPorts.contains(port)) {
-                finest(logger, null, "Copy output from " + port + " to stdout");
-                uri = null;
-            } else if (uri == null) {
+            String uri;
+            if (portOutputs.containsKey(port)) {
+                uri = portOutputs.get(port);
+                finest(logger, null, "Copy output from " + port + " to " + ((uri == null) ? "stdout" : uri));
+            } else {
                 // You didn't bind it, and it isn't going to stdout, so it's going into the bit bucket.
                 continue;
-            } else {
-                finest(logger, null, "Copy output from " + port + " to " + uri);
             }
 
             Serialization serial = pipeline.getSerialization(port);
@@ -348,7 +325,8 @@ public class Main {
                 wd.close();
             }
         }
-        return stdoutPorts.isEmpty();
+
+        return portOutputs.containsValue(null);
     }
 
     private void setParametersOnPipeline(XPipeline pipeline, String port, Map<QName, String> parameters) {
