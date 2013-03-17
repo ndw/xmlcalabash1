@@ -212,6 +212,12 @@ public class UserArgs {
         }
     }
 
+    public void setDefaultInputPort(String port) {
+        if (curStep.inputs.containsKey(null)) {
+            curStep.inputs.put(port, curStep.inputs.remove(null));
+        }
+    }
+
     public Set<String> getParameterPorts() {
         checkArgs();
         if (steps.size() != 0) {
@@ -498,7 +504,7 @@ public class UserArgs {
 
             for (String port : step.inputs.keySet()) {
                 tree.addStartElement(p_input);
-                tree.addAttribute(new QName("port"), port);
+                tree.addAttribute(new QName("port"), (port == null) ? "source" : port);
                 tree.startContent();
 
                 for (String uri : step.inputs.get(port)) {

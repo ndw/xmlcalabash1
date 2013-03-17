@@ -448,6 +448,9 @@ that input to <literal>stdin</literal>.</para>
 
 <para>If the input binding for a particular port is repeated, all of the inputs
 specified will appear on that port as a sequence of documents.</para>
+
+<para>If the uri does not contain an equals sign, the port specification can be
+left out and the input will be applied to the primary non-parameter input port.</para>
 </section>
 
 
@@ -472,6 +475,9 @@ specified will appear on that port as a sequence of documents.</para>
 </informaltable>
 
 <para>The input specified will be base64 encoded.</para>
+
+<para>If the uri does not contain an equals sign, the port specification can be
+left out and the input will be applied to the primary non-parameter input port.</para>
 
 <para>T.B.D.</para>
 </section>

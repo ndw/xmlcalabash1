@@ -5,12 +5,14 @@ Where switches are:
   -a, --schema-aware                   Turn on schema-aware processing
   -b, --binding prefix=uri             Specify namespace binding
   -c, --config configfile              Specify a particular configuration file
-  -d, --data-input port=uri            Bind the specified input port to data
+  -d, --data-input [port=]uri          Bind the specified input port to data, if no port is specified,
+                                       the first unbound input port is used
   -D, --debug                          Turn on debugging
   -E, --entity-resolver className      Specify a resolver class for URI resolution
   -G, --log-style logstyle             Specify the default style for p:log output;
                                        Must be 'off', 'plain', 'wrapped' (default), or 'directory'
-  -i, --input port=uri                 Bind the specified input port
+  -i, --input [port=]uri               Bind the specified input port, if no port is specified,
+                                       the first unbound input port is used
   -l, --library library.xpl            Load the specified library
   -o, --output [port=]uri              Bind the specified output port, if no port is specified,
                                        the first unbound output port is used

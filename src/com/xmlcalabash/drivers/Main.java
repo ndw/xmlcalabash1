@@ -182,6 +182,21 @@ public class Main {
         allPorts.addAll(userArgsInputPorts);
         allPorts.addAll(cfgInputPorts);
 
+        // map a given input without port specification to the primary non-parameter input implicitly
+        for (String port : ports) {
+            if (!allPorts.contains(port) && allPorts.contains(null)
+                && pipeline.getDeclareStep().getInput(port).getPrimary()
+                && !pipeline.getDeclareStep().getInput(port).getParameterInput()) {
+
+                if (userArgsInputPorts.contains(null)) {
+                    userArgs.setDefaultInputPort(port);
+                    allPorts.remove(null);
+                    allPorts.add(port);
+                }
+                break;
+            }
+        }
+
         for (String port : allPorts) {
             if (!ports.contains(port)) {
                 throw new XProcException("There is a binding for the port '" + port + "' but the pipeline declares no such port.");
@@ -220,7 +235,7 @@ public class Main {
 
         // Implicit binding for stdin?
         String implicitPort = null;
-        for (String port : pipeline.getInputs()) {
+        for (String port : ports) {
             if (!allPorts.contains(port)) {
                 if (pipeline.getDeclareStep().getInput(port).getPrimary()
                         && !pipeline.getDeclareStep().getInput(port).getParameterInput()) {

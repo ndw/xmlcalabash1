@@ -75,14 +75,24 @@ public class ParseArgs {
             }
 
             if (arg.startsWith("-i") || arg.equals("--input")) {
-                KeyValuePair v = parseKeyValue("i", "input");
-                userArgs.addInput(v.key, v.value, "xml");
+                String s = parseString("i", "input");
+                if (s.contains("=")) {
+                    KeyValuePair v = parseOption(s);
+                    userArgs.addInput(v.key, v.value, "xml");
+                } else {
+                    userArgs.addInput(null, s, "xml");
+                }
                 continue;
             }
 
             if (arg.startsWith("-d") || arg.equals("--data-input")) {
-                KeyValuePair v = parseKeyValue("d", "data-input");
-                userArgs.addInput(v.key, v.value, "data");
+                String s = parseString("d", "data-input");
+                if (s.contains("=")) {
+                    KeyValuePair v = parseOption(s);
+                    userArgs.addInput(v.key, v.value, "data");
+                } else {
+                    userArgs.addInput(null, s, "data");
+                }
                 continue;
             }
 
