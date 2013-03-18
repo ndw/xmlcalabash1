@@ -74,11 +74,6 @@ public class UserArgs {
     private boolean transparentJSON = false;
     private String jsonFlavor = null;
 
-    public UserArgs() {
-        // Default the prefix "p" to the XProc namespace
-        bindings.put("p", NS_XPROC);
-    }
-
     public void setDebug(boolean debug) {
         this.debug = debug;
     }
@@ -174,6 +169,10 @@ public class UserArgs {
     }
 
     public void addBinding(String prefix, String uri) {
+        if (bindings.containsKey(prefix)) {
+            throw new XProcException("Duplicate prefix binding: '" + prefix + "'.");
+        }
+
         bindings.put(prefix, uri);
     }
 
@@ -642,6 +641,11 @@ public class UserArgs {
         }
 
         public void checkArgs() {
+            // Default the prefix "p" to the XProc namespace
+            if (!bindings.containsKey("p")) {
+                bindings.put("p", NS_XPROC);
+            }
+
             stepName = makeQName(plainStepName);
 
             options.clear();
