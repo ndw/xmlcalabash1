@@ -20,6 +20,7 @@ package com.xmlcalabash.drivers;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
@@ -43,6 +44,7 @@ import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.PropertyHelper;
+import org.apache.tools.ant.taskdefs.LogOutputStream;
 import org.apache.tools.ant.taskdefs.MatchingTask;
 import org.apache.tools.ant.types.CommandlineJava;
 import org.apache.tools.ant.types.Environment;
@@ -1262,6 +1264,7 @@ public class CalabashTask extends MatchingTask {
             throw new BuildException(ex);
         } else {
             log("Caught an exception: " + ex, Project.MSG_WARN);
+            ex.printStackTrace(new PrintStream(new LogOutputStream(this, Project.MSG_VERBOSE)));
         }
     }
 
