@@ -26,7 +26,8 @@
         <pathelement location="/Volumes/Data/docbook/xslt20/tools/lib/jython.jar"/>
         <pathelement location="/Volumes/Data/docbook/xslt20/ext/jython"/>
       </classpath>
-      <jvmarg value="-Xmx1024m"/>
+      <jvmarg value="-Xmx1028m"/>
+      <jvmarg value="-Xss1028m"/>
       <arg value="-D"/>
       <arg value="-Xxpointer-on-text"/>
       <arg value="-isource=src/ref.xml"/>
