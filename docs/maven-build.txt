@@ -1,0 +1,55 @@
+This describes the steps necessary to release Calabash to the Maven
+Central repository.
+
+Initial setup
+=============
+
+Make sure you have GPG installed, and have distributed a key to the
+pool.sks-keyservers.net server
+
+    gpg --keyserver hkp://pool.sks-keyservers.net --send-keys [your key ID]
+
+Go to the Sonatype docs:
+
+    https://docs.sonatype.org/display/Repository/Sonatype+OSS+Maven+Repository+Usage+Guide
+
+Carry out these steps:
+
+    Section 2 - signing up for a Sonatype JIRA account
+    Section 3 - creating a JIRA ticket
+
+Download Ant Maven tasks from
+http://maven.apache.org/ant-tasks/download.html and put it into
+~/.ant/lib/.
+
+Create an XML file at ~/.m2/settings.xml
+
+    <settings>
+      <servers>
+        <server>
+          <id>sonatype-nexus-snapshots</id>
+          <username>your-username</username>
+          <password>your-password</password>
+        </server>
+        <server>
+          <id>sonatype-nexus-staging</id>
+          <username>your-username</username>
+          <password>your-password</password>
+        </server>
+      </servers>
+      <profiles>
+      </profiles>
+    </settings>
+
+Releasing to Maven
+==================
+
+Run "ant maven-stage" to build a release and deploy it to the Sonatype server.
+
+Go back to the Sonatype docs at
+
+   https://docs.sonatype.org/display/Repository/Sonatype+OSS+Maven+Repository+Usage+Guide.
+
+Carry out section 8 - release.
+
+For the first release, also carry out section 9 - activate Central Sync
