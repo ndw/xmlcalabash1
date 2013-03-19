@@ -469,4 +469,9 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
     </java>
   </target>
 
+  <target name="javadoc" depends="init,compile-everything"
+          description="Compile JavaDoc">
+    <javadoc sourcepath="src" destdir="${build.dir}/javadoc"
+             classpathref="build.classpath"/>
+  </target>
 </project>
