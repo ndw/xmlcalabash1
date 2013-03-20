@@ -257,7 +257,7 @@ public class XProcURIResolver implements URIResolver, EntityResolver, UnparsedTe
             InputStream stream = conn.getInputStream();
             return new InputStreamReader(stream);
         } catch (Exception e) {
-            throw new XProcException(e);
+            throw new XPathException(e);
         }
     }
 }
