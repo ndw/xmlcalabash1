@@ -503,21 +503,10 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
              classpathref="build.classpath"/>
   </target>
 
-  <target name="maven-dist" depends="init,compile-everything,javadoc"
+  <target name="maven-dist" depends="init,compile-everything,jar,javadoc"
           description="generate Maven jars">
-    <!-- build the main artifact -->
-    <jar destfile="${maven-jar}">
-      <manifest>
-        <attribute name="Built-By" value="${built.by}"/>
-        <attribute name="Implementation-Vendor" value="${implementation.vendor}"/>
-        <attribute name="Implementation-Title" value="${implementation.title}"/>
-        <attribute name="Implementation-Version" value="${dist-version}"/>
-        <attribute name="Main-Class" value="com.xmlcalabash.drivers.Main"/>
-        <attribute name="Class-Path" value="${run.classpath}"/>
-      </manifest>
-
-      <fileset dir="${build.dir}"/>
-    </jar>
+    <!-- copy the main artifact -->
+    <copy file="calabash.jar" toFile="${maven-jar}"/>
 
     <!-- build the sources artifact -->
     <jar jarfile="${maven-sources-jar}">
