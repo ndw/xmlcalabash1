@@ -158,7 +158,6 @@ public class DefaultStep implements XProcStep {
             type = step.getType().getClarkName();
         }
         fine(null, "Running " + type + " " + step.getName());
-        runtime.reportStep(step);
     }
 
     public Serializer makeSerializer() {

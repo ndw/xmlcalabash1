@@ -41,6 +41,8 @@ public class XCCInvokeModule extends DefaultStep {
     private static final QName _contentBase = new QName("","content-base");
     private static final QName _wrapper = new QName("","wrapper");
     private static final QName _module = new QName("","module");
+    private static final QName _auth_method = new QName("auth-method");
+
     private WritablePipe result = null;
     private Hashtable<QName,String> params = new Hashtable<QName, String> ();
 
@@ -91,7 +93,9 @@ public class XCCInvokeModule extends DefaultStep {
             throw new XProcException(e);
         }
 
-        contentSource.setAuthenticationPreemptive(true);
+        if ("basic".equals(getOption(_auth_method, ""))) {
+            contentSource.setAuthenticationPreemptive(true);
+        }
 
         Session session;
 

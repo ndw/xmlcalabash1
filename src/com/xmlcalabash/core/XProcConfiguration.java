@@ -11,15 +11,11 @@ import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmValue;
-import net.sf.saxon.tree.iter.NamespaceIterator;
 import net.sf.saxon.value.Whitespace;
-import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.om.NamePool;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.Hashtable;
-import java.util.Properties;
 import java.util.Vector;
 import java.util.HashSet;
 import java.util.logging.Level;
@@ -70,6 +66,7 @@ public class XProcConfiguration {
     public String saxonConfigFile = null;
     public Hashtable<String,String> nsBindings = new Hashtable<String,String> ();
     public boolean debug = false;
+    public String profileFile = null;
     public Hashtable<String,Vector<ReadablePipe>> inputs = new Hashtable<String,Vector<ReadablePipe>> ();
     public ReadablePipe pipeline = null;
     public Hashtable<String,String> outputs = new Hashtable<String,String> ();
@@ -198,40 +195,57 @@ public class XProcConfiguration {
         cfgProcessor.getUnderlyingConfiguration().setStripsAllWhiteSpace(false);
         cfgProcessor.getUnderlyingConfiguration().setStripsWhiteSpace(Whitespace.NONE);
 
+        String cfg = System.getProperty("com.xmlcalabash.config.global");
         try {
-            InputStream instream = getClass().getResourceAsStream("/etc/configuration.xml");
-            if (instream == null) {
-                throw new UnsupportedOperationException("Failed to load configuration from JAR file");
+            InputStream instream = null;
+
+            if (cfg == null) {
+                instream = getClass().getResourceAsStream("/etc/configuration.xml");
+                if (instream == null) {
+                    throw new UnsupportedOperationException("Failed to load configuration from JAR file");
+                }
+                // No resolver, we don't have one yet
+                SAXSource source = new SAXSource(new InputSource(instream));
+                DocumentBuilder builder = cfgProcessor.newDocumentBuilder();
+                builder.setLineNumbering(true);
+                builder.setBaseURI(puri);
+                parse(builder.build(source));
+            } else {
+                parse(readXML(cfg, cwd.toASCIIString()));
             }
-            // No resolver, we don't have one yet
-            SAXSource source = new SAXSource(new InputSource(instream));
-            DocumentBuilder builder = cfgProcessor.newDocumentBuilder();
-            builder.setLineNumbering(true);
-            builder.setBaseURI(puri);
-            parse(builder.build(source));
         } catch (SaxonApiException sae) {
             throw new XProcException(sae);
         }
 
-        try {
-            XdmNode cnode = readXML(".calabash", home.toASCIIString());
-            parse(cnode);
-        } catch (XProcException xe) {
-            if (XProcConstants.dynamicError(11).equals(xe.getErrorCode())) {
-                // nop; file not found is ok
-            } else {
-                throw xe;
+        cfg = System.getProperty("com.xmlcalabash.config.user", ".calabash");
+        if ("".equals(cfg)) {
+            // skip loading the user configuration
+        } else {
+            try {
+                XdmNode cnode = readXML(cfg, home.toASCIIString());
+                parse(cnode);
+            } catch (XProcException xe) {
+                if (XProcConstants.dynamicError(11).equals(xe.getErrorCode())) {
+                    // nop; file not found is ok
+                } else {
+                    throw xe;
+                }
             }
         }
 
-        try {
-            XdmNode cnode = readXML(".calabash", cwd.toASCIIString());
-            parse(cnode);
-        } catch (XProcException xe) {
-            if (XProcConstants.dynamicError(11).equals(xe.getErrorCode())) {
-                // nop; file not found is ok
-            } else {
-                throw xe;
+        cfg = System.getProperty("com.xmlcalabash.config.local", ".calabash");
+        if ("".equals(cfg)) {
+            // skip loading the local configuration
+        } else {
+            try {
+                XdmNode cnode = readXML(cfg, cwd.toASCIIString());
+                parse(cnode);
+            } catch (XProcException xe) {
+                if (XProcConstants.dynamicError(11).equals(xe.getErrorCode())) {
+                    // nop; file not found is ok
+                } else {
+                    throw xe;
+                }
             }
         }
 
@@ -246,6 +260,7 @@ public class XProcConfiguration {
 
         schemaAware = "true".equals(System.getProperty("com.xmlcalabash.schema-aware", ""+schemaAware));
         debug = "true".equals(System.getProperty("com.xmlcalabash.debug", ""+debug));
+        profileFile = System.getProperty("com.xmlcalabash.profile", profileFile);
         extensionValues = "true".equals(System.getProperty("com.xmlcalabash.general-values", ""+extensionValues));
         xpointerOnText = "true".equals(System.getProperty("com.xmlcalabash.xpointer-on-text", ""+xpointerOnText));
         transparentJSON = "true".equals(System.getProperty("com.xmlcalabash.transparent-json", ""+transparentJSON));
@@ -336,6 +351,8 @@ public class XProcConfiguration {
                     parseNamespaceBinding(node);
                 } else if ("debug".equals(localName)) {
                     parseDebug(node);
+                } else if ("profile".equals(localName)) {
+                    parseProfile(node);
                 } else if ("entity-resolver".equals(localName)) {
                     parseEntityResolver(node);
                 } else if ("input".equals(localName)) {
@@ -457,6 +474,10 @@ public class XProcConfiguration {
         if (!"true".equals(value) && !"false".equals(value)) {
             throw new XProcException(node, "Invalid configuration value for debug: "+ value);
         }
+    }
+
+    private void parseProfile(XdmNode node) {
+        profileFile = node.getStringValue().trim();
     }
 
     private void parseEntityResolver(XdmNode node) {
@@ -626,42 +647,9 @@ public class XProcConfiguration {
 
             documents.add(new ConfigDocument(href, node.getBaseURI().toASCIIString()));
         } else {
-            HashSet<String> excludeURIs = readExcludeInlinePrefixes(node, node.getAttributeValue(_exclude_inline_prefixes));
+            HashSet<String> excludeURIs = S9apiUtils.excludeInlinePrefixes(node, node.getAttributeValue(_exclude_inline_prefixes));
             documents.add(new ConfigDocument(docnodes, excludeURIs));
         }
-    }
-
-    private HashSet<String> readExcludeInlinePrefixes(XdmNode node, String prefixList) {
-        HashSet<String> excludeURIs = new HashSet<String> ();
-        excludeURIs.add(XProcConstants.NS_XPROC);
-
-        if (prefixList != null) {
-            // FIXME: Surely there's a better way to do this?
-            NodeInfo inode = node.getUnderlyingNode();
-            NamePool pool = inode.getNamePool();
-            int inscopeNS[] = NamespaceIterator.getInScopeNamespaceCodes(inode);
-
-            for (String pfx : prefixList.split("\\s+")) {
-                boolean found = false;
-
-                for (int pos = 0; pos < inscopeNS.length; pos++) {
-                    int ns = inscopeNS[pos];
-                    String nspfx = pool.getPrefixFromNamespaceCode(ns);
-                    String nsuri = pool.getURIFromNamespaceCode(ns);
-
-                    if (pfx.equals(nspfx)) {
-                        found = true;
-                        excludeURIs.add(nsuri);
-                    }
-                }
-
-                if (!found) {
-                    throw new XProcException(XProcConstants.staticError(57), "No binding for '" + pfx + ":'");
-                }
-            }
-        }
-
-        return excludeURIs;
     }
 
     private void parsePipeline(XdmNode node) {
@@ -685,7 +673,7 @@ public class XProcConfiguration {
             }
             pipeline = new ConfigDocument(href, node.getBaseURI().toASCIIString());
         } else {
-            HashSet<String> excludeURIs = readExcludeInlinePrefixes(node, node.getAttributeValue(_exclude_inline_prefixes));
+            HashSet<String> excludeURIs = S9apiUtils.excludeInlinePrefixes(node, node.getAttributeValue(_exclude_inline_prefixes));
             pipeline = new ConfigDocument(docnodes, excludeURIs);
         }
     }

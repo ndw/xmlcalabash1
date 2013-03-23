@@ -19,11 +19,8 @@
 
 package com.xmlcalabash.library;
 
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.URI;
-import java.io.FileOutputStream;
-import java.io.File;
-import java.io.IOException;
 
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
@@ -48,8 +45,9 @@ import net.sf.saxon.s9api.Serializer;
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
-import java.io.OutputStream;
+
 import java.net.URL;
+import java.util.zip.GZIPOutputStream;
 
 /**
  *
@@ -66,6 +64,11 @@ public class Store extends DefaultStep {
 
     private ReadablePipe source = null;
     private WritablePipe result = null;
+
+    // Store also implements the cx:gzip step.
+    // If gzip is true, then href may be null
+    protected CompressionMethod method = CompressionMethod.NONE;
+    private URI href = null;
 
     /**
      * Creates a new instance of Store
@@ -94,7 +97,6 @@ public class Store extends DefaultStep {
             throw XProcException.dynamicError(21);
         }
 
-        URI href = null;
         RuntimeValue hrefOpt = getOption(_href);
 
         XdmNode doc = source.read();
@@ -105,15 +107,17 @@ public class Store extends DefaultStep {
 
         if (hrefOpt != null) {
             href = hrefOpt.getBaseURI().resolve(hrefOpt.getString());
-        } else {
-            href = doc.getBaseURI();
         }
 
-        finer(hrefOpt.getNode(), "Storing to \"" + href + "\".");
+        if (method == CompressionMethod.GZIP) {
+            finer(hrefOpt == null ? null : hrefOpt.getNode(), "Gzipping" + (href == null ? "" : " to \"" + href + "\"."));
+        } else {
+            finer(hrefOpt.getNode(), "Storing to \"" + href + "\".");
+        }
 
         String decode = step.getExtensionAttribute(cx_decode);
         XdmNode root = S9apiUtils.getDocumentElement(doc);
-        if (("true".equals(decode) || "1".equals(decode))
+        if (("true".equals(decode) || "1".equals(decode) || method != CompressionMethod.NONE)
              && ((XProcConstants.NS_XPROC_STEP.equals(root.getNodeName().getNamespaceURI())
                   && "base64".equals(root.getAttributeValue(_encoding)))
                  || ("".equals(root.getNodeName().getNamespaceURI())
@@ -132,22 +136,29 @@ public class Store extends DefaultStep {
             storeXML(doc, href);
         }
 
-        TreeWriter tree = new TreeWriter(runtime);
-        tree.startDocument(step.getNode().getBaseURI());
-        tree.addStartElement(XProcConstants.c_result);
-        tree.startContent();
-        tree.addText(href.toString());
-        tree.addEndElement();
-        tree.endDocument();
-        result.write(tree.getResult());
+        if (href != null) {
+            TreeWriter tree = new TreeWriter(runtime);
+            tree.startDocument(step.getNode().getBaseURI());
+            tree.addStartElement(XProcConstants.c_result);
+            tree.startContent();
+            tree.addText(href.toString());
+            tree.addEndElement();
+            tree.endDocument();
+            result.write(tree.getResult());
+        }
     }
 
     private void storeXML(XdmNode doc, URI href) throws SaxonApiException {
         Serializer serializer = makeSerializer();
 
         try {
-            OutputStream outstr;
-            if(href.getScheme().equals("file")) {
+            OutputStream outstr = null;
+            ByteArrayOutputStream baos = null;
+
+            if (href == null) {
+                baos = new ByteArrayOutputStream();
+                outstr = baos;
+            } else if (href.getScheme().equals("file")) {
                 File output = new File(href);
 
                 File path = new File(output.getParent());
@@ -163,9 +174,18 @@ public class Store extends DefaultStep {
                 outstr = conn.getOutputStream();
             }
 
+            if (method == CompressionMethod.GZIP) {
+                GZIPOutputStream gzout = new GZIPOutputStream(outstr);
+                outstr = gzout;
+            }
+
             serializer.setOutputStream(outstr);
             S9apiUtils.serialize(runtime, doc, serializer);
             outstr.close();
+
+            if (href == null) {
+                returnData(baos);
+            }
         } catch (IOException ioe) {
             throw XProcException.stepError(50, ioe);
         }
@@ -174,27 +194,13 @@ public class Store extends DefaultStep {
     private void storeBinary(XdmNode doc, URI href) {
         try {
             byte[] decoded = Base64.decode(doc.getStringValue());
-            File output = new File(href);
+            OutputStream outstr = null;
+            ByteArrayOutputStream baos = null;
 
-            File path = new File(output.getParent());
-            if (!path.isDirectory()) {
-                if (!path.mkdirs()) {
-                    throw XProcException.stepError(50);
-                }
-            }
-
-            FileOutputStream outstr = new FileOutputStream(output);
-            outstr.write(decoded);
-            outstr.close();
-        } catch (IOException ioe) {
-            throw new XProcException(ioe);
-        }
-    }
-
-    private void storeJSON(XdmNode doc, URI href) throws SaxonApiException {
-        try {
-            OutputStream outstr;
-            if(href.getScheme().equals("file")) {
+            if (href == null) {
+                baos = new ByteArrayOutputStream();
+                outstr = baos;
+            } else {
                 File output = new File(href);
 
                 File path = new File(output.getParent());
@@ -203,6 +209,44 @@ public class Store extends DefaultStep {
                         throw XProcException.stepError(50);
                     }
                 }
+
+                outstr = new FileOutputStream(output);
+            }
+
+            if (method == CompressionMethod.GZIP) {
+                GZIPOutputStream gzout = new GZIPOutputStream(outstr);
+                outstr = gzout;
+            }
+
+            outstr.write(decoded);
+            outstr.close();
+
+            if (href == null) {
+                returnData(baos);
+            }
+        } catch (IOException ioe) {
+            throw new XProcException(ioe);
+        }
+    }
+
+    private void storeJSON(XdmNode doc, URI href) throws SaxonApiException {
+        try {
+            OutputStream outstr = null;
+            ByteArrayOutputStream baos = null;
+
+            if (href == null) {
+                baos = new ByteArrayOutputStream();
+                outstr = baos;
+            } else if (href.getScheme().equals("file")) {
+                File output = new File(href);
+
+                File path = new File(output.getParent());
+                if (!path.isDirectory()) {
+                    if (!path.mkdirs()) {
+                        throw XProcException.stepError(50);
+                    }
+                }
+
                 outstr = new FileOutputStream(output);
             } else {
                 final URLConnection conn = href.toURL().openConnection();
@@ -210,14 +254,41 @@ public class Store extends DefaultStep {
                 outstr = conn.getOutputStream();
             }
 
+            if (method == CompressionMethod.GZIP) {
+                GZIPOutputStream gzout = new GZIPOutputStream(outstr);
+                outstr = gzout;
+            }
+
             PrintWriter writer = new PrintWriter(outstr);
             String json = XMLtoJSON.convert(doc);
             writer.print(json);
             writer.close();
             outstr.close();
+
+            if (href == null) {
+                returnData(baos);
+            }
         } catch (IOException ioe) {
             throw XProcException.stepError(50, ioe);
         }
     }
+
+    public void returnData(ByteArrayOutputStream baos) {
+        // We're only called if the output is compressed
+
+        TreeWriter tree = new TreeWriter(runtime);
+        tree.startDocument(step.getNode().getBaseURI());
+        tree.addStartElement(XProcConstants.c_data);
+        tree.addAttribute(_encoding, "base64");
+        tree.addAttribute(_content_type, "application/x-gzip");
+        tree.startContent();
+        tree.addText(Base64.encodeBytes(baos.toByteArray()));
+        tree.addEndElement();
+        tree.endDocument();
+        result.write(tree.getResult());
+
+    }
+
+    protected enum CompressionMethod { NONE, GZIP };
 }
 

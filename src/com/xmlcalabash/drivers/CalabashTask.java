@@ -561,9 +561,8 @@ public class CalabashTask extends MatchingTask {
      * Set whether to enable general values;
      * optional, default is false.
      *
-     * See {@link http://xmlcalabash.com/docs/reference/extensions.html#ext.general-values}
-     *
-     * @param extensionValues true if enable general values
+     * @see <a href="http://xmlcalabash.com/docs/reference/extensions.html#ext.general-values">General values extension</a>
+     * @param generalValues true if enable general values
      */
     public void setGeneralValues(boolean generalValues) {
         this.extensionValues = generalValues;
@@ -604,7 +603,7 @@ public class CalabashTask extends MatchingTask {
      * Set whether to automatically translate between JSON and XML;
      * optional, default is false.
      *
-     * @param transparentJSON true if enable translation
+     * @param jsonFlavor the flavor of JSON/XML transformation to use
      */
     public void setJSONFlavor(String jsonFlavor) {
         this.jsonFlavor = jsonFlavor;
@@ -1269,7 +1268,7 @@ public class CalabashTask extends MatchingTask {
         /**
          * Set the current project
          *
-         * @input project the current project
+         * @param project the current project
          */
         public void setProject(Project project) {
             this.project = project;
@@ -1278,7 +1277,7 @@ public class CalabashTask extends MatchingTask {
         /**
          * Set the input port.
          *
-         * @input port the name of the port.
+         * @param port the name of the port.
          */
         public void setPort(String port) {
             this.port = port;
@@ -1347,7 +1346,7 @@ public class CalabashTask extends MatchingTask {
          * Set whether this input should be used.  It will be used if
          * the expression evalutes to true or the name of a property
          * which has been set, otherwise it won't.
-         * @input ifCond evaluated expression
+         * @param ifCond evaluated expression
          */
         public void setIf(Object ifCond) {
             this.ifCond = ifCond;
@@ -1357,7 +1356,7 @@ public class CalabashTask extends MatchingTask {
          * Set whether this input should be used.  It will be used if
          * the expression evalutes to true or the name of a property
          * which has been set, otherwise it won't.
-         * @input ifProperty evaluated expression
+         * @param ifProperty evaluated expression
          */
         public void setIf(String ifProperty) {
             setIf((Object) ifProperty);
@@ -1367,7 +1366,7 @@ public class CalabashTask extends MatchingTask {
          * Set whether this input should NOT be used. It will not be
          * used if the expression evaluates to true or the name of a
          * property which has been set, otherwise it will be used.
-         * @input unlessCond evaluated expression
+         * @param unlessCond evaluated expression
          */
         public void setUnless(Object unlessCond) {
             this.unlessCond = unlessCond;
@@ -1377,7 +1376,7 @@ public class CalabashTask extends MatchingTask {
          * Set whether this input should NOT be used. It will not be
          * used if the expression evaluates to true or the name of a
          * property which has been set, otherwise it will be used.
-         * @input unlessProperty evaluated expression
+         * @param unlessProperty evaluated expression
          */
         public void setUnless(String unlessProperty) {
             setUnless((Object) unlessProperty);
@@ -1406,7 +1405,7 @@ public class CalabashTask extends MatchingTask {
 
         /**
          * Set the prefix.
-         * @input prefix prefix to which to bind the namespace
+         * @param prefix prefix to which to bind the namespace
          */
         public void setPrefix(String prefix) {
             this.prefix = prefix;
@@ -1423,7 +1422,7 @@ public class CalabashTask extends MatchingTask {
 
        /**
          * Set the namespace URI.
-         * @input uri the namespace URI
+         * @param uri the namespace URI
          */
         public void setURI(String uri) {
             this.uri = uri;
@@ -1455,7 +1454,7 @@ public class CalabashTask extends MatchingTask {
         /**
          * Set the current project
          *
-         * @input project the current project
+         * @param project the current project
          */
         public void setProject(Project project) {
             this.project = project;
@@ -1463,7 +1462,7 @@ public class CalabashTask extends MatchingTask {
 
        /**
          * Set the name.
-         * @input name the parameter name
+         * @param name the parameter name
          */
         public void setName(String name) {
             this.name = name;
@@ -1480,7 +1479,7 @@ public class CalabashTask extends MatchingTask {
 
        /**
          * Set the value.
-         * @input value the parameter value
+         * @param value the parameter value
          */
         public void setValue(String value) {
             this.value = value;
@@ -1499,7 +1498,7 @@ public class CalabashTask extends MatchingTask {
          * Set whether this input should NOT be used. It will not be
          * used if the expression evaluates to true or the name of a
          * property which has been set, otherwise it will be used.
-         * @input unlessCond evaluated expression
+         * @param unlessCond evaluated expression
          */
         public void setUnless(Object unlessCond) {
             this.unlessCond = unlessCond;
@@ -1509,7 +1508,7 @@ public class CalabashTask extends MatchingTask {
          * Set whether this input should NOT be used. It will not be
          * used if the expression evaluates to true or the name of a
          * property which has been set, otherwise it will be used.
-         * @input unlessProperty evaluated expression
+         * @param unlessProperty evaluated expression
          */
         public void setUnless(String unlessProperty) {
             setUnless((Object) unlessProperty);
@@ -1538,7 +1537,7 @@ public class CalabashTask extends MatchingTask {
 
         /**
          * Set the port.
-         * @input port port to which to bind the parameter
+         * @param port port to which to bind the parameter
          */
         public void setPort(String port) {
             this.port = port;

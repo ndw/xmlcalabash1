@@ -157,6 +157,10 @@ public class Main {
                 config.debug = cmd.debug;
             }
 
+            if (cmd.profileFile != null) {
+                config.profileFile = cmd.profileFile;
+            }
+
             config.extensionValues |= cmd.extensionValues;
             config.xpointerOnText |= cmd.allowXPointerOnText;
             config.transparentJSON |= cmd.transparentJSON;
@@ -285,7 +289,7 @@ public class Main {
                 }
             }
 
-            if (implicitPort != null) {
+            if (implicitPort != null && !pipeline.hasReadablePipes(implicitPort)) {
                 XdmNode doc = runtime.parse(new InputSource(System.in));
                 pipeline.writeTo(implicitPort, doc);
             }
@@ -413,6 +417,7 @@ public class Main {
                 System.out.println();
             }
         } catch (XProcException err) {
+            exitStatus = 1;
             if (err.getErrorCode() != null) {
                 error(logger, null, errorMessage(err.getErrorCode()), err.getErrorCode());
             } else {

@@ -125,7 +125,7 @@ public class DeclareStep extends CompoundStep {
 
     public void declareStep(QName type, DeclareStep step) {
         if (declaredSteps.containsKey(type)) {
-            throw new XProcException(step, "Duplicate step type");
+            throw new XProcException(step, "Duplicate step type: " + type);
         } else {
             declaredSteps.put(type, step);
         }

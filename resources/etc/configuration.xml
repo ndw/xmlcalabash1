@@ -214,6 +214,12 @@
 <implementation type="cx:send-mail"
                 class-name="com.xmlcalabash.extensions.SendMail"/>
 
+<implementation type="cx:compress cx:gzip pxp:compress pxp:gzip"
+		class-name="com.xmlcalabash.extensions.Compress"/>
+
+<implementation type="cx:uncompress cx:gunzip pxp:uncompress pxp:gunzip"
+		class-name="com.xmlcalabash.extensions.Uncompress"/>
+
 <!-- Fileutils -->
 
 <implementation type="cxf:info pxf:info"

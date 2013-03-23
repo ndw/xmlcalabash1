@@ -12,7 +12,7 @@
 
 <cx:java-properties name="props" href="../../resources/etc/version.properties"/>
 
-<p:template>
+<p:template name="template">
   <p:input port="template">
     <p:inline exclude-inline-prefixes="c cx l">
       <wrapper xmlns="http://docbook.org/ns/docbook">
@@ -32,7 +32,9 @@
   <p:input port="source">
     <p:pipe step="main" port="source"/>
   </p:input>
-  <p:input port="insertion" select="/*/*"/>
+  <p:input port="insertion" select="/*/*">
+    <p:pipe step="template" port="result"/>
+  </p:input>
 </p:insert>
 
 <p:xinclude/>

@@ -103,6 +103,7 @@ public class Eval extends DefaultStep {
         XdmNode piperoot = S9apiUtils.getDocumentElement(pipedoc);
 
         XProcRuntime innerRuntime = new XProcRuntime(runtime);
+        innerRuntime.resetExtensionFunctions();
 
         QName stepName = getOption(_step, (QName) null);
         XPipeline pipeline = null;
@@ -266,5 +267,7 @@ public class Eval extends DefaultStep {
                 result.write(tree.getResult());
             }
         }
+
+        runtime.resetExtensionFunctions();
     }
 }

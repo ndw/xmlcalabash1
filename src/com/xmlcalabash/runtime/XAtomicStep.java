@@ -12,7 +12,6 @@ import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.io.ReadableInline;
 import com.xmlcalabash.io.ReadableDocument;
-import com.xmlcalabash.io.ReadableData;
 import com.xmlcalabash.io.Pipe;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.model.Step;
@@ -28,6 +27,7 @@ import com.xmlcalabash.model.ComputableValue;
 import com.xmlcalabash.model.NamespaceBinding;
 import com.xmlcalabash.model.DeclareStep;
 import com.xmlcalabash.model.Option;
+import net.sf.saxon.om.InscopeNamespaceResolver;
 import net.sf.saxon.om.NamePool;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.trans.XPathException;
@@ -45,15 +45,13 @@ import net.sf.saxon.s9api.XdmValue;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.SaxonApiUncheckedException;
-import net.sf.saxon.tree.iter.NamespaceIterator;
-import org.apache.batik.dom.util.HashTable;
 
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.Vector;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.HashSet;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.regex.Matcher;
@@ -83,6 +81,18 @@ public class XAtomicStep extends XStep {
 
     public XCompoundStep getParent() {
         return parent;
+    }
+
+    public boolean hasReadablePipes(String port) {
+        if (inputs.containsKey(port)) {
+            return inputs.get(port).size() > 0;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean hasWriteablePipe(String port) {
+        return outputs.containsKey(port);
     }
 
     public RuntimeValue optionAvailable(QName optName) {
@@ -367,7 +377,9 @@ public class XAtomicStep extends XStep {
         XProcData data = runtime.getXProcData();
         data.openFrame(this);
 
+        runtime.start(this);
         xstep.run();
+        runtime.finish(this);
 
         // FIXME: Is it sufficient to only do this for atomic steps?
         String cache = getInheritedExtensionAttribute(XProcConstants.cx_cache);
@@ -592,11 +604,11 @@ public class XAtomicStep extends XStep {
                     Hashtable<String,String> lclnsBindings = new Hashtable<String, String>();
                     NodeInfo inode = nsbinding.getNode().getUnderlyingNode();
                     NamePool pool = inode.getNamePool();
-                    int inscopeNS[] = NamespaceIterator.getInScopeNamespaceCodes(inode);
-                    for (int pos = 0; pos < inscopeNS.length; pos++) {
-                        int ns = inscopeNS[pos];
-                        String nspfx = pool.getPrefixFromNamespaceCode(ns);
-                        String nsuri = pool.getURIFromNamespaceCode(ns);
+                    InscopeNamespaceResolver inscopeNS = new InscopeNamespaceResolver(inode);
+                    Iterator<String> pfxiter = inscopeNS.iteratePrefixes();
+                    while (pfxiter.hasNext()) {
+                        String nspfx = pfxiter.next();
+                        String nsuri = inscopeNS.getURIForPrefix(nspfx, "".equals(nspfx));
                         lclnsBindings.put(nspfx, nsuri);
                     }
 
@@ -677,7 +689,8 @@ public class XAtomicStep extends XStep {
                     value += item.getStringValue();
                 } else {
                     XdmNode node = (XdmNode) item;
-                    if (node.getNodeKind() == XdmNodeKind.ATTRIBUTE) {
+                    if (node.getNodeKind() == XdmNodeKind.ATTRIBUTE
+                            || node.getNodeKind() == XdmNodeKind.NAMESPACE) {
                         value += node.getStringValue();
                     } else {
                         XdmDestination dest = new XdmDestination();

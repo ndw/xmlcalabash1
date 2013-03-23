@@ -119,7 +119,7 @@ public class ValueAvailable extends XProcExtensionFunctionDefinition {
             }
 
             boolean value = false;
-            QName varName = new QName(sVarName.getNamespaceURI(), sVarName.getLocalName());
+            QName varName = new QName(sVarName.getURI(), sVarName.getLocalPart());
 
             value = step.hasInScopeVariableBinding(varName);
 

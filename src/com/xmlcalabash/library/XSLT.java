@@ -44,6 +44,7 @@ import com.xmlcalabash.util.S9apiUtils;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.lib.CollectionURIResolver;
 import net.sf.saxon.lib.OutputURIResolver;
+import net.sf.saxon.lib.UnparsedTextURIResolver;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmDestination;
@@ -186,6 +187,7 @@ public class XSLT extends DefaultStep {
 
         OutputURIResolver uriResolver = config.getOutputURIResolver();
         CollectionURIResolver collectionResolver = config.getCollectionURIResolver();
+        UnparsedTextURIResolver unparsedTextURIResolver = runtime.getResolver();
 
         config.setOutputURIResolver(new OutputResolver());
         config.setCollectionURIResolver(new CollectionResolver(runtime, defaultCollection, collectionResolver));
@@ -224,6 +226,7 @@ public class XSLT extends DefaultStep {
         }
 
         transformer.setSchemaValidationMode(ValidationMode.DEFAULT);
+        transformer.getUnderlyingController().setUnparsedTextURIResolver(unparsedTextURIResolver);
         transformer.transform();
 
         config.setOutputURIResolver(uriResolver);

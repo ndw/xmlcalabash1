@@ -11,4 +11,9 @@ Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Export-Package: *, etc
 Import-Package: \
   net.sf.saxon.*;version=${if;${def;saxon94};9.4.0;9.3.0},\
-  *
+  javax.crypto.*,\
+  javax.xml.*,\
+  org.apache.commons.httpclient.*,\
+  org.xml.sax.*,\
+  *;resolution:=optional
+DynamicImport-Package: *
