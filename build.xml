@@ -409,34 +409,6 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
          includes="calabash-${dist-version}/**"/>
   </target>
 
-  <target name="test-extensions" depends="jar">
-    <echo>Running test-extensions...</echo>
-    <echo>  Sending report to test/extensions.xml; errors to ${test.errors}</echo>
-    <java fork="true" classname="com.xmlcalabash.drivers.RunTestReport"
-          output="test/extensions.xml" error="${test.errors}">
-      <classpath>
-        <pathelement location="calabash.jar"/>
-        <path refid="full.classpath"/>
-      </classpath>
-      <jvmarg value="-Xmx1024m"/>
-      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
-      <arg value="-D"/>
-      <arg value="-a"/>
-      <arg value="test/extensions/test-suite.xml"/>
-    </java>
-  </target>
-
-  <target name="report-extensions" depends="test-extensions">
-    <java fork="true" classname="net.sf.saxon.Transform">
-      <classpath refid="full.classpath"/>
-      <arg value="-o:test/extensions.html"/>
-      <arg value="-s:test/extensions.xml"/>
-      <arg value="-xsl:resources/format-report.xsl"/>
-    </java>
-    <echo>Report is in test/extensions.html</echo>
-  </target>
-
-
   <target name="test" depends="jar">
     <echo>Running test...</echo>
     <java fork="true" classname="com.xmlcalabash.drivers.RunTestReport">
@@ -469,6 +441,10 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
       <arg value="${tests.root}/tests/serialization/test-suite.xml"/>
       <arg value="${tests.root}/tests/optional/test-suite.xml"/>
       <arg value="${tests.root}/tests/extension/test-suite.xml"/>
+      <arg value="http://xmlcalabash.com/tests/test-suite.xml"/>
+<!--
+      <arg value="http://localhost:8130/tests/test-suite.xml"/>
+-->
     </java>
   </target>
 

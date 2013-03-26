@@ -469,7 +469,7 @@ private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
             e.printStackTrace();
         }
         throw e;
-    } catch (Exception e) {
+    } catch (Throwable e) {
         if (debug) {
             e.printStackTrace();
         }
