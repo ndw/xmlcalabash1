@@ -223,6 +223,12 @@ public class XSLT extends DefaultStep {
 
         if (outputBaseURI != null) {
             transformer.setBaseOutputURI(outputBaseURI);
+            // The following hack works around https://saxonica.plan.io/issues/1724
+            try {
+                result.setBaseURI(new URI(outputBaseURI));
+            } catch (URISyntaxException use) {
+                // whatever
+            }
         }
 
         transformer.setSchemaValidationMode(ValidationMode.DEFAULT);
