@@ -354,11 +354,10 @@ public class CalabashTask extends MatchingTask {
      */
     public void addConfiguredPipeline(Resources rc) {
         if (rc.size() != 1) {
-            throw new BuildException("The pipeline element must be specified with exactly one"
-                                     + " nested resource.");
-        } else {
-            setPipeline((Resource) rc.iterator().next());
+            handleError("The pipeline element must be specified with exactly one nested resource.");
         }
+
+        setPipeline((Resource) rc.iterator().next());
     }
 
     /**
