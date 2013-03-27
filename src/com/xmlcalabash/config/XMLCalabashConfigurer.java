@@ -1,5 +1,6 @@
 package com.xmlcalabash.config;
 
+import com.xmlcalabash.core.XProcProcessor;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.library.Load;
@@ -15,6 +16,7 @@ import net.sf.saxon.s9api.XdmNode;
  * To change this template use File | Settings | File Templates.
  */
 public interface XMLCalabashConfigurer {
+    public void configProcessor(XProcProcessor processor);
     public void configRuntime(XProcRuntime runtime);
     public XdmNode loadDocument(Load load);
     public ReadablePipe makeReadableData(XProcRuntime runtime, DataBinding binding);

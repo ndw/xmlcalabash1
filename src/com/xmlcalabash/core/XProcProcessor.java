@@ -3,28 +3,20 @@ package com.xmlcalabash.core;
 import com.xmlcalabash.config.XProcConfigurer;
 import com.xmlcalabash.util.DefaultXProcConfigurer;
 import com.xmlcalabash.util.DefaultXProcMessageListener;
-import com.xmlcalabash.util.JSONtoXML;
 import com.xmlcalabash.util.StepErrorListener;
 import com.xmlcalabash.util.URIUtils;
 import com.xmlcalabash.util.XProcURIResolver;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
-import net.sf.saxon.lib.UnparsedTextURIResolver;
 import net.sf.saxon.s9api.ExtensionFunction;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.trans.XPathException;
 import org.xml.sax.EntityResolver;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
-import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.URIResolver;
-import java.io.IOException;
-import java.io.Reader;
 import java.lang.reflect.Constructor;
 import java.net.URI;
 import java.util.logging.Logger;
@@ -80,6 +72,7 @@ public class XProcProcessor {
         } else {
             configurer = new DefaultXProcConfigurer(this);
         }
+        configurer.getXMLCalabashConfigurer().configProcessor(this);
 
         Configuration saxonConfig = processor.getUnderlyingConfiguration();
         saxonConfig.setURIResolver(uriResolver);
@@ -117,6 +110,7 @@ public class XProcProcessor {
 
     public void setConfigurer(XProcConfigurer configurer) {
         this.configurer = configurer;
+        configurer.getXMLCalabashConfigurer().configProcessor(this);
     }
 
     public XProcMessageListener getMessageListener() {

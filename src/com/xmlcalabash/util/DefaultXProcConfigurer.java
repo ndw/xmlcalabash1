@@ -6,7 +6,6 @@ import com.xmlcalabash.config.SaxonConfigurer;
 import com.xmlcalabash.config.XMLCalabashConfigurer;
 import com.xmlcalabash.config.XProcConfigurer;
 import com.xmlcalabash.core.XProcProcessor;
-import com.xmlcalabash.core.XProcRuntime;
 
 /**
  * Created by IntelliJ IDEA.
@@ -22,7 +21,7 @@ public class DefaultXProcConfigurer implements XProcConfigurer {
     private XMLCalabashConfigurer configurer = null;
 
     public DefaultXProcConfigurer(XProcProcessor xproc) {
-        configurer = new DefaultXMLCalabashConfigurer(xproc);
+        configurer = new DefaultXMLCalabashConfigurer();
     }
 
     public XMLCalabashConfigurer getXMLCalabashConfigurer() {

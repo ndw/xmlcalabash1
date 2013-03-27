@@ -28,8 +28,8 @@ public class DefaultXMLCalabashConfigurer implements XMLCalabashConfigurer {
     private final static QName cx_filemask = new QName("cx", XProcConstants.NS_CALABASH_EX,"filemask");
     protected XProcProcessor xproc = null;
 
-    public DefaultXMLCalabashConfigurer(XProcProcessor xproc) {
-        this.xproc = xproc;
+    public void configProcessor(XProcProcessor processor) {
+        xproc = processor;
     }
 
     public void configRuntime(XProcRuntime runtime) {
@@ -37,6 +37,9 @@ public class DefaultXMLCalabashConfigurer implements XMLCalabashConfigurer {
     }
 
     public XdmNode loadDocument(Load load) {
+        if ( xproc == null ) {
+            throw new XProcException("This configurer has not been set to a processor: " + this);
+        }
         boolean      validate = load.getOption(_dtd_validate, false);
         RuntimeValue href     = load.getOption(_href);
         String       base     = href.getBaseURI().toASCIIString();
