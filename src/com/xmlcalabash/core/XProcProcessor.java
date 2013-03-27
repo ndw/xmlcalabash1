@@ -246,17 +246,17 @@ public class XProcProcessor {
 
         @Override
         public void warning(TransformerException e) throws TransformerException {
-            throw new RuntimeException("Processor Error Listener Called");
+            msgListener.warning(e);
         }
 
         @Override
         public void error(TransformerException e) throws TransformerException {
-            throw new RuntimeException("Processor Error Listener Called");
+            msgListener.warning(e);
         }
 
         @Override
         public void fatalError(TransformerException e) throws TransformerException {
-            throw new RuntimeException("Processor Error Listener Called");
+            msgListener.error(e);
         }
     }
 }
