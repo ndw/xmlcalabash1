@@ -599,6 +599,9 @@ public class UserArgs {
                     if (!"*".equals(port)) {
                         tree.addAttribute(new QName("port"), port);
                     }
+                    if (!pname.getPrefix().isEmpty() || !pname.getNamespaceURI().isEmpty()) {
+                        tree.addNamespace(pname.getPrefix(), pname.getNamespaceURI());
+                    }
                     tree.addAttribute(new QName("name"), pname.toString());
                     tree.addAttribute(new QName("select"), value);
                     tree.startContent();
