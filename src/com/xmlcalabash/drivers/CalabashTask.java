@@ -732,16 +732,18 @@ public class CalabashTask extends MatchingTask {
                         // Mapper may produce zero or more filenames,
                         // which may or may not be what was wanted but
                         // only the user will know that.
-                        Union mappedResources = new Union();
-                        for (String fileName : inputFileNames) {
-                            FileResource mappedResource = new FileResource(baseDir, fileName);
-                            if (mappedResource.isExists()) {
-                                mappedResources.add(mappedResource);
-                            } else {
-                                log("Skipping non-exstent mapped resource: " + mappedResource.toString(), Project.MSG_DEBUG);
+                        if (inputFileNames != null) {
+                            Union mappedResources = new Union();
+                            for (String fileName : inputFileNames) {
+                                FileResource mappedResource = new FileResource(baseDir, fileName);
+                                if (mappedResource.isExists()) {
+                                    mappedResources.add(mappedResource);
+                                } else {
+                                    log("Skipping non-exstent mapped resource: " + mappedResource.toString(), Project.MSG_DEBUG);
+                                }
                             }
+                            useInputResources.put(port, mappedResources);
                         }
-                        useInputResources.put(port, mappedResources);
                     }
                 }
                 HashMap<String, Union> useOutputResources = new HashMap<String, Union>();
