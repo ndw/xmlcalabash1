@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -43,6 +44,8 @@ import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.model.Serialization;
 import com.xmlcalabash.runtime.XPipeline;
 import com.xmlcalabash.util.Input;
+import com.xmlcalabash.util.Output;
+import com.xmlcalabash.util.Output.Kind;
 import com.xmlcalabash.util.ParseArgs;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.UserArgs;
@@ -55,6 +58,7 @@ import net.sf.saxon.s9api.XdmSequenceIterator;
 import org.xml.sax.InputSource;
 
 import static com.xmlcalabash.core.XProcConstants.c_data;
+import static com.xmlcalabash.util.Output.Kind.OUTPUT_STREAM;
 import static java.lang.String.format;
 
 /**
@@ -284,29 +288,29 @@ public class Main {
             pipeline.writeTo(implicitPort, doc);
         }
 
-        Map<String, String> portOutputs = new HashMap<String, String>();
+        Map<String, Output> portOutputs = new HashMap<String, Output>();
 
-        Map<String, String> userArgsOutputs = userArgs.getOutputs();
+        Map<String, Output> userArgsOutputs = userArgs.getOutputs();
         for (String port : pipeline.getOutputs()) {
             // Bind to "-" implicitly
-            String uri = null;
+            Output output = null;
 
             if (userArgsOutputs.containsKey(port)) {
-                uri = userArgsOutputs.get(port);
+                output = userArgsOutputs.get(port);
             } else if (config.outputs.containsKey(port)) {
-                uri = config.outputs.get(port);
+                output = new Output(config.outputs.get(port));
             } else if (userArgsOutputs.containsKey(null)
                        && pipeline.getDeclareStep().getOutput(port).getPrimary()) {
                 // Bind unnamed port to primary output port
-                uri = userArgsOutputs.get(null);
+                output = userArgsOutputs.get(null);
             }
 
             // Look for explicit binding to "-"
-            if ("-".equals(uri)) {
-                uri = null;
+            if ((output != null) && (output.getKind() == Kind.URI) && "-".equals(output.getUri())) {
+                output = null;
             }
 
-            portOutputs.put(port, uri);
+            portOutputs.put(port, output);
         }
 
         for (QName optname : config.options.keySet()) {
@@ -322,14 +326,31 @@ public class Main {
         pipeline.run();
 
         for (String port : pipeline.getOutputs()) {
-            String uri;
+            Output output;
             if (portOutputs.containsKey(port)) {
-                uri = portOutputs.get(port);
+                output = portOutputs.get(port);
             } else {
                 // You didn't bind it, and it isn't going to stdout, so it's going into the bit bucket.
                 continue;
             }
-            finest(logger, null, "Copy output from " + port + " to " + ((uri == null) ? "stdout" : uri));
+
+            if ((output == null) || ((output.getKind() == OUTPUT_STREAM) && System.out.equals(output.getOutputStream()))) {
+                finest(logger, null, "Copy output from " + port + " to stdout");
+            } else {
+                switch (output.getKind()) {
+                    case URI:
+                        finest(logger, null, "Copy output from " + port + " to " + output.getUri());
+                        break;
+
+                    case OUTPUT_STREAM:
+                        String outputStreamClassName = output.getOutputStream().getClass().getName();
+                        finest(logger, null, "Copy output from " + port + " to " + outputStreamClassName + " stream");
+                        break;
+
+                    default:
+                        throw new UnsupportedOperationException(format("Unsupported output kind '%s'", output.getKind()));
+                }
+            }
 
             Serialization serial = pipeline.getSerialization(port);
 
@@ -362,13 +383,25 @@ public class Main {
 
             // I wonder if there's a better way...
             WritableDocument wd = null;
-            if (uri != null) {
-                URI furi = new URI(uri);
-                String filename = furi.getPath();
-                FileOutputStream outfile = new FileOutputStream(filename);
-                wd = new WritableDocument(runtime,filename,serial,outfile);
+            if (output == null) {
+                wd = new WritableDocument(runtime, null, serial);
             } else {
-                wd = new WritableDocument(runtime,uri,serial);
+                switch (output.getKind()) {
+                    case URI:
+                        URI furi = new URI(output.getUri());
+                        String filename = furi.getPath();
+                        FileOutputStream outfile = new FileOutputStream(filename);
+                        wd = new WritableDocument(runtime, filename, serial, outfile);
+                        break;
+
+                    case OUTPUT_STREAM:
+                        OutputStream outputStream = output.getOutputStream();
+                        wd = new WritableDocument(runtime, null, serial, outputStream);
+                        break;
+
+                    default:
+                        throw new UnsupportedOperationException(format("Unsupported output kind '%s'", output.getKind()));
+                }
             }
 
             ReadablePipe rpipe = pipeline.readFrom(port);
@@ -376,7 +409,7 @@ public class Main {
                 wd.write(rpipe.read());
             }
 
-            if (uri != null) {
+            if (output != null) {
                 wd.close();
             }
         }

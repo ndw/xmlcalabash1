@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -72,7 +73,7 @@ public class UserArgs {
     private String uriResolverClass = null;
     private String pipelineURI = null;
     private List<String> libraries = new ArrayList<String>();
-    private Map<String, String> outputs = new HashMap<String, String>();
+    private Map<String, Output> outputs = new HashMap<String, Output>();
     private Map<String, String> bindings = new HashMap<String, String>();
     private List<StepArgs> steps = new ArrayList<StepArgs>();
     private StepArgs curStep = new StepArgs();
@@ -156,7 +157,7 @@ public class UserArgs {
         libraries.add(libraryURI);
     }
 
-    public Map<String, String> getOutputs() {
+    public Map<String, Output> getOutputs() {
         checkArgs();
         return unmodifiableMap(outputs);
     }
@@ -171,10 +172,22 @@ public class UserArgs {
         }
 
         if ("-".equals(uri)) {
-            outputs.put(port, uri);
+            outputs.put(port, new Output(uri));
         } else {
-            outputs.put(port, "file://" + fixUpURI(uri));
+            outputs.put(port, new Output("file://" + fixUpURI(uri)));
         }
+    }
+
+    public void addOutput(String port, OutputStream outputStream) {
+        if (outputs.containsKey(port)) {
+            if (port == null) {
+                throw new XProcException("Duplicate output binding for default output port.");
+            } else {
+                throw new XProcException("Duplicate output binding: '" + port + "'.");
+            }
+        }
+
+        outputs.put(port, new Output(outputStream));
     }
 
     public void addBinding(String prefix, String uri) {
@@ -480,7 +493,7 @@ public class UserArgs {
         // This is a hack too. If there are no outputs, fake one.
         // Implicit pipelines default to having a single primary output port names "result"
         if (outputs.size() == 0) {
-            outputs.put("result", "-");
+            outputs.put("result", new Output("-"));
         }
 
         String lastStepName = "cmdlineStep" + steps.size();

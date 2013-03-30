@@ -962,7 +962,8 @@ public class CalabashTask extends MatchingTask {
             for (String port : outputResources.keySet()) {
                 Union resources = outputResources.get(port);
                 for (Iterator iterator = resources.iterator(); iterator.hasNext(); ) {
-                    userArgs.addOutput(port, iterator.next().toString());
+                    Resource resource = (Resource) iterator.next();
+                    userArgs.addOutput(port, resource.getOutputStream());
                 }
             }
             for (String prefix : bindings.keySet()) {
