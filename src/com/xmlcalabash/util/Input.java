@@ -23,12 +23,13 @@ public class Input {
         kind = URI;
     }
 
-    public Input(InputStream inputStream) {
-        this(inputStream, XML);
+    public Input(InputStream inputStream, String uri) {
+        this(inputStream, uri, XML);
     }
 
-    public Input(InputStream inputStream, Type type) {
+    public Input(InputStream inputStream, String uri, Type type) {
         this.inputStream = inputStream;
+        this.uri = uri;
         this.type = type;
         kind = INPUT_STREAM;
     }
@@ -45,6 +46,13 @@ public class Input {
             throw new IllegalArgumentException("Input is not of kind 'INPUT_STREAM'");
         }
         return inputStream;
+    }
+
+    public String getInputStreamUri() {
+        if (kind != INPUT_STREAM) {
+            throw new IllegalArgumentException("Input is not of kind 'INPUT_STREAM'");
+        }
+        return uri;
     }
 
     public Type getType() {

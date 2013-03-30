@@ -958,7 +958,7 @@ public class CalabashTask extends MatchingTask {
         try {
             UserArgs userArgs = new UserArgs();
             userArgs.setDebug(debug);
-            userArgs.setPipelineURI(pipelineResource.toString());
+            userArgs.setPipeline(pipelineResource.getInputStream(), pipelineResource.toString());
             for (String port : outputResources.keySet()) {
                 Union resources = outputResources.get(port);
                 for (Iterator iterator = resources.iterator(); iterator.hasNext(); ) {
@@ -973,7 +973,7 @@ public class CalabashTask extends MatchingTask {
             for (String port : inputResources.keySet()) {
                 Union inputResource = inputResources.get(port);
                 for (Resource resource : inputResource.listResources()) {
-                    userArgs.addInput(port, resource.getInputStream(), XML);
+                    userArgs.addInput(port, resource.getInputStream(), resource.toString(), XML);
                 }
             }
             for (Parameter parameter : parameters) {

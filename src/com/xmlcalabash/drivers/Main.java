@@ -145,8 +145,8 @@ public class Main {
 
         XPipeline pipeline = null;
 
-        if (userArgs.getPipelineURI() != null) {
-            pipeline = runtime.load(userArgs.getPipelineURI());
+        if (userArgs.getPipeline() != null) {
+            pipeline = runtime.load(userArgs.getPipeline());
         } else if (userArgs.hasImplicitPipeline()) {
             XdmNode implicitPipeline = userArgs.getImplicitPipeline(runtime);
 

@@ -71,7 +71,7 @@ public class UserArgs {
     private String logStyle = null;
     private String entityResolverClass = null;
     private String uriResolverClass = null;
-    private String pipelineURI = null;
+    private Input pipeline = null;
     private List<String> libraries = new ArrayList<String>();
     private Map<String, Output> outputs = new HashMap<String, Output>();
     private Map<String, String> bindings = new HashMap<String, String>();
@@ -142,14 +142,19 @@ public class UserArgs {
         this.uriResolverClass = uriResolverClass;
     }
 
-    public String getPipelineURI() {
+    public Input getPipeline() {
         checkArgs();
-        return pipelineURI;
+        return pipeline;
     }
 
-    public void setPipelineURI(String pipelineURI) {
+    public void setPipeline(String uri) {
         needsCheck = true;
-        this.pipelineURI = pipelineURI;
+        this.pipeline = new Input(uri);
+    }
+
+    public void setPipeline(InputStream inputStream, String uri) {
+        needsCheck = true;
+        this.pipeline = new Input(inputStream, uri);
     }
 
     public void addLibrary(String libraryURI) {
@@ -233,8 +238,8 @@ public class UserArgs {
         }
     }
 
-    public void addInput(String port, InputStream inputStream, Type type) {
-        curStep.addInput(port, inputStream, type);
+    public void addInput(String port, InputStream inputStream, String uri, Type type) {
+        curStep.addInput(port, inputStream, uri, type);
     }
 
     public void setDefaultInputPort(String port) {
@@ -341,7 +346,7 @@ public class UserArgs {
      */
     public void checkArgs() {
         if (needsCheck) {
-            if (hasImplicitPipelineInternal() && (pipelineURI != null)) {
+            if (hasImplicitPipelineInternal() && (pipeline != null)) {
                 throw new XProcException("You can specify a library and / or steps or a pipeline, but not both.");
             }
 
@@ -643,12 +648,12 @@ public class UserArgs {
             inputs.get(port).add(new Input(uri, type));
         }
 
-        public void addInput(String port, InputStream inputStream, Type type) {
+        public void addInput(String port, InputStream inputStream, String uri, Type type) {
             if (!inputs.containsKey(port)) {
                 inputs.put(port, new ArrayList<Input>());
             }
 
-            inputs.get(port).add(new Input(inputStream, type));
+            inputs.get(port).add(new Input(inputStream, uri, type));
         }
 
         public void addOption(String optname, String value) {

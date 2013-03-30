@@ -170,7 +170,7 @@ public class ParseArgs {
         }
 
         if (argpos < args.length) {
-            userArgs.setPipelineURI(args[argpos++]);
+            userArgs.setPipeline(args[argpos++]);
         }
 
         while (argpos < args.length) {
