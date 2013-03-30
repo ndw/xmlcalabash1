@@ -1,6 +1,9 @@
 package com.xmlcalabash.util;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +17,7 @@ import com.xmlcalabash.core.XProcConfiguration;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.runtime.XLibrary;
+import com.xmlcalabash.util.Input.Type;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -30,6 +34,7 @@ import static com.xmlcalabash.core.XProcConstants.p_input;
 import static com.xmlcalabash.core.XProcConstants.p_output;
 import static com.xmlcalabash.core.XProcConstants.p_pipe;
 import static com.xmlcalabash.core.XProcConstants.p_with_param;
+import static com.xmlcalabash.util.Input.Type.DATA;
 import static com.xmlcalabash.util.JSONtoXML.knownFlavor;
 import static com.xmlcalabash.util.LogOptions.DIRECTORY;
 import static com.xmlcalabash.util.LogOptions.OFF;
@@ -37,9 +42,13 @@ import static com.xmlcalabash.util.LogOptions.PLAIN;
 import static com.xmlcalabash.util.LogOptions.WRAPPED;
 import static com.xmlcalabash.util.URIUtils.cwdAsURI;
 import static com.xmlcalabash.util.URIUtils.encode;
+import static java.io.File.createTempFile;
+import static java.lang.Long.MAX_VALUE;
+import static java.lang.String.format;
 import static java.lang.System.err;
 import static java.lang.System.exit;
 import static java.lang.System.getProperty;
+import static java.nio.channels.Channels.newChannel;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
@@ -193,7 +202,7 @@ public class UserArgs {
         return unmodifiableSet(curStep.inputs.keySet());
     }
 
-    public List<String> getInputs(String port) {
+    public List<Input> getInputs(String port) {
         checkArgs();
         if (steps.size() != 0) {
             // If we built a compound pipeline from the arguments, then there aren't any pipeline inputs
@@ -202,13 +211,17 @@ public class UserArgs {
         return unmodifiableList(curStep.inputs.get(port));
     }
 
-    public void addInput(String port, String uri, String type) {
+    public void addInput(String port, String uri, Type type) {
         if ("-".equals(uri) || uri.startsWith("http:") || uri.startsWith("https:") || uri.startsWith("file:")
                 || "p:empty".equals(uri)) {
             curStep.addInput(port, uri, type);
         } else {
             curStep.addInput(port, "file://" + fixUpURI(uri), type);
         }
+    }
+
+    public void addInput(String port, InputStream inputStream, Type type) {
+        curStep.addInput(port, inputStream, type);
     }
 
     public void setDefaultInputPort(String port) {
@@ -245,6 +258,11 @@ public class UserArgs {
             name = name.substring(cpos + 1);
         }
 
+        curStep.addParameter(port, name, value);
+    }
+
+    public void addParam(String port, String name, String value) {
+        needsCheck = true;
         curStep.addParameter(port, name, value);
     }
 
@@ -293,7 +311,7 @@ public class UserArgs {
 
     public void setJsonFlavor(String jsonFlavor) {
         this.jsonFlavor = jsonFlavor;
-        if (!knownFlavor(jsonFlavor)) {
+        if ((jsonFlavor != null) && !knownFlavor(jsonFlavor)) {
             throw new XProcException("Unknown JSON flavor: '" + jsonFlavor + "'.");
         }
     }
@@ -427,7 +445,7 @@ public class UserArgs {
         return hasImplicitPipelineInternal();
     }
 
-    public XdmNode getImplicitPipeline(XProcRuntime runtime) {
+    public XdmNode getImplicitPipeline(XProcRuntime runtime) throws IOException {
         checkArgs();
         // This is a bit of a hack...
         if (steps.size() == 0 && libraries.size() == 1) {
@@ -506,26 +524,48 @@ public class UserArgs {
                 tree.addAttribute(new QName("port"), (port == null) ? "source" : port);
                 tree.startContent();
 
-                for (String uri : step.inputs.get(port)) {
-                    QName qname = p_document;
-                    if (uri.startsWith("xml:")) {
-                        uri = uri.substring(4);
-                    } else if (uri.startsWith("data:")) {
-                        qname = p_data;
-                        uri = uri.substring(5);
-                    } else {
-                        throw new UnsupportedOperationException("Unexpected URI type: " + uri);
-                    }
+                for (Input input : step.inputs.get(port)) {
+                    QName qname = (input.getType() == DATA) ? p_data : p_document;
+                    switch (input.getKind()) {
+                        case URI:
+                            String uri = input.getUri();
 
-                    if ("p:empty".equals(uri)) {
-                        tree.addStartElement(p_empty);
-                        tree.startContent();
-                        tree.addEndElement();
-                    } else {
-                        tree.addStartElement(qname);
-                        tree.addAttribute(new QName("href"), uri);
-                        tree.startContent();
-                        tree.addEndElement();
+                            if ("p:empty".equals(uri)) {
+                                tree.addStartElement(p_empty);
+                                tree.startContent();
+                                tree.addEndElement();
+                            } else {
+                                tree.addStartElement(qname);
+                                tree.addAttribute(new QName("href"), uri);
+                                tree.startContent();
+                                tree.addEndElement();
+                            }
+                            break;
+
+                        case INPUT_STREAM:
+                            InputStream inputStream = input.getInputStream();
+                            if (System.in.equals(inputStream)) {
+                                tree.addStartElement(qname);
+                                tree.addAttribute(new QName("href"), "-");
+                                tree.startContent();
+                                tree.addEndElement();
+                            } else {
+                                File tempInput = createTempFile("calabashInput", null);
+                                tempInput.deleteOnExit();
+                                FileOutputStream fileOutputStream = new FileOutputStream(tempInput);
+                                fileOutputStream.getChannel().transferFrom(newChannel(inputStream), 0, MAX_VALUE);
+                                fileOutputStream.close();
+                                inputStream.close();
+
+                                tree.addStartElement(qname);
+                                tree.addAttribute(new QName("href"), tempInput.toURI().toASCIIString());
+                                tree.startContent();
+                                tree.addEndElement();
+                            }
+                            break;
+
+                        default:
+                            throw new UnsupportedOperationException(format("Unsupported input kind '%s'", input.getKind()));
                     }
                 }
                 tree.addEndElement();
@@ -571,7 +611,7 @@ public class UserArgs {
     private class StepArgs {
         public String plainStepName = null;
         public QName stepName = null;
-        public Map<String, List<String>> inputs = new HashMap<String, List<String>>();
+        public Map<String, List<Input>> inputs = new HashMap<String, List<Input>>();
         public Map<String, Map<String, String>> plainParams = new HashMap<String, Map<String, String>>();
         public Map<String, Map<QName, String>> params = new HashMap<String, Map<QName, String>>();
         public Map<String, String> plainOptions = new HashMap<String, String>();
@@ -582,12 +622,20 @@ public class UserArgs {
             this.plainStepName = name;
         }
 
-        public void addInput(String port, String uri, String type) {
+        public void addInput(String port, String uri, Type type) {
             if (!inputs.containsKey(port)) {
-                inputs.put(port, new ArrayList<String>());
+                inputs.put(port, new ArrayList<Input>());
             }
 
-            inputs.get(port).add(type + ":" + uri);
+            inputs.get(port).add(new Input(uri, type));
+        }
+
+        public void addInput(String port, InputStream inputStream, Type type) {
+            if (!inputs.containsKey(port)) {
+                inputs.put(port, new ArrayList<Input>());
+            }
+
+            inputs.get(port).add(new Input(inputStream, type));
         }
 
         public void addOption(String optname, String value) {

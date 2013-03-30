@@ -42,6 +42,7 @@ import com.xmlcalabash.io.WritableDocument;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.model.Serialization;
 import com.xmlcalabash.runtime.XPipeline;
+import com.xmlcalabash.util.Input;
 import com.xmlcalabash.util.ParseArgs;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.UserArgs;
@@ -52,6 +53,9 @@ import net.sf.saxon.s9api.Serializer;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import org.xml.sax.InputSource;
+
+import static com.xmlcalabash.core.XProcConstants.c_data;
+import static java.lang.String.format;
 
 /**
  *
@@ -206,21 +210,52 @@ public class Main {
 
             if (userArgsInputPorts.contains(port)) {
                 XdmNode doc = null;
-                for (String uri : userArgs.getInputs(port)) {
-                    if (uri.startsWith("xml:")) {
-                        uri = uri.substring(4);
+                for (Input input : userArgs.getInputs(port)) {
+                    switch (input.getType()) {
+                        case XML:
+                            switch (input.getKind()) {
+                                case URI:
+                                    String uri = input.getUri();
+                                    if ("-".equals(uri)) {
+                                        doc = runtime.parse(new InputSource(System.in));
+                                    } else {
+                                        doc = runtime.parse(new InputSource(uri));
+                                    }
+                                    break;
 
-                        if ("-".equals(uri)) {
-                            doc = runtime.parse(new InputSource(System.in));
-                        } else {
-                            doc = runtime.parse(new InputSource(uri));
-                        }
-                    } else if (uri.startsWith("data:")) {
-                        uri = uri.substring(5);
-                        ReadableData rd = new ReadableData(runtime, XProcConstants.c_data, uri, "text/plain");
-                        doc = rd.read();
-                    } else {
-                        throw new UnsupportedOperationException("Unexpected input type: " + uri);
+                                case INPUT_STREAM:
+                                    InputStream inputStream = input.getInputStream();
+                                    doc = runtime.parse(new InputSource(inputStream));
+                                    inputStream.close();
+                                    break;
+
+                                default:
+                                    throw new UnsupportedOperationException(format("Unsupported input kind '%s'", input.getKind()));
+                            }
+                            break;
+
+                        case DATA:
+                            ReadableData rd;
+                            switch (input.getKind()) {
+                                case URI:
+                                    rd = new ReadableData(runtime, c_data, input.getUri(), "text/plain");
+                                    doc = rd.read();
+                                    break;
+
+                                case INPUT_STREAM:
+                                    InputStream inputStream = input.getInputStream();
+                                    rd = new ReadableData(runtime, c_data, inputStream, "text/plain");
+                                    doc = rd.read();
+                                    inputStream.close();
+                                    break;
+
+                                default:
+                                    throw new UnsupportedOperationException(format("Unsupported input kind '%s'", input.getKind()));
+                            }
+                            break;
+
+                        default:
+                            throw new UnsupportedOperationException(format("Unsupported input type '%s'", input.getType()));
                     }
 
                     pipeline.writeTo(port, doc);
@@ -262,6 +297,7 @@ public class Main {
                 uri = config.outputs.get(port);
             } else if (userArgsOutputs.containsKey(null)
                        && pipeline.getDeclareStep().getOutput(port).getPrimary()) {
+                // Bind unnamed port to primary output port
                 uri = userArgsOutputs.get(null);
             }
 

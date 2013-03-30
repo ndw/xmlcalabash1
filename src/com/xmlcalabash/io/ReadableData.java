@@ -54,6 +54,7 @@ public class ReadableData implements ReadablePipe {
     private int pos = 0;
     private QName wrapper = null;
     private String uri = null;
+    private InputStream inputStream = null;
     private String serverContentType = "content/unknown";
     private XProcRuntime runtime = null;
     private DocumentSequence documents = null;
@@ -61,8 +62,17 @@ public class ReadableData implements ReadablePipe {
 
     /** Creates a new instance of ReadableDocument */
     public ReadableData(XProcRuntime runtime, QName wrapper, String uri, String contentType) {
+        this(runtime, wrapper, uri, null, contentType);
+    }
+
+    public ReadableData(XProcRuntime runtime, QName wrapper, InputStream inputStream, String contentType) {
+        this(runtime, wrapper, null, inputStream, contentType);
+    }
+
+    private ReadableData(XProcRuntime runtime, QName wrapper, String uri, InputStream inputStream, String contentType) {
         this.runtime = runtime;
         this.uri = uri;
+        this.inputStream = inputStream;
         this.wrapper = wrapper;
         this.contentType = contentType;
     }
@@ -74,13 +84,13 @@ public class ReadableData implements ReadablePipe {
 
         documents = new DocumentSequence(runtime);
 
-        if (uri == null) {
+        if ((uri == null) && (inputStream == null)) {
             return documents;
         }
 
         String userContentType = parseContentType(contentType);
         String userCharset = parseCharset(contentType);
-        URI dataURI = getDataUri(uri);
+        URI dataURI = (uri == null) ? null : getDataUri(uri);
 
         TreeWriter tree = new TreeWriter(runtime);
         tree.startDocument(dataURI);
@@ -88,7 +98,7 @@ public class ReadableData implements ReadablePipe {
         InputStream stream;
 
         try {
-            stream = "-".equals(uri) ? System.in : getStream(dataURI);
+            stream = (uri == null) ? inputStream : ("-".equals(uri) ? System.in : getStream(dataURI));
             String serverContentType = getContentType();
 
             if ("content/unknown".equals(serverContentType) && contentType != null) {
@@ -111,7 +121,7 @@ public class ReadableData implements ReadablePipe {
             // FIXME: provide some way to override this!!!
 
             String charset = serverCharset;
-            if (("-".equals(uri) || "file".equals(dataURI.getScheme()))
+            if ((uri != null) && ("-".equals(uri) || "file".equals(dataURI.getScheme()))
                     && serverCharset == null
                     && serverBaseContentType.equals(userContentType)) {
                 charset = userCharset;

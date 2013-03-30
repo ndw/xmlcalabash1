@@ -2,6 +2,9 @@ package com.xmlcalabash.util;
 
 import com.xmlcalabash.core.XProcException;
 
+import static com.xmlcalabash.util.Input.Type.DATA;
+import static com.xmlcalabash.util.Input.Type.XML;
+
 /**
  * Created by IntelliJ IDEA.
  * User: ndw
@@ -78,9 +81,9 @@ public class ParseArgs {
                 String s = parseString("i", "input");
                 if (s.contains("=")) {
                     KeyValuePair v = parseOption(s);
-                    userArgs.addInput(v.key, v.value, "xml");
+                    userArgs.addInput(v.key, v.value, XML);
                 } else {
-                    userArgs.addInput(null, s, "xml");
+                    userArgs.addInput(null, s, XML);
                 }
                 continue;
             }
@@ -89,9 +92,9 @@ public class ParseArgs {
                 String s = parseString("d", "data-input");
                 if (s.contains("=")) {
                     KeyValuePair v = parseOption(s);
-                    userArgs.addInput(v.key, v.value, "data");
+                    userArgs.addInput(v.key, v.value, DATA);
                 } else {
-                    userArgs.addInput(null, s, "data");
+                    userArgs.addInput(null, s, DATA);
                 }
                 continue;
             }

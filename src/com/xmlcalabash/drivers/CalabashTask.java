@@ -19,27 +19,16 @@
 package com.xmlcalabash.drivers;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.PrintStream;
-import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
 
-import com.xmlcalabash.core.XProcConfiguration;
-import com.xmlcalabash.core.XProcConstants;
-import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.io.ReadablePipe;
-import com.xmlcalabash.io.WritableDocument;
-import com.xmlcalabash.model.RuntimeValue;
-import com.xmlcalabash.model.Serialization;
-import com.xmlcalabash.runtime.XPipeline;
-import com.xmlcalabash.util.JSONtoXML;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.XdmNode;
+import com.xmlcalabash.util.UserArgs;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.Project;
@@ -56,7 +45,8 @@ import org.apache.tools.ant.types.resources.FileResource;
 import org.apache.tools.ant.types.resources.Resources;
 import org.apache.tools.ant.types.resources.Union;
 import org.apache.tools.ant.util.FileNameMapper;
-import org.xml.sax.InputSource;
+
+import static com.xmlcalabash.util.Input.Type.XML;
 
 /**
  * Ant task to run Calabash.
@@ -198,21 +188,9 @@ public class CalabashTask extends MatchingTask {
     private Vector<Option> options = new Vector<Option>();
 
     /**
-     * The processed options, ready for passing to Calabash
-     */
-    private Map<QName, RuntimeValue> optionsMap =
-            new HashMap<QName, RuntimeValue>();
-
-    /**
      * The <param>s, ready for further processing
      */
     private Vector<Parameter> parameters = new Vector<Parameter>();
-
-    /**
-     * The processed parameters, ready for passing to Calabash
-     */
-    private Map<String, Hashtable<QName, RuntimeValue>> parametersTable =
-            new Hashtable<String, Hashtable<QName, RuntimeValue>>();
 
     /**
      * whether to enable debug output
@@ -715,45 +693,6 @@ public class CalabashTask extends MatchingTask {
                 sysProperties.setSystem();
             }
 
-            // When prefix "p" not set, default to the XProc namespace
-            if (!bindings.containsKey("p")) {
-                bindings.put("p", XProcConstants.NS_XPROC);
-            }
-
-            // Can only really work with options now bindings all present
-            for (Option o : options) {
-                QName qname = makeQName(o.getName());
-                String value = o.getValue();
-
-                if (optionsMap.containsKey(qname)) {
-                    handleError("Duplicated option QName: " + qname.getClarkName());
-                    continue;
-                }
-
-                optionsMap.put(qname, new RuntimeValue(value));
-            }
-
-            // Can only really work with parameters now bindings all present
-            for (Parameter p : parameters) {
-                String port = p.getPort();
-                QName qname = makeQName(p.getName());
-                String value = p.getValue();
-
-                Hashtable<QName, RuntimeValue> portParams;
-                if (!parametersTable.containsKey(port)) {
-                    portParams = new Hashtable<QName, RuntimeValue>();
-                } else {
-                    portParams = parametersTable.get(port);
-                    if (portParams.containsKey(qname)) {
-                        handleError("Duplicated parameter QName: " + qname.getClarkName());
-                        continue;
-                    }
-                }
-
-                portParams.put(qname, new RuntimeValue(value));
-                parametersTable.put(port, portParams);
-            }
-
             //-- make sure destination directory exists...
             checkDest();
 
@@ -777,22 +716,6 @@ public class CalabashTask extends MatchingTask {
                 handleError("Either 'out' or <output> corresponding to default output port and either 'extension' or nested <mapper> for naming output cannot be used together.");
                 return;
             }
-
-            // Set up Calabash config.
-            XProcConfiguration config = new XProcConfiguration("he", false);
-            config.extensionValues |= extensionValues;
-            config.xpointerOnText |= allowXPointerOnText;
-            config.transparentJSON |= transparentJSON;
-            if (jsonFlavor != null) {
-                if (!JSONtoXML.knownFlavor(jsonFlavor)) {
-                    handleError("Can't parse JSON flavor '" + jsonFlavor + "' or unrecognized format: " + jsonFlavor);
-                    return;
-                }
-                config.jsonFlavor = jsonFlavor;
-            }
-            config.useXslt10 |= useXslt10;
-
-            config.debug = debug;
 
             // If neither implicit or explicit fileset, assume user
             // knows what they're doing even though there may be no
@@ -844,12 +767,9 @@ public class CalabashTask extends MatchingTask {
                         }
                     }
                 }
-                process(config,
-                        useInputResources,
+                process(useInputResources,
                         useOutputResources,
                         pipelineResource,
-                        optionsMap,
-                        parametersTable,
                         force);
                 //return;
             } else { // Using implicit and/or explicit filesets
@@ -950,7 +870,7 @@ public class CalabashTask extends MatchingTask {
                             useOutputResources.put(port, outputResources);
                         }
                     }
-                    process(config, useInputResources, useOutputResources, pipelineResource, optionsMap, parametersTable, force);
+                    process(useInputResources, useOutputResources, pipelineResource, force);
                 }
             }
         } finally {
@@ -983,9 +903,7 @@ public class CalabashTask extends MatchingTask {
             }
             bindings.clear();
             options.clear();
-            optionsMap.clear();
             parameters.clear();
-            parametersTable.clear();
             debug = false;
             extensionValues = false;
             allowXPointerOnText = false;
@@ -1003,12 +921,9 @@ public class CalabashTask extends MatchingTask {
      * @param pipelineResource the pipeline to use.
      * @throws BuildException if the processing fails.
      */
-    private void process(XProcConfiguration config,
-                         Map<String, Union> inputResources,
+    private void process(Map<String, Union> inputResources,
                          Map<String, Union> outputResources,
                          Resource pipelineResource,
-                         Map<QName, RuntimeValue> optionsMap,
-                         Map<String, Hashtable<QName, RuntimeValue>> parametersMap,
                          boolean force) throws BuildException {
 
         long pipelineLastModified = pipelineResource.getLastModified();
@@ -1040,145 +955,41 @@ public class CalabashTask extends MatchingTask {
             }
         }
 
-        //log("Processing " + in + " to " + out, Project.MSG_INFO);
-        XProcRuntime runtime = new XProcRuntime(config);
-
-        XPipeline pipeline;
         try {
-            pipeline = runtime.load(pipelineResource.toString());
-
-            // The unnamed input is matched to one unmatched input
-            for (String port : pipeline.getInputs()) {
-                if (pipeline.getInput(port).getParameters()) {
-                    continue;
-                }
-                if (!inputResources.containsKey(port)) {
-                    if (inputResources.containsKey(null)) {
-                        inputResources.put(port, inputResources.remove(null));
-                        log("Binding unnamed input port to '" + port + "'.", Project.MSG_INFO);
-                    } else {
-                        log("You didn't specify any binding for the input port '" + port + "'.", Project.MSG_WARN);
-                    }
+            UserArgs userArgs = new UserArgs();
+            userArgs.setDebug(debug);
+            userArgs.setPipelineURI(pipelineResource.toString());
+            for (String port : outputResources.keySet()) {
+                Union resources = outputResources.get(port);
+                for (Iterator iterator = resources.iterator(); iterator.hasNext(); ) {
+                    userArgs.addOutput(port, iterator.next().toString());
                 }
             }
-
-            for (String port : pipeline.getInputs()) {
-                if (inputResources.containsKey(port)) {
-                    for (Resource resource : inputResources.get(port).listResources()) {
-                        log(resource.getName() + "::" + resource.isExists(), Project.MSG_INFO);
-                        if (!resource.isExists()) {
-                            log("Skipping non-existent input: " + resource, Project.MSG_DEBUG);
-                        }
-
-                        XdmNode doc = runtime.parse(new InputSource(resource.getInputStream()));
-                        pipeline.writeTo(port, doc);
-                    }
+            for (String prefix : bindings.keySet()) {
+                String uri = bindings.get(prefix);
+                userArgs.addBinding(prefix, uri);
+            }
+            for (String port : inputResources.keySet()) {
+                Union inputResource = inputResources.get(port);
+                for (Resource resource : inputResource.listResources()) {
+                    userArgs.addInput(port, resource.getInputStream(), XML);
                 }
             }
-
-            // Pass any options to the pipeline
-            for (QName name : optionsMap.keySet()) {
-                pipeline.passOption(name, optionsMap.get(name));
+            for (Parameter parameter : parameters) {
+                userArgs.addParam(parameter.getPort(), parameter.getName(), parameter.getValue());
             }
-
-            // Pass any parameters to the pipeline
-            for (String port : parametersMap.keySet()) {
-                Hashtable<QName, RuntimeValue> useTable = parametersMap.get(port);
-                if ("*".equals(port)) { // For primary parameter input port
-                    for (QName name : useTable.keySet()) {
-                        pipeline.setParameter(name, useTable.get(name));
-                    }
-                } else { // For specified parameter input port
-                    for (QName name : useTable.keySet()) {
-                        pipeline.setParameter(port, name, useTable.get(name));
-                    }
-                }
+            for (Option option : options) {
+                userArgs.addOption(option.getName(), option.getValue());
             }
+            userArgs.setExtensionValues(extensionValues);
+            userArgs.setAllowXPointerOnText(allowXPointerOnText);
+            userArgs.setUseXslt10(useXslt10);
+            userArgs.setTransparentJSON(transparentJSON);
+            userArgs.setJsonFlavor(jsonFlavor);
 
-            pipeline.run();
-
-            // The unnamed output is matched to one unmatched output
-            for (String port : pipeline.getOutputs()) {
-                if (!outputResources.containsKey(port)) {
-                    if (outputResources.containsKey(null)) {
-                        outputResources.put(port, outputResources.remove(null));
-                        log("Binding unnamed output port to '" + port + "'.", Project.MSG_INFO);
-                    } else {
-                        log("You didn't specify any binding for the output port '" + port
-                            + "': its output will be discarded.", Project.MSG_WARN);
-                    }
-                }
-            }
-
-            for (String port : pipeline.getOutputs()) {
-                String ouputResource = null;
-
-                if (outputResources.containsKey(port)) {
-                    Union resources = outputResources.get(port);
-                    if (resources.size() != 1) {
-                        handleError("The '" + port + "' output port must be specified with exactly one"
-                                    + " nested resource.");
-                    }
-                    ouputResource = resources.iterator().next().toString();
-                    log("Writing port '" + port + "' to '" + ouputResource + "'.", Project.MSG_INFO);
-                }
-
-                if (ouputResource == null) {
-                    // You didn't bind it, and it isn't going to stdout, so it's going into the bit bucket.
-                    continue;
-                }
-
-                Serialization serial = pipeline.getSerialization(port);
-
-                if (serial == null) {
-                    // Use the configuration options
-                    // FIXME: should each of these be considered separately?
-                    // FIXME: should there be command-line options to override these settings?
-                    serial = new Serialization(runtime, pipeline.getNode()); // The node's a hack
-                    for (String name : config.serializationOptions.keySet()) {
-                        String value = config.serializationOptions.get(name);
-
-                        if ("byte-order-mark".equals(name)) serial.setByteOrderMark("true".equals(value));
-                        if ("escape-uri-attributes".equals(name)) serial.setEscapeURIAttributes("true".equals(value));
-                        if ("include-content-type".equals(name)) serial.setIncludeContentType("true".equals(value));
-                        if ("indent".equals(name)) serial.setIndent("true".equals(value));
-                        if ("omit-xml-declaration".equals(name)) serial.setOmitXMLDeclaration("true".equals(value));
-                        if ("undeclare-prefixes".equals(name)) serial.setUndeclarePrefixes("true".equals(value));
-                        if ("method".equals(name)) serial.setMethod(new QName("", value));
-
-                        // FIXME: if ("cdata-section-elements".equals(name)) serial.setCdataSectionElements();
-                        if ("doctype-public".equals(name)) serial.setDoctypePublic(value);
-                        if ("doctype-system".equals(name)) serial.setDoctypeSystem(value);
-                        if ("encoding".equals(name)) serial.setEncoding(value);
-                        if ("media-type".equals(name)) serial.setMediaType(value);
-                        if ("normalization-form".equals(name)) serial.setNormalizationForm(value);
-                        if ("standalone".equals(name)) serial.setStandalone(value);
-                        if ("version".equals(name)) serial.setVersion(value);
-                    }
-                }
-
-                // ndw wonders if there's a better way...
-                WritableDocument wd;
-                if (ouputResource != null) {
-                    URI furi = new File(ouputResource).toURI();
-                    String filename = furi.getPath();
-                    FileOutputStream outfile = new FileOutputStream(filename);
-                    wd = new WritableDocument(runtime, filename, serial, outfile);
-                } else {
-                    wd = new WritableDocument(runtime, ouputResource, serial);
-                }
-
-                ReadablePipe rpipe = pipeline.readFrom(port);
-                while (rpipe.moreDocuments()) {
-                    wd.write(rpipe.read());
-                }
-
-                if (ouputResource != null) {
-                    wd.close();
-                }
-            }
-        } catch (Exception err) {
-            handleError("Pipeline failed: " + err.toString());
+            new Main().run(userArgs, userArgs.createConfiguration());
+        } catch (Exception e) {
+            handleError(e);
         }
     }
 
@@ -1202,36 +1013,6 @@ public class CalabashTask extends MatchingTask {
             }
             return new String[] { xmlFile + targetExtension };
         }
-    }
-
-    /**
-     * Makes a QName using the bindings defined on the task.
-     *
-     * @param name possibly-prefixed name
-     * @return QName
-     */
-    private QName makeQName(String name) {
-        QName qname;
-
-        if (name == null) {
-            qname = new QName("");
-        } else if (name.indexOf("{") == 0) {
-            qname = QName.fromClarkName(name);
-        } else {
-            int cpos = name.indexOf(":");
-            if (cpos > 0) {
-                String prefix = name.substring(0, cpos);
-                if (!bindings.containsKey(prefix)) {
-                    handleError("Unbound prefix \"" + prefix + "\" in: " + name);
-                }
-                String uri = bindings.get(prefix);
-                qname = new QName(prefix, uri, name.substring(cpos + 1));
-            } else {
-                qname = new QName("", name);
-            }
-        }
-
-        return qname;
     }
 
     /**
