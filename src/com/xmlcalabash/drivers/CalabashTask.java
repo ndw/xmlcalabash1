@@ -46,6 +46,7 @@ import org.apache.tools.ant.types.resources.Union;
 import org.apache.tools.ant.util.FileNameMapper;
 
 import static com.xmlcalabash.util.Input.Type.XML;
+import static java.lang.Long.MAX_VALUE;
 
 /**
  * Ant task to run Calabash.
@@ -907,13 +908,15 @@ public class CalabashTask extends MatchingTask {
                          boolean force) throws BuildException {
 
         long pipelineLastModified = pipelineResource.getLastModified();
+        pipelineLastModified = (pipelineLastModified == 0) ? MAX_VALUE : pipelineLastModified;
         Collection<Long> inputsLastModified = new Vector<Long>();
         for (String port : inputResources.keySet()) {
             for (Resource resource : inputResources.get(port).listResources()) {
-                inputsLastModified.add(resource.getLastModified());
+                long lastModified = resource.getLastModified();
+                inputsLastModified.add((lastModified == 0) ? MAX_VALUE : lastModified);
             }
         }
-        long newestInputLastModified = inputsLastModified.isEmpty() ? 0 : Collections.max(inputsLastModified);
+        long newestInputLastModified = inputsLastModified.isEmpty() ? MAX_VALUE : Collections.max(inputsLastModified);
 
         Collection<Long> outputsLastModified = new Vector<Long>();
         for (String port : outputResources.keySet()) {
