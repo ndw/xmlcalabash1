@@ -227,16 +227,17 @@ public class CalabashTask extends MatchingTask {
             port = inPort;
         }
 
-        if (inputMapper != null && resources.size() != 0) {
-            handleError("Both mapper and fileset on input port: " + port);
-            return;
-        }
-
         if (inputMapper != null) {
+            if (resources.size() != 0) {
+                handleError("Both mapper and fileset on input port: " + port);
+                return;
+            }
+
             if (port.equals(inPort)) {
                 handleError("Cannot use mapper on main input port: " + port);
                 return;
             }
+
             if (inputResources.containsKey(port)) {
                 handleError("Mapper used on input port that already has resources: " + port);
                 return;
@@ -374,7 +375,7 @@ public class CalabashTask extends MatchingTask {
             if (!outputResources.containsKey(port)) {
                 outputResources.put(port, new Union());
             }
-            outputResources.get(port).add(o.getResources());
+            outputResources.get(port).add(resources);
         }
     }
 
@@ -569,11 +570,11 @@ public class CalabashTask extends MatchingTask {
      * Set whether xpointer attribute on an XInclude element can be used when parse="text";
      * optional, default is false.
      *
-     * @param xpointerOnText true if enable XPointer on text
+     * @param xPointerOnText true if enable XPointer on text
      */
-    public void setXPointerOnText(boolean xpointerOnText) {
+    public void setXPointerOnText(boolean xPointerOnText) {
         try {
-            userArgs.setAllowXPointerOnText(xpointerOnText);
+            userArgs.setAllowXPointerOnText(xPointerOnText);
         } catch (Exception e) {
             handleError(e);
         }
@@ -756,11 +757,7 @@ public class CalabashTask extends MatchingTask {
                         }
                     }
                 }
-                process(useInputResources,
-                        useOutputResources,
-                        pipelineResource,
-                        force);
-                //return;
+                process(useInputResources, useOutputResources);
             } else { // Using implicit and/or explicit filesets
                 if (useImplicitFileset) {
                     DirectoryScanner scanner = getDirectoryScanner(baseDir);
@@ -859,7 +856,7 @@ public class CalabashTask extends MatchingTask {
                             useOutputResources.put(port, outputResources);
                         }
                     }
-                    process(useInputResources, useOutputResources, pipelineResource, force);
+                    process(useInputResources, useOutputResources);
                 }
             }
         } finally {
@@ -899,38 +896,33 @@ public class CalabashTask extends MatchingTask {
      *
      * @param inputResources   the map of input ports to resources
      * @param outputResources  the map of output ports to resources
-     * @param pipelineResource the pipeline to use.
      * @throws BuildException if the processing fails.
      */
-    private void process(Map<String, Union> inputResources,
-                         Map<String, Union> outputResources,
-                         Resource pipelineResource,
-                         boolean force) throws BuildException {
-
-        long pipelineLastModified = pipelineResource.getLastModified();
-        pipelineLastModified = (pipelineLastModified == 0) ? MAX_VALUE : pipelineLastModified;
-        Collection<Long> inputsLastModified = new Vector<Long>();
-        for (String port : inputResources.keySet()) {
-            for (Resource resource : inputResources.get(port).listResources()) {
-                long lastModified = resource.getLastModified();
-                inputsLastModified.add((lastModified == 0) ? MAX_VALUE : lastModified);
-            }
-        }
-        long newestInputLastModified = inputsLastModified.isEmpty() ? MAX_VALUE : Collections.max(inputsLastModified);
-
-        Collection<Long> outputsLastModified = new Vector<Long>();
-        for (String port : outputResources.keySet()) {
-            for (Resource resource : outputResources.get(port).listResources()) {
-                outputsLastModified.add(resource.getLastModified());
-            }
-        }
-        long oldestOutputLastModified = outputsLastModified.isEmpty() ? 0 : Collections.min(outputsLastModified);
-
-        log("Newest input time: " + newestInputLastModified, Project.MSG_DEBUG);
-        log("Oldest output time: " + oldestOutputLastModified, Project.MSG_DEBUG);
-        log("Pipeline file " + pipelineResource + " time: " + pipelineLastModified, Project.MSG_DEBUG);
-
+    private void process(Map<String, Union> inputResources, Map<String, Union> outputResources) throws BuildException {
         if (!force) {
+            long pipelineLastModified = pipelineResource.getLastModified();
+            pipelineLastModified = (pipelineLastModified == 0) ? MAX_VALUE : pipelineLastModified;
+            Collection<Long> inputsLastModified = new Vector<Long>();
+            for (String port : inputResources.keySet()) {
+                for (Resource resource : inputResources.get(port).listResources()) {
+                    long lastModified = resource.getLastModified();
+                    inputsLastModified.add((lastModified == 0) ? MAX_VALUE : lastModified);
+                }
+            }
+            long newestInputLastModified = inputsLastModified.isEmpty() ? MAX_VALUE : Collections.max(inputsLastModified);
+
+            Collection<Long> outputsLastModified = new Vector<Long>();
+            for (String port : outputResources.keySet()) {
+                for (Resource resource : outputResources.get(port).listResources()) {
+                    outputsLastModified.add(resource.getLastModified());
+                }
+            }
+            long oldestOutputLastModified = outputsLastModified.isEmpty() ? 0 : Collections.min(outputsLastModified);
+
+            log("Newest input time: " + newestInputLastModified, Project.MSG_DEBUG);
+            log("Oldest output time: " + oldestOutputLastModified, Project.MSG_DEBUG);
+            log("Pipeline file " + pipelineResource + " time: " + pipelineLastModified, Project.MSG_DEBUG);
+
             if (newestInputLastModified <= oldestOutputLastModified &&
                 pipelineLastModified <= oldestOutputLastModified) {
                 log("Skipping because all outputs are newer than inputs and newer than pipeline", Project.MSG_DEBUG);
@@ -1016,9 +1008,61 @@ public class CalabashTask extends MatchingTask {
     }
 
     /**
-     * The Port inner class used to represent input and output ports.
+     * The {@code Useable} inner class used to represent something which usage
+     * can be controlled by {@code if} and {@code unless} properties.
      */
-    public static class Port {
+    private static class Useable {
+        private Project project;
+        private Object ifCond;
+        private Object unlessCond;
+
+        /**
+         * Set the current project
+         *
+         * @param project the current project
+         */
+        public void setProject(Project project) {
+            this.project = project;
+        }
+
+        /**
+         * Set whether this {@code Useable} should be used. It will be used if
+         * the expression evaluates to {@code true} or the name of a property
+         * which has been set, otherwise it won't.
+         *
+         * @param ifCond evaluated expression
+         */
+        public void setIf(Object ifCond) {
+            this.ifCond = ifCond;
+        }
+
+        /**
+         * Set whether this {@code Useable} should NOT be used. It will not be
+         * used if the expression evaluates to {@code true} or the name of a
+         * property which has been set, otherwise it will be used.
+         *
+         * @param unlessCond evaluated expression
+         */
+        public void setUnless(Object unlessCond) {
+            this.unlessCond = unlessCond;
+        }
+
+        /**
+         * Ensures that the {@code Useable} passes the conditions placed
+         * on it with {@code if} and {@code unless} properties.
+         *
+         * @return {@code true} if the task passes the {@code if} and {@code unless} parameters
+         */
+        public boolean shouldUse() {
+            PropertyHelper ph = PropertyHelper.getPropertyHelper(project);
+            return ph.testIfCondition(ifCond) && ph.testUnlessCondition(unlessCond);
+        }
+    }
+
+    /**
+     * The {@code Port} inner class used to represent input or output on a port.
+     */
+    public static class Port extends Useable {
         /**
          * The input port
          */
@@ -1033,19 +1077,6 @@ public class CalabashTask extends MatchingTask {
          * Mapper to inPort files.
          */
         private FileNameMapper mapper = null;
-
-        private Object ifCond;
-        private Object unlessCond;
-        private Project project;
-
-        /**
-         * Set the current project
-         *
-         * @param project the current project
-         */
-        public void setProject(Project project) {
-            this.project = project;
-        }
 
         /**
          * Set the input port.
@@ -1115,66 +1146,10 @@ public class CalabashTask extends MatchingTask {
         public FileNameMapper getMapper() {
             return mapper;
         }
-
-        /**
-         * Set whether this input should be used. It will be used if
-         * the expression evaluates to true or the name of a property
-         * which has been set, otherwise it won't.
-         *
-         * @param ifCond evaluated expression
-         */
-        public void setIf(Object ifCond) {
-            this.ifCond = ifCond;
-        }
-
-        /**
-         * Set whether this input should be used. It will be used if
-         * the expression evaluates to true or the name of a property
-         * which has been set, otherwise it won't.
-         *
-         * @param ifProperty evaluated expression
-         */
-        public void setIf(String ifProperty) {
-            setIf((Object) ifProperty);
-        }
-
-        /**
-         * Set whether this input should NOT be used. It will not be
-         * used if the expression evaluates to true or the name of a
-         * property which has been set, otherwise it will be used.
-         *
-         * @param unlessCond evaluated expression
-         */
-        public void setUnless(Object unlessCond) {
-            this.unlessCond = unlessCond;
-        }
-
-        /**
-         * Set whether this input should NOT be used. It will not be
-         * used if the expression evaluates to true or the name of a
-         * property which has been set, otherwise it will be used.
-         *
-         * @param unlessProperty evaluated expression
-         */
-        public void setUnless(String unlessProperty) {
-            setUnless((Object) unlessProperty);
-        }
-
-        /**
-         * Ensures that the input passes the conditions placed
-         * on it with <code>if</code> and <code>unless</code> properties.
-         *
-         * @return true if the task passes the "if" and "unless" parameters
-         */
-        public boolean shouldUse() {
-            PropertyHelper ph = PropertyHelper.getPropertyHelper(project);
-            return ph.testIfCondition(ifCond)
-                   && ph.testUnlessCondition(unlessCond);
-        }
     } // Port
 
     /**
-     * The Namespace inner class represents a namespace binding.
+     * The {@code Namespace} inner class represents a namespace binding.
      */
     public static class Namespace {
         /**
@@ -1224,30 +1199,18 @@ public class CalabashTask extends MatchingTask {
     } // Namespace
 
     /**
-     * The Option inner class represents a pipeline option.
+     * The {@code Option} inner class represents a pipeline option.
      */
-    public static class Option {
+    public static class Option extends Useable {
         /**
          * The name
          */
         private String name = null;
+
         /**
          * The parameter value
          */
         private String value = null;
-
-        private Object ifCond;
-        private Object unlessCond;
-        private Project project;
-
-        /**
-         * Set the current project
-         *
-         * @param project the current project
-         */
-        public void setProject(Project project) {
-            this.project = project;
-        }
 
         /**
          * Set the name.
@@ -1284,66 +1247,10 @@ public class CalabashTask extends MatchingTask {
         public String getValue() {
             return value;
         }
-
-        /**
-         * Set whether this option should be used. It will be used if
-         * the expression evaluates to true or the name of a property
-         * which has been set, otherwise it won't.
-         *
-         * @param ifCond evaluated expression
-         */
-        public void setIf(Object ifCond) {
-            this.ifCond = ifCond;
-        }
-
-        /**
-         * Set whether this option should be used. It will be used if
-         * the expression evaluates to true or the name of a property
-         * which has been set, otherwise it won't.
-         *
-         * @param ifProperty evaluated expression
-         */
-        public void setIf(String ifProperty) {
-            setIf((Object) ifProperty);
-        }
-
-        /**
-         * Set whether this option should NOT be used. It will not be
-         * used if the expression evaluates to true or the name of a
-         * property which has been set, otherwise it will be used.
-         *
-         * @param unlessCond evaluated expression
-         */
-        public void setUnless(Object unlessCond) {
-            this.unlessCond = unlessCond;
-        }
-
-        /**
-         * Set whether this option should NOT be used. It will not be
-         * used if the expression evaluates to true or the name of a
-         * property which has been set, otherwise it will be used.
-         *
-         * @param unlessProperty evaluated expression
-         */
-        public void setUnless(String unlessProperty) {
-            setUnless((Object) unlessProperty);
-        }
-
-        /**
-         * Ensures that the option passes the conditions placed
-         * on it with <code>if</code> and <code>unless</code> properties.
-         *
-         * @return true if the task passes the "if" and "unless" parameters
-         */
-        public boolean shouldUse() {
-            PropertyHelper ph = PropertyHelper.getPropertyHelper(project);
-            return ph.testIfCondition(ifCond)
-                   && ph.testUnlessCondition(unlessCond);
-        }
     } // Option
 
     /**
-     * The Parameter inner class represents a pipeline parameter,
+     * The {@code Parameter} inner class represents a pipeline parameter,
      * which looks a lot like an option sent to a parameter port (or ports).
      */
     public static class Parameter extends Option {
