@@ -23,7 +23,6 @@ import java.io.PrintStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
@@ -69,6 +68,8 @@ public class CalabashTask extends MatchingTask {
      * Fields vaguely follow the sequence input, pipeline, output,
      * then the rest.
      */
+
+    private UserArgs userArgs = new UserArgs();
 
     /**
      * Input ports and the resources associated with each.
@@ -176,53 +177,6 @@ public class CalabashTask extends MatchingTask {
     private CommandlineJava.SysProperties sysProperties =
             new CommandlineJava.SysProperties();
 
-    /**
-     * Namespace prefix--URI bindings
-     */
-    private Hashtable<String, String> bindings =
-            new Hashtable<String, String>();
-
-    /**
-     * The <option>s, ready for further processing
-     */
-    private Vector<Option> options = new Vector<Option>();
-
-    /**
-     * The <param>s, ready for further processing
-     */
-    private Vector<Parameter> parameters = new Vector<Parameter>();
-
-    /**
-     * whether to enable debug output
-     */
-    private boolean debug = false;
-
-    /**
-     * whether to enable general values.  Description is about 'general values', but XProcConfiguration field is
-     * 'extensionValues'.
-     */
-    private boolean extensionValues = false;
-
-    /**
-     * whether the xpointer attribute on an XInclude element can be used when parse="text"
-     */
-    private boolean allowXPointerOnText = false;
-
-    /**
-     * whether to use XSLT 1.0 when ???
-     */
-    private boolean useXslt10 = false;
-
-    /**
-     * whether to automatically translate between JSON and XML
-     */
-    private boolean transparentJSON = false;
-
-    /**
-     * flavor of JSON to use. As attribute.
-     */
-    String jsonFlavor = null;
-
     /* End of fields to reset at end of execute(). */
 
     /**
@@ -320,11 +274,12 @@ public class CalabashTask extends MatchingTask {
      * @param pipeline pipeline location
      */
     public void setPipeline(Resource pipeline) {
-        if (pipelineResource != null) {
-            handleError("Only one pipeline attribute or nested element can be specified.");
+        try {
+            userArgs.setPipeline(pipeline.getInputStream(), pipeline.toString());
+            this.pipelineResource = pipeline;
+        } catch (Exception e) {
+            handleError(e);
         }
-
-        this.pipelineResource = pipeline;
     }
 
     /**
@@ -537,12 +492,11 @@ public class CalabashTask extends MatchingTask {
             return;
         }
 
-        if (bindings.containsKey(n.getPrefix())) {
-            handleError("Duplicated <namespace> prefix: " + n.getPrefix());
-            return;
+        try {
+            userArgs.addBinding(n.getPrefix(), n.getURI());
+        } catch (Exception e) {
+            handleError(e);
         }
-
-        bindings.put(n.getPrefix(), n.getURI());
     }
 
     /**
@@ -556,7 +510,11 @@ public class CalabashTask extends MatchingTask {
             return;
         }
 
-        options.add(o);
+        try {
+            userArgs.addOption(o.getName(), o.getValue());
+        } catch (Exception e) {
+            handleError(e);
+        }
     }
 
     /**
@@ -570,7 +528,11 @@ public class CalabashTask extends MatchingTask {
             return;
         }
 
-        parameters.add(p);
+        try {
+            userArgs.addParam(p.getPort(), p.getName(), p.getValue());
+        } catch (Exception e) {
+            handleError(e);
+        }
     }
 
     /**
@@ -580,7 +542,11 @@ public class CalabashTask extends MatchingTask {
      * @param debug true if enable debug output
      */
     public void setDebug(boolean debug) {
-        this.debug = debug;
+        try {
+            userArgs.setDebug(debug);
+        } catch (Exception e) {
+            handleError(e);
+        }
     }
 
     /**
@@ -591,7 +557,11 @@ public class CalabashTask extends MatchingTask {
      * @param generalValues true if enable general values
      */
     public void setGeneralValues(boolean generalValues) {
-        this.extensionValues = generalValues;
+        try {
+            userArgs.setExtensionValues(generalValues);
+        } catch (Exception e) {
+            handleError(e);
+        }
     }
 
     /**
@@ -601,7 +571,11 @@ public class CalabashTask extends MatchingTask {
      * @param xpointerOnText true if enable XPointer on text
      */
     public void setXPointerOnText(boolean xpointerOnText) {
-        this.allowXPointerOnText = xpointerOnText;
+        try {
+            userArgs.setAllowXPointerOnText(xpointerOnText);
+        } catch (Exception e) {
+            handleError(e);
+        }
     }
 
     /**
@@ -611,7 +585,11 @@ public class CalabashTask extends MatchingTask {
      * @param useXslt10 true if enable XSLT 1.0 support
      */
     public void setUseXslt10(boolean useXslt10) {
-        this.useXslt10 = useXslt10;
+        try {
+            userArgs.setUseXslt10(useXslt10);
+        } catch (Exception e) {
+            handleError(e);
+        }
     }
 
     /**
@@ -621,7 +599,11 @@ public class CalabashTask extends MatchingTask {
      * @param transparentJSON true if enable translation
      */
     public void setTransparentJSON(boolean transparentJSON) {
-        this.transparentJSON = transparentJSON;
+        try {
+            userArgs.setTransparentJSON(transparentJSON);
+        } catch (Exception e) {
+            handleError(e);
+        }
     }
 
     /**
@@ -630,7 +612,11 @@ public class CalabashTask extends MatchingTask {
      * @param jsonFlavor the flavor of JSON/XML transformation to use
      */
     public void setJSONFlavor(String jsonFlavor) {
-        this.jsonFlavor = jsonFlavor;
+        try {
+            userArgs.setJsonFlavor(jsonFlavor);
+        } catch (Exception e) {
+            handleError(e);
+        }
     }
 
     /**
@@ -878,6 +864,7 @@ public class CalabashTask extends MatchingTask {
         } finally {
             // Same instance is reused when Ant runs this task
             // again, so reset everything.
+            userArgs = new UserArgs();
             inputResources.clear();
             inputMappers.clear();
             baseDir = null;
@@ -903,15 +890,6 @@ public class CalabashTask extends MatchingTask {
                 // No way to clear CommandlineJava.SysProperties
                 sysProperties = new CommandlineJava.SysProperties();
             }
-            bindings.clear();
-            options.clear();
-            parameters.clear();
-            debug = false;
-            extensionValues = false;
-            allowXPointerOnText = false;
-            useXslt10 = false;
-            transparentJSON = false;
-            jsonFlavor = null;
         }
     }
 
@@ -958,9 +936,6 @@ public class CalabashTask extends MatchingTask {
         }
 
         try {
-            UserArgs userArgs = new UserArgs();
-            userArgs.setDebug(debug);
-            userArgs.setPipeline(pipelineResource.getInputStream(), pipelineResource.toString());
             for (String port : outputResources.keySet()) {
                 Union resources = outputResources.get(port);
                 for (Iterator iterator = resources.iterator(); iterator.hasNext(); ) {
@@ -968,27 +943,12 @@ public class CalabashTask extends MatchingTask {
                     userArgs.addOutput(port, resource.getOutputStream());
                 }
             }
-            for (String prefix : bindings.keySet()) {
-                String uri = bindings.get(prefix);
-                userArgs.addBinding(prefix, uri);
-            }
             for (String port : inputResources.keySet()) {
                 Union inputResource = inputResources.get(port);
                 for (Resource resource : inputResource.listResources()) {
                     userArgs.addInput(port, resource.getInputStream(), resource.toString(), XML);
                 }
             }
-            for (Parameter parameter : parameters) {
-                userArgs.addParam(parameter.getPort(), parameter.getName(), parameter.getValue());
-            }
-            for (Option option : options) {
-                userArgs.addOption(option.getName(), option.getValue());
-            }
-            userArgs.setExtensionValues(extensionValues);
-            userArgs.setAllowXPointerOnText(allowXPointerOnText);
-            userArgs.setUseXslt10(useXslt10);
-            userArgs.setTransparentJSON(transparentJSON);
-            userArgs.setJsonFlavor(jsonFlavor);
 
             new Main().run(userArgs, userArgs.createConfiguration());
         } catch (Exception e) {

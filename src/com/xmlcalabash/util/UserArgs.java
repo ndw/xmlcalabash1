@@ -147,14 +147,20 @@ public class UserArgs {
         return pipeline;
     }
 
-    public void setPipeline(String uri) {
+    private void setPipeline(Input pipeline) {
         needsCheck = true;
-        this.pipeline = new Input(uri);
+        if ((this.pipeline != null) && (pipeline != null)) {
+            throw new XProcException("Multiple pipelines are not supported.");
+        }
+        this.pipeline = pipeline;
+    }
+
+    public void setPipeline(String uri) {
+        setPipeline(new Input(uri));
     }
 
     public void setPipeline(InputStream inputStream, String uri) {
-        needsCheck = true;
-        this.pipeline = new Input(inputStream, uri);
+        setPipeline(new Input(inputStream, uri));
     }
 
     public void addLibrary(String libraryURI) {
