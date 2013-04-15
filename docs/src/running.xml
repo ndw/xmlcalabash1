@@ -162,25 +162,25 @@ Parser</link> requires <filename>htmlparser-1.3.1.jar</filename>.</para>
 <para>For example:</para>
 
 <screen><prompt>$</prompt> <userinput>cd calabash-<replaceable>version</replaceable></userinput>
-<prompt>$</prompt> <userinput>java com.xmlcalabash.drivers.Main xpl/pipe.xpl</userinput>
+<prompt>$</prompt> <userinput>java -jar calabash.jar xpl/pipe.xpl</userinput>
 <computeroutput>&lt;doc xmlns:p="http://www.w3.org/ns/xproc"&gt;
 Congratulations! You've run your first pipeline!
 &lt;/doc&gt;</computeroutput></screen>
 
 <para>You can use
-<option>-i<replaceable>port</replaceable>=<replaceable>uri</replaceable></option>
+<option>-i <replaceable>port</replaceable>=<replaceable>uri</replaceable></option>
 to change the inputs and
-<option>-o<replaceable>port</replaceable>=<replaceable>file</replaceable></option>
+<option>-o <replaceable>port</replaceable>=<replaceable>file</replaceable></option>
 to change the output location.</para>
 
 <para>For example:</para>
 
-<screen><prompt>$</prompt> <userinput>java com.xmlcalabash.drivers.Main -isource=xpl/pipe.xpl -oresult=/tmp/out.xml xpl/pipe.xpl</userinput></screen>
+<screen><prompt>$</prompt> <userinput>java -jar calabash.jar -i source=xpl/pipe.xpl -o result=/tmp/out.xml xpl/pipe.xpl</userinput></screen>
 
 <para>That will run <filename>xpl/pipe.xpl</filename> using <filename>xpl/pipe.xpl</filename>
 as the input and writing the result to <filename>/tmp/out.xml</filename>.</para>
 
-<para>If you run java com.xmlcalabash.drivers.Main with no options, it will
+<para>If you run java -jar calabash.jar with no options, it will
 print a short usage summary.</para>
 
 <para>Throughout this book, we assume that the command <replaceable>calabash</replaceable>
@@ -194,14 +194,56 @@ will run Java with the correct class path and other arguments.</para>
 
 <cmdsynopsis>
   <command><replaceable>calabash</replaceable></command>
-  <arg>--saxon-processor <replaceable>processortype</replaceable></arg>
-  <arg>--saxon-configuration <replaceable>filename</replaceable></arg>
-  <arg>--schema-aware</arg>
-  <arg>--debug</arg>
-  <arg>--safe-mode</arg>
-  <arg>--config <replaceable>configuri</replaceable></arg>
-  <arg>--log-style=
-    <group choice="plain">
+  <arg>
+    <group choice="req">
+      <arg choice="plain">-P</arg>
+      <arg choice="plain">--saxon-processor</arg>
+    </group>
+    <group choice="req">
+      <arg choice="plain">he</arg>
+      <arg choice="plain">pe</arg>
+      <arg choice="plain">ee</arg>
+    </group>
+  </arg>
+  <arg>--saxon-configuration <replaceable>file</replaceable></arg>
+  <arg>
+    <group choice="req">
+      <arg choice="plain">-a</arg>
+      <arg choice="plain">--schema-aware</arg>
+    </group>
+  </arg>
+  <arg>
+    <group choice="req">
+      <arg choice="plain">-D</arg>
+      <arg choice="plain">--debug</arg>
+    </group>
+  </arg>
+  <arg>
+    <group choice="req">
+      <arg choice="plain">-v</arg>
+      <arg choice="plain">--version</arg>
+    </group>
+  </arg>
+  <arg>--profile <replaceable>file</replaceable></arg>
+  <arg>
+    <group choice="req">
+      <arg choice="plain">-S</arg>
+      <arg choice="plain">--safe-mode</arg>
+    </group>
+  </arg>
+  <arg>
+    <group choice="req">
+      <arg choice="plain">-c</arg>
+      <arg choice="plain">--config</arg>
+    </group>
+    <replaceable>configfile</replaceable>
+  </arg>
+  <arg>
+    <group choice="req">
+      <arg choice="plain">-G</arg>
+      <arg choice="plain">--log-style</arg>
+    </group>
+    <group choice="req">
       <arg choice="plain">off</arg>
       <arg choice="plain">plain</arg>
       <arg choice="plain">wrapped</arg>
@@ -209,33 +251,131 @@ will run Java with the correct class path and other arguments.</para>
     </group>
   </arg>
   <sbr/>
-  <arg>--entity-resolver=<replaceable>classname</replaceable></arg>
-  <arg>--uri-resolver=<replaceable>classname</replaceable></arg>
-  <arg rep="repeat">--extension=<replaceable>extname</replaceable></arg>
-  <sbr/>
-  <arg rep="repeat">--binding <replaceable>prefix</replaceable>=<replaceable>uri</replaceable></arg>
-  <arg rep="repeat">--with-param <replaceable>name</replaceable>=<replaceable>value</replaceable></arg>
-  <sbr/>
-  <arg rep="repeat">--input <replaceable>portname</replaceable>=<replaceable>uri</replaceable></arg>
-  <arg rep="repeat">--data-input <replaceable>portname</replaceable>=<replaceable>uri</replaceable></arg>
-  <arg rep="repeat">--output <replaceable>portname</replaceable>=<replaceable>uri</replaceable></arg>
-  <sbr/>
-  <arg>--library=<replaceable>uri</replaceable></arg>
-  <group choice="plain">
-    <group choice="plain">
-      <arg choice="plain" rep="repeat">--step=<replaceable>steptype</replaceable></arg>
+  <arg>
+    <group choice="req">
+      <arg choice="plain">-E</arg>
+      <arg choice="plain">--entity-resolver</arg>
     </group>
-    <arg choice="plain"><replaceable>pipeline-uri</replaceable></arg>
-  </group>
+    <replaceable>className</replaceable>
+  </arg>
+  <arg>
+    <group choice="req">
+      <arg choice="plain">-U</arg>
+      <arg choice="plain">--uri-resolver</arg>
+    </group>
+    <replaceable>className</replaceable>
+  </arg>
+  <arg rep="repeat">
+    <group choice="req">
+      <arg choice="plain">-X</arg>
+      <arg choice="plain">--extension</arg>
+    </group>
+    <group choice="req">
+      <arg choice="plain">general-values</arg>
+      <arg choice="plain">xpointer-on-text</arg>
+      <arg choice="plain">
+        <group choice="req">
+          <arg choice="plain">use-xslt-1.0</arg>
+	  <arg choice="plain">use-xslt-10</arg>
+        </group>
+      </arg>
+      <arg choice="plain">transparent-json</arg>
+      <arg choice="plain">json-flavor=<replaceable>flavor</replaceable></arg>
+    </group>
+  </arg>
   <sbr/>
-  <arg rep="repeat"><replaceable>name</replaceable>=<replaceable>value</replaceable></arg>
+  <arg rep="repeat">
+    <group choice="req">
+      <arg choice="plain">-b</arg>
+      <arg choice="plain">--binding</arg>
+    </group>
+    <replaceable>prefix</replaceable>=<replaceable>uri</replaceable>
+  </arg>
+  <arg rep="repeat">
+    <group choice="req">
+      <arg choice="plain">-p</arg>
+      <arg choice="plain">--with-param</arg>
+    </group>
+    <arg choice="opt"><replaceable>port</replaceable>@</arg><replaceable>param</replaceable>=<replaceable>value</replaceable>
+  </arg>
+  <sbr/>
+  <arg rep="repeat">
+    <group choice="req">
+      <arg choice="plain">-i</arg>
+      <arg choice="plain">--input</arg>
+    </group>
+    <arg choice="opt"><replaceable>port</replaceable>=</arg><replaceable>uri</replaceable>
+  </arg>
+  <arg rep="repeat">
+    <group choice="req">
+      <arg choice="plain">-d</arg>
+      <arg choice="plain">--data-input</arg>
+    </group>
+    <arg choice="opt"><replaceable>port</replaceable>=</arg><replaceable>uri</replaceable>
+  </arg>
+  <arg rep="repeat">
+    <group choice="req">
+      <arg choice="plain">-o</arg>
+      <arg choice="plain">--output</arg>
+    </group>
+    <arg choice="opt"><replaceable>port</replaceable>=</arg><replaceable>uri</replaceable>
+  </arg>
+  <arg rep="repeat"><replaceable>option</replaceable>=<replaceable>value</replaceable></arg>
+  <sbr/>
+  <group choice="opt">
+    <arg choice="opt">
+      <arg rep="repeat">
+        <group choice="req">
+          <arg choice="plain">-l</arg>
+          <arg choice="plain">--library</arg>
+        </group>
+        <replaceable>library.xpl</replaceable>
+      </arg>
+      <arg choice="opt" rep="repeat">
+        <arg rep="repeat">
+          <group choice="req">
+            <arg choice="plain">-p</arg>
+            <arg choice="plain">--with-param</arg>
+          </group>
+          <arg choice="opt"><replaceable>port</replaceable>@</arg><replaceable>param</replaceable>=<replaceable>value</replaceable>
+        </arg>
+        <arg rep="repeat">
+          <group choice="req">
+            <arg choice="plain">-i</arg>
+            <arg choice="plain">--input</arg>
+          </group>
+          <arg choice="opt"><replaceable>port</replaceable>=</arg><replaceable>uri</replaceable>
+        </arg>
+        <arg rep="repeat">
+          <group choice="req">
+            <arg choice="plain">-d</arg>
+            <arg choice="plain">--data-input</arg>
+          </group>
+          <arg choice="opt"><replaceable>port</replaceable>=</arg><replaceable>uri</replaceable>
+        </arg>
+        <arg rep="repeat">
+          <group choice="req">
+            <arg choice="plain">-s</arg>
+            <arg choice="plain">--step</arg>
+          </group>
+          <replaceable>steptype</replaceable>
+        </arg>
+        <arg rep="repeat"><replaceable>option</replaceable>=<replaceable>value</replaceable></arg>
+      </arg>
+    </arg>
+    <arg choice="opt">
+      <arg choice="plain"><replaceable>pipeline-uri</replaceable></arg>
+      <arg rep="repeat"><replaceable>option</replaceable>=<replaceable>value</replaceable></arg>
+    </arg>
+  </group>
 </cmdsynopsis>
 
 <para>See <xref linkend="configuration"/> for a description of these arguments and what they
 mean.</para>
 
-<para>There are two different ways to select the pipeline to run: you can specify the URI of
-the pipeline document or you can specify one or more step types.</para>
+<para>There are three different ways to select the pipeline to run: you can specify the URI of
+the pipeline document on the commandline, you can specify one or more step types on the commandline,
+or you can specify the URI of the pipeline document in the configfile.</para>
 </section>
 
 <section xml:id="help">
