@@ -750,7 +750,7 @@ public class CalabashTask extends MatchingTask {
                             if (outputFileNames != null) {
                                 Union outputResources = new Union();
                                 for (String fileName : outputFileNames) {
-                                    outputResources.add(new FileResource(baseDir, fileName));
+                                    outputResources.add(new FileResource(destDir, fileName));
                                 }
                                 useOutputResources.put(port, outputResources);
                             }
@@ -851,7 +851,7 @@ public class CalabashTask extends MatchingTask {
                         if (outputFileNames != null) {
                             Union outputResources = new Union();
                             for (String fileName : outputFileNames) {
-                                outputResources.add(new FileResource(baseDir, fileName));
+                                outputResources.add(new FileResource(destDir, fileName));
                             }
                             useOutputResources.put(port, outputResources);
                         }
