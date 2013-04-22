@@ -716,6 +716,10 @@ public class UserArgs {
         }
 
         public void checkArgs() {
+            // Make this check here, to ensure it is done before makeQName
+            // is used. Otherwise it would have to be guaranteed that this
+            // check is done before calling this method.
+            //
             // Default the prefix "p" to the XProc namespace
             if (!bindings.containsKey("p")) {
                 bindings.put("p", NS_XPROC);
