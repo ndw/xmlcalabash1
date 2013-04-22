@@ -729,14 +729,22 @@ public class UserArgs {
 
             options.clear();
             for (Entry<String, String> plainOption : plainOptions.entrySet()) {
-                options.put(makeQName(plainOption.getKey()), plainOption.getValue());
+                QName name = makeQName(plainOption.getKey());
+                if (options.containsKey(name)) {
+                    throw new XProcException("Duplicate option name: '" + name + "'.");
+                }
+                options.put(name, plainOption.getValue());
             }
 
             params.clear();
             for (Entry<String, Map<String, String>> plainParam : plainParams.entrySet()) {
                 Map<QName, String> portParams = new HashMap<QName, String>();
                 for (Entry<String, String> portParam : plainParam.getValue().entrySet()) {
-                    portParams.put(makeQName(portParam.getKey()), portParam.getValue());
+                    QName name = makeQName(portParam.getKey());
+                    if (portParams.containsKey(name)) {
+                        throw new XProcException("Duplicate parameter name: '" + name + "'.");
+                    }
+                    portParams.put(name, portParam.getValue());
                 }
                 params.put(plainParam.getKey(), portParams);
             }
