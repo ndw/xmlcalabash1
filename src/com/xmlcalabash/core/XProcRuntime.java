@@ -933,11 +933,7 @@ public class XProcRuntime {
                 }
 
                 profileWriter = new TreeWriter(this);
-                try {
-                    profileWriter.startDocument(new URI("http://xmlcalabash.com/output/profile.xml"));
-                } catch (URISyntaxException use) {
-                    // nop;
-                }
+                profileWriter.startDocument(URI.create("http://xmlcalabash.com/output/profile.xml"));
             } catch (SaxonApiException sae) {
                 throw new XProcException(sae);
             } catch (FileNotFoundException fnfe) {
