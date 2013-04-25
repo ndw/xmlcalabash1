@@ -928,7 +928,9 @@ public class XProcRuntime {
 
                 serializer.setOutputStream(outstr);
                 S9apiUtils.serialize(this, result.getXdmNode(), serializer);
-                outstr.close();
+                if (!System.out.equals(outstr)) {
+                    outstr.close();
+                }
 
                 profileWriter = new TreeWriter(this);
                 try {
