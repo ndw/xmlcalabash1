@@ -218,6 +218,10 @@ access the local filesystem will result in a dynamic error.</para>
   <entry>Command line (short):</entry>
   <entry><literal>-c</literal> <replaceable>configuri</replaceable></entry>
 </row>
+<row>
+  <entry>Ant task:</entry>
+  <entry><tag class="emptytag">calabash <tag class="attribute">configFile</tag>="<tag class="attvalue"><replaceable>configuri</replaceable></tag>"</tag></entry>
+</row>
 </tbody>
 </tgroup>
 </informaltable>

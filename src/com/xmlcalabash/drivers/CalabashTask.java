@@ -687,6 +687,19 @@ public class CalabashTask extends MatchingTask {
     }
 
     /**
+     * Specify a particular configuration file to be loaded.
+     *
+     * @param configFile the path to a particular configuration file to be loaded
+     */
+    public void setConfigFile(String configFile) {
+        try {
+            userArgs.setConfigFile(configFile);
+        } catch (Exception e) {
+            handleError(e);
+        }
+    }
+
+    /**
      * Do the work.
      */
     public void execute() {
