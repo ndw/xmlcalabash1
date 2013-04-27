@@ -353,6 +353,11 @@ Calabash</citetitle> from Apache Ant using the
                                              <td>Whether schema-aware processing should be done</td>
                                              <td>No; default is <literal>false</literal></td>
                                     </tr>
+                                    <tr>
+                                             <td>safeMode</td>
+                                             <td>Whether "safe" execution should be done</td>
+                                             <td>No; default is <literal>false</literal></td>
+                                    </tr>
                            </tbody>
                   </informaltable>
 </section>

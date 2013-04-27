@@ -674,6 +674,19 @@ public class CalabashTask extends MatchingTask {
     }
 
     /**
+     * Specify whether "safe" execution should be done.
+     *
+     * @param safeMode whether "safe" execution should be done
+     */
+    public void setSafeMode(boolean safeMode) {
+        try {
+            userArgs.setSafeMode(safeMode);
+        } catch (Exception e) {
+            handleError(e);
+        }
+    }
+
+    /**
      * Do the work.
      */
     public void execute() {
