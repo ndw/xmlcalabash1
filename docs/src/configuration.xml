@@ -326,6 +326,10 @@ for all XML documents accessed.</para>
   <entry>XML configuration:</entry>
   <entry><tag class="starttag">cc:uri-resolver</tag><replaceable>classname</replaceable><tag class="endtag">cc:uri-resolver</tag></entry>
 </row>
+<row>
+  <entry>Ant task:</entry>
+  <entry><tag class="emptytag">calabash <tag class="attribute">uriResolver</tag>="<tag class="attvalue"><replaceable>classname</replaceable></tag>"</tag></entry>
+</row>
 </tbody>
 </tgroup>
 </informaltable>

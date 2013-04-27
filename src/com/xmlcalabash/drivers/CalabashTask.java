@@ -726,6 +726,19 @@ public class CalabashTask extends MatchingTask {
     }
 
     /**
+     * Specify a resolver class for URI resolution.
+     *
+     * @param uriResolver the resolver class for URI resolution
+     */
+    public void setURIResolver(Class uriResolver) {
+        try {
+            userArgs.setUriResolverClass(uriResolver.getName());
+        } catch (Exception e) {
+            handleError(e);
+        }
+    }
+
+    /**
      * Do the work.
      */
     public void execute() {

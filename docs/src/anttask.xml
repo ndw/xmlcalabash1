@@ -373,6 +373,11 @@ Calabash</citetitle> from Apache Ant using the
                                              <td>The resolver class for entity resolution</td>
                                              <td>No</td>
                                     </tr>
+                                    <tr>
+                                             <td>uriResolver</td>
+                                             <td>The resolver class for URI resolution</td>
+                                             <td>No</td>
+                                    </tr>
                            </tbody>
                   </informaltable>
 </section>
