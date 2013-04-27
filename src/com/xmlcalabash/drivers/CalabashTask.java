@@ -713,6 +713,19 @@ public class CalabashTask extends MatchingTask {
     }
 
     /**
+     * Specify a resolver class for entity resolution.
+     *
+     * @param entityResolver the resolver class for entity resolution
+     */
+    public void setEntityResolver(Class entityResolver) {
+        try {
+            userArgs.setEntityResolverClass(entityResolver.getName());
+        } catch (Exception e) {
+            handleError(e);
+        }
+    }
+
+    /**
      * Do the work.
      */
     public void execute() {

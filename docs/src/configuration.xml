@@ -290,6 +290,10 @@ elements specify an alternate style with
   <entry>XML configuration:</entry>
   <entry><tag class="starttag">cc:entity-resolver</tag><replaceable>classname</replaceable><tag class="endtag">cc:entity-resolver</tag></entry>
 </row>
+<row>
+  <entry>Ant task:</entry>
+  <entry><tag class="emptytag">calabash <tag class="attribute">entityResolver</tag>="<tag class="attvalue"><replaceable>classname</replaceable></tag>"</tag></entry>
+</row>
 </tbody>
 </tgroup>
 </informaltable>
