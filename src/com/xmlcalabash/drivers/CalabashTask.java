@@ -661,6 +661,19 @@ public class CalabashTask extends MatchingTask {
     }
 
     /**
+     * Specify whether schema-aware processing should be done.
+     *
+     * @param schemaAware whether schema-aware processing should be done
+     */
+    public void setSchemaAware(boolean schemaAware) {
+        try {
+            userArgs.setSchemaAware(schemaAware);
+        } catch (Exception e) {
+            handleError(e);
+        }
+    }
+
+    /**
      * Do the work.
      */
     public void execute() {

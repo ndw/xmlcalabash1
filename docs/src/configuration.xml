@@ -122,6 +122,10 @@ if you are using “home edition”.</para>
   <entry>XML configuration:</entry>
   <entry><tag class="starttag">cc:schema-aware</tag><replaceable>boolean</replaceable><tag class="endtag">cc:schema-aware</tag></entry>
 </row>
+<row>
+  <entry>Ant task:</entry>
+  <entry><tag class="emptytag">calabash <tag class="attribute">schemaAware</tag>="<tag class="attvalue"><replaceable>Ant boolean</replaceable></tag>"</tag></entry>
+</row>
 </tbody>
 </tgroup>
 </informaltable>
