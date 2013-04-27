@@ -338,6 +338,11 @@ Calabash</citetitle> from Apache Ant using the
                                              <td>The path to the file where profile information should be written to, or "<literal>-</literal>" for stdout</td>
                                              <td>No</td>
                                     </tr>
+                                    <tr>
+                                             <td>saxonProcessor</td>
+                                             <td>The edition of Saxon that should be used, must be "<literal>he</literal>" (default), "<literal>pe</literal>" or "<literal>ee</literal>"</td>
+                                             <td>No; default is "<literal>he</literal>"</td>
+                                    </tr>
                            </tbody>
                   </informaltable>
 </section>

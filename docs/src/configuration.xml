@@ -39,6 +39,10 @@ and “enterprise edition”. There are four ways to select the edition you wish
   <entry>XML configuration:</entry>
   <entry><tag class="starttag">cc:saxon-processor</tag><replaceable>edition</replaceable><tag class="endtag">cc:saxon-processor</tag></entry>
 </row>
+<row>
+  <entry>Ant task:</entry>
+  <entry><tag class="emptytag">calabash <tag class="attribute">saxonProcessor</tag>="<tag class="attvalue"><replaceable>edition</replaceable></tag>"</tag></entry>
+</row>
 </tbody>
 </tgroup>
 </informaltable>

@@ -635,6 +635,19 @@ public class CalabashTask extends MatchingTask {
     }
 
     /**
+     * Request a specific edition of Saxon. Must be {@code he} (default), {@code pe} or {@code ee}.
+     *
+     * @param saxonProcessor the edition of Saxon that should be used, must be {@code he} (default), {@code pe} or {@code ee}
+     */
+    public void setSaxonProcessor(String saxonProcessor) {
+        try {
+            userArgs.setSaxonProcessor(saxonProcessor);
+        } catch (Exception e) {
+            handleError(e);
+        }
+    }
+
+    /**
      * Do the work.
      */
     public void execute() {
