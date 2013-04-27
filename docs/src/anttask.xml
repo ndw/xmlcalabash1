@@ -363,6 +363,11 @@ Calabash</citetitle> from Apache Ant using the
                                              <td>The path to a particular configuration file to be loaded</td>
                                              <td>No</td>
                                     </tr>
+                                    <tr>
+                                             <td>logStyle</td>
+                                             <td>The default style for p:log output, must be "<literal>off</literal>", "<literal>plain</literal>", "<literal>wrapped</literal>" (default), or "<literal>directory</literal>"</td>
+                                             <td>No; default is "<literal>wrapped</literal>"</td>
+                                    </tr>
                            </tbody>
                   </informaltable>
 </section>

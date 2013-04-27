@@ -247,6 +247,10 @@ access the local filesystem will result in a dynamic error.</para>
 </row>
 <!-- why isn't there a system property for log-style? -->
 <!-- why isn't there an XML configuration for log-style? -->
+<row>
+  <entry>Ant task:</entry>
+  <entry><tag class="emptytag">calabash <tag class="attribute">logStyle</tag>="<tag class="attvalue"><replaceable>style</replaceable></tag>"</tag></entry>
+</row>
 </tbody>
 </tgroup>
 </informaltable>

@@ -700,6 +700,19 @@ public class CalabashTask extends MatchingTask {
     }
 
     /**
+     * Specify the default style for p:log output. Must be {@code off}, {@code plain}, {@code wrapped} (default), or {@code directory}.
+     *
+     * @param logStyle the default style for p:log output, must be {@code off}, {@code plain}, {@code wrapped} (default), or {@code directory}
+     */
+    public void setLogStyle(String logStyle) {
+        try {
+            userArgs.setLogStyle(logStyle);
+        } catch (Exception e) {
+            handleError(e);
+        }
+    }
+
+    /**
      * Do the work.
      */
     public void execute() {
