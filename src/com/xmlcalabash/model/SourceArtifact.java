@@ -47,13 +47,15 @@ public abstract class SourceArtifact {
     public XProcRuntime getXProc() {
         return runtime;
     }
-    
+
     public XdmNode getNode() {
         return node;
     }
 
     public String xplFile() {
         if (node == null) {
+            return "";
+        } else if (node.getDocumentURI() == null) {
             return "";
         } else {
             return node.getDocumentURI().toASCIIString();
