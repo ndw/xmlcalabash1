@@ -50,7 +50,7 @@ Calabash</citetitle> from Apache Ant using the
                            </itemizedlist></para>
                   <para>You can also specify options and parameters to be used by the
                            pipeline.</para>
-                  <section>
+                  <section xml:id="ant.input-and-output">
                            <title>Input and output files and filesets</title>
                            <para>In the simplest scenario, the <tag class="attribute">in</tag>
                                     attribute, if present, specifies the single input file and/or
@@ -406,7 +406,7 @@ Calabash</citetitle> from Apache Ant using the
                            </section>
 
                   </section>
-                  <section>
+                  <section xml:id="ant.pipeline">
                            <title>pipeline</title>
                            <para>Pipeline resource. Can be used instead of <tag class="attribute"
                                              >pipeline</tag> attribute.</para>
