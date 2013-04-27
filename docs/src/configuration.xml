@@ -702,6 +702,10 @@ a <tag>p:pipeline</tag>.</para>
   <entry>XML configuration:</entry>
   <entry><tag class="starttag">cc:profile</tag><replaceable>filename</replaceable><tag class="endtag">cc:profile</tag></entry>
 </row>
+<row>
+  <entry>Ant task:</entry>
+  <entry><tag class="emptytag">calabash <tag class="attribute">profileFile</tag>="<tag class="attvalue"><replaceable>filename</replaceable></tag>"</tag></entry>
+</row>
 </tbody>
 </tgroup>
 </informaltable>

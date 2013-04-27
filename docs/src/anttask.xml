@@ -333,6 +333,11 @@ Calabash</citetitle> from Apache Ant using the
                                              <td>Desired JSON flavor</td>
                                              <td>No</td>
                                     </tr>
+                                    <tr>
+                                             <td>profileFile</td>
+                                             <td>The path to the file where profile information should be written to, or "<literal>-</literal>" for stdout</td>
+                                             <td>No</td>
+                                    </tr>
                            </tbody>
                   </informaltable>
 </section>

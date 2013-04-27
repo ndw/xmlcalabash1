@@ -622,6 +622,19 @@ public class CalabashTask extends MatchingTask {
     }
 
     /**
+     * Set the path to the file where profile information should be written to, or {@code -} for stdout.
+     *
+     * @param profileFile the path to the file where profile information should be written to, or {@code -} for stdout
+     */
+    public void setProfileFile(String profileFile) {
+        try {
+            userArgs.setProfileFile(profileFile);
+        } catch (Exception e) {
+            handleError(e);
+        }
+    }
+
+    /**
      * Do the work.
      */
     public void execute() {
