@@ -84,6 +84,10 @@ There are three ways to specify the location of this file:
   <entry>XML configuration:</entry>
   <entry><tag class="starttag">cc:saxon-configuration</tag><replaceable>filename</replaceable><tag class="endtag">cc:saxon-configuration</tag></entry>
 </row>
+<row>
+  <entry>Ant task:</entry>
+  <entry><tag class="emptytag">calabash <tag class="attribute">saxonConfigFile</tag>="<tag class="attvalue"><replaceable>filename</replaceable></tag>"</tag></entry>
+</row>
 </tbody>
 </tgroup>
 </informaltable>

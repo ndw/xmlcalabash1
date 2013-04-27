@@ -648,6 +648,19 @@ public class CalabashTask extends MatchingTask {
     }
 
     /**
+     * Load the specified Saxon configuration file.
+     *
+     * @param saxonConfigFile the path to the Saxon configuration file to be loaded
+     */
+    public void setSaxonConfigFile(String saxonConfigFile) {
+        try {
+            userArgs.setSaxonConfigFile(saxonConfigFile);
+        } catch (Exception e) {
+            handleError(e);
+        }
+    }
+
+    /**
      * Do the work.
      */
     public void execute() {

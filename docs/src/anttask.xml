@@ -343,6 +343,11 @@ Calabash</citetitle> from Apache Ant using the
                                              <td>The edition of Saxon that should be used, must be "<literal>he</literal>" (default), "<literal>pe</literal>" or "<literal>ee</literal>"</td>
                                              <td>No; default is "<literal>he</literal>"</td>
                                     </tr>
+                                    <tr>
+                                             <td>saxonConfigFile</td>
+                                             <td>The path to the Saxon configuration file to be loaded</td>
+                                             <td>No</td>
+                                    </tr>
                            </tbody>
                   </informaltable>
 </section>
