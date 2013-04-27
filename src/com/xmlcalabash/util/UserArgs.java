@@ -365,6 +365,10 @@ public class UserArgs {
                 }
             }
 
+            if (schemaAware && (saxonProcessor != null) && !"ee".equals(saxonProcessor)) {
+                throw new XProcException("Schema-aware processing can only be used with saxon processor \"ee\".");
+            }
+
             for (StepArgs step : steps) {
                 step.checkArgs();
             }
