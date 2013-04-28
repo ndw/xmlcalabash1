@@ -509,7 +509,7 @@ write "<literal>*</literal>" as the port.</para>
 </row>
 <row>
   <entry>Ant task:</entry>
-  <entry>For detailed information on how to specify input and output files in the Ant task, see <xref linkend="ant.input-and-output"/></entry>
+  <entry>For detailed information on how to specify input and output files in the Ant task, see <xref linkend="ant.input-and-output"/> and <xref linkend="ant.input"/></entry>
 </row>
 </tbody>
 </tgroup>
@@ -542,6 +542,10 @@ left out and the input will be applied to the primary non-parameter input port.<
 <row>
   <entry>Command line (short):</entry>
   <entry><literal>-d</literal><replaceable>port</replaceable>=<replaceable>uri</replaceable></entry>
+</row>
+<row>
+  <entry>Ant task:</entry>
+  <entry>For detailed information on how to specify input and output files in the Ant task, see <xref linkend="ant.input-and-output"/> and <xref linkend="ant.input"/></entry>
 </row>
 </tbody>
 </tgroup>
@@ -579,7 +583,7 @@ left out and the input will be applied to the primary non-parameter input port.<
 </row>
 <row>
   <entry>Ant task:</entry>
-  <entry>For detailed information on how to specify input and output files in the Ant task, see <xref linkend="ant.input-and-output"/></entry>
+  <entry>For detailed information on how to specify input and output files in the Ant task, see <xref linkend="ant.input-and-output"/> and <xref linkend="ant.output"/></entry>
 </row>
 </tbody>
 </tgroup>

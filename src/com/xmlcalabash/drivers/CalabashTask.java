@@ -20,13 +20,16 @@ package com.xmlcalabash.drivers;
 
 import java.io.File;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
+import com.xmlcalabash.util.Input.Type;
 import com.xmlcalabash.util.UserArgs;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
@@ -47,6 +50,7 @@ import org.apache.tools.ant.util.FileNameMapper;
 
 import static com.xmlcalabash.util.Input.Type.XML;
 import static java.lang.Long.MAX_VALUE;
+import static java.util.Arrays.asList;
 
 /**
  * Ant task to run Calabash.
@@ -75,12 +79,12 @@ public class CalabashTask extends MatchingTask {
     /**
      * Input ports and the resources associated with each.
      */
-    private HashMap<String, Union> inputResources = new HashMap<String, Union>();
+    private Map<String, List<TypedResource>> inputResources = new HashMap<String, List<TypedResource>>();
 
     /**
      * Input ports and the mapper associated with each.
      */
-    private Map<String, FileNameMapper> inputMappers = new HashMap<String, FileNameMapper>();
+    private Map<String, TypedFileNameMapper> inputMappers = new HashMap<String, TypedFileNameMapper>();
 
     /**
      * Where to find the source XML file, default is the project's basedir
@@ -96,6 +100,11 @@ public class CalabashTask extends MatchingTask {
      * URI of the input XML. As attribute.
      */
     private Resource inResource = null;
+
+    /**
+     * Type of the input resource.
+     */
+    private Type inType = XML;
 
     /**
      * Whether the build should fail if the nested resource collection is empty.
@@ -209,11 +218,21 @@ public class CalabashTask extends MatchingTask {
     }
 
     /**
+     * Set the input type. optional, default is XML. This is used for the implicit and / or explicit fileset or the
+     * {@code in} attribute value.
+     *
+     * @param inType the input type
+     */
+    public void setInType(Type inType) {
+        this.inType = inType;
+    }
+
+    /**
      * Work with an instance of an <input> element already configured by Ant.
      *
      * @param i the configured input Port
      */
-    public void addConfiguredInput(Port i) {
+    public void addConfiguredInput(Input i) {
         if (!i.shouldUse()) {
             log("Skipping input '" + i.getPort() + "' as it is configured to be unused.", Project.MSG_DEBUG);
             return;
@@ -248,7 +267,7 @@ public class CalabashTask extends MatchingTask {
                 return;
             }
 
-            inputMappers.put(port, inputMapper);
+            inputMappers.put(port, new TypedFileNameMapper(inputMapper, i.getType()));
         } else {
             if (inputMappers.containsKey(port)) {
                 handleError("Resources used on input port that already has a mapper: " + port);
@@ -256,10 +275,12 @@ public class CalabashTask extends MatchingTask {
             }
 
             if (!inputResources.containsKey(port)) {
-                inputResources.put(port, new Union());
+                inputResources.put(port, new ArrayList<TypedResource>());
             }
 
-            inputResources.get(port).add(resources);
+            for (Resource resource : resources.listResources()) {
+                inputResources.get(port).add(new TypedResource(resource, i.getType()));
+            }
         }
     }
 
@@ -803,9 +824,10 @@ public class CalabashTask extends MatchingTask {
 
             // if we have an in file or out file then process them
             if (inResource != null) {
-                Port i = new Port();
+                Input i = new Input();
                 i.setPort(inPort);
                 i.add(inResource);
+                i.setType(inType);
                 addConfiguredInput(i);
             }
             // Since processing specified inputs, use outResource too
@@ -826,23 +848,23 @@ public class CalabashTask extends MatchingTask {
             // knows what they're doing even though there may be no
             // input or output ports.
             if (!useImplicitFileset && resources.size() == 0) {
-                HashMap<String, Union> useInputResources = new HashMap<String, Union>();
+                Map<String, List<TypedResource>> useInputResources = new HashMap<String, List<TypedResource>>();
                 // Any fixed resources on any input ports.
                 useInputResources.putAll(inputResources);
                 // Any mapped resources on non-inPort input ports.
                 for (String port : inputMappers.keySet()) {
-                    FileNameMapper inputMapper = inputMappers.get(port);
-                    for (Resource resource : inputResources.get(inPort).listResources()) {
-                        String[] inputFileNames = inputMapper.mapFileName(resource.getName());
+                    TypedFileNameMapper inputMapper = inputMappers.get(port);
+                    for (TypedResource typedResource : inputResources.get(inPort)) {
+                        String[] inputFileNames = inputMapper.mapFileName(typedResource.getResource().getName());
                         // Mapper may produce zero or more filenames,
                         // which may or may not be what was wanted but
                         // only the user will know that.
                         if (inputFileNames != null) {
-                            Union mappedResources = new Union();
+                            List<TypedResource> mappedResources = new ArrayList<TypedResource>();
                             for (String fileName : inputFileNames) {
                                 FileResource mappedResource = new FileResource(baseDir, fileName);
                                 if (mappedResource.isExists()) {
-                                    mappedResources.add(mappedResource);
+                                    mappedResources.add(new TypedResource(mappedResource, inputMapper.getType()));
                                 } else {
                                     log("Skipping non-exstent mapped resource: " + mappedResource.toString(), Project.MSG_DEBUG);
                                 }
@@ -855,12 +877,12 @@ public class CalabashTask extends MatchingTask {
                 useOutputResources.putAll(outputResources);
 
                 if (outputMappers.size() != 0) {
-                    for (Resource resource : inputResources.get(inPort).listResources()) {
+                    for (TypedResource typedResource : inputResources.get(inPort)) {
                         // Add any mapped resources on output ports.
                         for (String port : outputMappers.keySet()) {
                             FileNameMapper outputMapper = outputMappers.get(port);
 
-                            String[] outputFileNames = outputMapper.mapFileName(resource.getName());
+                            String[] outputFileNames = outputMapper.mapFileName(typedResource.getResource().getName());
                             // Mapper may produce zero or more filenames,
                             // which may or may not be what was wanted but
                             // only the user will know that.
@@ -917,24 +939,25 @@ public class CalabashTask extends MatchingTask {
                 // time.
                 for (Resource resource : resources.listResources()) {
                     log("Resource: " + resource.getName(), Project.MSG_DEBUG);
-                    HashMap<String, Union> useInputResources = new HashMap<String, Union>();
+                    Map<String, List<TypedResource>> useInputResources = new HashMap<String, List<TypedResource>>();
 
                     // Any fixed resources on other input ports.
                     useInputResources.putAll(inputResources);
                     // The resource.
-                    useInputResources.put(inPort, new Union(resource));
+                    useInputResources.put(inPort, asList(new TypedResource(resource, inType)));
                     // Any mapped resources on other input ports.
                     for (String port : inputMappers.keySet()) {
-                        FileNameMapper inputMapper = inputMappers.get(port);
+                        TypedFileNameMapper inputMapper = inputMappers.get(port);
 
                         String[] inputFileNames = inputMapper.mapFileName(resource.getName());
                         // Mapper may produce zero or more filenames,
                         // which may or may not be what was wanted but
                         // only the user will know that.
                         if (inputFileNames != null) {
-                            Union mappedResources = new Union();
+                            List<TypedResource> mappedResources = new ArrayList<TypedResource>();
                             for (String fileName : inputFileNames) {
-                                mappedResources.add(new FileResource(baseDir, fileName));
+                                FileResource mappedResource = new FileResource(baseDir, fileName);
+                                mappedResources.add(new TypedResource(mappedResource, inputMapper.getType()));
                             }
                             useInputResources.put(port, mappedResources);
                         }
@@ -985,6 +1008,7 @@ public class CalabashTask extends MatchingTask {
             baseDir = null;
             inPort = null;
             inResource = null;
+            inType = XML;
             failOnNoResources = true;
             pipelineResource = null;
             destDir = null;
@@ -1015,14 +1039,14 @@ public class CalabashTask extends MatchingTask {
      * @param outputResources  the map of output ports to resources
      * @throws BuildException if the processing fails.
      */
-    private void process(Map<String, Union> inputResources, Map<String, Union> outputResources) throws BuildException {
+    private void process(Map<String, List<TypedResource>> inputResources, Map<String, Union> outputResources) throws BuildException {
         if (!force) {
             long pipelineLastModified = pipelineResource.getLastModified();
             pipelineLastModified = (pipelineLastModified == 0) ? MAX_VALUE : pipelineLastModified;
             Collection<Long> inputsLastModified = new Vector<Long>();
             for (String port : inputResources.keySet()) {
-                for (Resource resource : inputResources.get(port).listResources()) {
-                    long lastModified = resource.getLastModified();
+                for (TypedResource typedResource : inputResources.get(port)) {
+                    long lastModified = typedResource.getResource().getLastModified();
                     inputsLastModified.add((lastModified == 0) ? MAX_VALUE : lastModified);
                 }
             }
@@ -1056,9 +1080,9 @@ public class CalabashTask extends MatchingTask {
                 }
             }
             for (String port : inputResources.keySet()) {
-                Union inputResource = inputResources.get(port);
-                for (Resource resource : inputResource.listResources()) {
-                    userArgs.addInput(port, resource.getInputStream(), resource.toString(), XML);
+                for (TypedResource typedResource : inputResources.get(port)) {
+                    Resource resource = typedResource.getResource();
+                    userArgs.addInput(port, resource.getInputStream(), resource.toString(), typedResource.getType());
                 }
             }
 
@@ -1177,7 +1201,7 @@ public class CalabashTask extends MatchingTask {
     }
 
     /**
-     * The {@code Port} inner class used to represent input or output on a port.
+     * The {@code Port} inner class used to represent output on a port.
      */
     public static class Port extends Useable {
         /**
@@ -1264,6 +1288,34 @@ public class CalabashTask extends MatchingTask {
             return mapper;
         }
     } // Port
+
+    /**
+     * The {@code Input} inner class used to represent input on a port.
+     */
+    public static class Input extends Port {
+        /**
+         * The input type
+         */
+        private Type type = XML;
+
+        /**
+         * Get the input type
+         *
+         * @return the input type
+         */
+        public Type getType() {
+            return type;
+        }
+
+        /**
+         * Set the input type
+         *
+         * @param type the input type
+         */
+        public void setType(Type type) {
+            this.type = type;
+        }
+    } // Input
 
     /**
      * The {@code Namespace} inner class represents a namespace binding.
@@ -1394,4 +1446,63 @@ public class CalabashTask extends MatchingTask {
             return port;
         }
     } // Parameter
+
+    private static class TypedResource {
+        private Resource resource = null;
+        private Type type = null;
+
+        private TypedResource(Resource resource, Type type) {
+            if (resource == null) {
+                throw new IllegalArgumentException("resource must not be null");
+            }
+            this.resource = resource;
+            if (type == null) {
+                throw new IllegalArgumentException("type must not be null");
+            }
+            this.type = type;
+        }
+
+        public Resource getResource() {
+            return resource;
+        }
+
+        public Type getType() {
+            return type;
+        }
+    } // TypedResource
+
+    private static class TypedFileNameMapper implements FileNameMapper {
+        private FileNameMapper fileNameMapper;
+        private Type type;
+
+        private TypedFileNameMapper(FileNameMapper fileNameMapper, Type type) {
+            if (fileNameMapper == null) {
+                throw new IllegalArgumentException("fileNameMapper must not be null");
+            }
+            this.fileNameMapper = fileNameMapper;
+            if (type == null) {
+                throw new IllegalArgumentException("type must not be null");
+            }
+            this.type = type;
+        }
+
+        public Type getType() {
+            return type;
+        }
+
+        @Override
+        public void setFrom(String s) {
+            fileNameMapper.setFrom(s);
+        }
+
+        @Override
+        public void setTo(String s) {
+            fileNameMapper.setTo(s);
+        }
+
+        @Override
+        public String[] mapFileName(String s) {
+            return fileNameMapper.mapFileName(s);
+        }
+    } // TypedFileNameMapper
 }

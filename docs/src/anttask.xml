@@ -53,7 +53,7 @@ Calabash</citetitle> from Apache Ant using the
                   <section xml:id="ant.input-and-output">
                            <title>Input and output files and filesets</title>
                            <para>In the simplest scenario, the <tag class="attribute">in</tag>
-                                    attribute, if present, specifies the single input file and/or
+                                    attribute, if present, specifies the single input file and / or
                                     the <tag class="attribute">out</tag> attribute, if present,
                                     specifies the single output file.  The <tag class="attribute"
                                              >inPort</tag> and <tag class="attribute">outPort</tag>
@@ -113,10 +113,10 @@ Calabash</citetitle> from Apache Ant using the
                                              >inPort</tag> or <tag class="attribute">outPort</tag>
                                     ports, the implicit fileset (formed based on <tag
                                              class="attribute">includes</tag> and other attributes
-                                    of <tag class="element">calabash</tag>) and/or an explicit file
+                                    of <tag class="element">calabash</tag>) and / or an explicit file
                                     set (formed from nested resource collection elements (outside of
                                     any in <tag class="element">input</tag> or <tag class="element"
-                                             >output</tag> elements)) makes a set of files that are
+                                             >output</tag> elements) makes a set of files that are
                                     processed one at a time as the input to the <tag
                                              class="attribute">inPort</tag> port in separate runs of
                                     the pipeline.</para>
@@ -130,7 +130,7 @@ Calabash</citetitle> from Apache Ant using the
                                     implicit fileset.  <tag class="attribute"
                                              >useimplicitfileset</tag> can disable the implicit
                                     fileset.</para>
-                           <para>When the implicit fileset and/or the explicit fileset selects one
+                           <para>When the implicit fileset and / or the explicit fileset selects one
                                     or more files, the <tag class="attribute">destdir</tag>, and
                                              <tag class="attribute">extension</tag> attributes (or
                                     using a nested mapper instead of <tag class="attribute"
@@ -180,8 +180,14 @@ Calabash</citetitle> from Apache Ant using the
                            <tbody>
                                     <tr>
                                              <td>in</td>
-                                             <td>Path to a single XML file to process as main input</td>
+                                             <td>Path to a single file to process as main input</td>
                                              <td>No</td>
+                                    </tr>
+                                    <tr>
+                                             <td>inType</td>
+                                             <td>The input type that is used for <tag class="attribute">in</tag> file or for implicit
+                                                  or explicit filesets, either <literal>XML</literal> or <literal>DATA</literal></td>
+                                             <td>No; default is <literal>XML</literal></td>
                                     </tr>
                                     <tr>
                                              <td>inPort</td>
@@ -198,7 +204,7 @@ Calabash</citetitle> from Apache Ant using the
                                     <tr>
                                              <td>outPort</td>
                                              <td>Pipeline output port that writes to out (or to
-                                                  outputs mapped from implicit and/or explicit input
+                                                  outputs mapped from implicit and / or explicit input
                                                   filesets)</td>
                                              <td>No; the primary output port will be used</td>
                                     </tr>
@@ -383,7 +389,7 @@ Calabash</citetitle> from Apache Ant using the
 </section>
          <section>
                   <title>Parameters specified as nested elements</title>
-                  <section>
+                  <section xml:id="ant.input">
                            <title>input</title>
                            <para>Specification of resources to apply to an input port.  May specify
                                     additional or alternative inputs to be applied to the
@@ -405,6 +411,11 @@ Calabash</citetitle> from Apache Ant using the
                                                                <td>port name</td>
                                                                <td>No; the primary non-parameter input
                                                                         port will be used</td>
+                                                      </tr>
+                                                      <tr>
+                                                               <td>type</td>
+                                                               <td>input type, either <literal>XML</literal> or <literal>DATA</literal></td>
+                                                               <td>No; default is <literal>XML</literal></td>
                                                       </tr>
                                                       <tr>
                                                                <td>if</td>
@@ -478,7 +489,7 @@ Calabash</citetitle> from Apache Ant using the
                                     </section>
                            </section>
                   </section>
-                  <section>
+                  <section xml:id="ant.output">
                            <title>output</title>
                            <para>Specification of resources to which to write the output from an
                                     output port. May be used as an alternative to <tag
@@ -552,7 +563,7 @@ Calabash</citetitle> from Apache Ant using the
                                     <title>mapper</title>
                                     <para>You can define resources to which to write based on the
                                     resource(s) specified for the implicit fileset (based on <tag
-                                             class="attribute">includes</tag>, etc.) and/or on the
+                                             class="attribute">includes</tag>, etc.) and / or on the
                                     explicit fileset formed from resource collections that are
                                     children of <tag class="element">calabash</tag>.</para>
                            </section>
