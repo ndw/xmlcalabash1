@@ -228,7 +228,7 @@ public class CalabashTask extends MatchingTask {
     }
 
     /**
-     * Work with an instance of an <input> element already configured by Ant.
+     * Work with an instance of an {@code <input>} element already configured by Ant.
      *
      * @param i the configured input Port
      */
