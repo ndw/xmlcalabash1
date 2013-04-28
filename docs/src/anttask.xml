@@ -212,7 +212,9 @@ Calabash</citetitle> from Apache Ant using the
                                              <td>pipeline</td>
                                              <td>Path to a single XProc pipeline file to be used</td>
                                              <td>Yes, unless a nested <tag class="element">pipeline</tag> has
-                                                  been specified</td>
+                                                  been specified, or unless nested <tag class="element">library</tag>
+                                                  or <tag class="element">step</tag> elements have been specified in which
+                                                  case no pipeline must be specified explicitly</td>
                                     </tr>
                                     <tr>
                                              <td>useImplicitFileset</td>
@@ -702,6 +704,22 @@ Calabash</citetitle> from Apache Ant using the
                            <para>Specify Java system properties used by Calabash</para></section>
                   <section><title>syspropertyset</title>
                            <para>Specify sets of Java system properties used by Calabash</para></section>
+                  <section xml:id="ant.library">
+                           <title>library</title>
+                           <para>Library resources. The steps in the libraries loaded are only available in <tag class="emptytag">step</tag> tags.
+                                  If no steps are specified, the first step of the first loaded library will be used.</para>
+                           <section>
+                                    <title>Parameters specified as nested elements</title>
+                                    <section>
+                                             <title>any resource collection</title>
+                                             <para>Any resource collection can be used, but only
+                                                  readable resources may be contained in it, e. g.
+<programlisting><![CDATA[<library>
+    <url url="http://xmlcalabash.com/extension/steps/library-1.0.xpl"/>
+</library>]]></programlisting></para>
+                                    </section>
+                           </section>
+                  </section>
          </section>
          <section>
                   <title>Examples</title>

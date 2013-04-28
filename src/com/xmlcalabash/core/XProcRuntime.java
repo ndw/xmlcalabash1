@@ -620,29 +620,58 @@ public class XProcRuntime {
     }
 
     // FIXME: This design sucks
-    public XLibrary loadLibrary(String libraryURI) throws SaxonApiException {
+    public XLibrary loadLibrary(Input library) throws SaxonApiException {
+        String libraryURI;
+        switch (library.getKind()) {
+            case URI:
+                libraryURI = library.getUri();
+                break;
+
+            case INPUT_STREAM:
+                libraryURI = library.getInputStreamUri();
+                break;
+
+            default:
+                throw new UnsupportedOperationException(format("Unsupported library kind '%s'", library.getKind()));
+        }
+
         for (String map : config.loaders.keySet()) {
             boolean data = map.startsWith("data:");
             String pattern = map.substring(5);
             if (libraryURI.matches(pattern)) {
-                return runLibraryLoader(libraryURI, config.loaders.get(map), data);
+                return runLibraryLoader(library, config.loaders.get(map), data);
             }
         }
 
         try {
-            return _loadLibrary(libraryURI);
+            return _loadLibrary(library);
         } catch (SaxonApiException sae) {
             error(sae);
             throw sae;
         } catch (XProcException xe) {
             error(xe);
             throw xe;
+        } catch (IOException ioe) {
+            error(ioe);
+            throw new XProcException(ioe);
         }
     }
 
-    private XLibrary _loadLibrary(String libraryURI) throws SaxonApiException {
+    private XLibrary _loadLibrary(Input library) throws SaxonApiException, IOException {
+        PipelineLibrary plibrary;
+        switch (library.getKind()) {
+            case URI:
+                plibrary = parser.loadLibrary(library.getUri());
+                break;
 
-        PipelineLibrary plibrary = parser.loadLibrary(libraryURI);
+            case INPUT_STREAM:
+                plibrary = parser.loadLibrary(library.getInputStream());
+                break;
+
+            default:
+                throw new UnsupportedOperationException(format("Unsupported library kind '%s'", library.getKind()));
+        }
+
         if (errorCode != null) {
             throw new XProcException(errorCode, errorMessage);
         }
@@ -689,8 +718,8 @@ public class XProcRuntime {
         return use(pipeDoc);
     }
 
-    private XLibrary runLibraryLoader(String libraryURI, String loaderURI, boolean data) throws SaxonApiException {
-        XdmNode libDoc = runLoader(new Input(libraryURI), loaderURI, data);
+    private XLibrary runLibraryLoader(Input library, String loaderURI, boolean data) throws SaxonApiException {
+        XdmNode libDoc = runLoader(library, loaderURI, data);
         return useLibrary(libDoc);
     }
 

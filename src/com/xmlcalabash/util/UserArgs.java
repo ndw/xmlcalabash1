@@ -35,6 +35,7 @@ import static com.xmlcalabash.core.XProcConstants.p_input;
 import static com.xmlcalabash.core.XProcConstants.p_output;
 import static com.xmlcalabash.core.XProcConstants.p_pipe;
 import static com.xmlcalabash.core.XProcConstants.p_with_param;
+import static com.xmlcalabash.util.Input.Kind.INPUT_STREAM;
 import static com.xmlcalabash.util.Input.Type.DATA;
 import static com.xmlcalabash.util.JSONtoXML.knownFlavor;
 import static com.xmlcalabash.util.LogOptions.DIRECTORY;
@@ -72,7 +73,7 @@ public class UserArgs {
     private String entityResolverClass = null;
     private String uriResolverClass = null;
     private Input pipeline = null;
-    private List<String> libraries = new ArrayList<String>();
+    private List<Input> libraries = new ArrayList<Input>();
     private Map<String, Output> outputs = new HashMap<String, Output>();
     private Map<String, String> bindings = new HashMap<String, String>();
     private List<StepArgs> steps = new ArrayList<StepArgs>();
@@ -165,7 +166,12 @@ public class UserArgs {
 
     public void addLibrary(String libraryURI) {
         needsCheck = true;
-        libraries.add(libraryURI);
+        libraries.add(new Input(libraryURI));
+    }
+
+    public void addLibrary(InputStream libraryInputStream, String libraryURI) {
+        needsCheck = true;
+        libraries.add(new Input(libraryInputStream, libraryURI));
     }
 
     public Map<String, Output> getOutputs() {
@@ -476,10 +482,22 @@ public class UserArgs {
     public XdmNode getImplicitPipeline(XProcRuntime runtime) throws IOException {
         checkArgs();
         // This is a bit of a hack...
-        if (steps.size() == 0 && libraries.size() == 1) {
+        if (steps.size() == 0 && libraries.size() > 0) {
             try {
-                XLibrary library = runtime.loadLibrary(libraries.get(0));
-                curStep.setName(library.getFirstPipelineType().getClarkName());
+                Input library = libraries.get(0);
+                if (library.getKind() == INPUT_STREAM) {
+                    InputStream libraryInputStream = library.getInputStream();
+                    File tempLibrary = createTempFile("calabashLibrary", null);
+                    tempLibrary.deleteOnExit();
+                    FileOutputStream fileOutputStream = new FileOutputStream(tempLibrary);
+                    fileOutputStream.getChannel().transferFrom(newChannel(libraryInputStream), 0, MAX_VALUE);
+                    fileOutputStream.close();
+                    libraryInputStream.close();
+                    libraries.set(0, new Input(tempLibrary.toURI().toASCIIString()));
+                }
+
+                XLibrary xLibrary = runtime.loadLibrary(libraries.get(0));
+                curStep.setName(xLibrary.getFirstPipelineType().getClarkName());
                 curStep.checkArgs();
                 steps.add(curStep);
             } catch (SaxonApiException sae) {
@@ -527,11 +545,33 @@ public class UserArgs {
             tree.addEndElement();
         }
 
-        for (String library : libraries) {
-            tree.addStartElement(p_import);
-            tree.addAttribute(new QName("href"), library);
-            tree.startContent();
-            tree.addEndElement();
+        for (Input library : libraries) {
+            switch (library.getKind()) {
+                case URI:
+                    tree.addStartElement(p_import);
+                    tree.addAttribute(new QName("href"), library.getUri());
+                    tree.startContent();
+                    tree.addEndElement();
+                    break;
+
+                case INPUT_STREAM:
+                    InputStream libraryInputStream = library.getInputStream();
+                    File tempLibrary = createTempFile("calabashLibrary", null);
+                    tempLibrary.deleteOnExit();
+                    FileOutputStream fileOutputStream = new FileOutputStream(tempLibrary);
+                    fileOutputStream.getChannel().transferFrom(newChannel(libraryInputStream), 0, MAX_VALUE);
+                    fileOutputStream.close();
+                    libraryInputStream.close();
+
+                    tree.addStartElement(p_import);
+                    tree.addAttribute(new QName("href"), tempLibrary.toURI().toASCIIString());
+                    tree.startContent();
+                    tree.addEndElement();
+                    break;
+
+                default:
+                    throw new UnsupportedOperationException(format("Unsupported library kind '%s'", library.getKind()));
+            }
         }
 
         int stepNum = 0;

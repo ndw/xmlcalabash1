@@ -760,15 +760,26 @@ public class CalabashTask extends MatchingTask {
     }
 
     /**
+     * Add a nested {@code <library>} element.
+     *
+     * @param libraries the configured Resources object represented as {@code <library>}.
+     */
+    public void addConfiguredLibrary(Resources libraries) {
+        try {
+            for (Iterator iterator = libraries.iterator(); iterator.hasNext(); ) {
+                Resource library = (Resource) iterator.next();
+                userArgs.addLibrary(library.getInputStream(), library.toString());
+            }
+        } catch (Exception e) {
+            handleError(e);
+        }
+    }
+
+    /**
      * Do the work.
      */
     public void execute() {
-        if (pipelineResource == null) {
-            handleError("no pipeline given, pipeline is mandatory");
-            return;
-        }
-
-        if (!pipelineResource.isExists()) {
+        if ((pipelineResource != null) && !pipelineResource.isExists()) {
             handleError("pipeline '" + pipelineResource.getName() + "' does not exist");
             return;
         }
@@ -1040,7 +1051,7 @@ public class CalabashTask extends MatchingTask {
      * @throws BuildException if the processing fails.
      */
     private void process(Map<String, List<TypedResource>> inputResources, Map<String, Union> outputResources) throws BuildException {
-        if (!force) {
+        if (!force && (pipelineResource != null)) {
             long pipelineLastModified = pipelineResource.getLastModified();
             pipelineLastModified = (pipelineLastModified == 0) ? MAX_VALUE : pipelineLastModified;
             Collection<Long> inputsLastModified = new Vector<Long>();

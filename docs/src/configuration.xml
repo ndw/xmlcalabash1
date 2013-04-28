@@ -614,13 +614,17 @@ left out and the output will be applied to the primary output port.</para>
   <entry>Command line (short):</entry>
   <entry><literal>-l</literal><replaceable>uri</replaceable></entry>
 </row>
+<row>
+  <entry>Ant task:</entry>
+  <entry><tag class="starttag">calabash</tag><tag class="starttag">library</tag><replaceable>library resources</replaceable><tag class="endtag">library</tag><tag class="endtag">calabash</tag></entry>
+</row>
 </tbody>
 </tgroup>
 </informaltable>
 
 <para>The steps in the library loaded are only available in
-<option>--step</option> options. At most one library may be loaded.
-If no step name is specified, the first step in the library will be used.</para>
+<option>--step</option> options. If no steps are specified,
+the first step of the first loaded library will be used.</para>
 </section>
 
 <section xml:id="cfg.step">

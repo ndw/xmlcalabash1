@@ -138,6 +138,13 @@ public class Parser {
         return doc;
     }
 
+    public PipelineLibrary loadLibrary(InputStream libraryInputStream) throws SaxonApiException, IOException {
+        XdmNode doc = runtime.parse(new InputSource(libraryInputStream));
+        libraryInputStream.close();
+        XdmNode root = S9apiUtils.getDocumentElement(doc);
+        return useLibrary(root);
+    }
+
     public PipelineLibrary loadLibrary(String libraryURI) throws SaxonApiException {
         XdmNode doc = runtime.parse(libraryURI, URIUtils.cwdAsURI().toASCIIString());
         XdmNode root = S9apiUtils.getDocumentElement(doc);
