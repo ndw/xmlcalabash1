@@ -69,6 +69,7 @@ import com.xmlcalabash.util.DefaultXProcConfigurer;
 import com.xmlcalabash.util.DefaultXProcMessageListener;
 import com.xmlcalabash.util.Input;
 import com.xmlcalabash.util.JSONtoXML;
+import com.xmlcalabash.util.Output;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.StepErrorListener;
 import com.xmlcalabash.util.TreeWriter;
@@ -127,7 +128,7 @@ public class XProcRuntime {
     private String htmlParser = null;
     private Vector<XProcExtensionFunctionDefinition> exFuncs = new Vector<XProcExtensionFunctionDefinition>();
 
-    private String profileFile = null;
+    private Output profile = null;
     private Hashtable<XStep,Calendar> profileHash = null;
     private TreeWriter profileWriter = null;
     private QName profileProfile = new QName("http://xmlcalabash.com/ns/profile", "profile");
@@ -203,8 +204,8 @@ public class XProcRuntime {
         jsonFlavor = config.jsonFlavor;
         useXslt10 = config.useXslt10;
 
-        if (config.profileFile != null) {
-            profileFile = config.profileFile;
+        if (config.profile != null) {
+            profile = config.profile;
             profileHash = new Hashtable<XStep, Calendar> ();
             profileWriter = new TreeWriter(this);
             try {
@@ -252,7 +253,7 @@ public class XProcRuntime {
         allowXPointerOnText = runtime.allowXPointerOnText;
         transparentJSON = runtime.transparentJSON;
         jsonFlavor = runtime.jsonFlavor;
-        profileFile = runtime.profileFile;
+        profile = runtime.profile;
 
         exFuncs.add(new Cwd(this));
         exFuncs.add(new BaseURI(this));
@@ -296,11 +297,12 @@ public class XProcRuntime {
         return config.debug;
     }
 
-    public String getProfileFile() {
-        return profileFile;
+    public Output getProfile() {
+        return profile;
     }
-    public void setProfileFile(String fn) {
-        profileFile = fn;
+
+    public void setProfile(Output profile) {
+        this.profile = profile;
     }
 
     public URI getStaticBaseURI() {
@@ -495,7 +497,7 @@ public class XProcRuntime {
             throw new XProcException(XProcConstants.dynamicError(9), ex);
         }
 
-        if (profileFile != null) {
+        if (profile != null) {
             profileHash = new Hashtable<XStep, Calendar>();
             profileWriter = new TreeWriter(this);
             try {
@@ -881,7 +883,7 @@ public class XProcRuntime {
     // ===========================================================
 
     public void start(XStep step) {
-        if (profileFile == null) {
+        if (profile == null) {
             return;
         }
 
@@ -912,7 +914,7 @@ public class XProcRuntime {
     }
 
     public void finish(XStep step) {
-        if (profileFile == null) {
+        if (profile == null) {
             return;
         }
 
@@ -949,15 +951,23 @@ public class XProcRuntime {
                 serializer.setOutputProperty(Serializer.Property.INDENT, "yes");
 
                 OutputStream outstr = null;
-                if ("-".equals(profileFile)) {
-                    outstr = System.out;
-                } else {
-                    outstr = new FileOutputStream(new File(profileFile));
+                switch (this.profile.getKind()) {
+                    case URI:
+                        URI furi = URI.create(this.profile.getUri());
+                        outstr = new FileOutputStream(new File(furi));
+                        break;
+
+                    case OUTPUT_STREAM:
+                        outstr = this.profile.getOutputStream();
+                        break;
+
+                    default:
+                        throw new UnsupportedOperationException(format("Unsupported profile kind '%s'", this.profile.getKind()));
                 }
 
                 serializer.setOutputStream(outstr);
                 S9apiUtils.serialize(this, result.getXdmNode(), serializer);
-                if (!System.out.equals(outstr)) {
+                if (!System.out.equals(outstr) && !System.err.equals(outstr)) {
                     outstr.close();
                 }
 

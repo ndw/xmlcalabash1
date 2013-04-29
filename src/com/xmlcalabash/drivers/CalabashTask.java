@@ -704,12 +704,34 @@ public class CalabashTask extends MatchingTask {
      *
      * @param profileFile the path to the file where profile information should be written to, or {@code -} for stdout
      */
-    public void setProfileFile(String profileFile) {
+    public void setProfileFile(Resource profileFile) {
         try {
-            userArgs.setProfileFile(profileFile);
+            userArgs.setProfile(profileFile.getOutputStream());
         } catch (Exception e) {
             handleError(e);
         }
+    }
+
+    /**
+     * Add a nested {@code <profile>} element.
+     *
+     * @param profile the configured Resources object represented as {@code <profile>}
+     */
+    public void addConfiguredProfile(UseableResources profile) {
+        if (!profile.shouldUse()) {
+            log("Skipping profile as it is configured to be unused.", Project.MSG_DEBUG);
+            return;
+        }
+
+        if (profile.size() == 0) {
+            return;
+        }
+
+        if (profile.size() > 1) {
+            handleError("The profile element must be specified with at most one nested resource.");
+        }
+
+        setProfileFile((Resource) profile.iterator().next());
     }
 
     /**

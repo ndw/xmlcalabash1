@@ -48,7 +48,7 @@ public class ParseArgs {
             }
 
             if (arg.startsWith("--profile")) {
-                userArgs.setProfileFile(parseString(null, "profile"));
+                userArgs.setProfile(parseString(null, "profile"));
                 continue;
             }
 

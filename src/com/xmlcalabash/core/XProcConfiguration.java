@@ -1,6 +1,7 @@
 package com.xmlcalabash.core;
 
 import com.xmlcalabash.util.JSONtoXML;
+import com.xmlcalabash.util.Output;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.DocumentBuilder;
@@ -18,7 +19,6 @@ import java.io.FileNotFoundException;
 import java.util.Hashtable;
 import java.util.Vector;
 import java.util.HashSet;
-import java.util.logging.Level;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
@@ -39,6 +39,9 @@ import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.Source;
 
 import org.xml.sax.InputSource;
+
+import static com.xmlcalabash.util.URIUtils.encode;
+import static java.lang.System.getProperty;
 
 /**
  * Created by IntelliJ IDEA.
@@ -66,7 +69,7 @@ public class XProcConfiguration {
     public String saxonConfigFile = null;
     public Hashtable<String,String> nsBindings = new Hashtable<String,String> ();
     public boolean debug = false;
-    public String profileFile = null;
+    public Output profile = null;
     public Hashtable<String,Vector<ReadablePipe>> inputs = new Hashtable<String,Vector<ReadablePipe>> ();
     public ReadablePipe pipeline = null;
     public Hashtable<String,String> outputs = new Hashtable<String,String> ();
@@ -153,7 +156,7 @@ public class XProcConfiguration {
             options.clear();
             implementations.clear();
             extensionFunctions.clear();
-            
+
             createSaxonProcessor(saxonProcessor, this.schemaAware, saxonConfigFile);
             loadConfiguration();
 
@@ -186,7 +189,17 @@ public class XProcConfiguration {
             System.err.println("Failed to obtain " + proctype.toUpperCase() + " processor; using " + actualtype + " instead.");
         }
     }
-    
+
+    private String fixUpURI(String uri) {
+        File f = new File(uri);
+        String fn = encode(f.getAbsolutePath());
+        // FIXME: HACK!
+        if ("\\".equals(getProperty("file.separator"))) {
+            fn = "/" + fn;
+        }
+        return fn;
+    }
+
     private void loadConfiguration() {
         URI home = URIUtils.homeAsURI();
         URI cwd = URIUtils.cwdAsURI();
@@ -260,7 +273,10 @@ public class XProcConfiguration {
 
         schemaAware = "true".equals(System.getProperty("com.xmlcalabash.schema-aware", ""+schemaAware));
         debug = "true".equals(System.getProperty("com.xmlcalabash.debug", ""+debug));
-        profileFile = System.getProperty("com.xmlcalabash.profile", profileFile);
+        String profileProperty = System.getProperty("com.xmlcalabash.profile");
+        if (profileProperty != null) {
+            profile = new Output("file://" + fixUpURI(profileProperty));
+        }
         extensionValues = "true".equals(System.getProperty("com.xmlcalabash.general-values", ""+extensionValues));
         xpointerOnText = "true".equals(System.getProperty("com.xmlcalabash.xpointer-on-text", ""+xpointerOnText));
         transparentJSON = "true".equals(System.getProperty("com.xmlcalabash.transparent-json", ""+transparentJSON));
@@ -409,7 +425,7 @@ public class XProcConfiguration {
 	public boolean isStepAvailable(QName type) {
 		return implementations.containsKey(type);
 	}
-	
+
 	public XProcStep newStep(XProcRuntime runtime,XAtomicStep step){
         String className = implementations.get(step.getType());
         if (className == null) {
@@ -420,7 +436,7 @@ public class XProcConfiguration {
         if (runtime.getSafeMode() && !className.startsWith("com.xmlcalabash.")) {
             throw XProcException.dynamicError(21);
         }
-        
+
 		try {
 			Constructor constructor = Class.forName(className).getConstructor(XProcRuntime.class, XAtomicStep.class);
 			return (XProcStep) constructor.newInstance(runtime,step);
@@ -477,7 +493,7 @@ public class XProcConfiguration {
     }
 
     private void parseProfile(XdmNode node) {
-        profileFile = node.getStringValue().trim();
+        profile = new Output("file://" + fixUpURI(node.getStringValue().trim()));
     }
 
     private void parseEntityResolver(XdmNode node) {

@@ -782,6 +782,55 @@ Calabash</citetitle> from Apache Ant using the
                            <para>Specify Java system properties used by Calabash</para></section>
                   <section><title>syspropertyset</title>
                            <para>Specify sets of Java system properties used by Calabash</para></section>
+                  <section>
+                           <title>profile</title>
+                           <para>Profile resource. Can be used instead of <tag class="attribute"
+                                             >profileFile</tag> attribute.</para>
+                           <section>
+                                    <title>Parameters</title>
+                                    <informaltable frame="border">
+                                             <thead>
+                                                      <tr>
+                                                               <th>Attribute</th>
+                                                               <th>Description</th>
+                                                               <th>Required</th>
+                                                      </tr>
+                                             </thead>
+                                             <tbody>
+                                                      <tr>
+                                                               <td>if</td>
+                                                               <td>This parameter behaves like standard Ant if's as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
+                                                               <td>No</td>
+                                                      </tr>
+                                                      <tr>
+                                                               <td>unless</td>
+                                                               <td>This parameter behaves like standard Ant unless' as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
+                                                               <td>No</td>
+                                                      </tr>
+                                             </tbody>
+                                    </informaltable>
+                           </section>
+                           <section>
+                                    <title>Parameters specified as nested elements</title>
+                                    <section>
+                                             <title>any <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resource</link></title>
+                                             <para>Any <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resource</link> can be used, but only
+                                                  one single writable resource may be contained
+                                                  in it, e. g.
+<programlisting><![CDATA[<profile>
+    <bzip2resource>
+        <file file="profile.xml.bz2"/>
+    </bzip2resource>
+</profile>]]></programlisting>
+                                                  or
+<programlisting><![CDATA[<profile>
+    <stderr/>
+</profile>]]></programlisting></para>
+                                    </section>
+                           </section>
+                  </section>
                   <section xml:id="ant.library">
                            <title>library</title>
                            <para>Library resources. The steps in the libraries loaded are only available in <tag class="emptytag">step</tag> tags.

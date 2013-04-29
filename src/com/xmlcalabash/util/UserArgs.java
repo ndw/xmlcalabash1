@@ -62,7 +62,7 @@ import static net.sf.saxon.s9api.QName.fromClarkName;
 public class UserArgs {
     private boolean needsCheck = false;
     private Boolean debug = null;
-    private String profileFile = null;
+    private Output profile = null;
     private boolean showVersion = false;
     private String saxonProcessor = null;
     private String saxonConfigFile = null;
@@ -89,8 +89,24 @@ public class UserArgs {
         this.debug = debug;
     }
 
-    public void setProfileFile(String profileFile) {
-        this.profileFile = profileFile;
+    private void setProfile(Output profile) {
+        needsCheck = true;
+        if ((this.profile != null) && (profile != null)) {
+            throw new XProcException("Multiple profile are not supported.");
+        }
+        this.profile = profile;
+    }
+
+    public void setProfile(String profile) {
+        if ("-".equals(profile)) {
+            setProfile(new Output(System.out));
+        } else {
+            setProfile(new Output("file://" + fixUpURI(profile)));
+        }
+    }
+
+    public void setProfile(OutputStream outputStream) {
+        setProfile(new Output(outputStream));
     }
 
     public boolean isShowVersion() {
@@ -449,8 +465,8 @@ public class UserArgs {
             config.debug = debug;
         }
 
-        if (profileFile != null) {
-            config.profileFile = profileFile;
+        if (profile != null) {
+            config.profile = profile;
         }
 
         config.extensionValues |= extensionValues;

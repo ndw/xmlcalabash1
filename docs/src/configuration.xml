@@ -748,7 +748,11 @@ a <tag>p:pipeline</tag>.</para>
 </row>
 <row>
   <entry>Ant task:</entry>
-  <entry><tag class="emptytag">calabash <tag class="attribute">profileFile</tag>="<tag class="attvalue"><replaceable>filename</replaceable></tag>"</tag></entry>
+  <entry>
+    <tag class="emptytag">calabash <tag class="attribute">profileFile</tag>="<tag class="attvalue"><replaceable>filename</replaceable></tag>"</tag>
+    or
+    <tag class="starttag">calabash</tag><tag class="starttag">profile</tag><replaceable>profile resource</replaceable><tag class="endtag">profile</tag><tag class="endtag">calabash</tag>
+  </entry>
 </row>
 </tbody>
 </tgroup>
