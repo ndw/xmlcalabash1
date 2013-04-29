@@ -9,13 +9,22 @@ Calabash</citetitle> from Apache Ant using the
 <code>CalabashTask</code> custom task.</para>
 
 <section xml:id="antsetup">
-<title>Setting up the Ant Task</title>
+<title>Setting up the Ant Task and Types</title>
 
-<para>Setting up is as for any other custom Ant task: you need a <markup>taskdef</markup>:</para>
+<para>Setting up is as for any other custom Antlib.
+       You need a <tag class="emptytag">typedef</tag> and a namespace declaration.
+       After that the custom Task and Types are available in the defined namespace.
+       If you put the calabash.jar to your Ant classpath, e. g. by placing it inside
+       <literal>${ant.home}/lib</literal>, you can even save the
+       <tag class="emptytag">typedef</tag> declaration ant the namespace definition
+       is enough to invoke the secret magic that automatically loads the Antlib as
+       soon as it is used in the build file.</para>
 
-<programlisting>&lt;taskdef name="calabash"
-         classname="com.xmlcalabash.drivers.CalabashTask"
-         classpath="<replaceable>path/to</replaceable>/calabash.jar"/></programlisting>
+<programlisting><![CDATA[<project xmlns:c="antlib:com.xmlcalabash">
+    <typedef uri="antlib:com.xmlcalabash"
+             resource="com/xmlcalabash/antlib.xml"
+             classpath="]]><replaceable>path/to</replaceable><![CDATA[/calabash.jar"/>
+</project>]]></programlisting>
 </section>
 
 <section>
@@ -50,6 +59,35 @@ Calabash</citetitle> from Apache Ant using the
                            </itemizedlist></para>
                   <para>You can also specify options and parameters to be used by the
                            pipeline.</para>
+                  <section>
+                           <title>Custom Task and Types</title>
+                           <para>The previously defined Antlib provides one custom task and four
+                                  custom types in the configured namespace.</para>
+                           <section>
+                                    <title>calabash</title>
+                                    <para>The custom Ant Task that is provided by the Antlib.
+                                           This is the main piece of the Calabash Ant integration.
+                                           The remaining sections of this chapter describe the
+                                           usage of this task.</para>
+                           </section>
+                           <section>
+                                    <title>stdin</title>
+                                    <para>A read-only Ant Resource that connects to stdin.</para>
+                           </section>
+                           <section>
+                                    <title>stdout</title>
+                                    <para>A write-only Ant Resource that connects to stdout.</para>
+                           </section>
+                           <section>
+                                    <title>stdinout</title>
+                                    <para>A read-write Ant Resource that connects to stdin
+                                           for reading and to stdout for writing.</para>
+                           </section>
+                           <section>
+                                    <title>stderr</title>
+                                    <para>A write-only Ant Resource that connects to stderr.</para>
+                           </section>
+                  </section>
                   <section xml:id="ant.input-and-output">
                            <title>Input and output files and filesets</title>
                            <para>In the simplest scenario, the <tag class="attribute">in</tag>

@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<antlib>
+    <taskdef name="calabash" classname="com.xmlcalabash.drivers.CalabashTask"/>
+    <typedef name="stdin" classname="com.xmlcalabash.util.StdinResource"/>
+    <typedef name="stdout" classname="com.xmlcalabash.util.StdoutResource"/>
+    <typedef name="stdinout" classname="com.xmlcalabash.util.StdinoutResource"/>
+    <typedef name="stderr" classname="com.xmlcalabash.util.StderrResource"/>
+</antlib>
