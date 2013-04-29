@@ -2,7 +2,8 @@ Usage: com.xmlcalabash.drivers.Main [switches/options] [pipeline.xpl] [options]
    or: com.xmlcalabash.drivers.Main [switches/options] { [inputs/parameters] step [options] }+
 
 Where switches are:
-  -a, --schema-aware                   Turn on schema-aware processing
+  -a, --schema-aware                   Turn on schema-aware processing,
+                                       this also sets saxon-processor to 'ee' implicitly
   -b, --binding prefix=uri             Specify namespace binding
   -c, --config configfile              Specify a particular configuration file
   -d, --data-input [port=]uri          Bind the specified input port to data, if no port is specified,
