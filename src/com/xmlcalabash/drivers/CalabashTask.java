@@ -323,18 +323,23 @@ public class CalabashTask extends MatchingTask {
     /**
      * Add a nested &lt;pipeline&gt; element.
      *
-     * @param rc the configured Resources object represented as &lt;pipeline&gt;.
+     * @param pipeline the configured Resources object represented as &lt;pipeline&gt;.
      */
-    public void addConfiguredPipeline(Resources rc) {
-        if (rc.size() == 0) {
+    public void addConfiguredPipeline(UseableResources pipeline) {
+        if (!pipeline.shouldUse()) {
+            log("Skipping pipeline as it is configured to be unused.", Project.MSG_DEBUG);
             return;
         }
 
-        if (rc.size() > 1) {
+        if (pipeline.size() == 0) {
+            return;
+        }
+
+        if (pipeline.size() > 1) {
             handleError("The pipeline element must be specified with at most one nested resource.");
         }
 
-        setPipeline((Resource) rc.iterator().next());
+        setPipeline((Resource) pipeline.iterator().next());
     }
 
     /**
@@ -519,23 +524,28 @@ public class CalabashTask extends MatchingTask {
     /**
      * Work with an instance of a <binding> element already configured by Ant.
      *
-     * @param n the configured Namespace
+     * @param namespace the configured Namespace
      */
-    public void addConfiguredNamespace(Namespace n) {
+    public void addConfiguredNamespace(Namespace namespace) {
+        if (!namespace.shouldUse()) {
+            log("Skipping namespace '" + namespace.getPrefix() + "=" + namespace.getURI() + "' as it is configured to be unused.", Project.MSG_DEBUG);
+            return;
+        }
+
         // prefix and/or uri may have been omitted in build file
         // without Ant complaining
-        if (n.getPrefix() == null) {
+        if (namespace.getPrefix() == null) {
             handleError("<namespace> prefix cannot be null");
             return;
         }
 
-        if (n.getURI() == null) {
+        if (namespace.getURI() == null) {
             handleError("<namespace> URI cannot be null");
             return;
         }
 
         try {
-            userArgs.addBinding(n.getPrefix(), n.getURI());
+            userArgs.addBinding(namespace.getPrefix(), namespace.getURI());
         } catch (Exception e) {
             handleError(e);
         }
@@ -811,7 +821,12 @@ public class CalabashTask extends MatchingTask {
      *
      * @param libraries the configured Resources object represented as {@code <library>}.
      */
-    public void addConfiguredLibrary(Resources libraries) {
+    public void addConfiguredLibrary(UseableResources libraries) {
+        if (!libraries.shouldUse()) {
+            log("Skipping library as it is configured to be unused.", Project.MSG_DEBUG);
+            return;
+        }
+
         try {
             for (Iterator iterator = libraries.iterator(); iterator.hasNext(); ) {
                 Resource library = (Resource) iterator.next();
@@ -1440,7 +1455,7 @@ public class CalabashTask extends MatchingTask {
     /**
      * The {@code Namespace} inner class represents a namespace binding.
      */
-    public static class Namespace {
+    public static class Namespace extends Useable {
         /**
          * The prefix
          */
@@ -1656,6 +1671,22 @@ public class CalabashTask extends MatchingTask {
             return options;
         }
     } // Step
+
+    public static class UseableResources extends Resources {
+        private Useable useable = new Useable();
+
+        public void setIf(Object ifCond) {
+            useable.setIf(ifCond);
+        }
+
+        public void setUnless(Object unlessCond) {
+            useable.setUnless(unlessCond);
+        }
+
+        public boolean shouldUse() {
+            return useable.shouldUse();
+        }
+    }
 
     private static class TypedResource {
         private Resource resource = null;

@@ -469,6 +469,32 @@ Calabash</citetitle> from Apache Ant using the
                            <para>Pipeline resource. Can be used instead of <tag class="attribute"
                                              >pipeline</tag> attribute.</para>
                            <section>
+                                    <title>Parameters</title>
+                                    <informaltable frame="border">
+                                             <thead>
+                                                      <tr>
+                                                               <th>Attribute</th>
+                                                               <th>Description</th>
+                                                               <th>Required</th>
+                                                      </tr>
+                                             </thead>
+                                             <tbody>
+                                                      <tr>
+                                                               <td>if</td>
+                                                               <td>This parameter behaves like standard Ant if's as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
+                                                               <td>No</td>
+                                                      </tr>
+                                                      <tr>
+                                                               <td>unless</td>
+                                                               <td>This parameter behaves like standard Ant unless' as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
+                                                               <td>No</td>
+                                                      </tr>
+                                             </tbody>
+                                    </informaltable>
+                           </section>
+                           <section>
                                     <title>Parameters specified as nested elements</title>
                                     <section>
                                              <title>any resource collection</title>
@@ -556,46 +582,62 @@ Calabash</citetitle> from Apache Ant using the
                            </section>
                   </section>
                   <section>
-                                    <title>any resource collection</title>
-                                    <para>Use resource collections to specify fixed resources that
-                                    should processed consecutively in a sequence of Calabash
-                                    runs.</para>
-                           </section>
-                           <section>
-                                    <title>mapper</title>
-                                    <para>You can define resources to which to write based on the
-                                    resource(s) specified for the implicit fileset (based on <tag
-                                             class="attribute">includes</tag>, etc.) and / or on the
-                                    explicit fileset formed from resource collections that are
-                                    children of <tag class="element">calabash</tag>.</para>
-                           </section>
+                           <title>any resource collection</title>
+                           <para>Use resource collections to specify fixed resources that
+                           should processed consecutively in a sequence of Calabash
+                           runs.</para>
+                  </section>
                   <section>
-                                    <title>namespace</title>
+                           <title>mapper</title>
+                           <para>You can define resources to which to write based on the
+                           resource(s) specified for the implicit fileset (based on <tag
+                                    class="attribute">includes</tag>, etc.) and / or on the
+                           explicit fileset formed from resource collections that are
+                           children of <tag class="element">calabash</tag>.</para>
+                  </section>
+                  <section>
+                           <title>namespace</title>
                            <para>Use nested <tag class="element">namespace</tag> elements to define
                                     mappings between prefixes and namespace URIs for any prefixes
                                     that are used in <tag class="element">option</tag> or <tag
                                              class="element">parameter</tag> elements.</para>
-                           <informaltable frame="border">
-                                    <thead>
-                                             <tr>
-                                                      <th>Attribute</th>
-                                                      <th>Description</th>
-                                                      <th>Required</th>
-                                             </tr>
-                                    </thead>
-                                    <tbody>
-                                             <tr>
-                                                      <td>prefix</td>
-                                                  <td>Prefix to which to map the URI</td>
-                                                      <td>Yes</td>
-                                             </tr>
-                                             <tr>
-                                                      <td>uri</td>
-                                                      <td>Namespace uri</td>
-                                                      <td>Yes</td>
-                                             </tr>
-                                    </tbody>
-                           </informaltable></section>
+                           <section>
+                                    <title>Parameters</title>
+                                    <informaltable frame="border">
+                                             <thead>
+                                                      <tr>
+                                                               <th>Attribute</th>
+                                                               <th>Description</th>
+                                                               <th>Required</th>
+                                                      </tr>
+                                             </thead>
+                                             <tbody>
+                                                      <tr>
+                                                               <td>prefix</td>
+                                                               <td>Prefix to which to map the URI</td>
+                                                               <td>Yes</td>
+                                                      </tr>
+                                                      <tr>
+                                                               <td>uri</td>
+                                                               <td>Namespace uri</td>
+                                                               <td>Yes</td>
+                                                      </tr>
+                                                      <tr>
+                                                               <td>if</td>
+                                                               <td>This parameter behaves like standard Ant if's as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
+                                                               <td>No</td>
+                                                      </tr>
+                                                      <tr>
+                                                               <td>unless</td>
+                                                               <td>This parameter behaves like standard Ant unless' as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
+                                                               <td>No</td>
+                                                      </tr>
+                                             </tbody>
+                                    </informaltable>
+                           </section>
+                  </section>
                   <section xml:id="ant.option">
                            <title>option</title>
                            <para>Specifies an option to be passed to the XProc processor</para>
@@ -708,6 +750,32 @@ Calabash</citetitle> from Apache Ant using the
                            <title>library</title>
                            <para>Library resources. The steps in the libraries loaded are only available in <tag class="emptytag">step</tag> tags.
                                   If no steps are specified, the first step of the first loaded library will be used.</para>
+                           <section>
+                                    <title>Parameters</title>
+                                    <informaltable frame="border">
+                                             <thead>
+                                                      <tr>
+                                                               <th>Attribute</th>
+                                                               <th>Description</th>
+                                                               <th>Required</th>
+                                                      </tr>
+                                             </thead>
+                                             <tbody>
+                                                      <tr>
+                                                               <td>if</td>
+                                                               <td>This parameter behaves like standard Ant if's as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
+                                                               <td>No</td>
+                                                      </tr>
+                                                      <tr>
+                                                               <td>unless</td>
+                                                               <td>This parameter behaves like standard Ant unless' as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
+                                                               <td>No</td>
+                                                      </tr>
+                                             </tbody>
+                                    </informaltable>
+                           </section>
                            <section>
                                     <title>Parameters specified as nested elements</title>
                                     <section>
