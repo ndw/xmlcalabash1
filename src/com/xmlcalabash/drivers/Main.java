@@ -168,7 +168,7 @@ public class Main {
             XdmNode doc = config.pipeline.read();
             pipeline = runtime.use(doc);
         } else {
-            throw new UnsupportedOperationException();
+            throw new UnsupportedOperationException("Either a pipeline or libraries and / or steps must be given");
         }
 
         // Process parameters from the configuration...
