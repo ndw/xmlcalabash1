@@ -1254,7 +1254,7 @@ public class CalabashTask extends MatchingTask {
          * @param mapper the mapper to use
          * @throws BuildException if more than one mapper is defined
          */
-        public void addMapper(Mapper mapper) throws BuildException {
+        public void addConfiguredMapper(Mapper mapper) throws BuildException {
             add(mapper.getImplementation());
         }
 
