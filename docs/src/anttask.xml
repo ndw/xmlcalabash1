@@ -645,7 +645,7 @@ Calabash</citetitle> from Apache Ant using the
                            </section>
                   </section>
                   <section>
-                           <title>param</title>
+                           <title>parameter</title>
                            <para>Specifies a parameter to be passed to the XProc processor</para>
                            <section>
                                     <title>Parameters</title>
