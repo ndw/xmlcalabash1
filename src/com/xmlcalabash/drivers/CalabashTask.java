@@ -187,6 +187,21 @@ public class CalabashTask extends MatchingTask {
     private CommandlineJava.SysProperties sysProperties =
             new CommandlineJava.SysProperties();
 
+    /**
+     * The list of parameters.
+     */
+    private List<Parameter> parameters = new ArrayList<Parameter>();
+
+    /**
+     * The list of options.
+     */
+    private List<Option> options = new ArrayList<Option>();
+
+    /**
+     * The list of steps.
+     */
+    private List<Step> steps = new ArrayList<Step>();
+
     /* End of fields to reset at end of execute(). */
 
     /**
@@ -230,17 +245,17 @@ public class CalabashTask extends MatchingTask {
     /**
      * Work with an instance of an {@code <input>} element already configured by Ant.
      *
-     * @param i the configured input Port
+     * @param input the configured input Port
      */
-    public void addConfiguredInput(Input i) {
-        if (!i.shouldUse()) {
-            log("Skipping input '" + i.getPort() + "' as it is configured to be unused.", Project.MSG_DEBUG);
+    public void addConfiguredInput(Input input) {
+        if (!input.shouldUse()) {
+            log("Skipping input '" + input.getPort() + "' as it is configured to be unused.", Project.MSG_DEBUG);
             return;
         }
 
-        String port = i.getPort();
-        FileNameMapper inputMapper = i.getMapper();
-        Union resources = i.getResources();
+        String port = input.getPort();
+        FileNameMapper inputMapper = input.getMapper();
+        Union resources = input.getResources();
 
         if (port == null) {
             port = inPort;
@@ -267,19 +282,19 @@ public class CalabashTask extends MatchingTask {
                 return;
             }
 
-            inputMappers.put(port, new TypedFileNameMapper(inputMapper, i.getType()));
+            inputMappers.put(port, new TypedFileNameMapper(inputMapper, input.getType()));
         } else {
             if (inputMappers.containsKey(port)) {
                 handleError("Resources used on input port that already has a mapper: " + port);
                 return;
             }
 
-            if (!inputResources.containsKey(port)) {
+            if ((resources.size() != 0) && !inputResources.containsKey(port)) {
                 inputResources.put(port, new ArrayList<TypedResource>());
             }
 
             for (Resource resource : resources.listResources()) {
-                inputResources.get(port).add(new TypedResource(resource, i.getType()));
+                inputResources.get(port).add(new TypedResource(resource, input.getType()));
             }
         }
     }
@@ -311,8 +326,12 @@ public class CalabashTask extends MatchingTask {
      * @param rc the configured Resources object represented as &lt;pipeline&gt;.
      */
     public void addConfiguredPipeline(Resources rc) {
-        if (rc.size() != 1) {
-            handleError("The pipeline element must be specified with exactly one nested resource.");
+        if (rc.size() == 0) {
+            return;
+        }
+
+        if (rc.size() > 1) {
+            handleError("The pipeline element must be specified with at most one nested resource.");
         }
 
         setPipeline((Resource) rc.iterator().next());
@@ -525,16 +544,30 @@ public class CalabashTask extends MatchingTask {
     /**
      * Work with an instance of a <option> element already configured by Ant.
      *
-     * @param o the configured Option
+     * @param option the configured Option
      */
-    public void addConfiguredOption(Option o) {
-        if (!o.shouldUse()) {
-            log("Skipping option '" + o.getName() + "' as it is configured to be unused.", Project.MSG_DEBUG);
+    public void addConfiguredOption(Option option) {
+        if (!option.shouldUse()) {
+            log("Skipping option '" + option.getName() + "' as it is configured to be unused.", Project.MSG_DEBUG);
+            return;
+        }
+
+        options.add(option);
+    }
+
+    /**
+     * Use an {@code <option>} element.
+     *
+     * @param option the Option
+     */
+    public void useOption(Option option) {
+        if (!option.shouldUse()) {
+            log("Skipping option '" + option.getName() + "' as it is configured to be unused.", Project.MSG_DEBUG);
             return;
         }
 
         try {
-            userArgs.addOption(o.getName(), o.getValue());
+            userArgs.addOption(option.getName(), option.getValue());
         } catch (Exception e) {
             handleError(e);
         }
@@ -543,16 +576,30 @@ public class CalabashTask extends MatchingTask {
     /**
      * Work with an instance of a <parameter> element already configured by Ant.
      *
-     * @param p the configured Parameter
+     * @param parameter the configured Parameter
      */
-    public void addConfiguredParameter(Parameter p) {
-        if (!p.shouldUse()) {
-            log("Skipping parameter '" + p.getName() + "' as it is configured to be unused.", Project.MSG_DEBUG);
+    public void addConfiguredParameter(Parameter parameter) {
+        if (!parameter.shouldUse()) {
+            log("Skipping parameter '" + parameter.getName() + "' as it is configured to be unused.", Project.MSG_DEBUG);
+            return;
+        }
+
+        parameters.add(parameter);
+    }
+
+    /**
+     * Use a {@code <parameter>} element.
+     *
+     * @param parameter the Parameter
+     */
+    public void useParameter(Parameter parameter) {
+        if (!parameter.shouldUse()) {
+            log("Skipping parameter '" + parameter.getName() + "' as it is configured to be unused.", Project.MSG_DEBUG);
             return;
         }
 
         try {
-            userArgs.addParam(p.getPort(), p.getName(), p.getValue());
+            userArgs.addParam(parameter.getPort(), parameter.getName(), parameter.getValue());
         } catch (Exception e) {
             handleError(e);
         }
@@ -776,9 +823,41 @@ public class CalabashTask extends MatchingTask {
     }
 
     /**
+     * Add a nested {@code <step>} element.
+     *
+     * @param step the configured Step object represented as {@code <step>}.
+     */
+    public void addConfiguredStep(Step step) {
+        if (!step.shouldUse()) {
+            log("Skipping step '" + step.getName() + "' as it is configured to be unused.", Project.MSG_DEBUG);
+            return;
+        }
+
+        if (step.getName() == null) {
+            handleError("Steps must have their 'name' attribute set");
+        }
+
+        steps.add(step);
+    }
+
+    /**
      * Do the work.
      */
     public void execute() {
+        if (((inResource != null) || (resources.size() != 0) || !inputResources.isEmpty() || !inputMappers.isEmpty())
+            && !steps.isEmpty()) {
+
+            handleError("if steps are given, only active inputs nested in these steps are supported");
+        }
+
+        if (!parameters.isEmpty() && !steps.isEmpty()) {
+            handleError("if steps are given, only active parameters nested in these steps are supported");
+        }
+
+        if (!options.isEmpty() && !steps.isEmpty()) {
+            handleError("if steps are given, only active options nested in these steps are supported");
+        }
+
         if ((pipelineResource != null) && !pipelineResource.isExists()) {
             handleError("pipeline '" + pipelineResource.getName() + "' does not exist");
             return;
@@ -796,6 +875,11 @@ public class CalabashTask extends MatchingTask {
 
         if ((inResource != null || outResource != null) && useImplicitFileset) {
             log("'in' and/or 'out' cannot be used with implicit fileset: ignoring implicit fileset.", Project.MSG_VERBOSE);
+            useImplicitFileset = false;
+        }
+
+        if (!steps.isEmpty() && useImplicitFileset) {
+            log("steps cannot be used with implicit fileset: ignoring implicit fileset.", Project.MSG_VERBOSE);
             useImplicitFileset = false;
         }
 
@@ -853,6 +937,14 @@ public class CalabashTask extends MatchingTask {
                 && (isTargetExtensionSet || mapper != null)) {
                 handleError("Either 'out' or <output> corresponding to default output port and either 'extension' or nested <mapper> for naming output cannot be used together.");
                 return;
+            }
+
+            for (Parameter parameter : parameters) {
+                useParameter(parameter);
+            }
+
+            for (Option option : options) {
+                useOption(option);
             }
 
             // If neither implicit or explicit fileset, assume user
@@ -1040,6 +1132,9 @@ public class CalabashTask extends MatchingTask {
                 // No way to clear CommandlineJava.SysProperties
                 sysProperties = new CommandlineJava.SysProperties();
             }
+            parameters.clear();
+            options.clear();
+            steps.clear();
         }
     }
 
@@ -1094,6 +1189,20 @@ public class CalabashTask extends MatchingTask {
                 for (TypedResource typedResource : inputResources.get(port)) {
                     Resource resource = typedResource.getResource();
                     userArgs.addInput(port, resource.getInputStream(), resource.toString(), typedResource.getType());
+                }
+            }
+            for (Step step : steps) {
+                for (Input input : step.getInputs()) {
+                    for (Resource resource : input.getResources().listResources()) {
+                        userArgs.addInput(input.getPort(), resource.getInputStream(), resource.toString(), input.getType());
+                    }
+                }
+                for (Parameter parameter : step.getParameters()) {
+                    useParameter(parameter);
+                }
+                userArgs.setCurStepName(step.getName());
+                for (Option option : step.getOptions()) {
+                    useOption(option);
                 }
             }
 
@@ -1457,6 +1566,96 @@ public class CalabashTask extends MatchingTask {
             return port;
         }
     } // Parameter
+
+    /**
+     * The {@code Step} inner class represents a pipeline step.
+     */
+    public static class Step extends Useable {
+        private String name = null;
+        private List<Input> inputs = new ArrayList<Input>();
+        private List<Parameter> parameters = new ArrayList<Parameter>();
+        private List<Option> options = new ArrayList<Option>();
+
+        /**
+         * Set the name.
+         *
+         * @param name the name
+         */
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        /**
+         * Get the name.
+         *
+         * @return the name
+         */
+        public String getName() {
+            return name;
+        }
+
+        /**
+         * Add a nested {@code <input>}.
+         *
+         * @param input the {@code Input} object
+         */
+        public void addConfiguredInput(Input input) {
+            if (!input.shouldUse()) {
+                super.project.log("Skipping input '" + input.getPort() + "' as it is configured to be unused.", Project.MSG_DEBUG);
+                return;
+            }
+
+            inputs.add(input);
+            if (input.getMapper() != null) {
+                throw new BuildException("Mappers are not supported for inputs that are nested in steps");
+            }
+        }
+
+        /**
+         * Get the inputs.
+         *
+         * @return the inputs
+         */
+        public List<Input> getInputs() {
+            return inputs;
+        }
+
+        /**
+         * Add a nested {@code <parameter>}.
+         *
+         * @param parameter the {@code Parameter} object
+         */
+        public void addConfiguredParameter(Parameter parameter) {
+            parameters.add(parameter);
+        }
+
+        /**
+         * Get the parameters.
+         *
+         * @return the parameters
+         */
+        public List<Parameter> getParameters() {
+            return parameters;
+        }
+
+        /**
+         * Add a nested {@code <option>}.
+         *
+         * @param option the {@code Option} object
+         */
+        public void addConfiguredOption(Option option) {
+            options.add(option);
+        }
+
+        /**
+         * Get the options.
+         *
+         * @return the options
+         */
+        public List<Option> getOptions() {
+            return options;
+        }
+    } // Step
 
     private static class TypedResource {
         private Resource resource = null;

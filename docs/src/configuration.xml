@@ -643,6 +643,10 @@ the first step of the first loaded library will be used.</para>
   <entry>Command line (short):</entry>
   <entry><literal>-s</literal><replaceable>stepname</replaceable></entry>
 </row>
+<row>
+  <entry>Ant task:</entry>
+  <entry><tag class="starttag">calabash</tag><tag class="emptytag">step <tag class="attribute">name</tag>="<tag class="attvalue"><replaceable>stepname</replaceable></tag>"</tag><tag class="endtag">calabash</tag></entry>
+</row>
 </tbody>
 </tgroup>
 </informaltable>

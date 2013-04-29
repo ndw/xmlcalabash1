@@ -596,7 +596,7 @@ Calabash</citetitle> from Apache Ant using the
                                              </tr>
                                     </tbody>
                            </informaltable></section>
-                  <section>
+                  <section xml:id="ant.option">
                            <title>option</title>
                            <para>Specifies an option to be passed to the XProc processor</para>
                            <section>
@@ -644,7 +644,7 @@ Calabash</citetitle> from Apache Ant using the
                                     </informaltable>
                            </section>
                   </section>
-                  <section>
+                  <section xml:id="ant.parameter">
                            <title>parameter</title>
                            <para>Specifies a parameter to be passed to the XProc processor</para>
                            <section>
@@ -717,6 +717,73 @@ Calabash</citetitle> from Apache Ant using the
 <programlisting><![CDATA[<library>
     <url url="http://xmlcalabash.com/extension/steps/library-1.0.xpl"/>
 </library>]]></programlisting></para>
+                                    </section>
+                           </section>
+                  </section>
+                  <section xml:id="ant.step">
+                           <title>step</title>
+                           <para>The steps to be used to form an implicit pipeline.
+                                  If no steps are specified, the first step of the first loaded library will be used.</para>
+                           <section>
+                                    <title>Parameters</title>
+                                    <informaltable frame="border">
+                                             <thead>
+                                                      <tr>
+                                                               <th>Attribute</th>
+                                                               <th>Description</th>
+                                                               <th>Required</th>
+                                                      </tr>
+                                             </thead>
+                                             <tbody>
+                                                      <tr>
+                                                               <td>name</td>
+                                                               <td>The name of the step to execute.
+                                                  QNames have their prefix matched
+                                                  against bindings specified in <tag class="element"
+                                                  >namespace</tag> elements. QNames may also be
+                                                  specified in Clark notation, e.g.,
+                                                  <literal>{uri}name</literal>.</td>
+                                                               <td>Yes</td>
+                                                      </tr>
+                                                      <tr>
+                                                               <td>if</td>
+                                                               <td>This parameter behaves like standard Ant if's as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
+                                                               <td>No</td>
+                                                      </tr>
+                                                      <tr>
+                                                               <td>unless</td>
+                                                               <td>This parameter behaves like standard Ant unless' as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
+                                                               <td>No</td>
+                                                      </tr>
+                                             </tbody>
+                                    </informaltable>
+                           </section>
+                           <section>
+                                    <title>Parameters specified as nested elements</title>
+                                    <section>
+                                             <title>input</title>
+					     <para>Input elements as documented in <xref linkend="ant.input"/>, with the exception that no nested mapper is supported, but only resource collections, e. g.
+<programlisting><![CDATA[<step name="p:identity">
+    <input port="source">
+        <string><![CDATA[<foo/>]]]]><![CDATA[></string>
+    </input>
+</step>]]></programlisting></para>
+                                    </section>
+                                    <section>
+                                             <title>parameter</title>
+                                             <para>Parameter elements as documented in <xref linkend="ant.parameter"/>, e. g.
+<programlisting><![CDATA[<step name="p:template">
+    <parameter name="foo" value="bar" />
+</step>]]></programlisting></para>
+                                    </section>
+                                    <section>
+                                             <title>option</title>
+                                             <para>Option elements as documented in <xref linkend="ant.option"/>, e. g.
+<programlisting><![CDATA[<step name="p:count">
+    <option name="limit" value="1" />
+</step>]]></programlisting></para>
                                     </section>
                            </section>
                   </section>
