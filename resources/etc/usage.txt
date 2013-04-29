@@ -27,7 +27,9 @@ Where switches are:
   -S, --safe-mode                      Request 'safe' execution
   -U, --uri-resolver className         Specify a resolver class for URI resolution
   -v, --version                        Show XML Calabash version
-  -X, --extension extname              Enable the 'extname' extension
+  -X, --extension extname              Enable the 'extname' extension;
+                                       valid extname values are 'general-values', 'xpointer-on-text',
+                                       'transparent-json', 'json-flavor=<flavor>' and 'use-xslt-10'
       --saxon-configuration file       Load the specified Saxon configuration
 
 For more information, consult http://xmlcalabash.com/docs/reference/ or
