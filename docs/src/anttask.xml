@@ -70,18 +70,17 @@ Calabash</citetitle> from Apache Ant using the
                                              <tag class="attribute">inPort</tag> is omitted) are
                                     applied to the <tag class="attribute">inPort</tag> port.  Those
                                              <tag class="element">input</tag> elements may contain
-                                    zero or more elements selecting an Ant resource collection
+                                    zero or more <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resources</link>
                                     (i.e., <tag class="element">fileset</tag>, <tag class="element"
-                                             >dirset</tag>, etc.) that may each select zero or more
-                                    files.</para>
+                                             >dirset</tag>, etc.).</para>
                            <para><tag class="element">input</tag> elements for ports other than the
                                              <tag class="attribute">inPort</tag> port may contain
-                                    either zero or more resource collection elements or an Ant
+                                    either zero or more <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resources</link> or an Ant
                                     mapper element (i.e., <tag class="element">mapper</tag>, <tag
                                              class="element">globmapper</tag>, etc.) that maps the
                                     current <tag class="attribute">inPort</tag> file(s) name(s) to
                                     other file name(s) that are used as the input file(s) for that
-                                    port.  You cannot specify both resource collections and a mapper
+                                    port. You cannot specify both Ant resources and a mapper
                                     for an input port (nor can you specify a mapper for the <tag
                                              class="attribute">inPort</tag> port).</para>
                            <para>You can as well or instead specify a file to contain the output of
@@ -101,12 +100,12 @@ Calabash</citetitle> from Apache Ant using the
                            <para>Other <tag class="element">output</tag> elements may each be used
                                     for any of the other output ports of the pipeline.</para>
                            <para><tag class="attribute">output</tag> elements may contain either
-                                    zero or more resource collection elements or an Ant mapper
+                                    zero or more <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resources</link> or an Ant mapper
                                     element (i.e., <tag class="element">mapper</tag>, <tag
                                              class="element">globmapper</tag>, etc.) that maps the
                                     current <tag class="attribute">inPort</tag> file(s) name(s) to a
                                     file name that is used as the output file for that port.  You
-                                    cannot specify both resource collections and a mapper for an
+                                    cannot specify both Ant resources and a mapper for an
                                     output port, and the <tag class="element">output</tag> cannot
                                     result in more than one file name.</para>
                            <para>When no files are specified for either the <tag class="attribute"
@@ -114,8 +113,8 @@ Calabash</citetitle> from Apache Ant using the
                                     ports, the implicit fileset (formed based on <tag
                                              class="attribute">includes</tag> and other attributes
                                     of <tag class="element">calabash</tag>) and / or an explicit file
-                                    set (formed from nested resource collection elements (outside of
-                                    any in <tag class="element">input</tag> or <tag class="element"
+                                    set (formed from nested <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resources</link> (outside of
+                                    any <tag class="element">input</tag> or <tag class="element"
                                              >output</tag> elements) makes a set of files that are
                                     processed one at a time as the input to the <tag
                                              class="attribute">inPort</tag> port in separate runs of
@@ -136,7 +135,8 @@ Calabash</citetitle> from Apache Ant using the
                                     using a nested mapper instead of <tag class="attribute"
                                              >extension</tag>) determine the filename to use for the
                                     output of the <tag class="attribute">outPort</tag> port, and the
-                                    resource collections or mapper for other input and output ports
+                                    <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resources</link>
+                                    or mapper for other input and output ports
                                     determine the file(s) from which to read or the file to which to
                                     write for those ports.</para>
                   </section>
@@ -289,7 +289,7 @@ Calabash</citetitle> from Apache Ant using the
                                     <tr>
                                              <td>failOnNoResources</td>
                                              <td>Whether the build should fail if the explicit
-                                                  fileset from a nested resource collection is
+                                                  fileset from nested <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resources</link> is
                                                   empty</td>
                                              <td>No; default is <literal>true</literal></td>
                                     </tr>
@@ -393,7 +393,7 @@ Calabash</citetitle> from Apache Ant using the
                   <title>Parameters specified as nested elements</title>
                   <section xml:id="ant.input">
                            <title>input</title>
-                           <para>Specification of resources to apply to an input port.  May specify
+                           <para>Specification of resources to apply to an input port. May specify
                                     additional or alternative inputs to be applied to the
                                     <tag class="attribute">inPort</tag> port or may be fixed or mapped
                                     resources to be applied to other ports.</para>
@@ -435,11 +435,11 @@ Calabash</citetitle> from Apache Ant using the
                                     </informaltable></section>
                            <section>
                                     <title>Parameters specified as nested elements</title>
-                                    <para>Either resource collections <emphasis>or</emphasis> a
+                                    <para>Either <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resources</link> <emphasis>or</emphasis> a
                                              mapper may be specified, but not both.</para>
                                     <section>
-                                             <title>any resource collection</title>
-                                             <para>Use resource collections to specify
+                                             <title>any <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resource</link></title>
+                                             <para>Use <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resources</link> to specify
                                                       fixed resources that should be applied to this
                                                       port. Any readable resource can be used, e. g.
 <programlisting><![CDATA[<input>
@@ -497,8 +497,8 @@ Calabash</citetitle> from Apache Ant using the
                            <section>
                                     <title>Parameters specified as nested elements</title>
                                     <section>
-                                             <title>any resource collection</title>
-                                             <para>Any resource collection can be used, but only
+                                             <title>any <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resource</link></title>
+                                             <para>Any <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resource</link> can be used, but only
                                                   one single readable resource may be contained
                                                   in it, e. g.
 <programlisting><![CDATA[<pipeline>
@@ -558,15 +558,13 @@ Calabash</citetitle> from Apache Ant using the
                            </section>
                            <section>
                                     <title>Parameters specified as nested elements</title>
-                                    <para>Either resource collections <emphasis>or</emphasis> a
-                                             mapper may be specified, but not both.</para>
+                                    <para>Either <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resources</link>
+                                             <emphasis>or</emphasis> a mapper may be specified, but not both.</para>
                                     <section>
-                                             <title>any resource collection</title>
-                                             <para>Use resource collections to specify fixed
+                                             <title>any <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resource</link></title>
+                                             <para>Use <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resources</link> to specify fixed
                                                   resources that should be applied to this
-                                                  port. Any resource collection can be used,
-                                                  but only writable resources may be contained
-                                                  in it, e. g.
+                                                  port. Any writable <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resource</link> can be used, e. g.
 <programlisting><![CDATA[<output>
     <bzip2resource>
         <file file="result.xml.bz2"/>
@@ -582,9 +580,9 @@ Calabash</citetitle> from Apache Ant using the
                            </section>
                   </section>
                   <section>
-                           <title>any resource collection</title>
-                           <para>Use resource collections to specify fixed resources that
-                           should processed consecutively in a sequence of Calabash
+                           <title>any <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resource</link></title>
+                           <para>Use readable <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resources</link> to specify fixed resources that
+                           should be processed consecutively in a sequence of Calabash
                            runs.</para>
                   </section>
                   <section>
@@ -779,9 +777,8 @@ Calabash</citetitle> from Apache Ant using the
                            <section>
                                     <title>Parameters specified as nested elements</title>
                                     <section>
-                                             <title>any resource collection</title>
-                                             <para>Any resource collection can be used, but only
-                                                  readable resources may be contained in it, e. g.
+                                             <title>any <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resources</link></title>
+                                             <para>Any readable <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resource</link> can be used, e. g.
 <programlisting><![CDATA[<library>
     <url url="http://xmlcalabash.com/extension/steps/library-1.0.xpl"/>
 </library>]]></programlisting></para>
