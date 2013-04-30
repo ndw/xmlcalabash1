@@ -65,7 +65,7 @@ public class UserArgs {
     private Output profile = null;
     private boolean showVersion = false;
     private String saxonProcessor = null;
-    private String saxonConfigFile = null;
+    private Input saxonConfig = null;
     private boolean schemaAware = false;
     private Boolean safeMode = null;
     private String configFile = null;
@@ -125,9 +125,24 @@ public class UserArgs {
         }
     }
 
-    public void setSaxonConfigFile(String saxonConfigFile) {
+    private void setSaxonConfig(Input saxonConfig) {
         needsCheck = true;
-        this.saxonConfigFile = saxonConfigFile;
+        if ((this.saxonConfig != null) && (saxonConfig != null)) {
+            throw new XProcException("Multiple saxonConfig are not supported.");
+        }
+        this.saxonConfig = saxonConfig;
+    }
+
+    public void setSaxonConfig(String saxonConfig) {
+        if ("-".equals(saxonConfig)) {
+            setSaxonConfig(new Input(System.in, "<stdin>"));
+        } else {
+            setSaxonConfig(new Input("file://" + fixUpURI(saxonConfig)));
+        }
+    }
+
+    public void setSaxonConfig(InputStream inputStream, String uri) {
+        setSaxonConfig(new Input(inputStream, uri));
     }
 
     public void setSchemaAware(boolean schemaAware) {
@@ -378,7 +393,7 @@ public class UserArgs {
                 throw new XProcException("You can specify a library and / or steps or a pipeline, but not both.");
             }
 
-            if (saxonConfigFile != null) {
+            if (saxonConfig != null) {
                 if (schemaAware) {
                     throw new XProcException("Specifying schema-aware processing is an error if you specify a Saxon configuration file.");
                 }
@@ -414,8 +429,8 @@ public class UserArgs {
                 proc = "ee";
             }
 
-            if (saxonConfigFile != null) {
-                config = new XProcConfiguration(saxonConfigFile);
+            if (saxonConfig != null) {
+                config = new XProcConfiguration(saxonConfig);
             } else if (proc != null) {
                 config = new XProcConfiguration(proc, schemaAware);
             } else {

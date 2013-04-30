@@ -1,5 +1,6 @@
 package com.xmlcalabash.core;
 
+import com.xmlcalabash.util.Input;
 import com.xmlcalabash.util.JSONtoXML;
 import com.xmlcalabash.util.Output;
 import net.sf.saxon.Configuration;
@@ -41,6 +42,7 @@ import javax.xml.transform.Source;
 import org.xml.sax.InputSource;
 
 import static com.xmlcalabash.util.URIUtils.encode;
+import static java.lang.String.format;
 import static java.lang.System.getProperty;
 
 /**
@@ -66,7 +68,7 @@ public class XProcConfiguration {
 
     public String saxonProcessor = "he";
     public boolean schemaAware = false;
-    public String saxonConfigFile = null;
+    public Input saxonConfig = null;
     public Hashtable<String,String> nsBindings = new Hashtable<String,String> ();
     public boolean debug = false;
     public Output profile = null;
@@ -113,7 +115,7 @@ public class XProcConfiguration {
         init("he", schemaAware, null);
     }
 
-    public XProcConfiguration(String saxoncfg) {
+    public XProcConfiguration(Input saxoncfg) {
         init(null, false, saxoncfg);
     }
 
@@ -133,7 +135,7 @@ public class XProcConfiguration {
         return cfgProcessor;
     }
 
-    private void init(String proctype, boolean schemaAware, String saxoncfg) {
+    private void init(String proctype, boolean schemaAware, Input saxoncfg) {
         if (schemaAware) {
             proctype = "ee";
         }
@@ -147,7 +149,7 @@ public class XProcConfiguration {
         this.saxonProcessor = Configuration.softwareEdition.toLowerCase();
 
         if (!(proctype == null || saxonProcessor.equals(proctype)) || schemaAware != this.schemaAware ||
-            (saxoncfg == null && saxonConfigFile != null)) {
+            (saxoncfg == null && saxonConfig != null)) {
             // Drat. We have to restart to get the right configuration.
             nsBindings.clear();
             inputs.clear();
@@ -157,7 +159,7 @@ public class XProcConfiguration {
             implementations.clear();
             extensionFunctions.clear();
 
-            createSaxonProcessor(saxonProcessor, this.schemaAware, saxonConfigFile);
+            createSaxonProcessor(saxonProcessor, this.schemaAware, saxonConfig);
             loadConfiguration();
 
             // If we got a schema aware processor, make sure it's reflected in our config
@@ -167,12 +169,26 @@ public class XProcConfiguration {
         }
     }
 
-    private void createSaxonProcessor(String proctype, boolean schemaAware, String saxoncfg) {
+    private void createSaxonProcessor(String proctype, boolean schemaAware, Input saxoncfg) {
         boolean licensed = schemaAware || !"he".equals(proctype);
 
         if (saxoncfg != null) {
             try {
-                InputStream instream = new FileInputStream(saxoncfg);
+                InputStream instream = null;
+                switch (saxoncfg.getKind()) {
+                    case URI:
+                        URI furi = URI.create(saxoncfg.getUri());
+                        instream = new FileInputStream(new File(furi));
+                        break;
+
+                    case INPUT_STREAM:
+                        instream = saxoncfg.getInputStream();
+                        break;
+
+                    default:
+                        throw new UnsupportedOperationException(format("Unsupported saxonConfig kind '%s'", saxoncfg.getKind()));
+                }
+
                 SAXSource source = new SAXSource(new InputSource(instream));
                 cfgProcessor = new Processor(source);
             } catch (FileNotFoundException e) {
@@ -269,7 +285,10 @@ public class XProcConfiguration {
             throw new XProcException("Invalid Saxon processor specified in com.xmlcalabash.saxon-processor property.");
         }
 
-        saxonConfigFile = System.getProperty("com.xmlcalabash.saxon-configuration", saxonConfigFile);
+        String saxonConfigProperty = System.getProperty("com.xmlcalabash.saxon-configuration");
+        if (saxonConfigProperty != null) {
+            saxonConfig = new Input("file://" + fixUpURI(saxonConfigProperty));
+        }
 
         schemaAware = "true".equals(System.getProperty("com.xmlcalabash.schema-aware", ""+schemaAware));
         debug = "true".equals(System.getProperty("com.xmlcalabash.debug", ""+debug));
@@ -465,7 +484,7 @@ public class XProcConfiguration {
 
     private void parseSaxonConfiguration(XdmNode node) {
         String value = node.getStringValue().trim();
-        saxonConfigFile = value;
+        saxonConfig = new Input("file://" + fixUpURI(value));
     }
 
     private void parseSchemaAware(XdmNode node) {

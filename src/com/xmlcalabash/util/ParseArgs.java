@@ -33,7 +33,7 @@ public class ParseArgs {
             }
 
             if (arg.startsWith("--saxon-configuration")) {
-                userArgs.setSaxonConfigFile(parseString(null, "saxon-configuration"));
+                userArgs.setSaxonConfig(parseString(null, "saxon-configuration"));
                 continue;
             }
 

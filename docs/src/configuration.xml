@@ -86,7 +86,11 @@ There are three ways to specify the location of this file:
 </row>
 <row>
   <entry>Ant task:</entry>
-  <entry><tag class="emptytag">calabash <tag class="attribute">saxonConfigFile</tag>="<tag class="attvalue"><replaceable>filename</replaceable></tag>"</tag></entry>
+  <entry>
+    <tag class="emptytag">calabash <tag class="attribute">saxonConfigFile</tag>="<tag class="attvalue"><replaceable>filename</replaceable></tag>"</tag>
+    or
+    <tag class="starttag">calabash</tag><tag class="starttag">saxonConfig</tag><replaceable>saxon config resource</replaceable><tag class="endtag">saxonConfig</tag><tag class="endtag">calabash</tag>
+  </entry>
 </row>
 </tbody>
 </tgroup>

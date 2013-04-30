@@ -752,12 +752,34 @@ public class CalabashTask extends MatchingTask {
      *
      * @param saxonConfigFile the path to the Saxon configuration file to be loaded
      */
-    public void setSaxonConfigFile(String saxonConfigFile) {
+    public void setSaxonConfigFile(Resource saxonConfigFile) {
         try {
-            userArgs.setSaxonConfigFile(saxonConfigFile);
+            userArgs.setSaxonConfig(saxonConfigFile.getInputStream(), saxonConfigFile.toString());
         } catch (Exception e) {
             handleError(e);
         }
+    }
+
+    /**
+     * Add a nested {@code <saxonConfig>} element.
+     *
+     * @param saxonConfig the configured Resources object represented as {@code <saxonConfig>}
+     */
+    public void addConfiguredSaxonConfig(UseableResources saxonConfig) {
+        if (!saxonConfig.shouldUse()) {
+            log("Skipping saxonConfig as it is configured to be unused.", Project.MSG_DEBUG);
+            return;
+        }
+
+        if (saxonConfig.size() == 0) {
+            return;
+        }
+
+        if (saxonConfig.size() > 1) {
+            handleError("The saxonConfig element must be specified with at most one nested resource.");
+        }
+
+        setSaxonConfigFile((Resource) saxonConfig.iterator().next());
     }
 
     /**
