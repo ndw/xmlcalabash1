@@ -58,7 +58,7 @@ public class ParseArgs {
             }
 
             if (arg.startsWith("-c") || arg.startsWith("--config")) {
-                userArgs.setConfigFile(parseString("c","config"));
+                userArgs.setConfig(parseString("c", "config"));
                 continue;
             }
 

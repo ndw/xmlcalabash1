@@ -888,6 +888,63 @@ Calabash</citetitle> from Apache Ant using the
                                     </section>
                            </section>
                   </section>
+                  <section>
+                           <title>config</title>
+                           <para>Config resource. Can be used instead of <tag class="attribute"
+                                             >configFile</tag> attribute.</para>
+                           <section>
+                                    <title>Parameters</title>
+                                    <informaltable frame="border">
+                                             <thead>
+                                                      <tr>
+                                                               <th>Attribute</th>
+                                                               <th>Description</th>
+                                                               <th>Required</th>
+                                                      </tr>
+                                             </thead>
+                                             <tbody>
+                                                      <tr>
+                                                               <td>if</td>
+                                                               <td>This parameter behaves like standard Ant if's as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
+                                                               <td>No</td>
+                                                      </tr>
+                                                      <tr>
+                                                               <td>unless</td>
+                                                               <td>This parameter behaves like standard Ant unless' as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
+                                                               <td>No</td>
+                                                      </tr>
+                                             </tbody>
+                                    </informaltable>
+                           </section>
+                           <section>
+                                    <title>Parameters specified as nested elements</title>
+                                    <section>
+                                             <title>any <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resource</link></title>
+                                             <para>Any <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resource</link> can be used, but only
+                                                  one single readable resource may be contained
+                                                  in it, e. g.
+<programlisting><![CDATA[<config>
+    <bzip2resource>
+        <file file="config.xml.bz2"/>
+    </bzip2resource>
+</config>]]></programlisting>
+                                                  or
+<programlisting><![CDATA[<config>
+    <stdinout/>
+</config>]]></programlisting>
+                                                  or
+<programlisting><![CDATA[<config>
+    <string><![CDATA[
+        <xproc-config xmlns="http://xmlcalabash.com/ns/configuration">
+            <html-parser value="tagsoup" />
+        </xproc-config>
+    ]]]]><![CDATA[></string>
+</config>]]></programlisting></para>
+                                    </section>
+                           </section>
+                  </section>
                   <section xml:id="ant.library">
                            <title>library</title>
                            <para>Library resources. The steps in the libraries loaded are only available in <tag class="emptytag">step</tag> tags.

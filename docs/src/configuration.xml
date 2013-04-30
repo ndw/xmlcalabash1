@@ -224,7 +224,11 @@ access the local filesystem will result in a dynamic error.</para>
 </row>
 <row>
   <entry>Ant task:</entry>
-  <entry><tag class="emptytag">calabash <tag class="attribute">configFile</tag>="<tag class="attvalue"><replaceable>configuri</replaceable></tag>"</tag></entry>
+  <entry>
+    <tag class="emptytag">calabash <tag class="attribute">configFile</tag>="<tag class="attvalue"><replaceable>configuri</replaceable></tag>"</tag>
+    or
+    <tag class="starttag">calabash</tag><tag class="starttag">config</tag><replaceable>config resource</replaceable><tag class="endtag">config</tag><tag class="endtag">calabash</tag>
+  </entry>
 </row>
 </tbody>
 </tgroup>

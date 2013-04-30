@@ -1,10 +1,12 @@
 package com.xmlcalabash.util;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -68,7 +70,7 @@ public class UserArgs {
     private Input saxonConfig = null;
     private boolean schemaAware = false;
     private Boolean safeMode = null;
-    private String configFile = null;
+    private Input config = null;
     private String logStyle = null;
     private String entityResolverClass = null;
     private String uriResolverClass = null;
@@ -154,8 +156,23 @@ public class UserArgs {
         this.safeMode = safeMode;
     }
 
-    public void setConfigFile(String configFile) {
-        this.configFile = configFile;
+    private void setConfig(Input config) {
+        if ((this.config != null) && (config != null)) {
+            throw new XProcException("Multiple config are not supported.");
+        }
+        this.config = config;
+    }
+
+    public void setConfig(String config) {
+        if ("-".equals(config)) {
+            setConfig(new Input(System.in, "<stdin>"));
+        } else {
+            setConfig(new Input("file://" + fixUpURI(config)));
+        }
+    }
+
+    public void setConfig(InputStream inputStream, String uri) {
+        setConfig(new Input(inputStream, uri));
     }
 
     public void setLogStyle(String logStyle) {
@@ -442,14 +459,34 @@ public class UserArgs {
             exit(2);
         }
 
-        if (configFile != null) {
-            // Make this absolute because sometimes it fails from the command line otherwise. WTF?
-            String cfgURI = cwdAsURI().resolve(configFile).toASCIIString();
-            SAXSource source = new SAXSource(new InputSource(cfgURI));
-            // No resolver, we don't have one yet
-            DocumentBuilder builder = config.getProcessor().newDocumentBuilder();
-            XdmNode doc = builder.build(source);
-            config.parse(doc);
+        if (this.config != null) {
+            try {
+                InputStream instream;
+                switch (this.config.getKind()) {
+                    case URI:
+                        URI furi = URI.create(this.config.getUri());
+                        instream = new FileInputStream(new File(furi));
+                        break;
+
+                    case INPUT_STREAM:
+                        instream = this.config.getInputStream();
+                        break;
+
+                    default:
+                        throw new UnsupportedOperationException(format("Unsupported config kind '%s'", this.config.getKind()));
+                }
+
+
+                SAXSource source = new SAXSource(new InputSource(instream));
+                // No resolver, we don't have one yet
+                DocumentBuilder builder = config.getProcessor().newDocumentBuilder();
+                XdmNode doc = builder.build(source);
+                config.parse(doc);
+            } catch (Exception e) {
+                err.println("FATAL: Failed to parse configuration file.");
+                err.println(e);
+                exit(3);
+            }
         }
 
         if (logStyle != null) {

@@ -813,12 +813,34 @@ public class CalabashTask extends MatchingTask {
      *
      * @param configFile the path to a particular configuration file to be loaded
      */
-    public void setConfigFile(String configFile) {
+    public void setConfigFile(Resource configFile) {
         try {
-            userArgs.setConfigFile(configFile);
+            userArgs.setConfig(configFile.getInputStream(), configFile.toString());
         } catch (Exception e) {
             handleError(e);
         }
+    }
+
+    /**
+     * Add a nested {@code <config>} element.
+     *
+     * @param config the configured Resources object represented as {@code <config>}
+     */
+    public void addConfiguredConfig(UseableResources config) {
+        if (!config.shouldUse()) {
+            log("Skipping config as it is configured to be unused.", Project.MSG_DEBUG);
+            return;
+        }
+
+        if (config.size() == 0) {
+            return;
+        }
+
+        if (config.size() > 1) {
+            handleError("The config element must be specified with at most one nested resource.");
+        }
+
+        setConfigFile((Resource) config.iterator().next());
     }
 
     /**
