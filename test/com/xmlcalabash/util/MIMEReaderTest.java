@@ -1,25 +1,18 @@
 package com.xmlcalabash.util;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+
 import junit.framework.TestCase;
-
-import javax.xml.transform.sax.SAXSource;
-
-import org.xml.sax.InputSource;
-import org.apache.commons.httpclient.Header;
-import net.sf.saxon.s9api.DocumentBuilder;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.Processor;
+import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.trans.XPathException;
 
-import java.io.StringReader;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.IOException;
-import java.net.URL;
-import java.net.MalformedURLException;
-import java.net.HttpURLConnection;
-import java.net.URLConnection;
+import org.apache.http.Header;
 
 /**
  * Created by IntelliJ IDEA.

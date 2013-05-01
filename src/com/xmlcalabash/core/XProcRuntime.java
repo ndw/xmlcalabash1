@@ -20,6 +20,56 @@
 
 package com.xmlcalabash.core;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.reflect.Constructor;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Vector;
+import java.util.logging.Logger;
+
+import javax.xml.transform.URIResolver;
+import javax.xml.transform.sax.SAXSource;
+
+import net.sf.saxon.Configuration;
+import net.sf.saxon.lib.ExtensionFunctionDefinition;
+import net.sf.saxon.s9api.ExtensionFunction;
+import net.sf.saxon.s9api.Processor;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.Serializer;
+import net.sf.saxon.s9api.XdmDestination;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XsltCompiler;
+import net.sf.saxon.s9api.XsltExecutable;
+import net.sf.saxon.s9api.XsltTransformer;
+
+import org.apache.http.client.CookieStore;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.params.ClientPNames;
+import org.apache.http.client.params.CookiePolicy;
+import org.apache.http.cookie.params.CookieSpecPNames;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
+
 import com.xmlcalabash.config.XProcConfigurer;
 import com.xmlcalabash.functions.BaseURI;
 import com.xmlcalabash.functions.Cwd;
@@ -34,6 +84,9 @@ import com.xmlcalabash.functions.XPathVersionAvailable;
 import com.xmlcalabash.functions.XProcExtensionFunctionDefinition;
 import com.xmlcalabash.io.ReadableData;
 import com.xmlcalabash.io.ReadablePipe;
+import com.xmlcalabash.model.DeclareStep;
+import com.xmlcalabash.model.Parser;
+import com.xmlcalabash.model.PipelineLibrary;
 import com.xmlcalabash.runtime.XLibrary;
 import com.xmlcalabash.runtime.XPipeline;
 import com.xmlcalabash.runtime.XRootStep;
@@ -44,51 +97,8 @@ import com.xmlcalabash.util.JSONtoXML;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.StepErrorListener;
 import com.xmlcalabash.util.TreeWriter;
-import net.sf.saxon.Configuration;
-import net.sf.saxon.lib.ExtensionFunctionDefinition;
-import net.sf.saxon.s9api.ExtensionFunction;
-import net.sf.saxon.s9api.Processor;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.Serializer;
-import net.sf.saxon.s9api.XdmDestination;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.SaxonApiException;
-import com.xmlcalabash.model.Parser;
-import com.xmlcalabash.model.DeclareStep;
-import com.xmlcalabash.model.PipelineLibrary;
-import com.xmlcalabash.util.XProcURIResolver;
 import com.xmlcalabash.util.URIUtils;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.lang.reflect.Constructor;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.logging.Logger;
-import java.util.Hashtable;
-import java.util.Vector;
-import java.util.GregorianCalendar;
-import java.util.Locale;
-import java.io.FileNotFoundException;
-import java.net.URISyntaxException;
-import java.net.URI;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-
-import javax.xml.transform.URIResolver;
-import javax.xml.transform.sax.SAXSource;
-
-import net.sf.saxon.s9api.XsltCompiler;
-import net.sf.saxon.s9api.XsltExecutable;
-import net.sf.saxon.s9api.XsltTransformer;
-import org.apache.commons.httpclient.Cookie;
-import org.xml.sax.EntityResolver;
-import org.xml.sax.InputSource;
+import com.xmlcalabash.util.XProcURIResolver;
 
 /**
  *
@@ -106,7 +116,6 @@ public class XProcRuntime {
     private Hashtable<QName, DeclareStep> declaredSteps = new Hashtable<QName,DeclareStep> ();
     private DeclareStep pipeline = null;
     private XPipeline xpipeline = null;
-    private Vector<Throwable> errors = null;
     private static String episode = null;
     private Hashtable<String,Vector<XdmNode>> collections = null;
     private URI staticBaseURI = null;
@@ -120,7 +129,8 @@ public class XProcRuntime {
     private XProcMessageListener msgListener = null;
     private PipelineLibrary standardLibrary = null;
     private XLibrary xStandardLibrary = null;
-    private Hashtable<String,Vector<Cookie>> cookieHash = new Hashtable<String,Vector<Cookie>> ();
+    private HttpClient httpClient;
+    private Map<String, CookieStore> cookieStores;
     private XProcConfigurer configurer = null;
     private String htmlParser = null;
     private Vector<XProcExtensionFunctionDefinition> exFuncs = new Vector<XProcExtensionFunctionDefinition>();
@@ -244,7 +254,8 @@ public class XProcRuntime {
         msgListener = runtime.msgListener;
         standardLibrary = runtime.standardLibrary;
         xStandardLibrary = runtime.xStandardLibrary;
-        cookieHash = runtime.cookieHash;
+        httpClient = runtime.httpClient;
+        cookieStores = runtime.cookieStores;
         configurer = runtime.configurer;
         allowGeneralExpressions = runtime.allowGeneralExpressions;
         allowXPointerOnText = runtime.allowXPointerOnText;
@@ -275,6 +286,9 @@ public class XProcRuntime {
     public void close() {
         for (XProcExtensionFunctionDefinition xf : exFuncs) {
             xf.close();
+        }
+        if (httpClient != null) {
+        	httpClient.getConnectionManager().shutdown();
         }
     }
 
@@ -464,17 +478,22 @@ public class XProcRuntime {
         return xStandardLibrary;
     }
 
-    private void reset() {
+    private synchronized void reset() {
         errorCode = null;
         errorMessage = null;
         declaredSteps = new Hashtable<QName,DeclareStep> ();
         //explicitDeclarations = false;
         pipeline = null;
         xpipeline = null;
-        errors = null;
         episode = null;
         collections = null;
-        cookieHash = new Hashtable<String,Vector<Cookie>> ();
+        cookieStores = new HashMap<String, CookieStore>();
+        DefaultHttpClient httpClient = new DefaultHttpClient();
+        httpClient.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.RFC_2109);
+        httpClient.getParams().setParameter(CookieSpecPNames.SINGLE_COOKIE_HEADER, true);
+        // Provide custom retry handler is necessary
+        httpClient.setHttpRequestRetryHandler(new StandardHttpRequestRetryHandler(3, false));
+        this.httpClient = httpClient;
 
         xprocData = new XProcData(this);
 
@@ -727,26 +746,32 @@ public class XProcRuntime {
         }
     }
 
-    public void clearCookies(String key) {
-        if (cookieHash.containsKey(key)) {
-            cookieHash.get(key).clear();
-        }
+    public synchronized CookieStore getCookieStore(String key) {
+    	if (cookieStores.containsKey(key))
+    		return cookieStores.get(key);
+    	BasicCookieStore cookieStore = new BasicCookieStore();
+		cookieStores.put(key, cookieStore);
+		return cookieStore;
+	}
+
+	public synchronized void setCookieStore(String key, CookieStore cookieStore) {
+		if (cookieStore == null) {
+			removeCookieStore(key);
+		} else {
+			this.cookieStores.put(key, cookieStore);
+		}
+	}
+
+	public synchronized void removeCookieStore(String key) {
+		this.cookieStores.remove(key);
+	}
+
+    public HttpClient getHttpClient() {
+    	return httpClient;
     }
 
-    public void addCookie(String key, Cookie cookie) {
-        if (!cookieHash.containsKey(key)) {
-            cookieHash.put(key, new Vector<Cookie> ());
-        }
-
-        cookieHash.get(key).add(cookie);
-    }
-
-    public Vector<Cookie> getCookies(String key) {
-        if (cookieHash.containsKey(key)) {
-            return cookieHash.get(key);
-        } else {
-            return new Vector<Cookie> ();
-        }
+    public void setHttpClient(HttpClient client) {
+    	this.httpClient = client;
     }
 
     public QName getErrorCode() {
