@@ -414,6 +414,10 @@ means.</para>
 <para>All parameters specified will be bound to either the specified
 parameter input port or the the primary parameter input port if no
 explicit port is specified.</para>
+
+<para>If the name attribute contains an at sign, the port specification must be
+given explicitly. To specify the primary parameter input port explicitly,
+write "<literal>*</literal>" as the port.</para>
 </section>
 
 <section xml:id="cfg.input">
