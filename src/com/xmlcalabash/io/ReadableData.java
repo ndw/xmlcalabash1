@@ -272,6 +272,7 @@ public class ReadableData implements ReadablePipe {
             URL url = uri.toURL();
             URLConnection connection = url.openConnection();
             serverContentType = connection.getContentType();
+            serverContentType = (serverContentType == null) ? "content/unknown" : serverContentType;
             return connection.getInputStream();
         } catch (IOException ioe) {
             throw new XProcException(XProcConstants.dynamicError(29), ioe);
