@@ -5,12 +5,14 @@ import java.io.InputStream;
 import static com.xmlcalabash.util.Input.Kind.INPUT_STREAM;
 import static com.xmlcalabash.util.Input.Kind.NONE;
 import static com.xmlcalabash.util.Input.Kind.URI;
+import static com.xmlcalabash.util.Input.Type.DATA;
 import static com.xmlcalabash.util.Input.Type.XML;
 
 public class Input {
     private String uri;
     private InputStream inputStream;
     private Type type;
+    private String contentType;
     private Kind kind = NONE;
 
     public Input(String uri) {
@@ -18,8 +20,13 @@ public class Input {
     }
 
     public Input(String uri, Type type) {
+        this(uri, type, null);
+    }
+
+    public Input(String uri, Type type, String contentType) {
         this.uri = uri;
         this.type = type;
+        this.contentType = contentType;
         kind = URI;
     }
 
@@ -28,9 +35,12 @@ public class Input {
     }
 
     public Input(InputStream inputStream, String uri, Type type) {
+        this(inputStream, uri, type, null);
+    }
+
+    public Input(InputStream inputStream, String uri, Type type, String contentType) {
+        this(uri, type, contentType);
         this.inputStream = inputStream;
-        this.uri = uri;
-        this.type = type;
         kind = INPUT_STREAM;
     }
 
@@ -57,6 +67,13 @@ public class Input {
 
     public Type getType() {
         return type;
+    }
+
+    public String getContentType() {
+        if ((contentType != null) && (type != DATA)) {
+            throw new IllegalStateException("contentType of input can only be set if type is DATA");
+        }
+        return contentType;
     }
 
     public Kind getKind() {

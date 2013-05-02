@@ -458,6 +458,17 @@ Calabash</citetitle> from Apache Ant using the
                                                                <td>No; default is <literal>XML</literal></td>
                                                       </tr>
                                                       <tr>
+                                                               <td>contentType</td>
+                                                               <td>content type, if this is equal to <literal>application/xml</literal>,
+                                                                        ends in <literal>+xml</literal>, starts with <literal>text/</literal>
+                                                                        or has a charset of <literal>utf-8</literal> specified, the input
+                                                                        is treated as text, otherwise the input gets base64 encoded
+                                                                        automatically before it is given to the pipeline</td>
+                                                               <td>No; default is guessed from the resource content, as fallback from the
+                                                                        resource name and as second fallback <literal>application/octet-stream</literal>
+                                                                        is used</td>
+                                                      </tr>
+                                                      <tr>
                                                                <td>if</td>
                                                                <td>This parameter behaves like standard Ant if's as documented at
                                                                         <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>

@@ -1,5 +1,6 @@
 package com.xmlcalabash.util;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -44,7 +45,6 @@ import static com.xmlcalabash.util.LogOptions.DIRECTORY;
 import static com.xmlcalabash.util.LogOptions.OFF;
 import static com.xmlcalabash.util.LogOptions.PLAIN;
 import static com.xmlcalabash.util.LogOptions.WRAPPED;
-import static com.xmlcalabash.util.URIUtils.cwdAsURI;
 import static com.xmlcalabash.util.URIUtils.encode;
 import static java.io.File.createTempFile;
 import static java.lang.Long.MAX_VALUE;
@@ -52,6 +52,8 @@ import static java.lang.String.format;
 import static java.lang.System.err;
 import static java.lang.System.exit;
 import static java.lang.System.getProperty;
+import static java.net.URLConnection.guessContentTypeFromName;
+import static java.net.URLConnection.guessContentTypeFromStream;
 import static java.nio.channels.Channels.newChannel;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -290,16 +292,27 @@ public class UserArgs {
     }
 
     public void addInput(String port, String uri, Type type) {
+        addInput(port, uri, type, null);
+    }
+
+    public void addInput(String port, String uri, Type type, String contentType) {
         if ("-".equals(uri) || uri.startsWith("http:") || uri.startsWith("https:") || uri.startsWith("file:")
                 || "p:empty".equals(uri)) {
-            curStep.addInput(port, uri, type);
+            curStep.addInput(port, uri, type, contentType);
         } else {
-            curStep.addInput(port, "file://" + fixUpURI(uri), type);
+            curStep.addInput(port, "file://" + fixUpURI(uri), type, contentType);
         }
     }
 
-    public void addInput(String port, InputStream inputStream, String uri, Type type) {
-        curStep.addInput(port, inputStream, uri, type);
+    public void addInput(String port, InputStream inputStream, String uri, Type type) throws IOException {
+        addInput(port, inputStream, uri, type, null);
+    }
+
+    public void addInput(String port, InputStream inputStream, String uri, Type type, String contentType) throws IOException {
+        inputStream = new BufferedInputStream(inputStream);
+        contentType = ((contentType == null) || "content/unknown".equals(contentType)) ? guessContentTypeFromStream(inputStream) : contentType;
+        contentType = ((contentType == null) || "content/unknown".equals(contentType)) ? guessContentTypeFromName(uri) : contentType;
+        curStep.addInput(port, inputStream, uri, type, contentType);
     }
 
     public void setDefaultInputPort(String port) {
@@ -673,6 +686,9 @@ public class UserArgs {
                             } else {
                                 tree.addStartElement(qname);
                                 tree.addAttribute(new QName("href"), uri);
+                                if (input.getType() == DATA) {
+                                    tree.addAttribute(new QName("content-type"), input.getContentType());
+                                }
                                 tree.startContent();
                                 tree.addEndElement();
                             }
@@ -683,6 +699,9 @@ public class UserArgs {
                             if (System.in.equals(inputStream)) {
                                 tree.addStartElement(qname);
                                 tree.addAttribute(new QName("href"), "-");
+                                if (input.getType() == DATA) {
+                                    tree.addAttribute(new QName("content-type"), input.getContentType());
+                                }
                                 tree.startContent();
                                 tree.addEndElement();
                             } else {
@@ -695,6 +714,9 @@ public class UserArgs {
 
                                 tree.addStartElement(qname);
                                 tree.addAttribute(new QName("href"), tempInput.toURI().toASCIIString());
+                                if (input.getType() == DATA) {
+                                    tree.addAttribute(new QName("content-type"), input.getContentType());
+                                }
                                 tree.startContent();
                                 tree.addEndElement();
                             }
@@ -761,20 +783,20 @@ public class UserArgs {
             this.plainStepName = name;
         }
 
-        public void addInput(String port, String uri, Type type) {
+        public void addInput(String port, String uri, Type type, String contentType) {
             if (!inputs.containsKey(port)) {
                 inputs.put(port, new ArrayList<Input>());
             }
 
-            inputs.get(port).add(new Input(uri, type));
+            inputs.get(port).add(new Input(uri, type, contentType));
         }
 
-        public void addInput(String port, InputStream inputStream, String uri, Type type) {
+        public void addInput(String port, InputStream inputStream, String uri, Type type, String contentType) {
             if (!inputs.containsKey(port)) {
                 inputs.put(port, new ArrayList<Input>());
             }
 
-            inputs.get(port).add(new Input(inputStream, uri, type));
+            inputs.get(port).add(new Input(inputStream, uri, type, contentType));
         }
 
         public void addOption(String optname, String value) {

@@ -48,6 +48,7 @@ import org.apache.tools.ant.types.resources.Resources;
 import org.apache.tools.ant.types.resources.Union;
 import org.apache.tools.ant.util.FileNameMapper;
 
+import static com.xmlcalabash.util.Input.Type.DATA;
 import static com.xmlcalabash.util.Input.Type.XML;
 import static java.lang.Long.MAX_VALUE;
 import static java.util.Arrays.asList;
@@ -282,7 +283,7 @@ public class CalabashTask extends MatchingTask {
                 return;
             }
 
-            inputMappers.put(port, new TypedFileNameMapper(inputMapper, input.getType()));
+            inputMappers.put(port, new TypedFileNameMapper(inputMapper, input.getType(), input.getContentType()));
         } else {
             if (inputMappers.containsKey(port)) {
                 handleError("Resources used on input port that already has a mapper: " + port);
@@ -294,7 +295,7 @@ public class CalabashTask extends MatchingTask {
             }
 
             for (Resource resource : resources.listResources()) {
-                inputResources.get(port).add(new TypedResource(resource, input.getType()));
+                inputResources.get(port).add(new TypedResource(resource, input.getType(), input.getContentType()));
             }
         }
     }
@@ -1048,7 +1049,7 @@ public class CalabashTask extends MatchingTask {
                             for (String fileName : inputFileNames) {
                                 FileResource mappedResource = new FileResource(baseDir, fileName);
                                 if (mappedResource.isExists()) {
-                                    mappedResources.add(new TypedResource(mappedResource, inputMapper.getType()));
+                                    mappedResources.add(new TypedResource(mappedResource, inputMapper.getType(), inputMapper.getContentType()));
                                 } else {
                                     log("Skipping non-exstent mapped resource: " + mappedResource.toString(), Project.MSG_DEBUG);
                                 }
@@ -1141,7 +1142,7 @@ public class CalabashTask extends MatchingTask {
                             List<TypedResource> mappedResources = new ArrayList<TypedResource>();
                             for (String fileName : inputFileNames) {
                                 FileResource mappedResource = new FileResource(baseDir, fileName);
-                                mappedResources.add(new TypedResource(mappedResource, inputMapper.getType()));
+                                mappedResources.add(new TypedResource(mappedResource, inputMapper.getType(), inputMapper.getContentType()));
                             }
                             useInputResources.put(port, mappedResources);
                         }
@@ -1269,13 +1270,13 @@ public class CalabashTask extends MatchingTask {
             for (String port : inputResources.keySet()) {
                 for (TypedResource typedResource : inputResources.get(port)) {
                     Resource resource = typedResource.getResource();
-                    userArgs.addInput(port, resource.getInputStream(), resource.toString(), typedResource.getType());
+                    userArgs.addInput(port, resource.getInputStream(), resource.toString(), typedResource.getType(), typedResource.getContentType());
                 }
             }
             for (Step step : steps) {
                 for (Input input : step.getInputs()) {
                     for (Resource resource : input.getResources().listResources()) {
-                        userArgs.addInput(input.getPort(), resource.getInputStream(), resource.toString(), input.getType());
+                        userArgs.addInput(input.getPort(), resource.getInputStream(), resource.toString(), input.getType(), input.getContentType());
                     }
                 }
                 for (Parameter parameter : step.getParameters()) {
@@ -1500,6 +1501,11 @@ public class CalabashTask extends MatchingTask {
         private Type type = XML;
 
         /**
+         * The content type
+         */
+        private String contentType;
+
+        /**
          * Get the input type
          *
          * @return the input type
@@ -1515,6 +1521,27 @@ public class CalabashTask extends MatchingTask {
          */
         public void setType(Type type) {
             this.type = type;
+        }
+
+        /**
+         * Get the content type
+         *
+         * @return the content type
+         */
+        public String getContentType() {
+            if ((contentType != null) && (type != DATA)) {
+                throw new IllegalStateException("contentType of input can only be set if type is DATA");
+            }
+            return contentType;
+        }
+
+        /**
+         * Set the content type
+         *
+         * @param contentType the content type
+         */
+        public void setContentType(String contentType) {
+            this.contentType = contentType;
         }
     } // Input
 
@@ -1757,8 +1784,13 @@ public class CalabashTask extends MatchingTask {
     private static class TypedResource {
         private Resource resource = null;
         private Type type = null;
+        private String contentType = null;
 
         private TypedResource(Resource resource, Type type) {
+            this(resource, type, null);
+        }
+
+        private TypedResource(Resource resource, Type type, String contentType) {
             if (resource == null) {
                 throw new IllegalArgumentException("resource must not be null");
             }
@@ -1767,6 +1799,7 @@ public class CalabashTask extends MatchingTask {
                 throw new IllegalArgumentException("type must not be null");
             }
             this.type = type;
+            this.contentType = contentType;
         }
 
         public Resource getResource() {
@@ -1776,13 +1809,22 @@ public class CalabashTask extends MatchingTask {
         public Type getType() {
             return type;
         }
+
+        public String getContentType() {
+            return contentType;
+        }
     } // TypedResource
 
     private static class TypedFileNameMapper implements FileNameMapper {
         private FileNameMapper fileNameMapper;
         private Type type;
+        private String contentType;
 
         private TypedFileNameMapper(FileNameMapper fileNameMapper, Type type) {
+            this(fileNameMapper, type, null);
+        }
+
+        private TypedFileNameMapper(FileNameMapper fileNameMapper, Type type, String contentType) {
             if (fileNameMapper == null) {
                 throw new IllegalArgumentException("fileNameMapper must not be null");
             }
@@ -1791,10 +1833,15 @@ public class CalabashTask extends MatchingTask {
                 throw new IllegalArgumentException("type must not be null");
             }
             this.type = type;
+            this.contentType = contentType;
         }
 
         public Type getType() {
             return type;
+        }
+
+        public String getContentType() {
+            return contentType;
         }
 
         @Override

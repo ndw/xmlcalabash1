@@ -242,13 +242,13 @@ public class Main {
                             ReadableData rd;
                             switch (input.getKind()) {
                                 case URI:
-                                    rd = new ReadableData(runtime, c_data, input.getUri(), "text/plain");
+                                    rd = new ReadableData(runtime, c_data, input.getUri(), input.getContentType());
                                     doc = rd.read();
                                     break;
 
                                 case INPUT_STREAM:
                                     InputStream inputStream = input.getInputStream();
-                                    rd = new ReadableData(runtime, c_data, inputStream, "text/plain");
+                                    rd = new ReadableData(runtime, c_data, inputStream, input.getContentType());
                                     doc = rd.read();
                                     inputStream.close();
                                     break;

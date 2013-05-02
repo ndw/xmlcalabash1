@@ -311,7 +311,7 @@ will run Java with the correct class path and other arguments.</para>
       <arg choice="plain">-d</arg>
       <arg choice="plain">--data-input</arg>
     </group>
-    <arg choice="opt"><replaceable>port</replaceable>=</arg><replaceable>uri</replaceable>
+    <arg choice="opt"><replaceable>contentType</replaceable>@</arg><arg choice="opt"><replaceable>port</replaceable>=</arg><replaceable>uri</replaceable>
   </arg>
   <arg rep="repeat">
     <group choice="req">

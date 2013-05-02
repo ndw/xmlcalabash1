@@ -90,11 +90,17 @@ public class ParseArgs {
 
             if (arg.startsWith("-d") || arg.equals("--data-input")) {
                 String s = parseString("d", "data-input");
+                String contentType = null;
+                if (s.contains("@")) {
+                    KeyValuePair v = parseOption(s, "@");
+                    contentType = v.key;
+                    s = v.value;
+                }
                 if (s.contains("=")) {
                     KeyValuePair v = parseOption(s);
-                    userArgs.addInput(v.key, v.value, DATA);
+                    userArgs.addInput(v.key, v.value, DATA, contentType);
                 } else {
-                    userArgs.addInput(null, s, DATA);
+                    userArgs.addInput(null, s, DATA, contentType);
                 }
                 continue;
             }
@@ -290,13 +296,17 @@ public class ParseArgs {
     }
 
     private KeyValuePair parseOption(String opt) {
+        return parseOption(opt, "=");
+    }
+
+    private KeyValuePair parseOption(String opt, String delimiter) {
         String key = null;
         String value = null;
 
-        int eqpos = opt.indexOf("=");
-        if (eqpos > 0) {
-            key = opt.substring(0,eqpos);
-            value = opt.substring(eqpos+1);
+        int delpos = opt.indexOf(delimiter);
+        if (delpos > 0) {
+            key = opt.substring(0,delpos);
+            value = opt.substring(delpos+1);
         } else {
             throw new XProcException("Unparseable command line argument: '" + opt + "'.");
         }

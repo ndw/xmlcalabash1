@@ -545,11 +545,11 @@ left out and the input will be applied to the primary non-parameter input port.<
 <tbody>
 <row>
   <entry>Command line (long):</entry>
-  <entry><literal>--data-input</literal> <replaceable>port</replaceable>=<replaceable>uri</replaceable></entry>
+  <entry><literal>--data-input</literal> <replaceable>contentType</replaceable>@<replaceable>port</replaceable>=<replaceable>uri</replaceable></entry>
 </row>
 <row>
   <entry>Command line (short):</entry>
-  <entry><literal>-d</literal><replaceable>port</replaceable>=<replaceable>uri</replaceable></entry>
+  <entry><literal>-d</literal><replaceable>contentType</replaceable>@<replaceable>port</replaceable>=<replaceable>uri</replaceable></entry>
 </row>
 <row>
   <entry>Ant task:</entry>
@@ -559,7 +559,20 @@ left out and the input will be applied to the primary non-parameter input port.<
 </tgroup>
 </informaltable>
 
-<para>The input specified will be base64 encoded.</para>
+<para>If the port and uri do not contain an at sign, the contentType specification can be
+left out. In this case the content type will be determined from the contents of the URI.
+If the content type cannot be determined from the contents of the URI, the content type
+is guessed from the URI name. If the content type cannot be guessed from the URI name,
+it is set to "<literal>application/octet-stream</literal>". If you have to give an explicit
+content type because the port or uri contain an at sign, but you don't know the content
+type, you can set it to "<literal>content/unknown</literal>" which is the same as leaving
+it out and will try to determine the content type from content or name.</para>
+
+<para>If the detected or explicitly specified content type is equal to
+<literal>application/xml</literal>, ends in <literal>+xml</literal>, starts with
+<literal>text/</literal> or has a charset of <literal>utf-8</literal> specified,
+the input is treated as text, otherwise the input gets base64 encoded automatically
+before it is given to the pipeline.</para>
 
 <para>If the uri does not contain an equals sign, the port specification can be
 left out and the input will be applied to the primary non-parameter input port.</para>

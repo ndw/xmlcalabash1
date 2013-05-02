@@ -101,7 +101,7 @@ public class ReadableData implements ReadablePipe {
             stream = (uri == null) ? inputStream : ("-".equals(uri) ? System.in : getStream(dataURI));
             String serverContentType = getContentType();
 
-            if ("content/unknown".equals(serverContentType) && contentType != null) {
+            if ((contentType != null) && !"content/unknown".equals(contentType)) {
                 // pretend...
                 serverContentType = contentType;
             }
