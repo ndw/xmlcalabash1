@@ -33,6 +33,8 @@ import java.net.Proxy;
 import java.net.ProxySelector;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
 
@@ -55,6 +57,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.auth.params.AuthPNames;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
@@ -64,7 +67,9 @@ import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.params.AuthPolicy;
 import org.apache.http.client.params.ClientPNames;
+import org.apache.http.client.params.CookiePolicy;
 import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.cookie.Cookie;
@@ -244,6 +249,7 @@ public class HttpRequest extends DefaultStep {
             }
         }
         localContext.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
+        params.setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.RFC_2109);
 
         String timeOutStr = step.getExtensionAttribute(cx_timeout);
         if (timeOutStr != null) {
@@ -277,7 +283,12 @@ public class HttpRequest extends DefaultStep {
             String pass = start.getAttributeValue(_password);
             String meth = start.getAttributeValue(_auth_method);
 
-            if (meth == null || !("basic".equals(meth.toLowerCase()) || "digest".equals(meth.toLowerCase()))) {
+            Collection<String> authpref;
+            if ("basic".equalsIgnoreCase(meth)) {
+            	authpref = Collections.singleton(AuthPolicy.BASIC);
+            } else if ("digest".equalsIgnoreCase(meth)) {
+            	authpref = Collections.singleton(AuthPolicy.DIGEST);
+            } else {
                 throw XProcException.stepError(3, "Unsupported auth-method: " + meth);
             }
 
@@ -290,6 +301,8 @@ public class HttpRequest extends DefaultStep {
             CredentialsProvider credsProvider = new BasicCredentialsProvider();
             credsProvider.setCredentials(scope, cred);
             localContext.setAttribute(ClientContext.CREDS_PROVIDER, credsProvider);
+            params.setBooleanParameter(ClientPNames.HANDLE_AUTHENTICATION, true);
+            params.setParameter(AuthPNames.TARGET_AUTH_PREF, authpref);
         }
 
         iter = start.axisIterator(Axis.CHILD);

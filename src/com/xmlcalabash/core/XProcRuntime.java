@@ -61,9 +61,6 @@ import net.sf.saxon.s9api.XsltTransformer;
 
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.params.ClientPNames;
-import org.apache.http.client.params.CookiePolicy;
-import org.apache.http.cookie.params.CookieSpecPNames;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
@@ -489,8 +486,6 @@ public class XProcRuntime {
         collections = null;
         cookieStores = new HashMap<String, CookieStore>();
         DefaultHttpClient httpClient = new DefaultHttpClient();
-        httpClient.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.RFC_2109);
-        httpClient.getParams().setParameter(CookieSpecPNames.SINGLE_COOKIE_HEADER, true);
         // Provide custom retry handler is necessary
         httpClient.setHttpRequestRetryHandler(new StandardHttpRequestRetryHandler(3, false));
         this.httpClient = httpClient;
