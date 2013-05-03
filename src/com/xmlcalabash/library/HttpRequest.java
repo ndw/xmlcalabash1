@@ -351,10 +351,10 @@ public class HttpRequest extends DefaultStep {
             }
 			httpResult = httpClient.execute(httpRequest, localContext);
             int statusCode = httpResult.getStatusLine().getStatusCode();
-            HttpHost origin = (HttpHost) localContext.getAttribute(ExecutionContext.HTTP_TARGET_HOST);
+            HttpHost host = (HttpHost) localContext.getAttribute(ExecutionContext.HTTP_TARGET_HOST);
             HttpUriRequest req = (HttpUriRequest) localContext.getAttribute(ExecutionContext.HTTP_REQUEST);
-            URI systemId = req.getURI().isAbsolute() ? req.getURI() : URI.create(origin.toURI() + req.getURI());
-            tree.startDocument(systemId);
+            URI root = new URI(host.getSchemeName(), null, host.getHostName(), host.getPort(), "/", null, null);
+            tree.startDocument(root.resolve(req.getURI()));
 
             // Deal with cookies
             if (saveCookieKey != null) {
