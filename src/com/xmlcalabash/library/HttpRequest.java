@@ -33,7 +33,6 @@ import java.net.Proxy;
 import java.net.ProxySelector;
 import java.net.URI;
 import java.nio.charset.Charset;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
@@ -283,11 +282,11 @@ public class HttpRequest extends DefaultStep {
             String pass = start.getAttributeValue(_password);
             String meth = start.getAttributeValue(_auth_method);
 
-            Collection<String> authpref;
+            List<String> authpref;
             if ("basic".equalsIgnoreCase(meth)) {
-            	authpref = Collections.singleton(AuthPolicy.BASIC);
+            	authpref = Collections.singletonList(AuthPolicy.BASIC);
             } else if ("digest".equalsIgnoreCase(meth)) {
-            	authpref = Collections.singleton(AuthPolicy.DIGEST);
+            	authpref = Collections.singletonList(AuthPolicy.DIGEST);
             } else {
                 throw XProcException.stepError(3, "Unsupported auth-method: " + meth);
             }
