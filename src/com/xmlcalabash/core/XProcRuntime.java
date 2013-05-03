@@ -61,9 +61,10 @@ import net.sf.saxon.s9api.XsltTransformer;
 
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.utils.HttpClientUtils;
 import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
+import org.apache.http.impl.client.SystemDefaultHttpClient;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 
@@ -284,9 +285,7 @@ public class XProcRuntime {
         for (XProcExtensionFunctionDefinition xf : exFuncs) {
             xf.close();
         }
-        if (httpClient != null) {
-            httpClient.getConnectionManager().shutdown();
-        }
+        HttpClientUtils.closeQuietly(httpClient);
     }
 
     public XProcConfigurer getConfigurer() {
@@ -485,7 +484,7 @@ public class XProcRuntime {
         episode = null;
         collections = null;
         cookieStores = new HashMap<String, CookieStore>();
-        DefaultHttpClient httpClient = new DefaultHttpClient();
+        SystemDefaultHttpClient httpClient = new SystemDefaultHttpClient();
         // Provide custom retry handler is necessary
         httpClient.setHttpRequestRetryHandler(new StandardHttpRequestRetryHandler(3, false));
         this.httpClient = httpClient;

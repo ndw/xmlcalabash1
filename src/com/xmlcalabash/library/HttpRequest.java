@@ -28,9 +28,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
-import java.net.ProxySelector;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.Collections;
@@ -70,7 +67,6 @@ import org.apache.http.client.params.AuthPolicy;
 import org.apache.http.client.params.ClientPNames;
 import org.apache.http.client.params.CookiePolicy;
 import org.apache.http.client.protocol.ClientContext;
-import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentType;
@@ -253,28 +249,6 @@ public class HttpRequest extends DefaultStep {
         String timeOutStr = step.getExtensionAttribute(cx_timeout);
         if (timeOutStr != null) {
             params.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, Integer.parseInt(timeOutStr));
-        }
-
-        ProxySelector proxySelector = ProxySelector.getDefault();
-        List<Proxy> plist = proxySelector.select(requestURI);
-        // I have no idea what I'm expected to do if I get more than one...
-        if (plist.size() > 0) {
-            Proxy proxy = plist.get(0);
-            switch (proxy.type()) {
-                case DIRECT:
-                    // nop;
-                    break;
-                case HTTP:
-                    // This can't cause a ClassCastException, right?
-                    InetSocketAddress addr = (InetSocketAddress) proxy.address();
-                    String host = addr.getHostName();
-                    int port = addr.getPort();
-                    params.setParameter(ConnRoutePNames.DEFAULT_PROXY, new HttpHost(host, port));
-                    break;
-                default:
-                    // FIXME: send out a log message
-                    break;
-            }
         }
 
         if (start.getAttributeValue(_username) != null) {
