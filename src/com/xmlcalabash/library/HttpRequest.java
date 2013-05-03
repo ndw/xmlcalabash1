@@ -64,6 +64,7 @@ import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.params.ClientPNames;
 import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.cookie.Cookie;
@@ -73,6 +74,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.message.BasicHeader;
+import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.BasicHttpContext;
@@ -211,6 +213,85 @@ public class HttpRequest extends DefaultStep {
             return;
         }
 
+        HttpParams params = new BasicHttpParams();
+    	HttpContext localContext = new BasicHttpContext();
+
+        // The p:http-request step should follow redirect requests if they are returned by the server.
+        params.setBooleanParameter(ClientPNames.HANDLE_REDIRECTS, true);
+
+        // What about cookies
+        String saveCookieKey = step.getExtensionAttribute(cx_save_cookies);
+        String useCookieKeys = step.getExtensionAttribute(cx_use_cookies);
+        String cookieKey = step.getExtensionAttribute(cx_cookies);
+
+        if (saveCookieKey == null) {
+            saveCookieKey = cookieKey;
+        }
+
+        if (useCookieKeys == null) {
+            useCookieKeys = cookieKey;
+        }
+
+    	// If a redirect response includes cookies, those cookies should be forwarded
+    	// as appropriate to the redirected location when the redirection is followed.
+        CookieStore cookieStore = new BasicCookieStore();
+    	if (useCookieKeys != null && useCookieKeys.equals(saveCookieKey)) {
+    		cookieStore = runtime.getCookieStore(useCookieKeys);
+    	} else if (useCookieKeys != null) {
+        	CookieStore useCookieStore = runtime.getCookieStore(useCookieKeys);
+    		for (Cookie cookie : useCookieStore.getCookies()) {
+    			cookieStore.addCookie(cookie);
+    		}
+        }
+    	localContext.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
+
+        String timeOutStr = step.getExtensionAttribute(cx_timeout);
+        if (timeOutStr != null) {
+            params.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, Integer.parseInt(timeOutStr));
+        }
+
+        ProxySelector proxySelector = ProxySelector.getDefault();
+        List<Proxy> plist = proxySelector.select(requestURI);
+        // I have no idea what I'm expected to do if I get more than one...
+        if (plist.size() > 0) {
+            Proxy proxy = plist.get(0);
+            switch (proxy.type()) {
+                case DIRECT:
+                    // nop;
+                    break;
+                case HTTP:
+                    // This can't cause a ClassCastException, right?
+                    InetSocketAddress addr = (InetSocketAddress) proxy.address();
+                    String host = addr.getHostName();
+                    int port = addr.getPort();
+                    params.setParameter(ConnRoutePNames.DEFAULT_PROXY, new HttpHost(host, port));
+                    break;
+                default:
+                    // FIXME: send out a log message
+                    break;
+            }
+        }
+
+        if (start.getAttributeValue(_username) != null) {
+            String user = start.getAttributeValue(_username);
+            String pass = start.getAttributeValue(_password);
+            String meth = start.getAttributeValue(_auth_method);
+
+            if (meth == null || !("basic".equals(meth.toLowerCase()) || "digest".equals(meth.toLowerCase()))) {
+                throw XProcException.stepError(3, "Unsupported auth-method: " + meth);
+            }
+
+            String host = requestURI.getHost();
+            int port = requestURI.getPort();
+            AuthScope scope = new AuthScope(host,port);
+
+            UsernamePasswordCredentials cred = new UsernamePasswordCredentials(user, pass);
+
+            CredentialsProvider credsProvider = new BasicCredentialsProvider();
+            credsProvider.setCredentials(scope, cred);
+            localContext.setAttribute(ClientContext.CREDS_PROVIDER, credsProvider);
+        }
+
         iter = start.axisIterator(Axis.CHILD);
         XdmNode body = null;
         while (iter.hasNext()) {
@@ -249,6 +330,7 @@ public class HttpRequest extends DefaultStep {
         }
 
         HttpUriRequest httpRequest;
+        HttpResponse httpResult = null;
         if ("get".equals(lcMethod)) {
         	httpRequest = doGet();
         } else if ("post".equals(lcMethod)) {
@@ -263,92 +345,15 @@ public class HttpRequest extends DefaultStep {
             throw new UnsupportedOperationException("Unrecognized http method: " + method);
         }
 
-        // What about cookies
-        String saveCookieKey = step.getExtensionAttribute(cx_save_cookies);
-        String useCookieKeys = step.getExtensionAttribute(cx_use_cookies);
-        String cookieKey = step.getExtensionAttribute(cx_cookies);
-
-        if (saveCookieKey == null) {
-            saveCookieKey = cookieKey;
-        }
-
-        if (useCookieKeys == null) {
-            useCookieKeys = cookieKey;
-        }
-
-        CookieStore cookieStore = null;
-        if (useCookieKeys != null || saveCookieKey != null) {
-        	cookieStore = new BasicCookieStore();
-        	if (useCookieKeys != null && useCookieKeys.equals(saveCookieKey)) {
-        		cookieStore = runtime.getCookieStore(useCookieKeys);
-        	} else if (useCookieKeys != null) {
-            	CookieStore useCookieStore = runtime.getCookieStore(useCookieKeys);
-        		for (Cookie cookie : useCookieStore.getCookies()) {
-        			cookieStore.addCookie(cookie);
-        		}
-            }
-            httpRequest.getParams().setParameter(ClientContext.COOKIE_STORE, cookieStore);
-        }
-
-        String timeOutStr = step.getExtensionAttribute(cx_timeout);
-        if (timeOutStr != null) {
-            HttpParams params = httpRequest.getParams();
-            params.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, Integer.parseInt(timeOutStr));
-        }
-
-        ProxySelector proxySelector = ProxySelector.getDefault();
-        List<Proxy> plist = proxySelector.select(requestURI);
-        // I have no idea what I'm expected to do if I get more than one...
-        if (plist.size() > 0) {
-            Proxy proxy = plist.get(0);
-            switch (proxy.type()) {
-                case DIRECT:
-                    // nop;
-                    break;
-                case HTTP:
-                    // This can't cause a ClassCastException, right?
-                    InetSocketAddress addr = (InetSocketAddress) proxy.address();
-                    String host = addr.getHostName();
-                    int port = addr.getPort();
-                    httpRequest.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, new HttpHost(host, port));
-                    break;
-                default:
-                    // FIXME: send out a log message
-                    break;
-            }
-        }
-
-        if (start.getAttributeValue(_username) != null) {
-            String user = start.getAttributeValue(_username);
-            String pass = start.getAttributeValue(_password);
-            String meth = start.getAttributeValue(_auth_method);
-
-            if (meth == null || !("basic".equals(meth.toLowerCase()) || "digest".equals(meth.toLowerCase()))) {
-                throw XProcException.stepError(3, "Unsupported auth-method: " + meth);
-            }
-
-            String host = requestURI.getHost();
-            int port = requestURI.getPort();
-            AuthScope scope = new AuthScope(host,port);
-
-            UsernamePasswordCredentials cred = new UsernamePasswordCredentials(user, pass);
-
-            CredentialsProvider credsProvider = new BasicCredentialsProvider();
-            credsProvider.setCredentials(scope, cred);
-            httpRequest.getParams().setParameter(ClientContext.CREDS_PROVIDER, credsProvider);
-        }
-
-        HttpResponse httpResult = null;
-
         TreeWriter tree = new TreeWriter(runtime);
 
         try {
             // Execute the method.
-        	HttpContext localContext = new BasicHttpContext();
             HttpClient httpClient = runtime.getHttpClient();
             if (httpClient == null) {
             	throw new XProcException("HTTP requests have been disabled");
             }
+            httpRequest.setParams(params);
 			httpResult = httpClient.execute(httpRequest, localContext);
             int statusCode = httpResult.getStatusLine().getStatusCode();
             HttpHost host = (HttpHost) localContext.getAttribute(ExecutionContext.HTTP_TARGET_HOST);
