@@ -214,7 +214,7 @@ public class HttpRequest extends DefaultStep {
         }
 
         HttpParams params = new BasicHttpParams();
-    	HttpContext localContext = new BasicHttpContext();
+        HttpContext localContext = new BasicHttpContext();
 
         // The p:http-request step should follow redirect requests if they are returned by the server.
         params.setBooleanParameter(ClientPNames.HANDLE_REDIRECTS, true);
@@ -232,18 +232,18 @@ public class HttpRequest extends DefaultStep {
             useCookieKeys = cookieKey;
         }
 
-    	// If a redirect response includes cookies, those cookies should be forwarded
-    	// as appropriate to the redirected location when the redirection is followed.
+        // If a redirect response includes cookies, those cookies should be forwarded
+        // as appropriate to the redirected location when the redirection is followed.
         CookieStore cookieStore = new BasicCookieStore();
-    	if (useCookieKeys != null && useCookieKeys.equals(saveCookieKey)) {
-    		cookieStore = runtime.getCookieStore(useCookieKeys);
-    	} else if (useCookieKeys != null) {
-        	CookieStore useCookieStore = runtime.getCookieStore(useCookieKeys);
-    		for (Cookie cookie : useCookieStore.getCookies()) {
-    			cookieStore.addCookie(cookie);
-    		}
+        if (useCookieKeys != null && useCookieKeys.equals(saveCookieKey)) {
+            cookieStore = runtime.getCookieStore(useCookieKeys);
+        } else if (useCookieKeys != null) {
+            CookieStore useCookieStore = runtime.getCookieStore(useCookieKeys);
+            for (Cookie cookie : useCookieStore.getCookies()) {
+                cookieStore.addCookie(cookie);
+            }
         }
-    	localContext.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
+        localContext.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
 
         String timeOutStr = step.getExtensionAttribute(cx_timeout);
         if (timeOutStr != null) {
@@ -332,15 +332,15 @@ public class HttpRequest extends DefaultStep {
         HttpUriRequest httpRequest;
         HttpResponse httpResult = null;
         if ("get".equals(lcMethod)) {
-        	httpRequest = doGet();
+            httpRequest = doGet();
         } else if ("post".equals(lcMethod)) {
-        	httpRequest = doPost(body);
+            httpRequest = doPost(body);
         } else if ("put".equals(lcMethod)) {
-        	httpRequest = doPut(body);
+            httpRequest = doPut(body);
         } else if ("head".equals(lcMethod)) {
-        	httpRequest = doHead();
+            httpRequest = doHead();
         } else if ("delete".equals(lcMethod)) {
-        	httpRequest = doDelete();
+            httpRequest = doDelete();
         } else {
             throw new UnsupportedOperationException("Unrecognized http method: " + method);
         }
@@ -351,10 +351,10 @@ public class HttpRequest extends DefaultStep {
             // Execute the method.
             HttpClient httpClient = runtime.getHttpClient();
             if (httpClient == null) {
-            	throw new XProcException("HTTP requests have been disabled");
+                throw new XProcException("HTTP requests have been disabled");
             }
             httpRequest.setParams(params);
-			httpResult = httpClient.execute(httpRequest, localContext);
+            httpResult = httpClient.execute(httpRequest, localContext);
             int statusCode = httpResult.getStatusLine().getStatusCode();
             HttpHost host = (HttpHost) localContext.getAttribute(ExecutionContext.HTTP_TARGET_HOST);
             HttpUriRequest req = (HttpUriRequest) localContext.getAttribute(ExecutionContext.HTTP_REQUEST);
@@ -363,7 +363,7 @@ public class HttpRequest extends DefaultStep {
 
             // Deal with cookies
             if (saveCookieKey != null) {
-            	runtime.setCookieStore(saveCookieKey, cookieStore);
+                runtime.setCookieStore(saveCookieKey, cookieStore);
             }
 
             String contentType = getContentType(httpResult);
@@ -431,9 +431,9 @@ public class HttpRequest extends DefaultStep {
             throw new XProcException(e);
         } finally {
             // Release the connection.
-        	if (httpResult != null) {
-        		EntityUtils.consumeQuietly(httpResult.getEntity());
-        	}
+            if (httpResult != null) {
+                EntityUtils.consumeQuietly(httpResult.getEntity());
+            }
         }
 
         tree.endDocument();

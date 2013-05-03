@@ -288,7 +288,7 @@ public class XProcRuntime {
             xf.close();
         }
         if (httpClient != null) {
-        	httpClient.getConnectionManager().shutdown();
+            httpClient.getConnectionManager().shutdown();
         }
     }
 
@@ -747,31 +747,31 @@ public class XProcRuntime {
     }
 
     public synchronized CookieStore getCookieStore(String key) {
-    	if (cookieStores.containsKey(key))
-    		return cookieStores.get(key);
-    	BasicCookieStore cookieStore = new BasicCookieStore();
-		cookieStores.put(key, cookieStore);
-		return cookieStore;
-	}
+        if (cookieStores.containsKey(key))
+            return cookieStores.get(key);
+        BasicCookieStore cookieStore = new BasicCookieStore();
+        cookieStores.put(key, cookieStore);
+        return cookieStore;
+    }
 
-	public synchronized void setCookieStore(String key, CookieStore cookieStore) {
-		if (cookieStore == null) {
-			removeCookieStore(key);
-		} else {
-			this.cookieStores.put(key, cookieStore);
-		}
-	}
+    public synchronized void setCookieStore(String key, CookieStore cookieStore) {
+        if (cookieStore == null) {
+            removeCookieStore(key);
+        } else {
+            this.cookieStores.put(key, cookieStore);
+        }
+    }
 
-	public synchronized void removeCookieStore(String key) {
-		this.cookieStores.remove(key);
-	}
+    public synchronized void removeCookieStore(String key) {
+        this.cookieStores.remove(key);
+    }
 
     public HttpClient getHttpClient() {
-    	return httpClient;
+        return httpClient;
     }
 
     public void setHttpClient(HttpClient client) {
-    	this.httpClient = client;
+        this.httpClient = client;
     }
 
     public QName getErrorCode() {
