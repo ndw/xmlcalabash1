@@ -1,18 +1,24 @@
 package com.xmlcalabash.extensions.fileutils;
 
-import com.xmlcalabash.library.DefaultStep;
-import com.xmlcalabash.io.WritablePipe;
-import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.core.XProcConstants;
-import com.xmlcalabash.core.XProcException;
-import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.model.RuntimeValue;
-import com.xmlcalabash.util.TreeWriter;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 
-import java.io.File;
-import java.net.URI;
+import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.io.DataStore;
+import com.xmlcalabash.io.WritablePipe;
+import com.xmlcalabash.library.DefaultStep;
+import com.xmlcalabash.model.RuntimeValue;
+import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.util.TreeWriter;
 
 /**
  * Created by IntelliJ IDEA.
@@ -54,45 +60,67 @@ public class Delete extends DefaultStep {
         boolean fail_on_error = getOption(_fail_on_error, true);
         
         RuntimeValue href = getOption(_href);
+        String base = href.getBaseURI().toASCIIString();
         URI uri = href.getBaseURI().resolve(href.getString());
-        File file;
-        if (!"file".equals(uri.getScheme())) {
-            throw new XProcException(step.getNode(), "Only file: scheme URIs are supported by the delete step.");
-        } else {
-            file = new File(uri.getPath());
-        }
 
-        if (!file.exists()) {
-            if (fail_on_error) {
-                throw new XProcException(step.getNode(), "Cannot delete: file does not exist: " + file.getAbsolutePath());
+        TreeWriter tree = new TreeWriter(runtime);
+        tree.startDocument(step.getNode().getBaseURI());
+        tree.addStartElement(XProcConstants.c_result);
+        tree.startContent();
+
+        tree.addText(uri.toASCIIString());
+
+        performDelete(href, base, recursive, fail_on_error);
+
+        tree.addEndElement();
+        tree.endDocument();
+
+        result.write(tree.getResult());
+    }
+
+    private void performDelete(RuntimeValue href, String base,
+            boolean recursive, boolean fail_on_error) {
+        DataStore store = runtime.getDataStore();
+        if (recursive) {
+            try {
+                for (String entry : getAllEntries(href.getString(), base)) {
+                    store.deleteEntry(entry, entry);
+                }
+            } catch (FileNotFoundException e) {
+                if (fail_on_error) {
+                    throw new XProcException(step.getNode(), "Cannot delete: file does not exist", e);
+                }
+            } catch (IOException e) {
+                if (fail_on_error) {
+                    throw new XProcException(step.getNode(), e);
+                }
             }
-        } else {
-
-            TreeWriter tree = new TreeWriter(runtime);
-            tree.startDocument(step.getNode().getBaseURI());
-            tree.addStartElement(XProcConstants.c_result);
-            tree.startContent();
-
-            tree.addText(file.toURI().toASCIIString());
-
-            performDelete(file, recursive, fail_on_error);
-
-            tree.addEndElement();
-            tree.endDocument();
-
-            result.write(tree.getResult());
+        }
+        try {
+            store.deleteEntry(href.getString(), base);
+        } catch (FileNotFoundException e) {
+            if (fail_on_error) {
+                throw new XProcException(step.getNode(), "Cannot delete: file does not exist", e);
+            }
+        } catch (IOException e) {
+            if (fail_on_error) {
+                throw new XProcException(step.getNode(), e);
+            }
         }
     }
-    
-    private void performDelete(File file, boolean recursive, boolean fail_on_error) {
-        if (recursive && file.isDirectory()) {
-            for (File f : file.listFiles()) {
-                performDelete(f, recursive, fail_on_error);
-            }
-        }
 
-        if (!file.delete() && fail_on_error) {
-            throw new XProcException(step.getNode(), "Delete failed for: " + file.getAbsolutePath());
-        }
+    private List<String> getAllEntries(final String href, String base)
+            throws MalformedURLException, FileNotFoundException, IOException {
+        final List<String> entries = new ArrayList<String>();
+        DataStore store = runtime.getDataStore();
+        store.listEachEntry(href, base, "*/*", new DataStore.DataInfo() {
+            public void list(URI id, String media, long lastModified)
+                    throws IOException {
+                String entry = id.toASCIIString();
+                entries.addAll(getAllEntries(entry, entry));
+                entries.add(entry);
+            }
+        });
+        return entries;
     }
 }
