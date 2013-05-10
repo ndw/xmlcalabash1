@@ -1,5 +1,5 @@
 /*
- * URLDataStore.java
+ * FallbackDataStore.java
  *
  * Copyright 2013 3 Round Stones Inc.
  * Some rights reserved.
@@ -22,100 +22,73 @@ package com.xmlcalabash.io;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
-import java.net.URLConnection;
 
 /**
- * Uses {@link URLConnection} to implement the interface.
+ * Throws an error with the scheme name in every method.
  * 
  * @author James Leigh <james@3roundstones.com>
  * 
  */
-public class URLDataStore implements DataStore {
-	private final DataStore fallback;
-
-	public URLDataStore(DataStore fallback) {
-		super();
-		this.fallback = fallback;
-	}
+public class FallbackDataStore implements DataStore {
 
 	public URI writeEntry(String href, String base, String media,
 			DataWriter handler) throws MalformedURLException,
 			FileNotFoundException, IOException {
 		URI baseURI = URI.create(base);
 		URI uri = baseURI.resolve(href);
-		URLConnection conn = uri.toURL().openConnection();
-		conn.setRequestProperty("Content-Type", media);
-		conn.setDoOutput(true);
-		conn.setDoInput(false);
-		OutputStream stream = conn.getOutputStream();
-		try {
-			handler.store(stream);
-		} finally {
-			stream.close();
-		}
-		String location = conn.getHeaderField("Content-Location");
-		URI url = URI.create(conn.getURL().toExternalForm());
-		if (location == null) {
-			return url;
-		} else {
-			return url.resolve(location);
-		}
+		String scheme = uri.getScheme();
+		throw new IOException(scheme
+				+ ": scheme URIs are not supported for writing");
 	}
 
 	public void readEntry(String href, String base, String accept,
 			DataReader handler) throws MalformedURLException,
 			FileNotFoundException, IOException {
 		URI baseURI = URI.create(base);
-		URL url = baseURI.resolve(href).toURL();
-		URLConnection connection = url.openConnection();
-		connection.setRequestProperty("Accept", accept);
-		final InputStream stream = connection.getInputStream();
-		try {
-			String type = connection.getContentType();
-			URI id = URI.create(connection.getURL().toExternalForm());
-			long len = connection.getContentLengthLong();
-			handler.load(id, type, stream, len);
-		} finally {
-			stream.close();
-		}
+		URI uri = baseURI.resolve(href);
+		String scheme = uri.getScheme();
+		throw new IOException(scheme
+				+ ": scheme URIs are not supported for reading");
 	}
 
 	public void infoEntry(String href, String base, String accept,
 			DataInfo handler) throws MalformedURLException,
 			FileNotFoundException, IOException {
 		URI baseURI = URI.create(base);
-		URL url = baseURI.resolve(href).toURL();
-		URLConnection connection = url.openConnection();
-		connection.setRequestProperty("Accept", accept);
-		final InputStream stream = connection.getInputStream();
-		try {
-			String type = connection.getContentType();
-			URI id = URI.create(connection.getURL().toExternalForm());
-			handler.list(id, type, connection.getLastModified());
-		} finally {
-			stream.close();
-		}
+		URI uri = baseURI.resolve(href);
+		String scheme = uri.getScheme();
+		throw new IOException(scheme
+				+ ": scheme URIs are not supported for metadata");
 	}
 
 	public void listEachEntry(String href, String base, String accept,
 			DataInfo handler) throws MalformedURLException,
 			FileNotFoundException, IOException {
-		fallback.listEachEntry(href, base, accept, handler);
+		URI baseURI = URI.create(base);
+		URI uri = baseURI.resolve(href);
+		String scheme = uri.getScheme();
+		throw new IOException(scheme
+				+ ": scheme URIs are not supported for directory listing");
 	}
 
 	public URI createList(String href, String base)
 			throws MalformedURLException, FileNotFoundException, IOException {
-		return fallback.createList(href, base);
+		URI baseURI = URI.create(base);
+		URI uri = baseURI.resolve(href);
+		String scheme = uri.getScheme();
+		throw new IOException(scheme
+				+ ": scheme URIs are not supported for creating directories");
 	}
 
 	public void deleteEntry(String href, String base)
 			throws MalformedURLException, FileNotFoundException, IOException {
-		fallback.deleteEntry(href, base);
+		URI baseURI = URI.create(base);
+		URI uri = baseURI.resolve(href);
+		String scheme = uri.getScheme();
+		throw new IOException(scheme
+				+ ": scheme URIs are not supported for deleting");
 	}
 
 }

@@ -81,6 +81,7 @@ import com.xmlcalabash.functions.VersionAvailable;
 import com.xmlcalabash.functions.XPathVersionAvailable;
 import com.xmlcalabash.functions.XProcExtensionFunctionDefinition;
 import com.xmlcalabash.io.DataStore;
+import com.xmlcalabash.io.FallbackDataStore;
 import com.xmlcalabash.io.FileDataStore;
 import com.xmlcalabash.io.HttpClientDataStore;
 import com.xmlcalabash.io.ReadableData;
@@ -346,7 +347,7 @@ public class XProcRuntime {
 
     public synchronized DataStore getDataStore() {
         if (dataStore == null) {
-            DataStore fallback = new URLDataStore();
+            DataStore fallback = new URLDataStore(new FallbackDataStore());
             if (!getSafeMode()) {
                 fallback = new FileDataStore(fallback);
             }
