@@ -50,28 +50,8 @@ public class FileDataStore implements DataStore {
 		super();
 		this.fallback = fallback;
 		contentTypes = new Properties();
-		File file = null;
-		try {
-			// First try to load the user-specific table, if it exists
-			String userTablePath = System
-					.getProperty("content.types.user.table");
-			if (userTablePath != null && new File(userTablePath).exists()) {
-				file = new File(userTablePath);
-			} else {
-				// No user table, try to load the default built-in table.
-				File lib = new File(System.getProperty("java.home"), "lib");
-				file = new File(lib, "content-types.properties");
-			}
-
-			InputStream is = new BufferedInputStream(new FileInputStream(file));
-			try {
-				contentTypes.load(is);
-			} finally {
-				is.close();
-			}
-		} catch (IOException e) {
-			throw new AssertionError(e);
-		}
+		loadDefaultContentTypes(contentTypes);
+		loadContentTypes(contentTypes);
 	}
 
 	public URI writeEntry(String href, String base, String media,
@@ -86,7 +66,7 @@ public class FileDataStore implements DataStore {
 				if (!file.isDirectory() && !file.mkdirs()) {
 					throw new FileNotFoundException(file.getAbsolutePath());
 				}
-				File temp = File.createTempFile("", suffix, file);
+				File temp = File.createTempFile("calabash", suffix, file);
 				OutputStream out = new FileOutputStream(temp);
 				try {
 					handler.store(out);
@@ -127,7 +107,14 @@ public class FileDataStore implements DataStore {
 		URI baseURI = URI.create(base);
 		URI uri = baseURI.resolve(href);
 		if ("file".equalsIgnoreCase(uri.getScheme())) {
-			read(new File(uri), handler);
+			File file = new File(uri);
+			String type = getContentTypeFromName(file.getName());
+			InputStream in = new FileInputStream(file);
+			try {
+				handler.load(file.toURI(), type, in, file.length());
+			} finally {
+				in.close();
+			}
 		} else {
 			fallback.readEntry(href, base, accept, handler);
 		}
@@ -248,43 +235,7 @@ public class FileDataStore implements DataStore {
 		}
 	}
 
-	private void read(File file, DataReader handler)
-			throws FileNotFoundException, IOException {
-		String type = getContentTypeFromName(file.getName());
-		InputStream in = new FileInputStream(file);
-		try {
-			handler.load(file.toURI(), type, in, file.length());
-		} finally {
-			in.close();
-		}
-	}
-
-	private String getFileSuffixFromType(String media) {
-		int i = media.indexOf(';');
-		if (i > 0) {
-			media = media.substring(0, i);
-		}
-		i = media.indexOf(',');
-		if (i > 0) {
-			media = media.substring(0, i);
-		}
-		String attr = (String) contentTypes.get(media.trim());
-		if (attr == null || attr.indexOf("file_extensions") < 0) {
-			return "";
-		} else {
-			int start = attr.indexOf('=', attr.indexOf("file_extensions"));
-			int end = attr.indexOf(',', start);
-			if (end < 0) {
-				end = attr.indexOf(';', start);
-			}
-			if (end < 0) {
-				end = attr.length();
-			}
-			return attr.substring(start, end).trim();
-		}
-	}
-
-	private String getContentTypeFromName(String name) {
+	protected String getContentTypeFromName(String name) {
 		final String ext = getFileExtension(name);
 		if (ext == null) {
 			return "application/octet-stream";
@@ -300,22 +251,86 @@ public class FileDataStore implements DataStore {
 		return "application/octet-stream";
 	}
 
-	private String getFileExtension(String fname) {
-		int i = fname.lastIndexOf('#');
-
+	protected String getFileSuffixFromType(String media) {
+		int i = media.indexOf(';');
 		if (i > 0) {
-			fname = fname.substring(0, i);
+			media = media.substring(0, i);
+		}
+		i = media.indexOf(',');
+		if (i > 0) {
+			media = media.substring(0, i);
+		}
+		String attr = (String) contentTypes.get(media.trim());
+		if (attr != null && attr.indexOf("file_extensions") >= 0) {
+			int start = attr.indexOf('=', attr.indexOf("file_extensions")) + 1;
+			int end = attr.indexOf(',', start);
+			if (end < 0) {
+				end = attr.indexOf(';', start);
+			}
+			if (end < 0) {
+				end = attr.length();
+			}
+			return attr.substring(start, end).trim();
+		} else {
+			int plus = media.lastIndexOf('+');
+			if (plus > 0) {
+				String primary = media.substring(0, media.indexOf('/') + 1);
+				String subtype = media.substring(plus + 1);
+				return getFileSuffixFromType(primary + subtype);
+			} else if (!media.startsWith("application/")) {
+				String subtype = media.substring(media.indexOf('/') + 1);
+				return getFileSuffixFromType("application/" + subtype);
+			}
+		}
+		return "";
+	}
+
+	private String getFileExtension(String fname) {
+		int end = fname.indexOf('#');
+		if (end < 0) {
+			end = fname.length();
 		}
 
-		i = fname.lastIndexOf('.');
-		i = Math.max(i, fname.lastIndexOf(File.separatorChar));
-		i = Math.max(i, fname.lastIndexOf('/'));
-		i = Math.max(i, fname.lastIndexOf('?'));
-
-		if (i != -1 && fname.charAt(i) == '.') {
-			return fname.substring(i).toLowerCase();
+		int start = fname.lastIndexOf('.', end);
+		if (start >= 0 && fname.charAt(start) == '.') {
+			return fname.substring(start, end).toLowerCase();
 		} else {
 			return null;
+		}
+	}
+
+	/**
+	 * Load some basic types in case the system doesn't have them.
+	 */
+	private void loadDefaultContentTypes(Properties contentTypes) {
+		contentTypes.put("application/json", "file_extensions=.json");
+		contentTypes.put("application/xml", "file_extensions=.xml");
+		contentTypes.put("application/zip", "file_extensions=.zip");
+		contentTypes.put("text/plain", "file_extensions=.txt");
+	}
+
+	private void loadContentTypes(Properties contentTypes) {
+		File file = null;
+		try {
+			// First try to load the user-specific table, if it exists
+			String userTablePath = System
+					.getProperty("content.types.user.table");
+			if (userTablePath != null && new File(userTablePath).exists()) {
+				file = new File(userTablePath);
+			} else {
+				// No user table, try to load the default built-in table.
+				File lib = new File(System.getProperty("java.home"), "lib");
+				file = new File(lib, "content-types.properties");
+			}
+	
+			InputStream is = new BufferedInputStream(new FileInputStream(file));
+			try {
+				contentTypes.load(is);
+			} finally {
+				is.close();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
