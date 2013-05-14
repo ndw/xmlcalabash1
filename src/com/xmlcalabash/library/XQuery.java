@@ -113,6 +113,7 @@ public class XQuery extends DefaultStep {
         Processor qtproc = runtime.getProcessor();
         XQueryCompiler xqcomp = qtproc.newXQueryCompiler();
         xqcomp.setBaseURI(root.getBaseURI());
+        xqcomp.setModuleURIResolver(runtime.getResolver());
         XQueryExecutable xqexec = xqcomp.compile(queryString);
         XQueryEvaluator xqeval = xqexec.load();
         if (document != null) {
