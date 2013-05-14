@@ -286,6 +286,7 @@ public class XProcRuntime {
             xf.close();
         }
         HttpClientUtils.closeQuietly(httpClient);
+        httpClient = null;
     }
 
     public XProcConfigurer getConfigurer() {
@@ -484,10 +485,6 @@ public class XProcRuntime {
         episode = null;
         collections = null;
         cookieStores = new HashMap<String, CookieStore>();
-        SystemDefaultHttpClient httpClient = new SystemDefaultHttpClient();
-        // Provide custom retry handler is necessary
-        httpClient.setHttpRequestRetryHandler(new StandardHttpRequestRetryHandler(3, false));
-        this.httpClient = httpClient;
 
         xprocData = new XProcData(this);
 
@@ -760,11 +757,18 @@ public class XProcRuntime {
         this.cookieStores.remove(key);
     }
 
-    public HttpClient getHttpClient() {
-        return httpClient;
+    public synchronized HttpClient getHttpClient() {
+    	if (this.httpClient == null) {
+            SystemDefaultHttpClient httpClient = new SystemDefaultHttpClient();
+            // Provide custom retry handler is necessary
+            httpClient.setHttpRequestRetryHandler(new StandardHttpRequestRetryHandler(3, false));
+            return this.httpClient = httpClient;
+    	} else {
+    		return httpClient;
+    	}
     }
 
-    public void setHttpClient(HttpClient client) {
+    public synchronized void setHttpClient(HttpClient client) {
         this.httpClient = client;
     }
 
