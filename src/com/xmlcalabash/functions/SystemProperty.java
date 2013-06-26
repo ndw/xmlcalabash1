@@ -8,6 +8,7 @@ import net.sf.saxon.expr.StaticContext;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
+import net.sf.saxon.om.Sequence;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.trans.XPathException;
@@ -63,7 +64,7 @@ public class SystemProperty extends XProcExtensionFunctionDefinition {
              staticContext = context;
          }
 
-         public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
+        public Sequence call(XPathContext xPathContext, Sequence[] sequences) throws XPathException {
              StructuredQName propertyName = null;
 
              XProcRuntime runtime = tl_runtime.get();
@@ -75,12 +76,12 @@ public class SystemProperty extends XProcExtensionFunctionDefinition {
              }
 
              try {
-                 SequenceIterator iter = arguments[0];
-                 String lexicalQName = iter.next().getStringValue();
+                 String lexicalQName = sequences[0].head().getStringValue();
                  propertyName = StructuredQName.fromLexicalQName(
                       lexicalQName,
                       false,
-                      context.getConfiguration().getNameChecker(),
+                      false,
+                      xPathContext.getConfiguration().getNameChecker(),
                       staticContext.getNamespaceResolver());
              } catch (XPathException e) {
                  if (e.getErrorCodeLocalPart()==null || e.getErrorCodeLocalPart().equals("FOCA0002")
@@ -132,8 +133,7 @@ public class SystemProperty extends XProcExtensionFunctionDefinition {
                  }
              }
 
-             return SingletonIterator.makeIterator(
-                     new StringValue(value));
+             return new StringValue(value);
          }
      }
 }

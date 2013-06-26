@@ -419,4 +419,13 @@ public class S9apiUtils {
         return ok;
     }
 
+    // FIXME: This method exists only to work around a bug in SaxonHE 9.5.1.1
+    public static XdmNode getParent(XdmNode node) {
+        try {
+            return node.getParent();
+        } catch (ClassCastException cce) {
+            return null;
+        }
+    }
+
 }

@@ -1261,7 +1261,7 @@ public class Parser {
             }
         }
         // Special case: if your parent is a p:library, get the exclusions from there too...
-        if (node.getParent() != null) {
+        if (S9apiUtils.getParent(node) != null) {
             XdmNode parent = node.getParent();
             if (XProcConstants.p_library.equals(parent.getNodeName()) && parent.getAttributeValue(_exclude_inline_prefixes) != null) {
                 HashSet<String> pexcl = S9apiUtils.excludeInlinePrefixes(parent, parent.getAttributeValue(_exclude_inline_prefixes));
@@ -1389,7 +1389,7 @@ public class Parser {
     }
 
     private Double inheritedVersion(XdmNode node) {
-        XdmNode parent = node.getParent();
+        XdmNode parent = S9apiUtils.getParent(node);
 
         if (XProcConstants.p_declare_step.equals(node.getNodeName())
                 || XProcConstants.p_pipeline.equals(node.getNodeName())

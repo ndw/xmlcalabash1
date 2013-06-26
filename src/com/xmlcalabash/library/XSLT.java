@@ -296,6 +296,11 @@ public class XSLT extends DefaultStep {
         public OutputResolver() {
         }
 
+        @Override
+        public OutputURIResolver newInstance() {
+            return new OutputResolver();
+        }
+
         public Result resolve(String href, String base) throws TransformerException {
             URI baseURI = null;
             try {

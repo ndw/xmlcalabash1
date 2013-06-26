@@ -6,6 +6,7 @@ import com.xmlcalabash.runtime.XStep;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
+import net.sf.saxon.om.Sequence;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.trans.XPathException;
@@ -74,9 +75,7 @@ public class XPathVersionAvailable extends XProcExtensionFunctionDefinition {
     }
 
     private class SystemPropertyCall extends ExtensionFunctionCall {
-        public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
-            SequenceIterator iter = arguments[0];
-
+        public Sequence call(XPathContext xPathContext, Sequence[] sequences) throws XPathException {
             XProcRuntime runtime = tl_runtime.get();
             XStep step = runtime.getXProcData().getStep();
             // FIXME: this can't be the best way to do this...
@@ -85,10 +84,10 @@ public class XPathVersionAvailable extends XProcExtensionFunctionDefinition {
                 throw XProcException.dynamicError(23);
             }
 
-            DoubleValue value = (DoubleValue) iter.next();
+            DoubleValue value = (DoubleValue) sequences[0].head();
             double reqVer = value.getDoubleValue();
 
-            return SingletonIterator.makeIterator((reqVer == 1.0 || reqVer == 2.0) ? BooleanValue.TRUE : BooleanValue.FALSE);
+            return (reqVer == 1.0 || reqVer == 2.0) ? BooleanValue.TRUE : BooleanValue.FALSE;
         }
     }
 }
