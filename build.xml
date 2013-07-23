@@ -89,6 +89,11 @@
     <classpath refid="build.classpath"/>
   </available>
 
+  <available property="saxon95"
+             classname="net.sf.saxon.event.OnEmptyHandler">
+    <classpath refid="build.classpath"/>
+  </available>
+
   <pathconvert property="run.classpath" refid="build.classpath" pathsep=" ">
     <map from="${basedir}/" to=""/>
   </pathconvert>
@@ -102,7 +107,11 @@
     <property name="install.dir" value="${dist.dir}/calabash-${dist-version}"/>
   </target>
 
-  <target name="saxon94" if="saxon94">
+  <target name="saxon95" if="saxon95">
+    <property name="saxon-version" value="95"/>
+  </target>
+
+  <target name="saxon94" if="saxon94" unless="saxon95">
     <property name="saxon-version" value="94"/>
   </target>
 
@@ -110,7 +119,7 @@
     <property name="saxon-version" value="93"/>
   </target>
 
-  <target name="saxon-version" depends="saxon93,saxon94">
+  <target name="saxon-version" depends="saxon93,saxon94,saxon95">
     <echo>Currently using saxon ${saxon-version}</echo>
   </target>
 
