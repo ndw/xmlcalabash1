@@ -1,10 +1,11 @@
 package com.xmlcalabash.util;
 
-import org.apache.commons.httpclient.Header;
-
-import java.io.InputStream;
-import java.io.IOException;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
+import org.apache.http.Header;
+import org.apache.http.message.BasicHeader;
 
 import com.xmlcalabash.core.XProcException;
 
@@ -147,7 +148,7 @@ public class MIMEReader {
         } else {
             name = name.trim();
             value = value.trim();
-            return new Header(name, value);
+            return new BasicHeader(name, value);
         }
     }
 
