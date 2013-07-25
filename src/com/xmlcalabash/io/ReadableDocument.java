@@ -19,30 +19,37 @@
 
 package com.xmlcalabash.io;
 
-import com.xmlcalabash.util.JSONtoXML;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.SaxonApiException;
-import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.core.XProcException;
-import com.xmlcalabash.model.Step;
-import com.xmlcalabash.util.XPointer;
-import org.json.JSONTokener;
-
 import java.io.File;
-import java.io.FileFilter;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
+import java.nio.charset.Charset;
 import java.util.Vector;
+import java.util.regex.Pattern;
+
+import net.sf.saxon.s9api.Processor;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XdmNode;
+
+import org.json.JSONTokener;
+
+import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.io.DataStore.DataInfo;
+import com.xmlcalabash.io.DataStore.DataReader;
+import com.xmlcalabash.model.Step;
+import com.xmlcalabash.util.HttpUtils;
+import com.xmlcalabash.util.JSONtoXML;
+import com.xmlcalabash.util.XPointer;
 
 /**
  *
  * @author ndw
  */
 public class ReadableDocument implements ReadablePipe {
+    private static final String ACCEPT_XML = "application/xml, text/xml, application/xml-external-parsed-entity, text/xml-external-parsed-entity";
+    private static final String ACCPET_JSON = "application/json, application/javascript, text/javascript, text/*, */*";
     protected DocumentSequence documents = null;
     protected String uri = null;
     protected XProcRuntime runtime = null;
@@ -126,44 +133,63 @@ public class ReadableDocument implements ReadablePipe {
     }
 
     protected void readDoc() {
-        XdmNode doc;
-
         readDoc = true;
         if (uri != null) {
             try {
                 // What if this is a directory?
-                String fn = uri;
-                if (fn.startsWith("file:")) {
-                    fn = fn.substring(5);
-                    if (fn.startsWith("///")) {
-                        fn = fn.substring(2);
-                    }
-                }
-
-                File f = new File(fn);
-                if (f.isDirectory()) {
-                    if (pattern == null) {
-                        pattern = Pattern.compile("^.*\\.xml$");
-                    }
-                    for (File file : f.listFiles(new RegexFileFilter(pattern))) {
-                        doc = runtime.parse(file.getCanonicalPath(), base);
-                        documents.add(doc);
-                    }
+                URI baseURI = URI.create(base);
+                if ("file".equalsIgnoreCase(baseURI.resolve(uri).getScheme())) {
+                    final DataStore store = runtime.getDataStore();
+                    store.infoEntry(uri, base, "*/*", new DataInfo() {
+                        public void list(URI id, String media, long lastModified)
+                                throws IOException {
+                            final String accept = pattern == null ? ACCEPT_XML : "*/*";
+                            final DataReader handler = new DataReader() {
+                                public void load(URI id, String media,
+                                        InputStream content, long len)
+                                        throws IOException {
+                                    content.close();
+                                    String name = new File(id).getName();
+                                    if (pattern == null || pattern.matcher(name).matches()) {
+                                        documents.add(parse(id.toASCIIString(), base));
+                                    }
+                                }
+                            };
+                            String entry = id.toASCIIString();
+                            if (media == null) {
+                                store.listEachEntry(entry, entry, accept, new DataInfo() {
+                                    public void list(URI id, String media, long lastModified)
+                                            throws IOException {
+                                        String entry = id.toASCIIString();
+                                        store.readEntry(entry, entry, accept, handler);
+                                    }
+                                });
+                            } else {
+                                store.readEntry(entry, entry, accept, handler);
+                            }
+                        }
+                    });
                 } else {
-                    doc = null;
-
                     try {
-                        doc = runtime.parse(uri, base);
+                        documents.add(parse(uri, base));
                     } catch (XProcException xe) {
                         if (runtime.transparentJSON()) {
                             try {
-                                URI baseURI = new URI(base);
-                                URL url = baseURI.resolve(uri).toURL();
-                                URLConnection conn = url.openConnection();
-                                InputStreamReader reader = new InputStreamReader(conn.getInputStream());
-                                JSONTokener jt = new JSONTokener(reader);
-                                doc = JSONtoXML.convert(runtime.getProcessor(), jt, runtime.jsonFlavor());
-                                documents.add(doc);
+                                DataStore store = runtime.getDataStore();
+                                store.readEntry(uri, base, ACCPET_JSON, new DataReader() {
+                                    public void load(URI id, String media, InputStream content, long len)
+                                            throws IOException {
+                                        String cs = HttpUtils.getCharset(media);
+                                        if (cs == null) {
+                                            cs = Charset.defaultCharset().name();
+                                        }
+                                        InputStreamReader reader = new InputStreamReader(content, cs);
+                                        JSONTokener jt = new JSONTokener(reader);
+                                        Processor processor = runtime.getProcessor();
+                                        String flavor = runtime.jsonFlavor();
+                                        documents.add(JSONtoXML.convert(processor, jt, flavor));
+                                    }
+                                });
                                 return;
                             } catch (Exception e) {
                                 throw xe;
@@ -172,26 +198,6 @@ public class ReadableDocument implements ReadablePipe {
                             throw xe;
                         }
                     }
-
-                    if (fn.contains("#")) {
-                        int pos = fn.indexOf("#");
-                        String ptr = fn.substring(pos+1);
-
-                        if (ptr.matches("^[\\w]+$")) {
-                            ptr = "element(" + ptr + ")";
-                        }
-
-                        XPointer xptr = new XPointer(ptr);
-                        Vector<XdmNode> nodes = xptr.selectNodes(runtime, doc);
-
-                        if (nodes.size() == 1) {
-                            doc = nodes.get(0);
-                        } else if (nodes.size() != 0) {
-                            throw new XProcException(node, "XPointer matches more than one node!?");
-                        }
-                    }
-
-                    documents.add(doc);
                 }
             } catch (Exception except) {
                 throw XProcException.dynamicError(11, node, except, "Could not read: " + uri);
@@ -199,16 +205,26 @@ public class ReadableDocument implements ReadablePipe {
         }
     }
 
-    private class RegexFileFilter implements FileFilter {
-        Pattern pattern = null;
+    private XdmNode parse(String uri, String base) {
+        XdmNode doc = runtime.parse(uri, base);
 
-        public RegexFileFilter(Pattern p) {
-            this.pattern = p;
-        }
+        if (uri.contains("#")) {
+            int pos = uri.indexOf("#");
+            String ptr = uri.substring(pos+1);
 
-        public boolean accept(File pathname) {
-            Matcher matcher = pattern.matcher(pathname.getName());
-            return matcher.matches();
+            if (ptr.matches("^[\\w]+$")) {
+                ptr = "element(" + ptr + ")";
+            }
+
+            XPointer xptr = new XPointer(ptr);
+            Vector<XdmNode> nodes = xptr.selectNodes(runtime, doc);
+
+            if (nodes.size() == 1) {
+                doc = nodes.get(0);
+            } else if (nodes.size() != 0) {
+                throw new XProcException(node, "XPointer matches more than one node!?");
+            }
         }
+        return doc;
     }
 }

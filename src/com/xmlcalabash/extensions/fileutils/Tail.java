@@ -1,25 +1,27 @@
 package com.xmlcalabash.extensions.fileutils;
 
-import com.xmlcalabash.library.DefaultStep;
-import com.xmlcalabash.io.WritablePipe;
-import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.core.XProcConstants;
-import com.xmlcalabash.core.XProcException;
-import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.model.RuntimeValue;
-import com.xmlcalabash.util.TreeWriter;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.URI;
+import java.util.Vector;
+
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.FileReader;
-import java.io.BufferedReader;
-import java.net.URI;
-import java.util.Vector;
+import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.io.DataStore;
+import com.xmlcalabash.io.DataStore.DataReader;
+import com.xmlcalabash.io.WritablePipe;
+import com.xmlcalabash.library.DefaultStep;
+import com.xmlcalabash.model.RuntimeValue;
+import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.util.TreeWriter;
 
 /**
  * Created by IntelliJ IDEA.
@@ -59,81 +61,67 @@ public class Tail extends DefaultStep {
         }
 
         boolean failOnError = getOption(_fail_on_error, true);
-        int maxCount = getOption(_count, 10);
+        int count = getOption(_count, 10);
+        final boolean tail = count >= 0;
+        final int maxCount = count >= 0 ? count : -count;
 
         RuntimeValue href = getOption(_href);
-        URI uri = href.getBaseURI().resolve(href.getString());
-        File file;
-        if (!"file".equals(uri.getScheme())) {
-            throw new XProcException(href.getNode(), "Only file: scheme URIs are supported by the copy step.");
-        } else {
-            file = new File(uri.getPath());
-        }
-
-        if (!file.exists()) {
-             throw new XProcException(href.getNode(), "Cannot read: file does not exist: " + file.getAbsolutePath());
-        }
-
-        if (file.isDirectory()) {
-             throw new XProcException(href.getNode(), "Cannot read: file is a directory: " + file.getAbsolutePath());
-        }
-
-        TreeWriter tree = new TreeWriter(runtime);
-        tree.startDocument(step.getNode().getBaseURI());
-        tree.addStartElement(XProcConstants.c_result);
-        tree.startContent();
-
-        boolean tail = true;
-        if (maxCount < 0) {
-            maxCount = -maxCount;
-            tail = false;
-        }
 
         try {
-            FileReader rdr = new FileReader(file);
-            BufferedReader brdr = new BufferedReader(rdr);
-            Vector<String> lines = new Vector<String> ();
-            int count = 0;
-            String line = brdr.readLine();
-            while (line != null) {
-                count++;
-                lines.add(line);
-
-                if (count > maxCount) {
-                    line = lines.remove(0);
-                    if (!tail) {
-                        tree.addStartElement(c_line);
-                        tree.startContent();
-                        tree.addText(line);
-                        tree.addEndElement();
-                        tree.addText("\n");
-                    }
-                }
-
-                line = brdr.readLine();
-            }
-            brdr.close();
-
-            if (tail) {
-                for (String lline : lines) {
-                    tree.addStartElement(c_line);
+            DataStore store = runtime.getDataStore();
+            store.readEntry(href.getString(), href.getBaseURI().toASCIIString(), "text/*, */*", new DataReader() {
+                public void load(URI id, String media, InputStream content, long len)
+                        throws IOException {
+                    TreeWriter tree = new TreeWriter(runtime);
+                    tree.startDocument(id);
+                    tree.addStartElement(XProcConstants.c_result);
                     tree.startContent();
-                    tree.addText(lline);
-                    tree.addEndElement();
-                    tree.addText("\n");
-                }
-            }
 
-            rdr.close();
+                    Reader rdr = new InputStreamReader(content);
+                    BufferedReader brdr = new BufferedReader(rdr);
+                    Vector<String> lines = new Vector<String> ();
+                    int count = 0;
+                    String line = brdr.readLine();
+                    while (line != null) {
+                        count++;
+                        lines.add(line);
+
+                        if (count > maxCount) {
+                            line = lines.remove(0);
+                            if (!tail) {
+                                tree.addStartElement(c_line);
+                                tree.startContent();
+                                tree.addText(line);
+                                tree.addEndElement();
+                                tree.addText("\n");
+                            }
+                        }
+
+                        line = brdr.readLine();
+                    }
+                    brdr.close();
+
+                    if (tail) {
+                        for (String lline : lines) {
+                            tree.addStartElement(c_line);
+                            tree.startContent();
+                            tree.addText(lline);
+                            tree.addEndElement();
+                            tree.addText("\n");
+                        }
+                    }
+
+                    tree.addEndElement();
+                    tree.endDocument();
+
+                    result.write(tree.getResult());
+                }
+            });
         } catch (FileNotFoundException fnfe) {
-            throw new XProcException(fnfe);
+            URI uri = href.getBaseURI().resolve(href.getString());
+            throw new XProcException(href.getNode(), "Cannot read: file does not exist: " + uri.toASCIIString());
         } catch (IOException ioe) {
             throw new XProcException(ioe);
         }
-
-        tree.addEndElement();
-        tree.endDocument();
-
-        result.write(tree.getResult());
     }
 }

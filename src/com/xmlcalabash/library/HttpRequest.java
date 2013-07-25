@@ -19,62 +19,85 @@ package com.xmlcalabash.library;
  * Notice in each file and include the License file at docs/CDDL+GPL.txt.
  */
 
-import com.xmlcalabash.util.HttpUtils;
-import com.xmlcalabash.util.JSONtoXML;
-import com.xmlcalabash.util.XMLtoJSON;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.nio.charset.Charset;
+import java.util.Collections;
+import java.util.List;
+import java.util.Vector;
+
+import javax.xml.XMLConstants;
+
+import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmSequenceIterator;
-import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.Serializer;
-import net.sf.saxon.s9api.DocumentBuilder;
+import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
+import net.sf.saxon.s9api.XdmSequenceIterator;
+
+import org.apache.http.Consts;
+import org.apache.http.Header;
+import org.apache.http.HeaderElement;
+import org.apache.http.HttpEntityEnclosingRequest;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.auth.params.AuthPNames;
+import org.apache.http.client.CookieStore;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.params.AuthPolicy;
+import org.apache.http.client.params.ClientPNames;
+import org.apache.http.client.params.CookiePolicy;
+import org.apache.http.client.protocol.ClientContext;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.message.BasicHeader;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.CoreConnectionPNames;
+import org.apache.http.params.HttpParams;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.ExecutionContext;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONTokener;
+import org.xml.sax.InputSource;
+
 import com.xmlcalabash.core.XProcConstants;
-import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.io.DataStore;
+import com.xmlcalabash.io.DataStore.DataReader;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.util.Base64;
+import com.xmlcalabash.util.HttpUtils;
+import com.xmlcalabash.util.JSONtoXML;
+import com.xmlcalabash.util.MIMEReader;
+import com.xmlcalabash.util.RelevantNodes;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TreeWriter;
-import com.xmlcalabash.util.MIMEReader;
-import com.xmlcalabash.util.Base64;
-import com.xmlcalabash.util.RelevantNodes;
-
-import javax.xml.XMLConstants;
-import javax.xml.transform.sax.SAXSource;
-import java.io.UnsupportedEncodingException;
-import java.util.Vector;
-import java.util.List;
-import java.net.URI;
-import java.net.ProxySelector;
-import java.net.Proxy;
-import java.net.InetSocketAddress;
-import java.io.IOException;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileInputStream;
-
-import org.apache.commons.httpclient.Cookie;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.cookie.CookiePolicy;
-import org.json.JSONTokener;
-import org.xml.sax.InputSource;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
-import org.apache.commons.httpclient.HeaderElement;
-import org.apache.commons.httpclient.NameValuePair;
-import org.apache.commons.httpclient.HttpMethodBase;
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.commons.httpclient.auth.AuthScope;
-import org.apache.commons.httpclient.params.HttpMethodParams;
-import org.apache.commons.httpclient.methods.*;
+import com.xmlcalabash.util.XMLtoJSON;
 
 public class HttpRequest extends DefaultStep {
     private static final QName c_request = new QName("c", XProcConstants.NS_XPROC_STEP, "request");
@@ -104,7 +127,6 @@ public class HttpRequest extends DefaultStep {
 
     private static final int bufSize = 912 * 8; // A multiple of 3, 4, and 75 for base64 line breaking
 
-    private HttpClient client = null;
     private boolean statusOnly = false;
     private boolean detailed = false;
     private String method = null;
@@ -186,10 +208,17 @@ public class HttpRequest extends DefaultStep {
 
         requestURI = start.getBaseURI().resolve(start.getAttributeValue(_href));
 
-        if ("file".equals(requestURI.getScheme())) {
-            doFile();
+        String scheme = requestURI.getScheme();
+        if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
+            doFile(start.getAttributeValue(_href), start.getBaseURI().toASCIIString());
             return;
         }
+
+        HttpParams params = new BasicHttpParams();
+        HttpContext localContext = new BasicHttpContext();
+
+        // The p:http-request step should follow redirect requests if they are returned by the server.
+        params.setBooleanParameter(ClientPNames.HANDLE_REDIRECTS, true);
 
         // What about cookies
         String saveCookieKey = step.getExtensionAttribute(cx_save_cookies);
@@ -204,46 +233,23 @@ public class HttpRequest extends DefaultStep {
             useCookieKeys = cookieKey;
         }
 
-        client = new HttpClient();
-        client.getParams().setCookiePolicy(CookiePolicy.RFC_2109);
-        client.getParams().setParameter("http.protocol.single-cookie-header", true);
-
-        HttpState state = client.getState();
-
-        if (useCookieKeys != null) {
-            for (String key : useCookieKeys.split("\\s+")) {
-                for (Cookie cookie : runtime.getCookies(key)) {
-                    state.addCookie(cookie);
-                }
+        // If a redirect response includes cookies, those cookies should be forwarded
+        // as appropriate to the redirected location when the redirection is followed.
+        CookieStore cookieStore = new BasicCookieStore();
+        if (useCookieKeys != null && useCookieKeys.equals(saveCookieKey)) {
+            cookieStore = runtime.getCookieStore(useCookieKeys);
+        } else if (useCookieKeys != null) {
+            CookieStore useCookieStore = runtime.getCookieStore(useCookieKeys);
+            for (Cookie cookie : useCookieStore.getCookies()) {
+                cookieStore.addCookie(cookie);
             }
         }
+        localContext.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
+        params.setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.RFC_2109);
 
         String timeOutStr = step.getExtensionAttribute(cx_timeout);
         if (timeOutStr != null) {
-            HttpMethodParams params = client.getParams();
-            params.setSoTimeout(Integer.parseInt(timeOutStr));
-        }
-
-        ProxySelector proxySelector = ProxySelector.getDefault();
-        List<Proxy> plist = proxySelector.select(requestURI);
-        // I have no idea what I'm expected to do if I get more than one...
-        if (plist.size() > 0) {
-            Proxy proxy = plist.get(0);
-            switch (proxy.type()) {
-                case DIRECT:
-                    // nop;
-                    break;
-                case HTTP:
-                    // This can't cause a ClassCastException, right?
-                    InetSocketAddress addr = (InetSocketAddress) proxy.address();
-                    String host = addr.getHostName();
-                    int port = addr.getPort();
-                    client.getHostConfiguration().setProxy(host,port);
-                    break;
-                default:
-                    // FIXME: send out a log message
-                    break;
-            }
+            params.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, Integer.parseInt(timeOutStr));
         }
 
         if (start.getAttributeValue(_username) != null) {
@@ -251,7 +257,12 @@ public class HttpRequest extends DefaultStep {
             String pass = start.getAttributeValue(_password);
             String meth = start.getAttributeValue(_auth_method);
 
-            if (meth == null || !("basic".equals(meth.toLowerCase()) || "digest".equals(meth.toLowerCase()))) {
+            List<String> authpref;
+            if ("basic".equalsIgnoreCase(meth)) {
+                authpref = Collections.singletonList(AuthPolicy.BASIC);
+            } else if ("digest".equalsIgnoreCase(meth)) {
+                authpref = Collections.singletonList(AuthPolicy.DIGEST);
+            } else {
                 throw XProcException.stepError(3, "Unsupported auth-method: " + meth);
             }
 
@@ -261,11 +272,11 @@ public class HttpRequest extends DefaultStep {
 
             UsernamePasswordCredentials cred = new UsernamePasswordCredentials(user, pass);
 
-            client.getState().setCredentials(scope, cred);
-
-            if ("basic".equals(meth.toLowerCase())) {
-                client.getParams().setAuthenticationPreemptive(true);
-            }
+            CredentialsProvider credsProvider = new BasicCredentialsProvider();
+            credsProvider.setCredentials(scope, cred);
+            localContext.setAttribute(ClientContext.CREDS_PROVIDER, credsProvider);
+            params.setBooleanParameter(ClientPNames.HANDLE_AUTHENTICATION, true);
+            params.setParameter(AuthPNames.TARGET_AUTH_PREF, authpref);
         }
 
         iter = start.axisIterator(Axis.CHILD);
@@ -287,7 +298,7 @@ public class HttpRequest extends DefaultStep {
                         // We'll deal with the content-type header later
                         headerContentType = event.getAttributeValue(_value).toLowerCase();
                     } else {
-                        headers.add(new Header(event.getAttributeValue(_name), event.getAttributeValue(_value)));
+                        headers.add(new BasicHeader(event.getAttributeValue(_name), event.getAttributeValue(_value)));
                     }
                 } else if (XProcConstants.c_multipart.equals(event.getNodeName())
                            || XProcConstants.c_body.equals(event.getNodeName())) {
@@ -305,18 +316,18 @@ public class HttpRequest extends DefaultStep {
             throw XProcException.stepError(5);
         }
 
-        HttpMethodBase httpResult;
-
+        HttpUriRequest httpRequest;
+        HttpResponse httpResult = null;
         if ("get".equals(lcMethod)) {
-            httpResult = doGet();
+            httpRequest = doGet();
         } else if ("post".equals(lcMethod)) {
-            httpResult = doPost(body);
+            httpRequest = doPost(body);
         } else if ("put".equals(lcMethod)) {
-            httpResult = doPut(body);
+            httpRequest = doPut(body);
         } else if ("head".equals(lcMethod)) {
-            httpResult = doHead();
+            httpRequest = doHead();
         } else if ("delete".equals(lcMethod)) {
-            httpResult = doDelete();
+            httpRequest = doDelete();
         } else {
             throw new UnsupportedOperationException("Unrecognized http method: " + method);
         }
@@ -325,18 +336,21 @@ public class HttpRequest extends DefaultStep {
 
         try {
             // Execute the method.
-            int statusCode = client.executeMethod(httpResult);
-            tree.startDocument(URI.create(httpResult.getURI().getURI()));
+            HttpClient httpClient = runtime.getHttpClient();
+            if (httpClient == null) {
+                throw new XProcException("HTTP requests have been disabled");
+            }
+            httpRequest.setParams(params);
+            httpResult = httpClient.execute(httpRequest, localContext);
+            int statusCode = httpResult.getStatusLine().getStatusCode();
+            HttpHost host = (HttpHost) localContext.getAttribute(ExecutionContext.HTTP_TARGET_HOST);
+            HttpUriRequest req = (HttpUriRequest) localContext.getAttribute(ExecutionContext.HTTP_REQUEST);
+            URI root = new URI(host.getSchemeName(), null, host.getHostName(), host.getPort(), "/", null, null);
+            tree.startDocument(root.resolve(req.getURI()));
 
             // Deal with cookies
             if (saveCookieKey != null) {
-                runtime.clearCookies(saveCookieKey);
-
-                state = client.getState();
-                Cookie[] cookies = state.getCookies();
-                for (Cookie cookie : cookies) {
-                    runtime.addCookie(saveCookieKey, cookie);
-                }
+                runtime.setCookieStore(saveCookieKey, cookieStore);
             }
 
             String contentType = getContentType(httpResult);
@@ -359,7 +373,7 @@ public class HttpRequest extends DefaultStep {
                 tree.addAttribute(_status, "" + statusCode);
                 tree.startContent();
 
-                for (Header header : httpResult.getResponseHeaders()) {
+                for (Header header : httpResult.getAllHeaders()) {
                     // I don't understand why/how HeaderElement parsing works. I get very weird results.
                     // So I'm just going to go the long way around...
                     String h = header.toString();
@@ -376,9 +390,9 @@ public class HttpRequest extends DefaultStep {
 
                 if (statusOnly) {
                     // Skip reading the result
-                } else {
+                } else if (httpResult.getEntity() != null) {
                     // Read the response body.
-                    InputStream bodyStream = httpResult.getResponseBodyAsStream();
+                    InputStream bodyStream = httpResult.getEntity().getContent();
                     if (bodyStream != null) {
                         readBodyContent(tree, bodyStream, httpResult);
                     }
@@ -390,19 +404,23 @@ public class HttpRequest extends DefaultStep {
                     // Skip reading the result
                 } else {
                     // Read the response body.
-                    InputStream bodyStream = httpResult.getResponseBodyAsStream();
-                    if (bodyStream != null) {
+                    if (httpResult.getEntity() != null) {
+                        InputStream bodyStream = httpResult.getEntity().getContent();
                         readBodyContent(tree, bodyStream, httpResult);
                     } else {
                         throw XProcException.dynamicError(6);
                     }
                 }
             }
+        } catch (XProcException e) {
+            throw e;
         } catch (Exception e) {
             throw new XProcException(e);
         } finally {
             // Release the connection.
-            httpResult.releaseConnection();
+            if (httpResult != null) {
+                EntityUtils.consumeQuietly(httpResult.getEntity());
+            }
         }
 
         tree.endDocument();
@@ -412,62 +430,50 @@ public class HttpRequest extends DefaultStep {
         result.write(resultNode);
     }
 
-    private GetMethod doGet() {
-        GetMethod method = new GetMethod(requestURI.toASCIIString());
-
-        // Provide custom retry handler is necessary
-        method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER,
-                new DefaultHttpMethodRetryHandler(3, false));
+    private HttpGet doGet() {
+        HttpGet method = new HttpGet(requestURI);
 
         for (Header header : headers) {
-            method.addRequestHeader(header);
+            method.addHeader(header);
         }
 
         return method;
     }
 
-    private HeadMethod doHead() {
-        HeadMethod method = new HeadMethod(requestURI.toASCIIString());
-
-        // Provide custom retry handler is necessary
-        method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER,
-                new DefaultHttpMethodRetryHandler(3, false));
+    private HttpHead doHead() {
+        HttpHead method = new HttpHead(requestURI);
 
         for (Header header : headers) {
-            method.addRequestHeader(header);
+            method.addHeader(header);
         }
 
         return method;
     }
 
-    private DeleteMethod doDelete() {
-        DeleteMethod method = new DeleteMethod(requestURI.toASCIIString());
-
-        // Provide custom retry handler is necessary
-        method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER,
-                new DefaultHttpMethodRetryHandler(3, false));
+    private HttpDelete doDelete() {
+        HttpDelete method = new HttpDelete(requestURI);
 
         for (Header header : headers) {
-            method.addRequestHeader(header);
+            method.addHeader(header);
         }
 
         return method;
     }
 
-    private PutMethod doPut(XdmNode body) {
-        PutMethod method = new PutMethod(requestURI.toASCIIString());
+    private HttpPut doPut(XdmNode body) {
+        HttpPut method = new HttpPut(requestURI);
         doPutOrPost(method,body);
         return method;
     }
 
 
-    private PostMethod doPost(XdmNode body) {
-        PostMethod method = new PostMethod(requestURI.toASCIIString());
+    private HttpPost doPost(XdmNode body) {
+        HttpPost method = new HttpPost(requestURI);
         doPutOrPost(method,body);
         return method;
     }
 
-    private void doPutOrPost(EntityEnclosingMethod method, XdmNode body) {
+    private void doPutOrPost(HttpEntityEnclosingRequest method, XdmNode body) {
         if (XProcConstants.c_multipart.equals(body.getNodeName())) {
             doPutOrPostMultipart(method,body);
         } else {
@@ -475,12 +481,8 @@ public class HttpRequest extends DefaultStep {
         }
     }
 
-    private void doPutOrPostSinglepart(EntityEnclosingMethod method, XdmNode body) {
+    private void doPutOrPostSinglepart(HttpEntityEnclosingRequest method, XdmNode body) {
         // ATTENTION: This doesn't handle multipart, that's done entirely separately
-
-        // Provide custom retry handler is necessary
-        method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER,
-                new DefaultHttpMethodRetryHandler(3, false));
 
         // Check for consistency of content-type
         contentType = body.getAttributeValue(_content_type);
@@ -508,7 +510,7 @@ public class HttpRequest extends DefaultStep {
             }
 
             if (!descriptionHeader) {
-                headers.add(new Header("Content-Description", bodyDescription));
+                headers.add(new BasicHeader("Content-Description", bodyDescription));
             }
         }
 
@@ -524,7 +526,7 @@ public class HttpRequest extends DefaultStep {
             }
 
             if (!idHeader) {
-                headers.add(new Header("Content-Id", bodyId));
+                headers.add(new BasicHeader("Content-Id", bodyId));
             }
         }
 
@@ -540,7 +542,7 @@ public class HttpRequest extends DefaultStep {
             }
 
             if (!dispositionHeader) {
-                headers.add(new Header("Content-Disposition", bodyDisposition));
+                headers.add(new BasicHeader("Content-Disposition", bodyDisposition));
             }
         }
 
@@ -549,7 +551,7 @@ public class HttpRequest extends DefaultStep {
         }
 
         for (Header header : headers) {
-            method.addRequestHeader(header);
+            method.addHeader(header);
         }
 
         // FIXME: This sucks rocks. I want to write the data to be posted, not provide some way to read it
@@ -618,8 +620,8 @@ public class HttpRequest extends DefaultStep {
                 }
             }
 
-            StringRequestEntity requestEntity = new StringRequestEntity(postContent, contentType, "UTF-8");
-            method.setRequestEntity(requestEntity);
+            StringEntity requestEntity = new StringEntity(postContent, ContentType.create(contentType, "UTF-8"));
+            method.setEntity(requestEntity);
 
         } catch (IOException ioe) {
             throw new XProcException(ioe);
@@ -628,13 +630,9 @@ public class HttpRequest extends DefaultStep {
         }
     }
 
-    private void doPutOrPostMultipart(EntityEnclosingMethod method, XdmNode multipart) {
+    private void doPutOrPostMultipart(HttpEntityEnclosingRequest method, XdmNode multipart) {
         // The Apache HTTP libraries just don't handle this case...we treat it as a "single part"
         // and build the body ourselves, using the boundaries etc.
-
-        // Provide custom retry handler is necessary
-        method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER,
-                new DefaultHttpMethodRetryHandler(3, false));
 
         // Check for consistency of content-type
         contentType = multipart.getAttributeValue(_content_type);
@@ -651,7 +649,7 @@ public class HttpRequest extends DefaultStep {
         }
 
         for (Header header : headers) {
-            method.addRequestHeader(header);
+            method.addHeader(header);
         }
 
         String boundary = multipart.getAttributeValue(_boundary);
@@ -787,13 +785,13 @@ public class HttpRequest extends DefaultStep {
         //postContent += "--" + boundary + "--\r\n";
         byteContent.append("--" + boundary + "--\r\n");
 
-        ByteArrayRequestEntity requestEntity = new ByteArrayRequestEntity(byteContent.content(), multipartContentType);
+        ByteArrayEntity requestEntity = new ByteArrayEntity(byteContent.content(), ContentType.create(multipartContentType));
         //StringRequestEntity requestEntity = new StringRequestEntity(postContent, multipartContentType, null);
-        method.setRequestEntity(requestEntity);
+        method.setEntity(requestEntity);
     }
 
-    private String getFullContentType(HttpMethodBase method) {
-        Header contentTypeHeader = method.getResponseHeader("Content-Type");
+    private String getFullContentType(HttpResponse method) {
+        Header contentTypeHeader = method.getLastHeader("Content-Type");
         return getFullContentType(contentTypeHeader);
     }
 
@@ -835,8 +833,8 @@ public class HttpRequest extends DefaultStep {
         return elems[0].getName();
     }
 
-    private String getContentType(HttpMethodBase method) {
-        Header contentTypeHeader = method.getResponseHeader("Content-Type");
+    private String getContentType(HttpResponse method) {
+        Header contentTypeHeader = method.getLastHeader("Content-Type");
         String contentType = getContentType(contentTypeHeader);
         if (contentType == null) {
             // This should never happen either...
@@ -850,8 +848,8 @@ public class HttpRequest extends DefaultStep {
         return getHeaderValue(contentTypeHeader);
     }
 
-    private String getContentBoundary(HttpMethodBase method) {
-        Header contentTypeHeader = method.getResponseHeader("Content-Type");
+    private String getContentBoundary(HttpResponse method) {
+        Header contentTypeHeader = method.getLastHeader("Content-Type");
         return getContentBoundary(contentTypeHeader);
     }
 
@@ -903,9 +901,10 @@ public class HttpRequest extends DefaultStep {
         return HttpUtils.textContentType(contentType);
     }
 
-    private void readBodyContent(TreeWriter tree, InputStream bodyStream, HttpMethodBase method) throws SaxonApiException, IOException {
+    private void readBodyContent(TreeWriter tree, InputStream bodyStream, HttpResponse method) throws SaxonApiException, IOException {
         String contentType = getFullContentType(method);
-        String charset = method.getResponseCharSet();
+        Charset cs = ContentType.getOrDefault(method.getEntity()).getCharset();
+        String charset = cs == null ? Consts.ISO_8859_1.name() : cs.name();
         String boundary = getContentBoundary(method);
 
         if (overrideContentType != null) {
@@ -1103,7 +1102,7 @@ public class HttpRequest extends DefaultStep {
         }
     }
 
-    private void doFile() {
+    private void doFile(String href, String base) {
         // Find the content type
         String contentType = overrideContentType;
 
@@ -1111,38 +1110,42 @@ public class HttpRequest extends DefaultStep {
             contentType = "application/octet-stream";
         }
 
-        // FIXME: Is ISO-8859-1 the right default?
-        String charset = HttpUtils.getCharset(contentType, "ISO-8859-1");
-
-        TreeWriter tree = new TreeWriter(runtime);
-        tree.startDocument(requestURI);
-
         try {
-            File file = new File(requestURI.getPath());
-            FileInputStream bodyStream = null;
-            bodyStream = new FileInputStream(file);
+            DataStore store = runtime.getDataStore();
+            store.readEntry(href, base, "application/xml, text/xml, */*", new DataReader() {
+                public void load(URI id, String contentType, InputStream bodyStream, long len)
+                        throws IOException {
+                    // FIXME: Is ISO-8859-1 the right default?
+                    String charset = HttpUtils.getCharset(contentType, "ISO-8859-1");
 
-            if (xmlContentType(contentType)) {
-                readBodyContentPart(tree, bodyStream, contentType, charset);
-            } else {
-                tree.addStartElement(XProcConstants.c_body);
-                tree.addAttribute(_content_type, contentType);
-                if (!xmlContentType(contentType) && !textContentType(contentType)) {
-                    tree.addAttribute(_encoding, "base64");
+                    TreeWriter tree = new TreeWriter(runtime);
+                    tree.startDocument(id);
+
+                    try {
+                        if (xmlContentType(contentType)) {
+                            readBodyContentPart(tree, bodyStream, contentType, charset);
+                        } else {
+                            tree.addStartElement(XProcConstants.c_body);
+                            tree.addAttribute(_content_type, contentType);
+                            if (!xmlContentType(contentType) && !textContentType(contentType)) {
+                                tree.addAttribute(_encoding, "base64");
+                            }
+                            tree.startContent();
+                            readBodyContentPart(tree, bodyStream, contentType, charset);
+                            tree.addEndElement();
+                        }
+
+                        tree.endDocument();
+
+                        XdmNode doc = tree.getResult();
+                        result.write(doc);
+                    } catch (SaxonApiException sae) {
+                        throw new XProcException(sae);
+                    }
                 }
-                tree.startContent();
-                readBodyContentPart(tree, bodyStream, contentType, charset);
-                tree.addEndElement();
-            }
-
-            tree.endDocument();
-
-            XdmNode doc = tree.getResult();
-            result.write(doc);
+            });
         } catch (FileNotFoundException fnfe) {
             throw new XProcException(fnfe);
-        } catch (SaxonApiException sae) {
-            throw new XProcException(sae);
         } catch (IOException ioe) {
             throw new XProcException(ioe);
         }

@@ -19,35 +19,33 @@
 
 package com.xmlcalabash.library;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.URI;
+import java.util.zip.GZIPOutputStream;
 
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.Serializer;
+import net.sf.saxon.s9api.XdmNode;
+
+import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.io.DataStore;
+import com.xmlcalabash.io.DataStore.DataWriter;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
-import com.xmlcalabash.util.JSONtoXML;
-import com.xmlcalabash.util.TreeWriter;
-import com.xmlcalabash.util.S9apiUtils;
-import com.xmlcalabash.util.Base64;
-import com.xmlcalabash.core.XProcRuntime;
-import java.net.URLConnection;
-
-import com.xmlcalabash.util.XMLtoJSON;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.Processor;
-import net.sf.saxon.s9api.XQueryCompiler;
-import net.sf.saxon.s9api.XQueryExecutable;
-import net.sf.saxon.s9api.XQueryEvaluator;
-import net.sf.saxon.s9api.Serializer;
-
 import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.core.XProcConstants;
-import com.xmlcalabash.core.XProcException;
-
-import java.net.URL;
-import java.util.zip.GZIPOutputStream;
+import com.xmlcalabash.util.Base64;
+import com.xmlcalabash.util.JSONtoXML;
+import com.xmlcalabash.util.S9apiUtils;
+import com.xmlcalabash.util.TreeWriter;
+import com.xmlcalabash.util.XMLtoJSON;
 
 /**
  *
@@ -68,7 +66,6 @@ public class Store extends DefaultStep {
     // Store also implements the cx:gzip step.
     // If gzip is true, then href may be null
     protected CompressionMethod method = CompressionMethod.NONE;
-    private URI href = null;
 
     /**
      * Creates a new instance of Store
@@ -105,8 +102,10 @@ public class Store extends DefaultStep {
             throw XProcException.dynamicError(6);
         }
 
+        String href = null, base = null;
         if (hrefOpt != null) {
-            href = hrefOpt.getBaseURI().resolve(hrefOpt.getString());
+            href = hrefOpt.getString();
+            base = hrefOpt.getBaseURI().toASCIIString();
         }
 
         if (method == CompressionMethod.GZIP) {
@@ -117,157 +116,183 @@ public class Store extends DefaultStep {
 
         String decode = step.getExtensionAttribute(cx_decode);
         XdmNode root = S9apiUtils.getDocumentElement(doc);
+        String contentType = root.getAttributeValue(_content_type);
+        URI contentId;
         if (("true".equals(decode) || "1".equals(decode) || method != CompressionMethod.NONE)
              && ((XProcConstants.NS_XPROC_STEP.equals(root.getNodeName().getNamespaceURI())
                   && "base64".equals(root.getAttributeValue(_encoding)))
                  || ("".equals(root.getNodeName().getNamespaceURI())
                      && "base64".equals(root.getAttributeValue(c_encoding))))) {
-            storeBinary(doc, href);
+            contentId = storeBinary(doc, href, base, contentType);
         } else if (runtime.transparentJSON()
                    && (((c_body.equals(root.getNodeName())
-                        && ("application/json".equals(root.getAttributeValue(_content_type))
-                            || "text/json".equals(root.getAttributeValue(_content_type))))
+                        && ("application/json".equals(contentType)
+                            || "text/json".equals(contentType)))
                        || c_json.equals(root.getNodeName()))
                        || JSONtoXML.JSONX_NS.equals(root.getNodeName().getNamespaceURI())
                        || JSONtoXML.JXML_NS.equals(root.getNodeName().getNamespaceURI())
                        || JSONtoXML.MLJS_NS.equals(root.getNodeName().getNamespaceURI()))) {
-            storeJSON(doc, href);
+            contentId = storeJSON(doc, href, base, contentType);
         } else {
-            storeXML(doc, href);
+            contentId = storeXML(doc, href, base, contentType);
         }
 
-        if (href != null) {
+        if (contentId != null) {
             TreeWriter tree = new TreeWriter(runtime);
             tree.startDocument(step.getNode().getBaseURI());
             tree.addStartElement(XProcConstants.c_result);
             tree.startContent();
-            tree.addText(href.toString());
+            tree.addText(contentId.toASCIIString());
             tree.addEndElement();
             tree.endDocument();
             result.write(tree.getResult());
         }
     }
 
-    private void storeXML(XdmNode doc, URI href) throws SaxonApiException {
-        Serializer serializer = makeSerializer();
+    private URI storeXML(final XdmNode doc, String href, String base,
+            String media) throws SaxonApiException {
+        final Serializer serializer = makeSerializer();
+
+        if (media == null) {
+            media = "application/xml";
+        }
 
         try {
-            OutputStream outstr = null;
-            ByteArrayOutputStream baos = null;
-
             if (href == null) {
+                OutputStream outstr;
+                ByteArrayOutputStream baos;
                 baos = new ByteArrayOutputStream();
                 outstr = baos;
-            } else if (href.getScheme().equals("file")) {
-                File output = new File(href);
 
-                File path = new File(output.getParent());
-                if (!path.isDirectory()) {
-                    if (!path.mkdirs()) {
-                        throw XProcException.stepError(50);
-                    }
+                if (method == CompressionMethod.GZIP) {
+                    GZIPOutputStream gzout = new GZIPOutputStream(outstr);
+                    outstr = gzout;
                 }
-                outstr = new FileOutputStream(output);
-            } else {
-                final URLConnection conn = href.toURL().openConnection();
-                conn.setDoOutput(true);
-                outstr = conn.getOutputStream();
-            }
 
-            if (method == CompressionMethod.GZIP) {
-                GZIPOutputStream gzout = new GZIPOutputStream(outstr);
-                outstr = gzout;
-            }
+                serializer.setOutputStream(outstr);
+                S9apiUtils.serialize(runtime, doc, serializer);
+                outstr.close();
 
-            serializer.setOutputStream(outstr);
-            S9apiUtils.serialize(runtime, doc, serializer);
-            outstr.close();
-
-            if (href == null) {
                 returnData(baos);
+                return null;
+            } else {
+                DataStore store = runtime.getDataStore();
+                return store.writeEntry(href, base, media, new DataWriter() {
+                    public void store(OutputStream outstr)
+                            throws IOException {
+                        if (method == CompressionMethod.GZIP) {
+                            GZIPOutputStream gzout = new GZIPOutputStream(outstr);
+                            outstr = gzout;
+                        }
+
+                        serializer.setOutputStream(outstr);
+                        try {
+                            S9apiUtils.serialize(runtime, doc, serializer);
+                        } catch (SaxonApiException e) {
+                            throw new IOException(e);
+                        }
+                    }
+                });
             }
+        } catch (FileNotFoundException e) {
+            throw XProcException.stepError(50);
         } catch (IOException ioe) {
+            if (ioe.getCause() instanceof SaxonApiException) {
+                throw (SaxonApiException) ioe.getCause();
+            }
             throw XProcException.stepError(50, ioe);
         }
     }
 
-    private void storeBinary(XdmNode doc, URI href) {
+    private URI storeBinary(XdmNode doc, String href, String base, String media) {
+        if (media == null) {
+            media = "application/octet-stream";
+        }
+
         try {
-            byte[] decoded = Base64.decode(doc.getStringValue());
-            OutputStream outstr = null;
-            ByteArrayOutputStream baos = null;
+            final byte[] decoded = Base64.decode(doc.getStringValue());
 
             if (href == null) {
+                OutputStream outstr = null;
+                ByteArrayOutputStream baos = null;
                 baos = new ByteArrayOutputStream();
                 outstr = baos;
-            } else {
-                File output = new File(href);
 
-                File path = new File(output.getParent());
-                if (!path.isDirectory()) {
-                    if (!path.mkdirs()) {
-                        throw XProcException.stepError(50);
-                    }
+                if (method == CompressionMethod.GZIP) {
+                    GZIPOutputStream gzout = new GZIPOutputStream(outstr);
+                    outstr = gzout;
                 }
 
-                outstr = new FileOutputStream(output);
-            }
+                outstr.write(decoded);
+                outstr.close();
 
-            if (method == CompressionMethod.GZIP) {
-                GZIPOutputStream gzout = new GZIPOutputStream(outstr);
-                outstr = gzout;
-            }
-
-            outstr.write(decoded);
-            outstr.close();
-
-            if (href == null) {
                 returnData(baos);
+                return null;
+            } else {
+                DataStore store = runtime.getDataStore();
+                return store.writeEntry(href, base, media, new DataWriter() {
+                    public void store(OutputStream outstr) throws IOException {
+                        if (method == CompressionMethod.GZIP) {
+                            GZIPOutputStream gzout = new GZIPOutputStream(outstr);
+                            outstr = gzout;
+                        }
+
+                        outstr.write(decoded);
+                    }
+                });
             }
+        } catch (FileNotFoundException e) {
+            throw XProcException.stepError(50);
         } catch (IOException ioe) {
             throw new XProcException(ioe);
         }
     }
 
-    private void storeJSON(XdmNode doc, URI href) throws SaxonApiException {
-        try {
-            OutputStream outstr = null;
-            ByteArrayOutputStream baos = null;
+    private URI storeJSON(final XdmNode doc, String href, String base,
+            String media) throws SaxonApiException {
+        if (media == null) {
+            media = "application/json";
+        }
 
+        try {
             if (href == null) {
+                OutputStream outstr = null;
+                ByteArrayOutputStream baos = null;
+
                 baos = new ByteArrayOutputStream();
                 outstr = baos;
-            } else if (href.getScheme().equals("file")) {
-                File output = new File(href);
 
-                File path = new File(output.getParent());
-                if (!path.isDirectory()) {
-                    if (!path.mkdirs()) {
-                        throw XProcException.stepError(50);
-                    }
+                if (method == CompressionMethod.GZIP) {
+                    GZIPOutputStream gzout = new GZIPOutputStream(outstr);
+                    outstr = gzout;
                 }
 
-                outstr = new FileOutputStream(output);
-            } else {
-                final URLConnection conn = href.toURL().openConnection();
-                conn.setDoOutput(true);
-                outstr = conn.getOutputStream();
-            }
+                PrintWriter writer = new PrintWriter(outstr);
+                String json = XMLtoJSON.convert(doc);
+                writer.print(json);
+                writer.close();
+                outstr.close();
 
-            if (method == CompressionMethod.GZIP) {
-                GZIPOutputStream gzout = new GZIPOutputStream(outstr);
-                outstr = gzout;
-            }
-
-            PrintWriter writer = new PrintWriter(outstr);
-            String json = XMLtoJSON.convert(doc);
-            writer.print(json);
-            writer.close();
-            outstr.close();
-
-            if (href == null) {
                 returnData(baos);
+                return null;
+            } else {
+                DataStore store = runtime.getDataStore();
+                return store.writeEntry(href, base, media, new DataWriter() {
+                    public void store(OutputStream outstr) throws IOException {
+                        if (method == CompressionMethod.GZIP) {
+                            GZIPOutputStream gzout = new GZIPOutputStream(outstr);
+                            outstr = gzout;
+                        }
+
+                        PrintWriter writer = new PrintWriter(outstr);
+                        String json = XMLtoJSON.convert(doc);
+                        writer.print(json);
+                        writer.close();
+                    }
+                });
             }
+        } catch (FileNotFoundException e) {
+            throw XProcException.stepError(50);
         } catch (IOException ioe) {
             throw XProcException.stepError(50, ioe);
         }
