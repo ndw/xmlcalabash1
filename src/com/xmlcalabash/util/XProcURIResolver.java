@@ -1,28 +1,5 @@
 package com.xmlcalabash.util;
 
-import net.sf.saxon.lib.UnparsedTextURIResolver;
-import net.sf.saxon.trans.XPathException;
-import org.xml.sax.InputSource;
-import org.xml.sax.EntityResolver;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.XMLReaderFactory;
-
-import javax.xml.transform.URIResolver;
-import javax.xml.transform.Source;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.sax.SAXSource;
-import javax.xml.parsers.SAXParserFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
-import net.sf.saxon.s9api.DocumentBuilder;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.Configuration;
-import com.xmlcalabash.core.XProcException;
-import com.xmlcalabash.core.XProcConstants;
-import com.xmlcalabash.core.XProcRuntime;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -33,7 +10,33 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Hashtable;
-import java.util.logging.Logger;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParserFactory;
+import javax.xml.transform.Source;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.URIResolver;
+import javax.xml.transform.sax.SAXSource;
+import javax.xml.transform.stream.StreamSource;
+
+import net.sf.saxon.Configuration;
+import net.sf.saxon.lib.ModuleURIResolver;
+import net.sf.saxon.lib.StandardModuleURIResolver;
+import net.sf.saxon.lib.UnparsedTextURIResolver;
+import net.sf.saxon.s9api.DocumentBuilder;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.trans.XPathException;
+
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.XMLReaderFactory;
+
+import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
 
 /**
  * Created by IntelliJ IDEA.
@@ -42,9 +45,10 @@ import java.util.logging.Logger;
  * Time: 4:04:27 PM
  * To change this template use File | Settings | File Templates.
  */
-public class XProcURIResolver implements URIResolver, EntityResolver, UnparsedTextURIResolver {
+public class XProcURIResolver implements URIResolver, EntityResolver, ModuleURIResolver, UnparsedTextURIResolver {
     private URIResolver uriResolver = null;
     private EntityResolver entityResolver = null;
+    private ModuleURIResolver moduleURIResolver = null;
     private UnparsedTextURIResolver unparsedTextResolver = null;
     private XProcRuntime runtime = null;
     private Hashtable<String,XdmNode> cache = new Hashtable<String,XdmNode> ();
@@ -60,6 +64,10 @@ public class XProcURIResolver implements URIResolver, EntityResolver, UnparsedTe
 
     public void setUnderlyingEntityResolver(EntityResolver resolver) {
         entityResolver = resolver;
+    }
+
+    public void setUnderlyingModuleURIResolver(ModuleURIResolver resolver) {
+    	moduleURIResolver = resolver;
     }
 
     public void setUnderlyingUnparsedTextURIResolver(UnparsedTextURIResolver resolver) {
@@ -245,6 +253,15 @@ public class XProcURIResolver implements URIResolver, EntityResolver, UnparsedTe
     }
 
     @Override
+	public StreamSource[] resolve(String moduleURI, String baseURI, String[] locations)
+			throws XPathException {
+    	if (moduleURIResolver != null) {
+    		return moduleURIResolver.resolve(moduleURI, baseURI, locations);
+    	}
+		return StandardModuleURIResolver.getInstance().resolve(moduleURI, baseURI, locations);
+	}
+
+	@Override
     public Reader resolve(URI uri, String s, Configuration configuration) throws XPathException {
         if (unparsedTextResolver != null) {
             return unparsedTextResolver.resolve(uri, s, configuration);
