@@ -879,6 +879,11 @@ public class Parser {
 
         QName oname = new QName(name, node);
 
+        // If it has no prefix, then it's in no namespace, not the default namespace
+        if (oname.getPrefix() == null || "".equals(oname.getPrefix())) {
+            oname = new QName("", name);
+        }
+
         if (XProcConstants.NS_XPROC.equals(oname.getNamespaceURI())) {
             throw XProcException.staticError(28, node, "You cannot specify a variable in the p: namespace.");
         }
