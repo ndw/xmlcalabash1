@@ -1,5 +1,7 @@
 package com.xmlcalabash.util;
 
+import net.sf.saxon.lib.ModuleURIResolver;
+import net.sf.saxon.lib.StandardModuleURIResolver;
 import net.sf.saxon.lib.UnparsedTextURIResolver;
 import net.sf.saxon.trans.XPathException;
 import org.xml.sax.InputSource;
@@ -14,6 +16,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.stream.StreamSource;
 
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -42,9 +45,10 @@ import java.util.logging.Logger;
  * Time: 4:04:27 PM
  * To change this template use File | Settings | File Templates.
  */
-public class XProcURIResolver implements URIResolver, EntityResolver, UnparsedTextURIResolver {
+public class XProcURIResolver implements URIResolver, EntityResolver, ModuleURIResolver, UnparsedTextURIResolver {
     private URIResolver uriResolver = null;
     private EntityResolver entityResolver = null;
+    private ModuleURIResolver moduleURIResolver = null;
     private UnparsedTextURIResolver unparsedTextResolver = null;
     private XProcRuntime runtime = null;
     private Hashtable<String,XdmNode> cache = new Hashtable<String,XdmNode> ();
@@ -64,6 +68,10 @@ public class XProcURIResolver implements URIResolver, EntityResolver, UnparsedTe
 
     public void setUnderlyingUnparsedTextURIResolver(UnparsedTextURIResolver resolver) {
         unparsedTextResolver = resolver;
+    }
+
+    public void setUnderlyingModuleURIResolver(ModuleURIResolver resolver) {
+        moduleURIResolver = resolver;
     }
 
     public void cache(XdmNode doc, URI baseURI) {
@@ -242,6 +250,15 @@ public class XProcURIResolver implements URIResolver, EntityResolver, UnparsedTe
         } else {
             return null;
         }
+    }
+
+    @Override
+    public StreamSource[] resolve(String moduleURI, String baseURI, String[] locations)
+            throws XPathException {
+        if (moduleURIResolver != null) {
+            return moduleURIResolver.resolve(moduleURI, baseURI, locations);
+        }
+        return StandardModuleURIResolver.getInstance().resolve(moduleURI, baseURI, locations);
     }
 
     @Override

@@ -214,6 +214,7 @@ public class Exec extends DefaultStep {
 
                 Processor qtproc = runtime.getProcessor();
                 XQueryCompiler xqcomp = qtproc.newXQueryCompiler();
+                xqcomp.setModuleURIResolver(runtime.getResolver());
                 XQueryExecutable xqexec = xqcomp.compile(queryexpr);
                 XQueryEvaluator xqeval = xqexec.load();
                 xqeval.setContextItem(srcDoc);
