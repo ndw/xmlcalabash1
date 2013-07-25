@@ -153,6 +153,7 @@ public class S9apiUtils {
     public static void serialize(XProcRuntime xproc, Vector<XdmNode> nodes, Serializer serializer) throws SaxonApiException {
         Processor qtproc = xproc.getProcessor();
         XQueryCompiler xqcomp = qtproc.newXQueryCompiler();
+        xqcomp.setModuleURIResolver(xproc.getResolver());
 
         // Patch suggested by oXygen to avoid errors that result from attempting to serialize
         // a schema-valid document with a schema-naive query
