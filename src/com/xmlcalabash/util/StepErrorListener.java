@@ -74,7 +74,6 @@ public class StepErrorListener implements ErrorListener {
 
         writer.startDocument(baseURI);
         writer.addStartElement(c_error);
-        writer.addAttribute(_type, type);
 
         String message = exception.toString();
         StructuredQName qCode = null;
@@ -95,8 +94,11 @@ public class StepErrorListener implements ErrorListener {
             qCode = ((XPathException) exception.getException()).getErrorCodeQName();
         }
         if (qCode != null) {
+            writer.addNamespace(qCode.getPrefix(), qCode.getNamespaceBinding().getURI());
             writer.addAttribute(_code, qCode.getDisplayName());
         }
+
+        writer.addAttribute(_type, type);
 
         if (exception.getLocator() != null) {
             SourceLocator loc = exception.getLocator();
