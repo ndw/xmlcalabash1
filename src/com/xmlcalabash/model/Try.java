@@ -61,12 +61,14 @@ public class Try  extends DeclareStep {
                 Input cinput = new Input(runtime, step.getNode());
                 cinput.setPort(input.getPort());
                 cinput.setPrimary(input.getPrimary());
+                cinput.setSequence(input.getSequence());
                 addInput(cinput);
             }
             for (Output output : step.outputs()) {
                 Output coutput = new Output(runtime, step.getNode());
                 coutput.setPort(output.getPort());
                 coutput.setPrimary(output.getPrimary());
+                coutput.setSequence(output.getSequence());
                 addOutput(coutput);
             }
         }
