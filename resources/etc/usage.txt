@@ -1,26 +1,36 @@
-Usage: com.xmlcalabash.drivers.Main [switches] [pipeline.xpl] [options]
-   or: com.xmlcalabash.drivers.Main [switches] \
-           { [inputs/outputs/parameters] step [options] }+
+Usage: com.xmlcalabash.drivers.Main [switches/options] [pipeline.xpl] [options]
+   or: com.xmlcalabash.drivers.Main [switches/options] { [inputs/parameters] step [options] }+
 
 Where switches are:
-  -a, --schema-aware                   Turn on schema-aware processing
-  -b, --binding prefix=uri  	       Specify namespace binding
-  -c, --config configfile              Specify a particular configuration file
-  -d, --data-input port=uri            Bind the specified input port to data
-  -D, --debug               	       Turn on debugging
-  -E, --entity-resolver className      Specify a resolver class for URI resolution
-  -G, --log-style logstyle             Specify the default style for p:log output
-  -i, --input port=uri      	       Bind the specified input port
-  -l, --library library.xpl            Load the specified library
-  -o, --output port=uri                Bind the specified output port
-  -p, --with-param [port@]param=value  Specify a parameter
-  -P, --saxon-processor edition        Request a specific edition of Saxon
-  -s, --step-name stepname             Run the step named 'stepname'
-  -S, --safe-mode                      Request "safe" execution
-  -U, --uri-resolver className         Specify a resolver class for URI resolution
-  -v, --version                        Show XML Calabash version
-  -X, --extension extname              Enable the 'extname' extension
-      --saxon-configuration file       Load the specified Saxon configuration
+  -a, --schema-aware                         Turn on schema-aware processing,
+                                             this also sets saxon-processor to 'ee' implicitly
+  -b, --binding prefix=uri                   Specify namespace binding
+  -c, --config configfile                    Specify a particular configuration file
+  -d, --data-input [contentType@][port=]uri  Bind the specified input port to data, if no port is specified,
+                                             the first unbound input port is used
+  -D, --debug                                Turn on debugging
+  -E, --entity-resolver className            Specify a resolver class for entity resolution
+  -G, --log-style logstyle                   Specify the default style for p:log output;
+                                             Must be 'off', 'plain', 'wrapped' (default), or 'directory'
+  -i, --input [port=]uri                     Bind the specified input port, if no port is specified,
+                                             the first unbound input port is used
+  -l, --library library.xpl                  Load the specified library
+  -o, --output [port=]uri                    Bind the specified output port, if no port is specified,
+                                             the first unbound output port is used
+  -p, --with-param [port@]param=value        Specify a parameter
+      --profile file                         Specify a file, or '-' for console output,
+                                             where to write profiling information of the
+                                             pipeline that was run
+  -P, --saxon-processor edition              Request a specific edition of Saxon;
+                                             Must be 'he' (default), 'pe' or 'ee'
+  -s, --step stepname                        Run the step named 'stepname' instead of a pipeline
+  -S, --safe-mode                            Request 'safe' execution
+  -U, --uri-resolver className               Specify a resolver class for URI resolution
+  -v, --version                              Show XML Calabash version
+  -X, --extension extname                    Enable the 'extname' extension;
+                                             valid extname values are 'general-values', 'xpointer-on-text',
+                                             'transparent-json', 'json-flavor=<flavor>' and 'use-xslt-10'
+      --saxon-configuration file             Load the specified Saxon configuration
 
 For more information, consult http://xmlcalabash.com/docs/reference/ or
 the documentation that came with the distribution.
