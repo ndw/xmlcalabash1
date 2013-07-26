@@ -1,22 +1,20 @@
 package com.xmlcalabash.extensions;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+
+import org.apache.http.cookie.Cookie;
+
 import com.xmlcalabash.core.XProcConstants;
-import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.library.DefaultStep;
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.util.TreeWriter;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XdmNode;
-import org.apache.commons.httpclient.Cookie;
-
-import javax.xml.datatype.Duration;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 /**
  * Created by IntelliJ IDEA.
@@ -66,7 +64,7 @@ public class GetCookies extends DefaultStep {
         tree.addStartElement(c_cookies);
         tree.startContent();
 
-        for (Cookie cookie : runtime.getCookies(cookieKey)) {
+        for (Cookie cookie : runtime.getCookieStore(cookieKey).getCookies()) {
             tree.addStartElement(c_cookie);
             tree.addAttribute(_name, cookie.getName());
             tree.addAttribute(_value, cookie.getValue());

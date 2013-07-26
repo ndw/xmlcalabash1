@@ -5,7 +5,7 @@ import junit.framework.TestCase;
 import javax.xml.transform.sax.SAXSource;
 
 import org.xml.sax.InputSource;
-import org.apache.commons.httpclient.Header;
+import org.apache.http.Header;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.SaxonApiException;

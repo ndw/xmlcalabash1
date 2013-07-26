@@ -59,11 +59,11 @@
       <version>9.4.0.7</version>
     </dependency>
 
-    <!-- No need to specify commons-logging or commons-codec - they're transitive dependencies of commons-httpclient -->
+    <!-- No need to specify commons-logging or commons-codec - they're transitive dependencies of httpclient -->
     <dependency>
-      <groupId>commons-httpclient</groupId>
-      <artifactId>commons-httpclient</artifactId>
-      <version>3.1</version>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>4.2.5</version>
     </dependency>
 
     <dependency>
