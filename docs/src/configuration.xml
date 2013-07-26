@@ -39,6 +39,10 @@ and “enterprise edition”. There are four ways to select the edition you wish
   <entry>XML configuration:</entry>
   <entry><tag class="starttag">cc:saxon-processor</tag><replaceable>edition</replaceable><tag class="endtag">cc:saxon-processor</tag></entry>
 </row>
+<row>
+  <entry>Ant task:</entry>
+  <entry><tag class="emptytag">calabash <tag class="attribute">saxonProcessor</tag>="<tag class="attvalue"><replaceable>edition</replaceable></tag>"</tag></entry>
+</row>
 </tbody>
 </tgroup>
 </informaltable>
@@ -80,6 +84,14 @@ There are three ways to specify the location of this file:
   <entry>XML configuration:</entry>
   <entry><tag class="starttag">cc:saxon-configuration</tag><replaceable>filename</replaceable><tag class="endtag">cc:saxon-configuration</tag></entry>
 </row>
+<row>
+  <entry>Ant task:</entry>
+  <entry>
+    <tag class="emptytag">calabash <tag class="attribute">saxonConfigFile</tag>="<tag class="attvalue"><replaceable>filename</replaceable></tag>"</tag>
+    or
+    <tag class="starttag">calabash</tag><tag class="starttag">saxonConfig</tag><replaceable>saxon config resource</replaceable><tag class="endtag">saxonConfig</tag><tag class="endtag">calabash</tag>
+  </entry>
+</row>
 </tbody>
 </tgroup>
 </informaltable>
@@ -114,6 +126,10 @@ if you are using “home edition”.</para>
   <entry>XML configuration:</entry>
   <entry><tag class="starttag">cc:schema-aware</tag><replaceable>boolean</replaceable><tag class="endtag">cc:schema-aware</tag></entry>
 </row>
+<row>
+  <entry>Ant task:</entry>
+  <entry><tag class="emptytag">calabash <tag class="attribute">schemaAware</tag>="<tag class="attvalue"><replaceable>Ant boolean</replaceable></tag>"</tag></entry>
+</row>
 </tbody>
 </tgroup>
 </informaltable>
@@ -146,6 +162,10 @@ is enabled, then PSVIs are passed between steps.</para>
   <entry>XML configuration:</entry>
   <entry><tag class="starttag">cc:debug</tag><replaceable>boolean</replaceable><tag class="endtag">cc:debug</tag></entry>
 </row>
+<row>
+  <entry>Ant task:</entry>
+  <entry><tag class="emptytag">calabash <tag class="attribute">debug</tag>="<tag class="attvalue"><replaceable>Ant boolean</replaceable></tag>"</tag></entry>
+</row>
 </tbody>
 </tgroup>
 </informaltable>
@@ -174,6 +194,10 @@ is enabled, then PSVIs are passed between steps.</para>
   <entry>XML configuration:</entry>
   <entry><tag class="starttag">cc:safe-mode</tag><replaceable>boolean</replaceable><tag class="endtag">cc:safe-mode</tag></entry>
 </row>
+<row>
+  <entry>Ant task:</entry>
+  <entry><tag class="emptytag">calabash <tag class="attribute">safeMode</tag>="<tag class="attvalue"><replaceable>Ant boolean</replaceable></tag>"</tag></entry>
+</row>
 </tbody>
 </tgroup>
 </informaltable>
@@ -197,6 +221,14 @@ access the local filesystem will result in a dynamic error.</para>
 <row>
   <entry>Command line (short):</entry>
   <entry><literal>-c</literal> <replaceable>configuri</replaceable></entry>
+</row>
+<row>
+  <entry>Ant task:</entry>
+  <entry>
+    <tag class="emptytag">calabash <tag class="attribute">configFile</tag>="<tag class="attvalue"><replaceable>configuri</replaceable></tag>"</tag>
+    or
+    <tag class="starttag">calabash</tag><tag class="starttag">config</tag><replaceable>config resource</replaceable><tag class="endtag">config</tag><tag class="endtag">calabash</tag>
+  </entry>
 </row>
 </tbody>
 </tgroup>
@@ -223,6 +255,10 @@ access the local filesystem will result in a dynamic error.</para>
 </row>
 <!-- why isn't there a system property for log-style? -->
 <!-- why isn't there an XML configuration for log-style? -->
+<row>
+  <entry>Ant task:</entry>
+  <entry><tag class="emptytag">calabash <tag class="attribute">logStyle</tag>="<tag class="attvalue"><replaceable>style</replaceable></tag>"</tag></entry>
+</row>
 </tbody>
 </tgroup>
 </informaltable>
@@ -262,6 +298,10 @@ elements specify an alternate style with
   <entry>XML configuration:</entry>
   <entry><tag class="starttag">cc:entity-resolver</tag><replaceable>classname</replaceable><tag class="endtag">cc:entity-resolver</tag></entry>
 </row>
+<row>
+  <entry>Ant task:</entry>
+  <entry><tag class="emptytag">calabash <tag class="attribute">entityResolver</tag>="<tag class="attvalue"><replaceable>classname</replaceable></tag>"</tag></entry>
+</row>
 </tbody>
 </tgroup>
 </informaltable>
@@ -293,6 +333,10 @@ for all XML documents accessed.</para>
 <row>
   <entry>XML configuration:</entry>
   <entry><tag class="starttag">cc:uri-resolver</tag><replaceable>classname</replaceable><tag class="endtag">cc:uri-resolver</tag></entry>
+</row>
+<row>
+  <entry>Ant task:</entry>
+  <entry><tag class="emptytag">calabash <tag class="attribute">uriResolver</tag>="<tag class="attvalue"><replaceable>classname</replaceable></tag>"</tag></entry>
 </row>
 </tbody>
 </tgroup>
@@ -340,16 +384,26 @@ for all URIs accessed.</para>
   <entry>XML configuration:</entry>
   <entry><tag class="emptytag">cc:extension <tag class="attribute">name</tag>="<tag class="attvalue"><replaceable>extensions-names</replaceable></tag>" <tag class="attribute">value</tag>="<tag class="attvalue"><replaceable>boolean</replaceable></tag>"</tag></entry>
 </row>
+<row>
+  <entry>Ant task:</entry>
+  <entry><tag class="emptytag">calabash
+           <tag class="attribute">generalValues</tag>="<tag class="attvalue"><replaceable>Ant boolean</replaceable></tag>"
+           <tag class="attribute">xPointerOnText</tag>="<tag class="attvalue"><replaceable>Ant boolean</replaceable></tag>"
+           <tag class="attribute">transparentJSON</tag>="<tag class="attvalue"><replaceable>Ant boolean</replaceable></tag>"
+           <tag class="attribute">jsonFlavor</tag>="<tag class="attvalue"><replaceable>flavor</replaceable></tag>"
+           <tag class="attribute">useXslt10</tag>="<tag class="attvalue"><replaceable>Ant boolean</replaceable></tag>"
+         </tag></entry>
+</row>
 </tbody>
 </tgroup>
 </informaltable>
 
 <para>Valid extension names are
-“<literal linkend="ext.general-values">general-values</literal>”,
-“<literal linkend="ext.xpointer-on-text">xpointer-on-text</literal>”,
-“<literal linkend="ext.transparent-json">transparent-json</literal>”,
+“<literal><link linkend="ext.general-values">general-values</link></literal>”,
+“<literal><link linkend="ext.xpointer-on-text">xpointer-on-text</link></literal>”,
+“<literal><link linkend="ext.transparent-json">transparent-json</link></literal>”,
 “<literal>json-flavor</literal>”,
-and “<literal linkend="ext.use-xslt-10">use-xslt-10</literal>”.</para>
+and “<literal><link linkend="ext.use-xslt-10">use-xslt-10</link></literal>”.</para>
 
 </section>
 
@@ -369,12 +423,21 @@ and “<literal linkend="ext.use-xslt-10">use-xslt-10</literal>”.</para>
   <entry>Command line (short):</entry>
   <entry><literal>-b</literal><replaceable>prefix</replaceable>=<replaceable>uri</replaceable></entry>
 </row>
+<row>
+  <entry>Ant task:</entry>
+  <entry><tag class="starttag">calabash</tag>
+         <tag class="emptytag">namespace
+           <tag class="attribute">prefix</tag>="<tag class="attvalue"><replaceable>prefix</replaceable></tag>"
+           <tag class="attribute">uri</tag>="<tag class="attvalue"><replaceable>uri</replaceable></tag>"
+         </tag>
+         <tag class="endtag">calabash</tag></entry>
+</row>
 </tbody>
 </tgroup>
 </informaltable>
 
 <para>These bindings apply (only) to the options, parameters, and step
-names (if any) specified on the command line. For convenience, the
+names (if any) specified on the command line or in the Ant task. For convenience, the
 prefix “<literal>p</literal>” is bound to the XProc namespace by
 default.</para>
 
@@ -407,6 +470,16 @@ means.</para>
 <tag class="attribute">name</tag>="<tag class="attvalue"><replaceable>paramname</replaceable></tag>"
 <tag class="attribute">value</tag>="<tag class="attvalue"><replaceable>string</replaceable></tag>"</tag></entry>
 </row>
+<row>
+  <entry>Ant task:</entry>
+  <entry><tag class="starttag">calabash</tag>
+         <tag class="emptytag">parameter
+           <tag class="attribute">port</tag>="<tag class="attvalue"><replaceable>portname</replaceable></tag>"
+           <tag class="attribute">name</tag>="<tag class="attvalue"><replaceable>paramname</replaceable></tag>"
+           <tag class="attribute">value</tag>="<tag class="attvalue"><replaceable>string</replaceable></tag>"
+         </tag>
+         <tag class="endtag">calabash</tag></entry>
+</row>
 </tbody>
 </tgroup>
 </informaltable>
@@ -414,6 +487,10 @@ means.</para>
 <para>All parameters specified will be bound to either the specified
 parameter input port or the the primary parameter input port if no
 explicit port is specified.</para>
+
+<para>If the name attribute contains an at sign, the port specification must be
+given explicitly. To specify the primary parameter input port explicitly,
+write "<literal>*</literal>" as the port.</para>
 </section>
 
 <section xml:id="cfg.input">
@@ -438,6 +515,10 @@ explicit port is specified.</para>
 <tag class="attribute">port</tag>="<tag class="attvalue"><replaceable>portname</replaceable></tag>"
 <tag class="attribute">href</tag>="<tag class="attvalue"><replaceable>uri</replaceable></tag>"</tag></entry>
 </row>
+<row>
+  <entry>Ant task:</entry>
+  <entry>For detailed information on how to specify input and output files in the Ant task, see <xref linkend="ant.input-and-output"/> and <xref linkend="ant.input"/></entry>
+</row>
 </tbody>
 </tgroup>
 </informaltable>
@@ -448,6 +529,9 @@ that input to <literal>stdin</literal>.</para>
 
 <para>If the input binding for a particular port is repeated, all of the inputs
 specified will appear on that port as a sequence of documents.</para>
+
+<para>If the uri does not contain an equals sign, the port specification can be
+left out and the input will be applied to the primary non-parameter input port.</para>
 </section>
 
 
@@ -461,17 +545,37 @@ specified will appear on that port as a sequence of documents.</para>
 <tbody>
 <row>
   <entry>Command line (long):</entry>
-  <entry><literal>--data-input</literal> <replaceable>port</replaceable>=<replaceable>uri</replaceable></entry>
+  <entry><literal>--data-input</literal> <replaceable>contentType</replaceable>@<replaceable>port</replaceable>=<replaceable>uri</replaceable></entry>
 </row>
 <row>
   <entry>Command line (short):</entry>
-  <entry><literal>-d</literal><replaceable>port</replaceable>=<replaceable>uri</replaceable></entry>
+  <entry><literal>-d</literal><replaceable>contentType</replaceable>@<replaceable>port</replaceable>=<replaceable>uri</replaceable></entry>
+</row>
+<row>
+  <entry>Ant task:</entry>
+  <entry>For detailed information on how to specify input and output files in the Ant task, see <xref linkend="ant.input-and-output"/> and <xref linkend="ant.input"/></entry>
 </row>
 </tbody>
 </tgroup>
 </informaltable>
 
-<para>The input specified will be base64 encoded.</para>
+<para>If the port and uri do not contain an at sign, the contentType specification can be
+left out. In this case the content type will be determined from the contents of the URI.
+If the content type cannot be determined from the contents of the URI, the content type
+is guessed from the URI name. If the content type cannot be guessed from the URI name,
+it is set to "<literal>application/octet-stream</literal>". If you have to give an explicit
+content type because the port or uri contain an at sign, but you don't know the content
+type, you can set it to "<literal>content/unknown</literal>" which is the same as leaving
+it out and will try to determine the content type from content or name.</para>
+
+<para>If the detected or explicitly specified content type is equal to
+<literal>application/xml</literal>, ends in <literal>+xml</literal>, starts with
+<literal>text/</literal> or has a charset of <literal>utf-8</literal> specified,
+the input is treated as text, otherwise the input gets base64 encoded automatically
+before it is given to the pipeline.</para>
+
+<para>If the uri does not contain an equals sign, the port specification can be
+left out and the input will be applied to the primary non-parameter input port.</para>
 
 <para>T.B.D.</para>
 </section>
@@ -498,6 +602,10 @@ specified will appear on that port as a sequence of documents.</para>
 <tag class="attribute">port</tag>="<tag class="attvalue"><replaceable>portname</replaceable></tag>"
 <tag class="attribute">href</tag>="<tag class="attvalue"><replaceable>uri</replaceable></tag>"</tag></entry>
 </row>
+<row>
+  <entry>Ant task:</entry>
+  <entry>For detailed information on how to specify input and output files in the Ant task, see <xref linkend="ant.input-and-output"/> and <xref linkend="ant.output"/></entry>
+</row>
 </tbody>
 </tgroup>
 </informaltable>
@@ -506,6 +614,9 @@ specified will appear on that port as a sequence of documents.</para>
 the specified URI. The string
 “<literal>-</literal>” may be used for exactly one output URI to bind
 that output to <literal>stdout</literal>.</para>
+
+<para>If the uri does not contain an equals sign, the port specification can be
+left out and the output will be applied to the primary output port.</para>
 </section>
 
 <section xml:id="cfg.library">
@@ -524,13 +635,17 @@ that output to <literal>stdout</literal>.</para>
   <entry>Command line (short):</entry>
   <entry><literal>-l</literal><replaceable>uri</replaceable></entry>
 </row>
+<row>
+  <entry>Ant task:</entry>
+  <entry><tag class="starttag">calabash</tag><tag class="starttag">library</tag><replaceable>library resources</replaceable><tag class="endtag">library</tag><tag class="endtag">calabash</tag></entry>
+</row>
 </tbody>
 </tgroup>
 </informaltable>
 
 <para>The steps in the library loaded are only available in
-<option>--step</option> options. At most one library may be loaded.
-If no step name is specified, the first step in the library will be used.</para>
+<option>--step</option> options. If no steps are specified,
+the first step of the first loaded library will be used.</para>
 </section>
 
 <section xml:id="cfg.step">
@@ -548,6 +663,10 @@ If no step name is specified, the first step in the library will be used.</para>
 <row>
   <entry>Command line (short):</entry>
   <entry><literal>-s</literal><replaceable>stepname</replaceable></entry>
+</row>
+<row>
+  <entry>Ant task:</entry>
+  <entry><tag class="starttag">calabash</tag><tag class="emptytag">step <tag class="attribute">name</tag>="<tag class="attvalue"><replaceable>stepname</replaceable></tag>"</tag><tag class="endtag">calabash</tag></entry>
 </row>
 </tbody>
 </tgroup>
@@ -576,6 +695,15 @@ a <tag>p:pipeline</tag>.</para>
   <entry>XML configuration:</entry>
   <entry><tag class="starttag">cc:pipeline</tag><replaceable>pipeline-uri</replaceable><tag class="endtag">cc:pipeline</tag></entry>
 </row>
+<row>
+  <entry>Ant task:</entry>
+  <entry>
+    <tag class="emptytag">calabash <tag class="attribute">pipeline</tag>="<tag class="attvalue"><replaceable>pipeline-path</replaceable></tag>"</tag>
+    or
+    <tag class="starttag">calabash</tag><tag class="starttag">pipeline</tag><replaceable>pipeline resource</replaceable><tag class="endtag">pipeline</tag><tag class="endtag">calabash</tag>
+    For more information see, <xref linkend="ant.pipeline"/>
+  </entry>
+</row>
 </tbody>
 </tgroup>
 </informaltable>
@@ -603,11 +731,78 @@ a <tag>p:pipeline</tag>.</para>
 <tag class="attribute">name</tag>="<tag class="attvalue"><replaceable>optname</replaceable></tag>"
 <tag class="attribute">value</tag>="<tag class="attvalue"><replaceable>string</replaceable></tag>"</tag></entry>
 </row>
+<row>
+  <entry>Ant task:</entry>
+  <entry><tag class="starttag">calabash</tag>
+         <tag class="emptytag">option
+           <tag class="attribute">name</tag>="<tag class="attvalue"><replaceable>optname</replaceable></tag>"
+           <tag class="attribute">value</tag>="<tag class="attvalue"><replaceable>string</replaceable></tag>"
+         </tag>
+         <tag class="endtag">calabash</tag></entry>
+</row>
 </tbody>
 </tgroup>
 </informaltable>
 
 <para>T.B.D.</para>
+</section>
+
+<section xml:id="cfg.profile-file">
+<title>Profile File</title>
+
+<para>There are three ways to specify the profile file in the configuration:</para>
+
+<informaltable frame="none" role="cfgprop">
+<tgroup cols="2" colsep="0" rowsep="0">
+<tbody>
+<row>
+  <entry>Command line:</entry>
+  <entry><literal>--profile</literal>=<replaceable>filename</replaceable></entry>
+</row>
+<row>
+  <entry>Java system property:</entry>
+  <entry><property>com.xmlcalabash.profile</property>=<replaceable>filename</replaceable></entry>
+</row>
+<row>
+  <entry>XML configuration:</entry>
+  <entry><tag class="starttag">cc:profile</tag><replaceable>filename</replaceable><tag class="endtag">cc:profile</tag></entry>
+</row>
+<row>
+  <entry>Ant task:</entry>
+  <entry>
+    <tag class="emptytag">calabash <tag class="attribute">profileFile</tag>="<tag class="attvalue"><replaceable>filename</replaceable></tag>"</tag>
+    or
+    <tag class="starttag">calabash</tag><tag class="starttag">profile</tag><replaceable>profile resource</replaceable><tag class="endtag">profile</tag><tag class="endtag">calabash</tag>
+  </entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+
+<para>If this parameter is set, the execution time for all executed steps is recorded and written to the specified XML file. The filename can also be "<literal>-</literal>" which causes the profile information to be written to stdout.</para>
+</section>
+
+<section xml:id="cfg.version">
+<title>Version</title>
+
+<para>There are two ways to make Calabash show its version information:</para>
+
+<informaltable frame="none" role="cfgprop">
+<tgroup cols="2" colsep="0" rowsep="0">
+<tbody>
+<row>
+  <entry>Command line (long):</entry>
+  <entry><literal>--version</literal></entry>
+</row>
+<row>
+  <entry>Command line (short):</entry>
+  <entry><literal>-v</literal></entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+
+<para>If this parameter is given, Calabash shows some information about itself before starting its real work.</para>
 </section>
 
 <!-- ====== -->
