@@ -20,6 +20,30 @@
 
 package com.xmlcalabash.core;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.reflect.Constructor;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.Hashtable;
+import java.util.Locale;
+import java.util.Vector;
+import java.util.logging.Logger;
+
+import javax.xml.transform.URIResolver;
+import javax.xml.transform.sax.SAXSource;
+
 import com.xmlcalabash.config.XProcConfigurer;
 import com.xmlcalabash.functions.BaseURI;
 import com.xmlcalabash.functions.Cwd;
@@ -34,61 +58,40 @@ import com.xmlcalabash.functions.XPathVersionAvailable;
 import com.xmlcalabash.functions.XProcExtensionFunctionDefinition;
 import com.xmlcalabash.io.ReadableData;
 import com.xmlcalabash.io.ReadablePipe;
+import com.xmlcalabash.model.DeclareStep;
+import com.xmlcalabash.model.Parser;
+import com.xmlcalabash.model.PipelineLibrary;
 import com.xmlcalabash.runtime.XLibrary;
 import com.xmlcalabash.runtime.XPipeline;
 import com.xmlcalabash.runtime.XRootStep;
 import com.xmlcalabash.runtime.XStep;
 import com.xmlcalabash.util.DefaultXProcConfigurer;
 import com.xmlcalabash.util.DefaultXProcMessageListener;
+import com.xmlcalabash.util.Input;
 import com.xmlcalabash.util.JSONtoXML;
+import com.xmlcalabash.util.Output;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.StepErrorListener;
 import com.xmlcalabash.util.TreeWriter;
+import com.xmlcalabash.util.URIUtils;
+import com.xmlcalabash.util.XProcURIResolver;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
 import net.sf.saxon.s9api.ExtensionFunction;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.Serializer;
 import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.SaxonApiException;
-import com.xmlcalabash.model.Parser;
-import com.xmlcalabash.model.DeclareStep;
-import com.xmlcalabash.model.PipelineLibrary;
-import com.xmlcalabash.util.XProcURIResolver;
-import com.xmlcalabash.util.URIUtils;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.lang.reflect.Constructor;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.logging.Logger;
-import java.util.Hashtable;
-import java.util.Vector;
-import java.util.GregorianCalendar;
-import java.util.Locale;
-import java.io.FileNotFoundException;
-import java.net.URISyntaxException;
-import java.net.URI;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-
-import javax.xml.transform.URIResolver;
-import javax.xml.transform.sax.SAXSource;
-
 import net.sf.saxon.s9api.XsltCompiler;
 import net.sf.saxon.s9api.XsltExecutable;
 import net.sf.saxon.s9api.XsltTransformer;
 import org.apache.commons.httpclient.Cookie;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
+
+import static java.lang.String.format;
 
 /**
  *
@@ -125,7 +128,7 @@ public class XProcRuntime {
     private String htmlParser = null;
     private Vector<XProcExtensionFunctionDefinition> exFuncs = new Vector<XProcExtensionFunctionDefinition>();
 
-    private String profileFile = null;
+    private Output profile = null;
     private Hashtable<XStep,Calendar> profileHash = null;
     private TreeWriter profileWriter = null;
     private QName profileProfile = new QName("http://xmlcalabash.com/ns/profile", "profile");
@@ -201,8 +204,8 @@ public class XProcRuntime {
         jsonFlavor = config.jsonFlavor;
         useXslt10 = config.useXslt10;
 
-        if (config.profileFile != null) {
-            profileFile = config.profileFile;
+        if (config.profile != null) {
+            profile = config.profile;
             profileHash = new Hashtable<XStep, Calendar> ();
             profileWriter = new TreeWriter(this);
             try {
@@ -250,7 +253,7 @@ public class XProcRuntime {
         allowXPointerOnText = runtime.allowXPointerOnText;
         transparentJSON = runtime.transparentJSON;
         jsonFlavor = runtime.jsonFlavor;
-        profileFile = runtime.profileFile;
+        profile = runtime.profile;
 
         exFuncs.add(new Cwd(this));
         exFuncs.add(new BaseURI(this));
@@ -294,11 +297,12 @@ public class XProcRuntime {
         return config.debug;
     }
 
-    public String getProfileFile() {
-        return profileFile;
+    public Output getProfile() {
+        return profile;
     }
-    public void setProfileFile(String fn) {
-        profileFile = fn;
+
+    public void setProfile(Output profile) {
+        this.profile = profile;
     }
 
     public URI getStaticBaseURI() {
@@ -340,7 +344,7 @@ public class XProcRuntime {
     public void setMessageListener(XProcMessageListener listener) {
       msgListener = listener;
     }
-    
+
     public void setCollection(URI href, Vector<XdmNode> docs) {
         if (collections == null) {
             collections = new Hashtable<String,Vector<XdmNode>> ();
@@ -493,7 +497,7 @@ public class XProcRuntime {
             throw new XProcException(XProcConstants.dynamicError(9), ex);
         }
 
-        if (profileFile != null) {
+        if (profile != null) {
             profileHash = new Hashtable<XStep, Calendar>();
             profileWriter = new TreeWriter(this);
             try {
@@ -505,30 +509,58 @@ public class XProcRuntime {
     }
 
     // FIXME: This design sucks
-    public XPipeline load(String pipelineURI) throws SaxonApiException {
+    public XPipeline load(Input pipeline) throws SaxonApiException {
+        String uri;
+        switch (pipeline.getKind()) {
+            case URI:
+                uri = pipeline.getUri();
+                break;
+
+            case INPUT_STREAM:
+                uri = pipeline.getInputStreamUri();
+                break;
+
+            default:
+                throw new UnsupportedOperationException(format("Unsupported pipeline kind '%s'", pipeline.getKind()));
+        }
+
         for (String map : config.loaders.keySet()) {
             boolean data = map.startsWith("data:");
             String pattern = map.substring(5);
-            if (pipelineURI.matches(pattern)) {
-                return runPipelineLoader(pipelineURI, config.loaders.get(map), data);
+            if (uri.matches(pattern)) {
+                return runPipelineLoader(pipeline, config.loaders.get(map), data);
             }
         }
 
         try {
-            return _load(pipelineURI);
+            return _load(pipeline);
         } catch (SaxonApiException sae) {
             error(sae);
             throw sae;
         } catch (XProcException xe) {
             error(xe);
             throw xe;
+        } catch (IOException ioe) {
+            error(ioe);
+            throw new XProcException(ioe);
         }
     }
 
-    private XPipeline _load(String pipelineURI) throws SaxonApiException {
+    private XPipeline _load(Input pipelineInput) throws SaxonApiException, IOException {
         reset();
         configurer.getXMLCalabashConfigurer().configRuntime(this);
-        pipeline = parser.loadPipeline(pipelineURI);
+        switch (pipelineInput.getKind()) {
+            case URI:
+                pipeline = parser.loadPipeline(pipelineInput.getUri());
+                break;
+
+            case INPUT_STREAM:
+                pipeline = parser.loadPipeline(pipelineInput.getInputStream());
+                break;
+
+            default:
+                throw new UnsupportedOperationException(format("Unsupported pipeline kind '%s'", pipelineInput.getKind()));
+        }
         if (errorCode != null) {
             throw new XProcException(errorCode, errorMessage);
         }
@@ -590,29 +622,58 @@ public class XProcRuntime {
     }
 
     // FIXME: This design sucks
-    public XLibrary loadLibrary(String libraryURI) throws SaxonApiException {
+    public XLibrary loadLibrary(Input library) throws SaxonApiException {
+        String libraryURI;
+        switch (library.getKind()) {
+            case URI:
+                libraryURI = library.getUri();
+                break;
+
+            case INPUT_STREAM:
+                libraryURI = library.getInputStreamUri();
+                break;
+
+            default:
+                throw new UnsupportedOperationException(format("Unsupported library kind '%s'", library.getKind()));
+        }
+
         for (String map : config.loaders.keySet()) {
             boolean data = map.startsWith("data:");
             String pattern = map.substring(5);
             if (libraryURI.matches(pattern)) {
-                return runLibraryLoader(libraryURI, config.loaders.get(map), data);
+                return runLibraryLoader(library, config.loaders.get(map), data);
             }
         }
 
         try {
-            return _loadLibrary(libraryURI);
+            return _loadLibrary(library);
         } catch (SaxonApiException sae) {
             error(sae);
             throw sae;
         } catch (XProcException xe) {
             error(xe);
             throw xe;
+        } catch (IOException ioe) {
+            error(ioe);
+            throw new XProcException(ioe);
         }
     }
 
-    private XLibrary _loadLibrary(String libraryURI) throws SaxonApiException {
+    private XLibrary _loadLibrary(Input library) throws SaxonApiException, IOException {
+        PipelineLibrary plibrary;
+        switch (library.getKind()) {
+            case URI:
+                plibrary = parser.loadLibrary(library.getUri());
+                break;
 
-        PipelineLibrary plibrary = parser.loadLibrary(libraryURI);
+            case INPUT_STREAM:
+                plibrary = parser.loadLibrary(library.getInputStream());
+                break;
+
+            default:
+                throw new UnsupportedOperationException(format("Unsupported library kind '%s'", library.getKind()));
+        }
+
         if (errorCode != null) {
             throw new XProcException(errorCode, errorMessage);
         }
@@ -654,35 +715,54 @@ public class XProcRuntime {
         return xlibrary;
     }
 
-    private XPipeline runPipelineLoader(String pipelineURI, String loaderURI, boolean data) throws SaxonApiException {
-        XdmNode pipeDoc = runLoader(pipelineURI, loaderURI, data);
+    private XPipeline runPipelineLoader(Input pipeline, String loaderURI, boolean data) throws SaxonApiException {
+        XdmNode pipeDoc = runLoader(pipeline, loaderURI, data);
         return use(pipeDoc);
     }
 
-    private XLibrary runLibraryLoader(String pipelineURI, String loaderURI, boolean data) throws SaxonApiException {
-        XdmNode libDoc = runLoader(pipelineURI, loaderURI, data);
+    private XLibrary runLibraryLoader(Input library, String loaderURI, boolean data) throws SaxonApiException {
+        XdmNode libDoc = runLoader(library, loaderURI, data);
         return useLibrary(libDoc);
     }
-    
-    private XdmNode runLoader(String pipelineURI, String loaderURI, boolean data) throws SaxonApiException {
+
+    private XdmNode runLoader(Input pipeline, String loaderURI, boolean data) throws SaxonApiException {
         XPipeline loader = null;
 
         try {
-            loader = _load(loaderURI);
+            loader = _load(new Input(loaderURI));
         } catch (SaxonApiException sae) {
             error(sae);
             throw sae;
         } catch (XProcException xe) {
             error(xe);
             throw xe;
+        } catch (IOException ioe) {
+            error(ioe);
+            throw new XProcException(ioe);
         }
 
         XdmNode pipeDoc = null;
-        if (data) {
-            ReadableData rdata = new ReadableData(this, XProcConstants.c_result, getStaticBaseURI().resolve(pipelineURI).toASCIIString(), "text/plain");
-            pipeDoc = rdata.read();
-        } else {
-            pipeDoc = parse(pipelineURI, getStaticBaseURI().toASCIIString());
+        switch (pipeline.getKind()) {
+            case URI:
+                if (data) {
+                    ReadableData rdata = new ReadableData(this, XProcConstants.c_result, getStaticBaseURI().resolve(pipeline.getUri()).toASCIIString(), "text/plain");
+                    pipeDoc = rdata.read();
+                } else {
+                    pipeDoc = parse(pipeline.getUri(), getStaticBaseURI().toASCIIString());
+                }
+                break;
+
+            case INPUT_STREAM:
+                if (data) {
+                    ReadableData rdata = new ReadableData(this, XProcConstants.c_result, pipeline.getInputStream(), "text/plain");
+                    pipeDoc = rdata.read();
+                } else {
+                    pipeDoc = parse(new InputSource(pipeline.getInputStream()));
+                }
+                break;
+
+            default:
+                throw new UnsupportedOperationException(format("Unsupported pipeline kind '%s'", pipeline.getKind()));
         }
 
         loader.clearInputs("source");
@@ -694,9 +774,9 @@ public class XProcRuntime {
         reset();
         return pipeDoc;
     }
-    
+
     public Processor getProcessor() {
-        return processor;        
+        return processor;
     }
 
     public XdmNode parse(String uri, String base) {
@@ -803,7 +883,7 @@ public class XProcRuntime {
     // ===========================================================
 
     public void start(XStep step) {
-        if (profileFile == null) {
+        if (profile == null) {
             return;
         }
 
@@ -834,7 +914,7 @@ public class XProcRuntime {
     }
 
     public void finish(XStep step) {
-        if (profileFile == null) {
+        if (profile == null) {
             return;
         }
 
@@ -871,22 +951,28 @@ public class XProcRuntime {
                 serializer.setOutputProperty(Serializer.Property.INDENT, "yes");
 
                 OutputStream outstr = null;
-                if ("-".equals(profileFile)) {
-                    outstr = System.out;
-                } else {
-                    outstr = new FileOutputStream(new File(profileFile));
+                switch (this.profile.getKind()) {
+                    case URI:
+                        URI furi = URI.create(this.profile.getUri());
+                        outstr = new FileOutputStream(new File(furi));
+                        break;
+
+                    case OUTPUT_STREAM:
+                        outstr = this.profile.getOutputStream();
+                        break;
+
+                    default:
+                        throw new UnsupportedOperationException(format("Unsupported profile kind '%s'", this.profile.getKind()));
                 }
 
                 serializer.setOutputStream(outstr);
                 S9apiUtils.serialize(this, result.getXdmNode(), serializer);
-                outstr.close();
+                if (!System.out.equals(outstr) && !System.err.equals(outstr)) {
+                    outstr.close();
+                }
 
                 profileWriter = new TreeWriter(this);
-                try {
-                    profileWriter.startDocument(new URI("http://xmlcalabash.com/output/profile.xml"));
-                } catch (URISyntaxException use) {
-                    // nop;
-                }
+                profileWriter.startDocument(URI.create("http://xmlcalabash.com/output/profile.xml"));
             } catch (SaxonApiException sae) {
                 throw new XProcException(sae);
             } catch (FileNotFoundException fnfe) {

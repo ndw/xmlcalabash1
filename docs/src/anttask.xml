@@ -5,17 +5,26 @@
 <title>Calabash Ant Task</title>
 
 <para>This chapter describes how to run <citetitle>XML
-Calabash</citetitle> from the Apache Ant using the
+Calabash</citetitle> from Apache Ant using the
 <code>CalabashTask</code> custom task.</para>
 
 <section xml:id="antsetup">
-<title>Setting up the Ant Task</title>
+<title>Setting up the Ant Task and Types</title>
 
-<para>Setting up is as for any other custom Ant task: you need a <markup>taskdef</markup>:</para>
+<para>Setting up is as for any other custom Antlib.
+       You need a <tag class="emptytag">typedef</tag> and a namespace declaration.
+       After that the custom Task and Types are available in the defined namespace.
+       If you put the calabash.jar to your Ant classpath, e. g. by placing it inside
+       <literal>${ant.home}/lib</literal>, you can even save the
+       <tag class="emptytag">typedef</tag> declaration ant the namespace definition
+       is enough to invoke the secret magic that automatically loads the Antlib as
+       soon as it is used in the build file.</para>
 
-<programlisting>&lt;taskdef name="calabash"
-	   classname="com.xmlcalabash.drivers.CalabashTask"
-	   classpath="<replaceable>path/to</replaceable>/calabash.jar"/></programlisting>
+<programlisting><![CDATA[<project xmlns:c="antlib:com.xmlcalabash">
+    <typedef uri="antlib:com.xmlcalabash"
+             resource="com/xmlcalabash/antlib.xml"
+             classpath="]]><replaceable>path/to</replaceable><![CDATA[/calabash.jar"/>
+</project>]]></programlisting>
 </section>
 
 <section>
@@ -51,12 +60,41 @@ Calabash</citetitle> from the Apache Ant using the
                   <para>You can also specify options and parameters to be used by the
                            pipeline.</para>
                   <section>
+                           <title>Custom Task and Types</title>
+                           <para>The previously defined Antlib provides one custom task and four
+                                  custom types in the configured namespace.</para>
+                           <section>
+                                    <title>calabash</title>
+                                    <para>The custom Ant Task that is provided by the Antlib.
+                                           This is the main piece of the Calabash Ant integration.
+                                           The remaining sections of this chapter describe the
+                                           usage of this task.</para>
+                           </section>
+                           <section>
+                                    <title>stdin</title>
+                                    <para>A read-only Ant Resource that connects to stdin.</para>
+                           </section>
+                           <section>
+                                    <title>stdout</title>
+                                    <para>A write-only Ant Resource that connects to stdout.</para>
+                           </section>
+                           <section>
+                                    <title>stdinout</title>
+                                    <para>A read-write Ant Resource that connects to stdin
+                                           for reading and to stdout for writing.</para>
+                           </section>
+                           <section>
+                                    <title>stderr</title>
+                                    <para>A write-only Ant Resource that connects to stderr.</para>
+                           </section>
+                  </section>
+                  <section xml:id="ant.input-and-output">
                            <title>Input and output files and filesets</title>
                            <para>In the simplest scenario, the <tag class="attribute">in</tag>
-                                    attribute, if present, specifies the single input file and/or
+                                    attribute, if present, specifies the single input file and / or
                                     the <tag class="attribute">out</tag> attribute, if present,
                                     specifies the single output file.  The <tag class="attribute"
-                                             >inport</tag> and <tag class="attribute">outport</tag>
+                                             >inPort</tag> and <tag class="attribute">outPort</tag>
                                     attributes specify the pipeline port to which to apply the input
                                     or from which to receive the output, respectively, though these
                                     may be omitted as stated below.</para>
@@ -65,25 +103,24 @@ Calabash</citetitle> from the Apache Ant using the
                                              >input</tag> elements.</para>
                            <para><tag class="element">input</tag> elements whose <tag
                                              class="attribute">port</tag> attribute value matches
-                                             <tag class="attribute">inport</tag> (or whose <tag
+                                             <tag class="attribute">inPort</tag> (or whose <tag
                                              class="attribute">port</tag> attribute is omitted when
-                                             <tag class="attribute">inport</tag> is omitted) are
-                                    applied to the <tag class="attribute">inport</tag> port.  Those
+                                             <tag class="attribute">inPort</tag> is omitted) are
+                                    applied to the <tag class="attribute">inPort</tag> port.  Those
                                              <tag class="element">input</tag> elements may contain
-                                    zero or more elements selecting an Ant resource collection
+                                    zero or more <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resources</link>
                                     (i.e., <tag class="element">fileset</tag>, <tag class="element"
-                                             >dirset</tag>, etc.) that may each select zero or more
-                                    files.</para>
+                                             >dirset</tag>, etc.).</para>
                            <para><tag class="element">input</tag> elements for ports other than the
-                                             <tag class="attribute">inport</tag> port may contain
-                                    either zero or more resource collection elements or an Ant
+                                             <tag class="attribute">inPort</tag> port may contain
+                                    either zero or more <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resources</link> or an Ant
                                     mapper element (i.e., <tag class="element">mapper</tag>, <tag
                                              class="element">globmapper</tag>, etc.) that maps the
-                                    current <tag class="attribute">inport</tag> file(s) name(s) to
+                                    current <tag class="attribute">inPort</tag> file(s) name(s) to
                                     other file name(s) that are used as the input file(s) for that
-                                    port.  You cannot specify both resource collections and a mapper
+                                    port. You cannot specify both Ant resources and a mapper
                                     for an input port (nor can you specify a mapper for the <tag
-                                             class="attribute">inport</tag> port).</para>
+                                             class="attribute">inPort</tag> port).</para>
                            <para>You can as well or instead specify a file to contain the output of
                                     an output port using one or more nested <tag class="element"
                                              >output</tag> elements. You cannot specify more than
@@ -91,34 +128,34 @@ Calabash</citetitle> from the Apache Ant using the
                                     output.</para>
                            <para>An <tag class="element">output</tag> element whose <tag
                                              class="attribute">port</tag> attribute value matches
-                                             <tag class="attribute">outport</tag> (or whose <tag
+                                             <tag class="attribute">outPort</tag> (or whose <tag
                                              class="attribute">port</tag> attribute is omitted when
-                                             <tag class="attribute">outport</tag> is omitted) is
-                                    used for the <tag class="attribute">outport</tag> port. This
+                                             <tag class="attribute">outPort</tag> is omitted) is
+                                    used for the <tag class="attribute">outPort</tag> port. This
                                              <tag class="element">output</tag> element and the <tag
                                              class="attribute">out</tag> attribute cannot both be
                                     used at once.</para>
                            <para>Other <tag class="element">output</tag> elements may each be used
                                     for any of the other output ports of the pipeline.</para>
                            <para><tag class="attribute">output</tag> elements may contain either
-                                    zero or more resource collection elements or an Ant mapper
+                                    zero or more <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resources</link> or an Ant mapper
                                     element (i.e., <tag class="element">mapper</tag>, <tag
                                              class="element">globmapper</tag>, etc.) that maps the
-                                    current <tag class="attribute">inport</tag> file(s) name(s) to a
+                                    current <tag class="attribute">inPort</tag> file(s) name(s) to a
                                     file name that is used as the output file for that port.  You
-                                    cannot specify both resource collections and a mapper for an
+                                    cannot specify both Ant resources and a mapper for an
                                     output port, and the <tag class="element">output</tag> cannot
                                     result in more than one file name.</para>
                            <para>When no files are specified for either the <tag class="attribute"
-                                             >inport</tag> or <tag class="attribute">outport</tag>
+                                             >inPort</tag> or <tag class="attribute">outPort</tag>
                                     ports, the implicit fileset (formed based on <tag
                                              class="attribute">includes</tag> and other attributes
-                                    of <tag class="element">calabash</tag>) and/or an explicit file
-                                    set (formed from nested resource collection elements (outside of
-                                    any in <tag class="element">input</tag> or <tag class="element"
-                                             >output</tag> elements)) makes a set of files that are
+                                    of <tag class="element">calabash</tag>) and / or an explicit file
+                                    set (formed from nested <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resources</link> (outside of
+                                    any <tag class="element">input</tag> or <tag class="element"
+                                             >output</tag> elements) makes a set of files that are
                                     processed one at a time as the input to the <tag
-                                             class="attribute">inport</tag> port in separate runs of
+                                             class="attribute">inPort</tag> port in separate runs of
                                     the pipeline.</para>
                            <para>The <tag class="attribute">basedir</tag>, <tag class="attribute"
                                              >includes</tag>, <tag class="attribute"
@@ -130,40 +167,39 @@ Calabash</citetitle> from the Apache Ant using the
                                     implicit fileset.  <tag class="attribute"
                                              >useimplicitfileset</tag> can disable the implicit
                                     fileset.</para>
-                           <para>When the implicit fileset and/or the explicit fileset selects one
+                           <para>When the implicit fileset and / or the explicit fileset selects one
                                     or more files, the <tag class="attribute">destdir</tag>, and
                                              <tag class="attribute">extension</tag> attributes (or
                                     using a nested mapper instead of <tag class="attribute"
                                              >extension</tag>) determine the filename to use for the
-                                    output of the <tag class="attribute">outport</tag> port, and the
-                                    resource collections or mapper for other input and output ports
+                                    output of the <tag class="attribute">outPort</tag> port, and the
+                                    <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resources</link>
+                                    or mapper for other input and output ports
                                     determine the file(s) from which to read or the file to which to
                                     write for those ports.</para>
                   </section>
                   <section>
                            <title>Ports</title>
-                           <para>The <tag class="attribute">inport</tag> and <tag class="attribute"
-                                             >outport</tag> attributes determine the pipeline ports
+                           <para>The <tag class="attribute">inPort</tag> and <tag class="attribute"
+                                             >outPort</tag> attributes determine the pipeline ports
                                     to use for single, or sequential, processing of files.
                                     Additionally, the filename of the file on the <tag
-                                             class="attribute">inport</tag> port is used (or can be
+                                             class="attribute">inPort</tag> port is used (or can be
                                     used) by mappers to determine the input or output files to use
                                     for other ports.</para>
                            <para>You may omit at most one input port name and at most one output
                                     port name from the ports specified on the <tag class="element"
                                              >calabash</tag> task. The <tag class="element"
-                                             >calabash</tag> task maps the first input and output
-                                    ports of the pipeline that have no defined mapping to the
+                                             >calabash</tag> task maps the primary non-parameter
+                                    input the primary output port of the pipeline to the
                                     unnamed ports (and any additional port without a defined mapping
                                     will cause an error). The omitted ports do not have to be the
-                                             <tag class="attribute">inport</tag> and <tag
-                                             class="attribute">outport</tag> ports; e.g., you can
-                                    instead specify <tag class="attribute">inport</tag> and omit the
+                                             <tag class="attribute">inPort</tag> and <tag
+                                             class="attribute">outPort</tag> ports; e.g., you can
+                                    instead specify <tag class="attribute">inPort</tag> and omit the
                                              <tag class="attribute">port</tag> attribute on the
                                     nested <tag class="element">input</tag> element for a different
-                                    port. The omitted ports do not have to be the primary input and
-                                    output ports of the pipeline: matching is purely by name only
-                                    (or, rather, on the absence of a name).</para>
+                                    port.</para>
                            <para>Nested <tag class="element">parameter</tag> elements specify Inputs
                                     to parameter ports.</para>
                   </section>
@@ -182,64 +218,70 @@ Calabash</citetitle> from the Apache Ant using the
                            <tbody>
                                     <tr>
                                              <td>in</td>
-                                             <td>Location of a single XML file to process</td>
+                                             <td>Path to a single file to process as main input</td>
                                              <td>No</td>
                                     </tr>
                                     <tr>
-                                             <td>inport</td>
-                                             <td>Pipeline input port ot which to apply
+                                             <td>inType</td>
+                                             <td>The input type that is used for <tag class="attribute">in</tag> file or for implicit
+                                                  or explicit filesets, either <literal>XML</literal> or <literal>DATA</literal></td>
+                                             <td>No; default is <literal>XML</literal></td>
+                                    </tr>
+                                    <tr>
+                                             <td>inPort</td>
+                                             <td>Pipeline input port to which to apply
                                                       <tag class="attribute">in</tag> file (or to apply files from
                                                   implicit or explicit filesets)</td>
-                                             <td>No; the otherwise unmapped input port will be
-                                                  used</td>
+                                             <td>No; the primary non-parameter input port will be used</td>
                                     </tr>
                                     <tr>
                                              <td>out</td>
-                                             <td>Specifies the output name for the result of the
-                                                  pipeline</td>
+                                             <td>Path to the single output result file that will be produced</td>
                                              <td>No</td>
                                     </tr>
                                     <tr>
-                                             <td>outport</td>
+                                             <td>outPort</td>
                                              <td>Pipeline output port that writes to out (or to
-                                                  outputs mapped from implicit and/or explicit input
+                                                  outputs mapped from implicit and / or explicit input
                                                   filesets)</td>
-                                             <td>No; the otherwise unmapped output port will be
-                                                  used</td>
+                                             <td>No; the primary output port will be used</td>
                                     </tr>
                                     <tr>
                                              <td>pipeline</td>
-                                             <td>XProc pipeline file</td>
+                                             <td>Path to a single XProc pipeline file to be used</td>
                                              <td>Yes, unless a nested <tag class="element">pipeline</tag> has
-                                                  been specified</td>
+                                                  been specified, or unless nested <tag class="element">library</tag>
+                                                  or <tag class="element">step</tag> elements have been specified in which
+                                                  case no pipeline must be specified explicitly</td>
                                     </tr>
                                     <tr>
-                                             <td>useimplicitfileset</td>
+                                             <td>useImplicitFileset</td>
                                              <td>Whether to use the implicit fileset formed using
                                                   includes, excludes, etc.</td>
                                              <td>No; default is <literal>true</literal> unless
                                                       <tag class="attribute">in</tag> or a nested
                                                   <tag class="element">input</tag> corresponding to
-                                                      <markup>inport</markup> or <tag class="attribute">out</tag> or
+                                                      <markup>inPort</markup> or <tag class="attribute">out</tag> or
                                                   a nested <tag class="element">output</tag> corresponding to
-                                                  <markup>outport</markup> has been specified</td>
+                                                  <markup>outPort</markup> has been specified</td>
                                     </tr>
                                     <tr>
                                              <td>basedir</td>
                                              <td>Where to find the source XML when the implicit
-                                                  fileset is used</td>
-                                             <td>No</td>
+                                                  fileset or input mappers are used</td>
+                                             <td>No; default is the Ant project's
+                                                  <tag class="attriute">basedir</tag></td>
                                     </tr>
                                     <tr>
                                              <td>destdir</td>
                                              <td>Where to store the results when the implicit
-                                                  fileset is used</td>
-                                             <td>No</td>
+                                                  fileset or output mappers are used</td>
+                                             <td>No; default is the <tag class="attriute">basedir</tag></td>
                                     </tr>
                                     <tr>
                                              <td>extension</td>
                                              <td>Desired file extension to use for outputs mapped
-                                                  from the implicit and/or explicit filesets</td>
+                                                  from the implicit and / or explicit filesets</td>
                                              <td>No; default is <literal>-out.xml</literal></td>
                                     </tr>
                                     <tr>
@@ -258,7 +300,7 @@ Calabash</citetitle> from the Apache Ant using the
                                     <tr>
                                              <td>excludes</td>
                                              <td>Comma- or space-separated list of patterns of files
-                                                  that must be excluded.  No files (except default
+                                                  that must be excluded. No files (except default
                                                   excludes) are excluded when omtted.</td>
                                              <td>No</td>
                                     </tr>
@@ -271,35 +313,35 @@ Calabash</citetitle> from the Apache Ant using the
                                     <tr>
                                              <td>defaultexcludes</td>
                                              <td>Indicates whether default excludes should be used
-                                                  or not.  Default excludes are used when
+                                                  or not. Default excludes are used when
                                                   omitted.</td>
                                              <td>No; default is <literal>true</literal></td>
                                     </tr>
                                     <tr>
-                                             <td>scanincludeddirectories</td>
+                                             <td>scanIncludedDirectories</td>
                                              <td>If any directories are matched by the
-                                                  includes/excludes patterns, try to process all
+                                                  includes / excludes patterns, try to process all
                                                   files in those directories</td>
                                              <td>No; default is <literal>true</literal></td>
                                     </tr>
                                     <tr>
-                                             <td>failonnoresources</td>
+                                             <td>failOnNoResources</td>
                                              <td>Whether the build should fail if the explicit
-                                                  fileset from a nested resource collection is
+                                                  fileset from nested <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resources</link> is
                                                   empty</td>
-                                             <td>No; default is <literal>false</literal></td>
+                                             <td>No; default is <literal>true</literal></td>
                                     </tr>
                                     <tr>
                                              <td>force</td>
                                              <td>Run pipeline, even when outputs are newer than
-                                                  either inputs or pipeline.</td>
+                                                  all inputs and the pipeline.</td>
                                              <td>No; default is <literal>false</literal></td>
                                     </tr>
                                     <tr>
-                                             <td>failonerror</td>
+                                             <td>failOnError</td>
                                              <td>Whether the build should fail if any errors
                                                   occur</td>
-                                             <td>No; default is <literal>false</literal></td>
+                                             <td>No; default is <literal>true</literal></td>
                                     </tr>
                                     <tr>
                                              <td>debug</td>
@@ -308,33 +350,78 @@ Calabash</citetitle> from the Apache Ant using the
                                              <td>No; default is <literal>false</literal></td>
                                     </tr>
                                     <tr>
-                                             <td>generalvalues</td>
+                                             <td>generalValues</td>
                                              <td>Whether to enable general values.  See <uri
                                                   xlink:href="extensions.html#ext.general-values"
                                                   >http://xmlcalabash.com/docs/reference/extensions.html#ext.general-values</uri></td>
                                              <td>No; default is <literal>false</literal></td>
                                     </tr>
                                     <tr>
-                                             <td>xpointerontext</td>
+                                             <td>xPointerOnText</td>
                                              <td>Whether XPointer attributes on an XInclude element
                                                   can be used when
                                                   <markup>parse="text"</markup></td>
                                              <td>No; default is <literal>false</literal></td>
                                     </tr>
                                     <tr>
-                                             <td>usexslt10</td>
+                                             <td>useXslt10</td>
                                              <td>Whether to enable the use of XSLT 1.0</td>
                                              <td>No; default is <literal>false</literal></td>
                                     </tr>
                                     <tr>
-                                             <td>transparentjson</td>
+                                             <td>transparentJSON</td>
                                              <td>Whether ot automatically translate between JSON and
                                                   XML</td>
                                              <td>No; default is <literal>false</literal></td>
                                     </tr>
                                     <tr>
-                                             <td>jsonflavor</td>
-                                             <td>Desired XML flavor</td>
+                                             <td>jsonFlavor</td>
+                                             <td>Desired JSON flavor</td>
+                                             <td>No</td>
+                                    </tr>
+                                    <tr>
+                                             <td>profileFile</td>
+                                             <td>The path to the file where profile information should be written to, or "<literal>-</literal>" for stdout</td>
+                                             <td>No</td>
+                                    </tr>
+                                    <tr>
+                                             <td>saxonProcessor</td>
+                                             <td>The edition of Saxon that should be used, must be "<literal>he</literal>" (default), "<literal>pe</literal>" or "<literal>ee</literal>"</td>
+                                             <td>No; default is "<literal>he</literal>"</td>
+                                    </tr>
+                                    <tr>
+                                             <td>saxonConfigFile</td>
+                                             <td>The path to the Saxon configuration file to be loaded</td>
+                                             <td>No</td>
+                                    </tr>
+                                    <tr>
+                                             <td>schemaAware</td>
+                                             <td>Whether schema-aware processing should be done</td>
+                                             <td>No; default is <literal>false</literal></td>
+                                    </tr>
+                                    <tr>
+                                             <td>safeMode</td>
+                                             <td>Whether "safe" execution should be done</td>
+                                             <td>No; default is <literal>false</literal></td>
+                                    </tr>
+                                    <tr>
+                                             <td>configFile</td>
+                                             <td>The path to a particular configuration file to be loaded</td>
+                                             <td>No</td>
+                                    </tr>
+                                    <tr>
+                                             <td>logStyle</td>
+                                             <td>The default style for p:log output, must be "<literal>off</literal>", "<literal>plain</literal>", "<literal>wrapped</literal>" (default), or "<literal>directory</literal>"</td>
+                                             <td>No; default is "<literal>wrapped</literal>"</td>
+                                    </tr>
+                                    <tr>
+                                             <td>entityResolver</td>
+                                             <td>The resolver class for entity resolution</td>
+                                             <td>No</td>
+                                    </tr>
+                                    <tr>
+                                             <td>uriResolver</td>
+                                             <td>The resolver class for URI resolution</td>
                                              <td>No</td>
                                     </tr>
                            </tbody>
@@ -342,11 +429,11 @@ Calabash</citetitle> from the Apache Ant using the
 </section>
          <section>
                   <title>Parameters specified as nested elements</title>
-                  <section>
+                  <section xml:id="ant.input">
                            <title>input</title>
-                           <para>Specification of resources to apply to an input port.  May specify
+                           <para>Specification of resources to apply to an input port. May specify
                                     additional or alternative inputs to be applied to the
-                                    <tag class="attribute">inport</tag> port or may be fixed or mapped
+                                    <tag class="attribute">inPort</tag> port or may be fixed or mapped
                                     resources to be applied to other ports.</para>
                            <section>
                                     <title>Parameters</title>
@@ -362,64 +449,129 @@ Calabash</citetitle> from the Apache Ant using the
                                                       <tr>
                                                                <td>port</td>
                                                                <td>port name</td>
-                                                               <td>No; the otherwise unmapped input
+                                                               <td>No; the primary non-parameter input
                                                                         port will be used</td>
                                                       </tr>
                                                       <tr>
+                                                               <td>type</td>
+                                                               <td>input type, either <literal>XML</literal> or <literal>DATA</literal></td>
+                                                               <td>No; default is <literal>XML</literal></td>
+                                                      </tr>
+                                                      <tr>
+                                                               <td>contentType</td>
+                                                               <td>content type, if this is equal to <literal>application/xml</literal>,
+                                                                        ends in <literal>+xml</literal>, starts with <literal>text/</literal>
+                                                                        or has a charset of <literal>utf-8</literal> specified, the input
+                                                                        is treated as text, otherwise the input gets base64 encoded
+                                                                        automatically before it is given to the pipeline</td>
+                                                               <td>No; default is guessed from the resource content, as fallback from the
+                                                                        resource name and as second fallback <literal>application/octet-stream</literal>
+                                                                        is used</td>
+                                                      </tr>
+                                                      <tr>
                                                                <td>if</td>
-                                                               <td>The port specification will be used if this
-                                                                        property is set</td>
+                                                               <td>This parameter behaves like standard Ant if's as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
                                                                <td>No</td>
                                                       </tr>
                                                       <tr>
                                                                <td>unless</td>
-                                                               <td>The port will not be used if this property is
-                                                                        set</td>
+                                                               <td>This parameter behaves like standard Ant unless' as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
                                                                <td>No</td>
-                                                      </tr></tbody>
+                                                      </tr>
+                                             </tbody>
                                     </informaltable></section>
                            <section>
                                     <title>Parameters specified as nested elements</title>
-                                    <para>Either resource collections <emphasis>or</emphasis> a
+                                    <para>Either <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resources</link> <emphasis>or</emphasis> a
                                              mapper may be specified, but not both.</para>
                                     <section>
-                                             <title>any resource collection</title>
-                                             <para>Use resource collections to specify
+                                             <title>any <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resource</link></title>
+                                             <para>Use <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resources</link> to specify
                                                       fixed resources that should be applied to this
-                                                      port.</para>
+                                                      port. Any readable resource can be used, e. g.
+<programlisting><![CDATA[<input>
+    <string><![CDATA[
+        <foo/>
+    ]]]]><![CDATA[></string>
+</input>]]></programlisting>
+                                                  or
+<programlisting><![CDATA[<input>
+    <url url="http://www.w3.org"/>
+</input>]]></programlisting></para>
                                     </section>
                                     <section>
                                              <title>mapper</title>
                                              <para>You can define resources to be used based on the
                                                   resource(s) specified for the <tag
-                                                  class="attribute">inport</tag> port or on the
-                                                  current resource from the implicit and/or explicit
+                                                  class="attribute">inPort</tag> port or on the
+                                                  current resource from the implicit and / or explicit
                                                   input fileset.</para>
-                                             <para>You cannot use a mapper on the <tag class="attribute">inport</tag> port.</para>
+                                             <para>You cannot use a mapper on the <tag class="attribute">inPort</tag> port.</para>
                                     </section>
                            </section>
-                           
+
                   </section>
-                  <section>
+                  <section xml:id="ant.pipeline">
                            <title>pipeline</title>
-                           <para>Pipeline file.  Can be used instead of <tag class="attribute"
-                                             >pipeline</tag>.</para>
+                           <para>Pipeline resource. Can be used instead of <tag class="attribute"
+                                             >pipeline</tag> attribute.</para>
+                           <section>
+                                    <title>Parameters</title>
+                                    <informaltable frame="border">
+                                             <thead>
+                                                      <tr>
+                                                               <th>Attribute</th>
+                                                               <th>Description</th>
+                                                               <th>Required</th>
+                                                      </tr>
+                                             </thead>
+                                             <tbody>
+                                                      <tr>
+                                                               <td>if</td>
+                                                               <td>This parameter behaves like standard Ant if's as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
+                                                               <td>No</td>
+                                                      </tr>
+                                                      <tr>
+                                                               <td>unless</td>
+                                                               <td>This parameter behaves like standard Ant unless' as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
+                                                               <td>No</td>
+                                                      </tr>
+                                             </tbody>
+                                    </informaltable>
+                           </section>
                            <section>
                                     <title>Parameters specified as nested elements</title>
                                     <section>
-                                             <title>any resource collection</title>
-                                             <para>Use resource collections to specify fixed
-                                                  resources that should be applied to this
-                                                  port.</para>
+                                             <title>any <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resource</link></title>
+                                             <para>Any <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resource</link> can be used, but only
+                                                  one single readable resource may be contained
+                                                  in it, e. g.
+<programlisting><![CDATA[<pipeline>
+    <string><![CDATA[
+        <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="1.0">
+            <p:input port="source" kind="document" primary="true"/>
+            <p:output port="result" sequence="true"/>
+            <p:identity/>
+        </p:declare-step>
+    ]]]]><![CDATA[></string>
+</pipeline>]]></programlisting>
+                                                  or
+<programlisting><![CDATA[<pipeline>
+    <url url="http://www.domain.org/pipeline.xpl"/>
+</pipeline>]]></programlisting></para>
                                     </section>
                            </section>
                   </section>
-                  <section>
+                  <section xml:id="ant.output">
                            <title>output</title>
                            <para>Specification of resources to which to write the output from an
                                     output port. May be used as an alternative to <tag
-                                             class="attribute">out</tag> to specify to which to
-                                    write the output from the <tag class="attribute">outport</tag>
+                                             class="attribute">out</tag> to specify to where to
+                                    write the output from the <tag class="attribute">outPort</tag>
                                     port or may be fixed or mapped resources to be applied to other
                                     ports.</para>
                            <section>
@@ -434,86 +586,106 @@ Calabash</citetitle> from the Apache Ant using the
                                              </thead>
                                              <tbody>
                                                   <tr>
-                                                  <td>port</td>
-                                                  <td>port name</td>
-                                                  <td>No; the otherwise unmapped output port will be
-                                                  used</td>
+                                                           <td>port</td>
+                                                           <td>port name</td>
+                                                           <td>No; the primary output port will be used</td>
                                                   </tr>
                                                   <tr>
-                                                  <td>if</td>
-                                                  <td>The port specification will be used if this
-                                                  property is set</td>
-                                                  <td>No</td>
+                                                           <td>if</td>
+                                                           <td>This parameter behaves like standard Ant if's as documented at
+                                                                    <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
+                                                           <td>No</td>
                                                   </tr>
                                                   <tr>
-                                                  <td>unless</td>
-                                                  <td>The port will not be used if this property is
-                                                  set</td>
-                                                  <td>No</td>
+                                                           <td>unless</td>
+                                                           <td>This parameter behaves like standard Ant unless' as documented at
+                                                                    <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
+                                                           <td>No</td>
                                                   </tr>
                                              </tbody>
                                     </informaltable>
                            </section>
                            <section>
                                     <title>Parameters specified as nested elements</title>
-                                    <para>Either resource collections <emphasis>or</emphasis> a
-                                             mapper may be specified, but not both.</para>
+                                    <para>Either <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resources</link>
+                                             <emphasis>or</emphasis> a mapper may be specified, but not both.</para>
                                     <section>
-                                             <title>any resource collection</title>
-                                             <para>Use resource collections to specify fixed
+                                             <title>any <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resource</link></title>
+                                             <para>Use <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resources</link> to specify fixed
                                                   resources that should be applied to this
-                                                  port.</para>
+                                                  port. Any writable <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resource</link> can be used, e. g.
+<programlisting><![CDATA[<output>
+    <bzip2resource>
+        <file file="result.xml.bz2"/>
+    </bzip2resource>
+</output>]]></programlisting></para>
                                     </section>
                                     <section>
                                              <title>mapper</title>
                                              <para>You can define resources to which to write based
                                                   on the resource(s) specified for the <tag
-                                                  class="attribute">inport</tag> port.</para>
+                                                  class="attribute">inPort</tag> port.</para>
                                     </section>
                            </section>
                   </section>
                   <section>
-                                    <title>any resource collection</title>
-                                    <para>Use resource collections to specify fixed resources that
-                                    should processed consecutively in a sequence of Calabash
-                                    runs.</para>
-                           </section>
-                           <section>
-                                    <title>mapper</title>
-                                    <para>You can define resources to which to write based on the
-                                    resource(s) specified for the implicit fileset (based on <tag
-                                             class="attribute">includes</tag>, etc.) and/or on the
-                                    explicit fileset formed from resource collections that are
-                                    children of <tag class="element">calabash</tag>.</para>
-                           </section>
+                           <title>any <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resource</link></title>
+                           <para>Use readable <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resources</link> to specify fixed resources that
+                           should be processed consecutively in a sequence of Calabash
+                           runs.</para>
+                  </section>
                   <section>
-                                    <title>namespace</title>
+                           <title>mapper</title>
+                           <para>You can define resources to which to write based on the
+                           resource(s) specified for the implicit fileset (based on <tag
+                                    class="attribute">includes</tag>, etc.) and / or on the
+                           explicit fileset formed from resource collections that are
+                           children of <tag class="element">calabash</tag>.</para>
+                  </section>
+                  <section>
+                           <title>namespace</title>
                            <para>Use nested <tag class="element">namespace</tag> elements to define
                                     mappings between prefixes and namespace URIs for any prefixes
                                     that are used in <tag class="element">option</tag> or <tag
                                              class="element">parameter</tag> elements.</para>
-                           <informaltable frame="border">
-                                    <thead>
-                                             <tr>
-                                                      <th>Attribute</th>
-                                                      <th>Description</th>
-                                                      <th>Required</th>
-                                             </tr>
-                                    </thead>
-                                    <tbody>
-                                             <tr>
-                                                      <td>prefix</td>
-                                                  <td>Prefix to which to map the URI</td>
-                                                      <td>Yes</td>
-                                             </tr>
-                                             <tr>
-                                                      <td>uri</td>
-                                                      <td>Namespace uri</td>
-                                                      <td>Yes</td>
-                                             </tr>
-                                    </tbody>
-                           </informaltable></section>
-                  <section>
+                           <section>
+                                    <title>Parameters</title>
+                                    <informaltable frame="border">
+                                             <thead>
+                                                      <tr>
+                                                               <th>Attribute</th>
+                                                               <th>Description</th>
+                                                               <th>Required</th>
+                                                      </tr>
+                                             </thead>
+                                             <tbody>
+                                                      <tr>
+                                                               <td>prefix</td>
+                                                               <td>Prefix to which to map the URI</td>
+                                                               <td>Yes</td>
+                                                      </tr>
+                                                      <tr>
+                                                               <td>uri</td>
+                                                               <td>Namespace uri</td>
+                                                               <td>Yes</td>
+                                                      </tr>
+                                                      <tr>
+                                                               <td>if</td>
+                                                               <td>This parameter behaves like standard Ant if's as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
+                                                               <td>No</td>
+                                                      </tr>
+                                                      <tr>
+                                                               <td>unless</td>
+                                                               <td>This parameter behaves like standard Ant unless' as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
+                                                               <td>No</td>
+                                                      </tr>
+                                             </tbody>
+                                    </informaltable>
+                           </section>
+                  </section>
+                  <section xml:id="ant.option">
                            <title>option</title>
                            <para>Specifies an option to be passed to the XProc processor</para>
                            <section>
@@ -530,10 +702,13 @@ Calabash</citetitle> from the Apache Ant using the
                                                       <tr>
                                                                <td>name</td>
                                                                <td>Option name, which must be
-                                                  unique. QNames have their prefix matched against
+                                                  unique amongst the ones that are going to be used
+                                                  according to their <tag class="attriute">if</tag> and
+                                                  <tag class="attribute">unless</tag> attributes.
+                                                  QNames have their prefix matched against
                                                   bindings specified in <tag class="element"
                                                   >namespace</tag> elements. QNames may also be
-                                                  specified in Clark notation, e.g.,
+                                                  specified in Clark notation, i. e.
                                                   <literal>{uri}name</literal>.</td>
                                                                <td>No</td>
                                                       </tr>
@@ -544,22 +719,22 @@ Calabash</citetitle> from the Apache Ant using the
                                                       </tr>
                                                       <tr>
                                                                <td>if</td>
-                                                               <td>The option specification will be used if this
-                                                                        property is set</td>
+                                                               <td>This parameter behaves like standard Ant if's as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
                                                                <td>No</td>
                                                       </tr>
                                                       <tr>
                                                                <td>unless</td>
-                                                               <td>The option will not be used if this property
-                                                                        is set</td>
+                                                               <td>This parameter behaves like standard Ant unless' as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
                                                                <td>No</td>
                                                       </tr>
                                              </tbody>
                                     </informaltable>
                            </section>
                   </section>
-                  <section>
-                           <title>param</title>
+                  <section xml:id="ant.parameter">
+                           <title>parameter</title>
                            <para>Specifies a parameter to be passed to the XProc processor</para>
                            <section>
                                     <title>Parameters</title>
@@ -576,13 +751,17 @@ Calabash</citetitle> from the Apache Ant using the
                                                                <td>port</td>
                                                                <td>Port to which to apply the
                                                   parameter.</td>
-                                                               <td>No; default is the primary
-                                                  parameter port</td>
+                                                               <td>No; default is only available parameter port, if there
+                                                                        are no or more than one parameter ports, an error
+                                                                        is raised</td>
                                                       </tr>
                                                       <tr>
                                                                <td>name</td>
-                                                               <td>Parameter name name, which must
-                                                  be unique. QNames have their prefix matched
+                                                               <td>Parameter name, which must
+                                                  be unique amongst the ones that are going to be used
+                                                  according to their <tag class="attriute">if</tag> and
+                                                  <tag class="attribute">unless</tag> attributes.
+                                                  QNames have their prefix matched
                                                   against bindings specified in <tag class="element"
                                                   >namespace</tag> elements. QNames may also be
                                                   specified in Clark notation, e.g.,
@@ -596,14 +775,14 @@ Calabash</citetitle> from the Apache Ant using the
                                                       </tr>
                                                       <tr>
                                                                <td>if</td>
-                                                               <td>The option specification will be used if this
-                                                                        property is set</td>
+                                                               <td>This parameter behaves like standard Ant if's as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
                                                                <td>No</td>
                                                       </tr>
                                                       <tr>
                                                                <td>unless</td>
-                                                               <td>The option will not be used if this property
-                                                                        is set</td>
+                                                               <td>This parameter behaves like standard Ant unless' as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
                                                                <td>No</td>
                                                       </tr>
                                              </tbody>
@@ -614,6 +793,277 @@ Calabash</citetitle> from the Apache Ant using the
                            <para>Specify Java system properties used by Calabash</para></section>
                   <section><title>syspropertyset</title>
                            <para>Specify sets of Java system properties used by Calabash</para></section>
+                  <section>
+                           <title>profile</title>
+                           <para>Profile resource. Can be used instead of <tag class="attribute"
+                                             >profileFile</tag> attribute.</para>
+                           <section>
+                                    <title>Parameters</title>
+                                    <informaltable frame="border">
+                                             <thead>
+                                                      <tr>
+                                                               <th>Attribute</th>
+                                                               <th>Description</th>
+                                                               <th>Required</th>
+                                                      </tr>
+                                             </thead>
+                                             <tbody>
+                                                      <tr>
+                                                               <td>if</td>
+                                                               <td>This parameter behaves like standard Ant if's as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
+                                                               <td>No</td>
+                                                      </tr>
+                                                      <tr>
+                                                               <td>unless</td>
+                                                               <td>This parameter behaves like standard Ant unless' as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
+                                                               <td>No</td>
+                                                      </tr>
+                                             </tbody>
+                                    </informaltable>
+                           </section>
+                           <section>
+                                    <title>Parameters specified as nested elements</title>
+                                    <section>
+                                             <title>any <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resource</link></title>
+                                             <para>Any <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resource</link> can be used, but only
+                                                  one single writable resource may be contained
+                                                  in it, e. g.
+<programlisting><![CDATA[<profile>
+    <bzip2resource>
+        <file file="profile.xml.bz2"/>
+    </bzip2resource>
+</profile>]]></programlisting>
+                                                  or
+<programlisting><![CDATA[<profile>
+    <stderr/>
+</profile>]]></programlisting></para>
+                                    </section>
+                           </section>
+                  </section>
+                  <section>
+                           <title>saxonConfig</title>
+                           <para>Saxon config resource. Can be used instead of <tag class="attribute"
+                                             >saxonConfigFile</tag> attribute.</para>
+                           <section>
+                                    <title>Parameters</title>
+                                    <informaltable frame="border">
+                                             <thead>
+                                                      <tr>
+                                                               <th>Attribute</th>
+                                                               <th>Description</th>
+                                                               <th>Required</th>
+                                                      </tr>
+                                             </thead>
+                                             <tbody>
+                                                      <tr>
+                                                               <td>if</td>
+                                                               <td>This parameter behaves like standard Ant if's as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
+                                                               <td>No</td>
+                                                      </tr>
+                                                      <tr>
+                                                               <td>unless</td>
+                                                               <td>This parameter behaves like standard Ant unless' as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
+                                                               <td>No</td>
+                                                      </tr>
+                                             </tbody>
+                                    </informaltable>
+                           </section>
+                           <section>
+                                    <title>Parameters specified as nested elements</title>
+                                    <section>
+                                             <title>any <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resource</link></title>
+                                             <para>Any <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resource</link> can be used, but only
+                                                  one single readable resource may be contained
+                                                  in it, e. g.
+<programlisting><![CDATA[<saxonConfig>
+    <bzip2resource>
+        <file file="saxon-config.xml.bz2"/>
+    </bzip2resource>
+</saxonConfig>]]></programlisting>
+                                                  or
+<programlisting><![CDATA[<saxonConfig>
+    <stdin/>
+</saxonConfig>]]></programlisting>
+                                                  or
+<programlisting><![CDATA[<saxonConfig>
+    <string><![CDATA[
+        <configuration xmlns="http://saxon.sf.net/ns/configuration">
+            <global optimizationLevel="10"/>
+        </configuration>
+    ]]]]><![CDATA[></string>
+</saxonConfig>]]></programlisting></para>
+                                    </section>
+                           </section>
+                  </section>
+                  <section>
+                           <title>config</title>
+                           <para>Config resource. Can be used instead of <tag class="attribute"
+                                             >configFile</tag> attribute.</para>
+                           <section>
+                                    <title>Parameters</title>
+                                    <informaltable frame="border">
+                                             <thead>
+                                                      <tr>
+                                                               <th>Attribute</th>
+                                                               <th>Description</th>
+                                                               <th>Required</th>
+                                                      </tr>
+                                             </thead>
+                                             <tbody>
+                                                      <tr>
+                                                               <td>if</td>
+                                                               <td>This parameter behaves like standard Ant if's as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
+                                                               <td>No</td>
+                                                      </tr>
+                                                      <tr>
+                                                               <td>unless</td>
+                                                               <td>This parameter behaves like standard Ant unless' as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
+                                                               <td>No</td>
+                                                      </tr>
+                                             </tbody>
+                                    </informaltable>
+                           </section>
+                           <section>
+                                    <title>Parameters specified as nested elements</title>
+                                    <section>
+                                             <title>any <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resource</link></title>
+                                             <para>Any <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resource</link> can be used, but only
+                                                  one single readable resource may be contained
+                                                  in it, e. g.
+<programlisting><![CDATA[<config>
+    <bzip2resource>
+        <file file="config.xml.bz2"/>
+    </bzip2resource>
+</config>]]></programlisting>
+                                                  or
+<programlisting><![CDATA[<config>
+    <stdinout/>
+</config>]]></programlisting>
+                                                  or
+<programlisting><![CDATA[<config>
+    <string><![CDATA[
+        <xproc-config xmlns="http://xmlcalabash.com/ns/configuration">
+            <html-parser value="tagsoup" />
+        </xproc-config>
+    ]]]]><![CDATA[></string>
+</config>]]></programlisting></para>
+                                    </section>
+                           </section>
+                  </section>
+                  <section xml:id="ant.library">
+                           <title>library</title>
+                           <para>Library resources. The steps in the libraries loaded are only available in <tag class="emptytag">step</tag> tags.
+                                  If no steps are specified, the first step of the first loaded library will be used.</para>
+                           <section>
+                                    <title>Parameters</title>
+                                    <informaltable frame="border">
+                                             <thead>
+                                                      <tr>
+                                                               <th>Attribute</th>
+                                                               <th>Description</th>
+                                                               <th>Required</th>
+                                                      </tr>
+                                             </thead>
+                                             <tbody>
+                                                      <tr>
+                                                               <td>if</td>
+                                                               <td>This parameter behaves like standard Ant if's as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
+                                                               <td>No</td>
+                                                      </tr>
+                                                      <tr>
+                                                               <td>unless</td>
+                                                               <td>This parameter behaves like standard Ant unless' as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
+                                                               <td>No</td>
+                                                      </tr>
+                                             </tbody>
+                                    </informaltable>
+                           </section>
+                           <section>
+                                    <title>Parameters specified as nested elements</title>
+                                    <section>
+                                             <title>any <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resources</link></title>
+                                             <para>Any readable <link xlink:href="http://ant.apache.org/manual/Types/resources.html">Ant resource</link> can be used, e. g.
+<programlisting><![CDATA[<library>
+    <url url="http://xmlcalabash.com/extension/steps/library-1.0.xpl"/>
+</library>]]></programlisting></para>
+                                    </section>
+                           </section>
+                  </section>
+                  <section xml:id="ant.step">
+                           <title>step</title>
+                           <para>The steps to be used to form an implicit pipeline.
+                                  If no steps are specified, the first step of the first loaded library will be used.</para>
+                           <section>
+                                    <title>Parameters</title>
+                                    <informaltable frame="border">
+                                             <thead>
+                                                      <tr>
+                                                               <th>Attribute</th>
+                                                               <th>Description</th>
+                                                               <th>Required</th>
+                                                      </tr>
+                                             </thead>
+                                             <tbody>
+                                                      <tr>
+                                                               <td>name</td>
+                                                               <td>The name of the step to execute.
+                                                  QNames have their prefix matched
+                                                  against bindings specified in <tag class="element"
+                                                  >namespace</tag> elements. QNames may also be
+                                                  specified in Clark notation, e.g.,
+                                                  <literal>{uri}name</literal>.</td>
+                                                               <td>Yes</td>
+                                                      </tr>
+                                                      <tr>
+                                                               <td>if</td>
+                                                               <td>This parameter behaves like standard Ant if's as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
+                                                               <td>No</td>
+                                                      </tr>
+                                                      <tr>
+                                                               <td>unless</td>
+                                                               <td>This parameter behaves like standard Ant unless' as documented at
+                                                                        <uri>http://ant.apache.org/manual/properties.html#if+unless</uri></td>
+                                                               <td>No</td>
+                                                      </tr>
+                                             </tbody>
+                                    </informaltable>
+                           </section>
+                           <section>
+                                    <title>Parameters specified as nested elements</title>
+                                    <section>
+                                             <title>input</title>
+					     <para>Input elements as documented in <xref linkend="ant.input"/>, with the exception that no nested mapper is supported, but only resource collections, e. g.
+<programlisting><![CDATA[<step name="p:identity">
+    <input port="source">
+        <string><![CDATA[<foo/>]]]]><![CDATA[></string>
+    </input>
+</step>]]></programlisting></para>
+                                    </section>
+                                    <section>
+                                             <title>parameter</title>
+                                             <para>Parameter elements as documented in <xref linkend="ant.parameter"/>, e. g.
+<programlisting><![CDATA[<step name="p:template">
+    <parameter name="foo" value="bar" />
+</step>]]></programlisting></para>
+                                    </section>
+                                    <section>
+                                             <title>option</title>
+                                             <para>Option elements as documented in <xref linkend="ant.option"/>, e. g.
+<programlisting><![CDATA[<step name="p:count">
+    <option name="limit" value="1" />
+</step>]]></programlisting></para>
+                                    </section>
+                           </section>
+                  </section>
          </section>
          <section>
                   <title>Examples</title>
@@ -624,43 +1074,42 @@ Calabash</citetitle> from the Apache Ant using the
                   </section>
                   <section>
                            <title><tag class="element">pipeline</tag></title>
-                           <programlisting>&lt;calabash in="in.xml" out="out.xml">
-  &lt;pipeline>
-    &lt;file file="pipeline.xpl" />
-  &lt;/pipeline>
-&lt;/calabash></programlisting>
+<programlisting><![CDATA[<calabash in="in.xml" out="out.xml">
+    <pipeline>
+        <file file="pipeline.xpl" />
+    </pipeline>
+</calabash>]]></programlisting>
                   </section>
                   <section>
                            <title>Implicit fileset plus mapper on additional input port</title>
-                           <programlisting>&lt;calabash includes="doc.xml"
-	      inport="source"
-	      destdir="out"
-	      extension=".compare.xml"
-	      pipeline="compare-001.xpl">
-      &lt;input port="alternate">
-	&lt;globmapper from="*.xml" to="*-alt.xml" />
-      &lt;/input>
-&lt;/calabash></programlisting>
+<programlisting><![CDATA[<calabash includes="doc.xml"
+          inPort="source"
+          destdir="out"
+          extension=".compare.xml"
+          pipeline="compare-001.xpl">
+    <input port="alternate">
+        <globmapper from="*.xml" to="*-alt.xml" />
+    </input>
+</calabash>]]></programlisting>
                   </section>
                   <section>
                            <title>Fixed input, multiple mapped outputs</title>
-                           <programlisting>&lt;calabash in="group-003_input1.xml" pipeline="group-003_pipeline.xpl">
-      &lt;output port="result">
-	&lt;globmapper from="*_input1.xml" to="out/*_result.xml" />
-      &lt;/output>
-      &lt;output port="result2">
-	&lt;globmapper from="*_input1.xml" to="out/*_result2.xml" />
-      &lt;/output>
-&lt;/calabash></programlisting>
+<programlisting><![CDATA[<calabash in="group-003_input1.xml" pipeline="group-003_pipeline.xpl">
+    <output port="result">
+        <globmapper from="*_input1.xml" to="out/*_result.xml" />
+    </output>
+    <output port="result2">
+        <globmapper from="*_input1.xml" to="out/*_result2.xml" />
+    </output>
+</calabash>]]></programlisting>
                   </section>
                   <section>
                            <title>QNames</title>
-                           <programlisting>&lt;calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
-      &lt;sysproperty key="com.xmlcalabash.phonehome" value="false" />
-      &lt;namespace prefix="hi" uri="low" />
-      &lt;parameter name="{hi}there" value="a value" />
-      &lt;parameter name="hi:there" value="a value" />
-&lt;/calabash></programlisting>
+<programlisting><![CDATA[<calabash in="in.xml" out="out.xml" pipeline="pipeline.xpl">
+    <namespace prefix="hi" uri="low" />
+    <parameter name="{hi}there" value="a value" />
+    <parameter name="hi:there" value="a value" />
+</calabash>]]></programlisting>
                            <para><literal>{hi}there</literal> is a QName in Clark notation, where
                                              <literal>hi</literal> is the namespace URI and
                                              <literal>there</literal> is the local name; whereas
@@ -688,7 +1137,7 @@ Calabash</citetitle> from the Apache Ant using the
                                     </listitem>
                            </varlistentry>
                            <varlistentry>
-                                    <term><tag class="attribute">in</tag> and/or <tag
+                                    <term><tag class="attribute">in</tag> and / or <tag
                                                   class="attribute">out</tag> and an implicit
                                              fileset</term>
                                     <listitem>
@@ -699,8 +1148,8 @@ Calabash</citetitle> from the Apache Ant using the
                            </varlistentry>
                            <varlistentry>
                                     <term>Two or more of <tag class="attribute">out</tag>, a
-                                             resource for <tag class="attribute">outport</tag>, a
-                                             mapper for <tag class="attribute">outport</tag>, and
+                                             resource for <tag class="attribute">outPort</tag>, a
+                                             mapper for <tag class="attribute">outPort</tag>, and
                                                   <tag class="attribute">extension</tag></term>
                                     <listitem>
                                              <para>Too conflicted</para>
@@ -756,7 +1205,7 @@ Calabash</citetitle> from the Apache Ant using the
                                     <term>Mapper on main input port</term>
                                     <listitem>
                                              <para>The file(s) on the main input port, determined by
-                                                      the <tag class="attribute">inport</tag> value,
+                                                      the <tag class="attribute">inPort</tag> value,
                                                       provides the name that other mappers use as their
                                                       basis. A mapper on the main input port has nothing
                                                       to use as a basis, so it's not allowed.</para>
@@ -780,7 +1229,7 @@ Calabash</citetitle> from the Apache Ant using the
                                                   mapping prefixes to URIs</para>
                                     </listitem>
                            </varlistentry>
-                           
+
                   </variablelist>
          </section>
 </chapter>

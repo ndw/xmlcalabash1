@@ -8,7 +8,7 @@
 
   <property name="antunit.home" value="/usr/local/src/apache-ant-antunit-1.2"/>
 
-  <taskdef 
+  <taskdef
       uri="antlib:org.apache.ant.antunit"
       resource="org/apache/ant/antunit/antlib.xml">
     <classpath>
@@ -30,36 +30,27 @@
   <mkdir dir="out" />
 
   <target name="testBasic" description="Use without 'in', 'out', and 'pipeline'.">
-    <calabash in="in/in.xml" out="out/out.xml" pipeline="pipeline.xpl" force="true">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
-    </calabash>
+    <calabash in="in/in.xml" out="out/out.xml" pipeline="pipeline.xpl" force="true"/>
   </target>
 
   <target name="testIn2" description="Use with different input.">
-    <calabash in="in/in2.xml" out="out/out.xml" pipeline="pipeline.xpl" force="true">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
-    </calabash>
+    <calabash in="in/in2.xml" out="out/out.xml" pipeline="pipeline.xpl" force="true"/>
   </target>
 
   <target name="testInport" description="Use with bogus 'inport'.">
     <touch file="in/in.xml" />
     <au:expectfailure expectedmessage="0 documents appear on the 'source' port.">
-      <calabash in="in/in.xml" out="out/out.xml" inport="bogus" pipeline="pipeline.xpl">
-	<sysproperty key="com.xmlcalabash.phonehome" value="false"/>
-      </calabash>
+      <calabash in="in/in.xml" out="out/out.xml" inport="bogus" pipeline="pipeline.xpl"/>
     </au:expectfailure>
   </target>
 
   <target name="testInport2" description="Use with real 'inport' value.">
-    <calabash in="in/in.xml" inport="source" out="out/out.xml" pipeline="pipeline.xpl" force="true">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
-    </calabash>
+    <calabash in="in/in.xml" inport="source" out="out/out.xml" pipeline="pipeline.xpl" force="true"/>
   </target>
 
   <target name="testInport3" description="No input documents.">
     <au:expectfailure expectedmessage="0 documents appear on the 'source' port.">
       <calabash inport="source" out="out/out.xml" pipeline="pipeline.xpl" force="true">
-	<sysproperty key="com.xmlcalabash.phonehome" value="false"/>
 	<input port="source" />
       </calabash>
     </au:expectfailure>
@@ -72,7 +63,6 @@
 		out="out/out.xml"
 		pipeline="xpl/compare-001.xpl"
 		force="true">
-	<sysproperty key="com.xmlcalabash.phonehome" value="false"/>
 	<input port="alternate">
 	  <file file="in/doc.xml" />
 	  <identitymapper />
@@ -89,7 +79,6 @@
 	      extension=".inport5.xml"
 	      pipeline="xpl/compare-001.xpl"
 	      force="true">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
       <input port="alternate">
 	<globmapper from="*.xml" to="*-alt.xml" />
       </input>
@@ -97,20 +86,15 @@
   </target>
 
   <target name="testOutport" description="Use with bogus 'outport'.">
-    <calabash in="in/in.xml" out="out/out.xml" outport="bogus" pipeline="pipeline.xpl" force="true">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
-    </calabash>
+    <calabash in="in/in.xml" out="out/out.xml" outport="bogus" pipeline="pipeline.xpl" force="true"/>
   </target>
 
   <target name="testOutport2" description="Use with real 'outport' value.">
-    <calabash in="in/in.xml" out="out/out.xml" outport="result" pipeline="pipeline.xpl" force="true">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
-    </calabash>
+    <calabash in="in/in.xml" out="out/out.xml" outport="result" pipeline="pipeline.xpl" force="true"/>
   </target>
 
   <target name="testNestedPipeline" description="Use with nested 'pipeline'">
     <calabash in="in/in.xml" out="out/out.xml" force="true">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
       <pipeline>
 	<file file="pipeline.xpl" />
       </pipeline>
@@ -119,7 +103,6 @@
 
   <target name="TestMultiport1" description="Use with multiple input ports.">
     <calabash in="in/doc.xml" out="out/out.xml" pipeline="xpl/compare-001.xpl" force="true">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
       <input port="alternate">
 	<file file="in/doc.xml" />
       </input>
@@ -128,7 +111,6 @@
 
   <target name="testOutport3" description="Use with real 'outport' value.">
     <calabash in="in/in.xml" outport="result" pipeline="pipeline.xpl" force="true">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
       <output>
 	<file file="out/out.xml" />
       </output>
@@ -137,7 +119,6 @@
 
   <target name="testOutport4" description="Use with real 'outport' value.">
     <calabash in="in/in.xml" pipeline="pipeline.xpl" force="true">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
       <output port="result">
 	<file file="out/out.xml" />
       </output>
@@ -153,7 +134,6 @@
 	      destdir="out"
 	      pipeline="xpl/group-003.xpl"
 	      force="true">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
       <output port="result">
 	<globmapper from="*_input1.xml" to="../out/*_result.xml" />
       </output>
@@ -178,7 +158,6 @@
 	      destdir="out"
 	      pipeline="xpl/group-003.xpl"
 	      force="true">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
       <output>
 	<globmapper from="*_input1.xml" to="../out/*_result.xml" />
       </output>
@@ -196,7 +175,6 @@
 
   <target name="testNestedInput1" description="Use with nested input port.">
     <calabash out="out/out.xml" pipeline="pipeline.xpl" force="true">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
       <input port="source">
 	<file file="in/in.xml" />
       </input>
@@ -205,7 +183,6 @@
 
   <target name="testNestedInput2" description="Use with nested input port.">
     <calabash out="out/out.xml" pipeline="pipeline.xpl" force="true">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
       <input>
 	<file file="in/in.xml" />
       </input>
@@ -214,7 +191,6 @@
 
   <target name="testMultiport2" description="Use with multiple input ports.">
     <calabash out="out/out.xml" pipeline="xpl/compare-001.xpl" force="true">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
       <input port="source">
 	<file file="in/doc.xml" />
       </input>
@@ -226,7 +202,6 @@
 
   <target name="testIncludes1" description="Use with 'includes' value.">
     <calabash includes="in/in.xml" outport="result" pipeline="pipeline.xpl" force="true">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
       <output>
 	<file file="out/out.xml" />
       </output>
@@ -234,9 +209,7 @@
   </target>
 
   <target name="testIncludes2" description="Use with 'includes' value.">
-    <calabash includes="in*.xml" destdir="out" pipeline="pipeline.xpl" force="true">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
-    </calabash>
+    <calabash includes="in*.xml" destdir="out" pipeline="pipeline.xpl" force="true"/>
   </target>
 
 
@@ -245,9 +218,7 @@
 	      basedir="in"
 	      destdir="out"
 	      pipeline="pipeline.xpl"
-	      force="true">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
-    </calabash>
+	      force="true"/>
   </target>
 
   <target name="testIncludes4" description="Use 'extension' with 'includes' and 'basedir' values.">
@@ -256,9 +227,7 @@
 	      destdir="out"
 	      extension=".extension.xml"
 	      pipeline="pipeline.xpl"
-	      force="true">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
-    </calabash>
+	      force="true"/>
   </target>
 
   <target name="testIncludes5" description="Use a globmapper with 'includes' and 'basedir' values.">
@@ -267,14 +236,12 @@
 	      destdir="out"
 	      pipeline="pipeline.xpl"
 	      force="true">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
       <globmapper from="*.xml" to="*.glob.xml" />
     </calabash>
   </target>
 
   <target name="testBinding1" description="Namespace but no option or param.">
     <calabash in="in/in.xml" out="out/out.xml" pipeline="pipeline.xpl" force="true">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
       <namespace prefix="hi" uri="there" />
     </calabash>
   </target>
@@ -282,7 +249,6 @@
   <target name="testBinding2" description="Namespace prefix but no URI">
     <au:expectfailure expectedmessage="&lt;namespace> URI cannot be null">
       <calabash in="in/in.xml" out="out/out.xml" pipeline="pipeline.xpl" force="true">
-	<sysproperty key="com.xmlcalabash.phonehome" value="false" />
 	<namespace prefix="hi" />
       </calabash>
     </au:expectfailure>
@@ -291,7 +257,6 @@
   <target name="testBinding3" description="Use with 'includes' and 'basedir' values.">
     <au:expectfailure expectedmessage="&lt;namespace> prefix cannot be null">
       <calabash in="in/in.xml" out="out/out.xml" pipeline="pipeline.xpl" force="true">
-	<sysproperty key="com.xmlcalabash.phonehome" value="false" />
 	<namespace uri="there" />
       </calabash>
     </au:expectfailure>
@@ -300,7 +265,6 @@
   <target name="testBinding4" description="No prefix, no URI.">
     <au:expectfailure expectedmessage="cannot be null">
       <calabash in="in/in.xml" out="out/out.xml" pipeline="pipeline.xpl" force="true">
-	<sysproperty key="com.xmlcalabash.phonehome" value="false" />
 	<namespace />
       </calabash>
     </au:expectfailure>
@@ -309,7 +273,6 @@
   <target name="testBinding5" description="Duplicated namespace prefix.">
     <au:expectfailure expectedmessage="Duplicated &lt;namespace> prefix">
       <calabash in="in/in.xml" out="out/out.xml" pipeline="pipeline.xpl" force="true">
-	<sysproperty key="com.xmlcalabash.phonehome" value="false" />
 	<namespace prefix="hi" uri="there" />
 	<namespace prefix="hi" uri="not there" />
       </calabash>
@@ -318,7 +281,6 @@
 
   <target name="testParameter1" description="Bound prefix.">
     <calabash in="in/in.xml" out="out/out.xml" pipeline="pipeline.xpl" force="true">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
       <namespace prefix="hi" uri="there" />
       <parameter name="hi:there" value="a value" />
     </calabash>
@@ -327,7 +289,6 @@
   <target name="testParameter2" description="Use with 'includes' and 'basedir' values.">
     <au:expectfailure expectedmessage="Unbound prefix">
       <calabash in="in/in.xml" out="out/out.xml" pipeline="pipeline.xpl" force="true">
-	<sysproperty key="com.xmlcalabash.phonehome" value="false" />
 	<namespace prefix="hi" uri="there" />
 	<parameter name="not:there" value="a value" />
       </calabash>
@@ -337,7 +298,6 @@
   <target name="testParameter3" description="Duplicated parameter QName.">
     <au:expectfailure expectedmessage="Duplicated parameter QName">
       <calabash in="in/in.xml" out="out/out.xml" pipeline="pipeline.xpl" force="true">
-	<sysproperty key="com.xmlcalabash.phonehome" value="false" />
 	<namespace prefix="hi" uri="there" />
 	<parameter name="hi:there" value="a value" />
 	<parameter name="hi:there" value="another value" />
@@ -348,7 +308,6 @@
   <target name="testParameter4" description="Duplicated parameter QName: same URI, different prefixes.">
     <au:expectfailure expectedmessage="Duplicated parameter QName">
       <calabash in="in/in.xml" out="out/out.xml" pipeline="pipeline.xpl" force="true">
-	<sysproperty key="com.xmlcalabash.phonehome" value="false" />
 	<namespace prefix="hi" uri="there" />
 	<namespace prefix="not" uri="there" />
 	<parameter name="hi:there" value="a value" />
@@ -362,7 +321,6 @@
     <touch file="in/in.xml" />
     <au:expectfailure expectedmessage="XD0031">
       <calabash in="in/in.xml" out="out/out.xml" pipeline="pipeline.xpl" force="true">
-	<sysproperty key="com.xmlcalabash.phonehome" value="false" />
 	<parameter name="p:there" value="in your morning" />
       </calabash>
     </au:expectfailure>
@@ -370,21 +328,18 @@
 
   <target name="testParameter6" description="Empty parameter name.">
     <calabash in="in/in.xml" out="out/out.xml" pipeline="pipeline.xpl" force="true">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
       <parameter name="" value="a value" />
     </calabash>
   </target>
 
   <target name="testParameter7" description="No-namespace parameter name.">
     <calabash in="in/in.xml" out="out/out.xml" pipeline="pipeline.xpl" force="true">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
       <parameter name="no-namespace" value="a value" />
     </calabash>
   </target>
 
   <target name="testParameter8" description="Clack notation in parameter name.">
     <calabash in="in/in.xml" out="out/out.xml" pipeline="pipeline.xpl" force="true">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
       <namespace prefix="hi" uri="low" />
       <parameter name="{hi}there" value="a value" />
       <parameter name="hi:there" value="a value" />
@@ -394,7 +349,6 @@
   <target name="testParameter9" description="Clack notation in duplicate parameter names.">
     <au:expectfailure expectedmessage="Duplicated parameter QName">
       <calabash in="in/in.xml" out="out/out.xml" pipeline="pipeline.xpl" force="true">
-	<sysproperty key="com.xmlcalabash.phonehome" value="false" />
 	<parameter name="{hi}there" value="a value" />
 	<parameter name="{hi}there" value="another value" />
       </calabash>
@@ -404,7 +358,6 @@
   <target name="testParameter10" description="Duplicate QName in bound and Clack notation parameter names.">
     <au:expectfailure expectedmessage="Duplicated parameter QName">
       <calabash in="in/in.xml" out="out/out.xml" pipeline="pipeline.xpl" force="true">
-	<sysproperty key="com.xmlcalabash.phonehome" value="false" />
 	<namespace prefix="hi" uri="low" />
 	<parameter name="{low}there" value="a value" />
 	<parameter name="hi:there" value="a value" />
@@ -414,14 +367,12 @@
 
   <target name="testOption1" description="Valid no-namespace option.">
     <calabash in="in/in.xml" out="out/out.xml" pipeline="pipeline.xpl" force="true">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
       <option name="no-namespace" value="a value" />
     </calabash>
   </target>
 
   <target name="testOption2" description="'p' prefix should be bound automatically.">
     <calabash in="in/in.xml" out="out/out.xml" pipeline="pipeline.xpl" force="true">
-      <sysproperty key="com.xmlcalabash.phonehome" value="false" />
       <option name="p:there" value="in your night" />
     </calabash>
   </target>
