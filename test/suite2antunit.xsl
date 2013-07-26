@@ -87,7 +87,7 @@
 
       <property name="antunit.home" value="{$antunit.home}"/>
 
-      <taskdef 
+      <taskdef
 	  uri="antlib:org.apache.ant.antunit"
 	  resource="org/apache/ant/antunit/antlib.xml">
 	<classpath>
@@ -187,7 +187,6 @@
 	     required="yes" />
 
   <calabash useimplicitfileset="false">
-    <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
     <pipeline>
       <xsl:choose>
 	<xsl:when test="exists(t:pipeline/@href)">

@@ -1,26 +1,27 @@
 package com.xmlcalabash.extensions;
 
-import com.xmlcalabash.core.XProcConstants;
-import com.xmlcalabash.core.XProcException;
-import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.io.ReadablePipe;
-import com.xmlcalabash.io.WritablePipe;
-import com.xmlcalabash.library.DefaultStep;
-import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.util.RelevantNodes;
-import com.xmlcalabash.util.S9apiUtils;
-import com.xmlcalabash.util.TreeWriter;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
-import org.apache.commons.httpclient.Cookie;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import org.apache.http.cookie.SetCookie;
+import org.apache.http.impl.cookie.BasicClientCookie;
+
+import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.io.ReadablePipe;
+import com.xmlcalabash.library.DefaultStep;
+import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.util.RelevantNodes;
+import com.xmlcalabash.util.S9apiUtils;
 
 /**
  * Created by IntelliJ IDEA.
@@ -87,9 +88,7 @@ public class SetCookies extends DefaultStep {
                     throw new XProcException(step.getNode(), "Invalid cookie: " + node);
                 }
 
-                Cookie cookie = new Cookie();
-                cookie.setName(name);
-                cookie.setValue(value);
+                SetCookie cookie = new BasicClientCookie(name, value);
 
                 if (domain != null) { cookie.setDomain(domain); }
                 if (path != null) { cookie.setPath(path); }
@@ -112,7 +111,7 @@ public class SetCookies extends DefaultStep {
                     }
                 }
 
-                runtime.addCookie(cookieKey, cookie);
+                runtime.getCookieStore(cookieKey).addCookie(cookie);
 
             } else if (node.getNodeKind() == XdmNodeKind.TEXT) {
                 if ("".equals(node.getStringValue().trim())) {

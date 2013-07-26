@@ -110,45 +110,48 @@ public class XQuery extends DefaultStep {
 
         config.setCollectionURIResolver(new CollectionResolver(runtime, defaultCollection, collectionResolver));
 
-        Processor qtproc = runtime.getProcessor();
-        XQueryCompiler xqcomp = qtproc.newXQueryCompiler();
-        xqcomp.setBaseURI(root.getBaseURI());
-        XQueryExecutable xqexec = xqcomp.compile(queryString);
-        XQueryEvaluator xqeval = xqexec.load();
-        if (document != null) {
-            xqeval.setContextItem(document);
-        }
-
-        for (QName name : params.keySet()) {
-            RuntimeValue v = params.get(name);
-            if (runtime.getAllowGeneralExpressions()) {
-                xqeval.setExternalVariable(name, v.getValue());
-            } else {
-                xqeval.setExternalVariable(name, new XdmAtomicValue(v.getString()));
+        try {
+            Processor qtproc = runtime.getProcessor();
+            XQueryCompiler xqcomp = qtproc.newXQueryCompiler();
+            xqcomp.setBaseURI(root.getBaseURI());
+            xqcomp.setModuleURIResolver(runtime.getResolver());
+            XQueryExecutable xqexec = xqcomp.compile(queryString);
+            XQueryEvaluator xqeval = xqexec.load();
+            if (document != null) {
+                xqeval.setContextItem(document);
             }
 
-        }
+            for (QName name : params.keySet()) {
+                RuntimeValue v = params.get(name);
+                if (runtime.getAllowGeneralExpressions()) {
+                    xqeval.setExternalVariable(name, v.getValue());
+                } else {
+                    xqeval.setExternalVariable(name, new XdmAtomicValue(v.getString()));
+                }
 
-        Iterator<XdmItem> iter = xqeval.iterator();
-        while (iter.hasNext()) {
-            XdmItem item = iter.next();
-            if (item.isAtomicValue()) {
-                throw new XProcException(step.getNode(), "Not expecting atomic values back from XQuery!");
             }
-            XdmNode node = (XdmNode) item;
 
-            if (node.getNodeKind() != XdmNodeKind.DOCUMENT) {
-                // Make a document for this node...is this the right thing to do?
-                TreeWriter treeWriter = new TreeWriter(runtime);
-                treeWriter.startDocument(step.getNode().getBaseURI());
-                treeWriter.addSubtree(node);
-                treeWriter.endDocument();
-                node = treeWriter.getResult();
+            Iterator<XdmItem> iter = xqeval.iterator();
+            while (iter.hasNext()) {
+                XdmItem item = iter.next();
+                if (item.isAtomicValue()) {
+                    throw new XProcException(step.getNode(), "Not expecting atomic values back from XQuery!");
+                }
+                XdmNode node = (XdmNode) item;
+
+                if (node.getNodeKind() != XdmNodeKind.DOCUMENT) {
+                    // Make a document for this node...is this the right thing to do?
+                    TreeWriter treeWriter = new TreeWriter(runtime);
+                    treeWriter.startDocument(step.getNode().getBaseURI());
+                    treeWriter.addSubtree(node);
+                    treeWriter.endDocument();
+                    node = treeWriter.getResult();
+                }
+
+                result.write(node);
             }
-            
-            result.write(node);
+        } finally {
+            config.setCollectionURIResolver(collectionResolver);
         }
-
-        config.setCollectionURIResolver(collectionResolver);
     }
 }
