@@ -469,7 +469,9 @@ public class XProcRuntime {
     }
 
     public String getProductVersion() {
-        return XProcConstants.XPROC_VERSION;
+        String sver = processor.getSaxonProductVersion();
+        String sed = processor.getUnderlyingConfiguration().getEditionCode();
+        return XProcConstants.XPROC_VERSION + " (for Saxon " + sver + "/" + sed + ")";
     }
 
     public String getVendor() {
