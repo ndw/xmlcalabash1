@@ -32,4 +32,7 @@
     </java>
   </target>
 
+  <target name="clean" depends="init">
+    <delete dir="build"/>
+  </target>
 </project>

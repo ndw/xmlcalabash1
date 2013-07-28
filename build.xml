@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="calabash docs" default="default" basedir=".">
+  <description>
+    Ant build script for XML Calabash documentation.
+  </description>
+
+  <property file="resources/etc/vendor.properties"/>
+  <property file="resources/etc/version.properties"/>
+
+  <property name="version" value="${version.major}.${version.minor}.${version.release}"/>
+
+  <!-- so I can point to a directory containing commercial jars -->
+  <property name="lib.dir" value="lib"/>
+
+  <property name="dist.dir" value="dist"/>
+  <property name="build.dir" value="out/production/Calabash"/>
+
+  <!-- where my Saxon EE license lives -->
+  <property name="license.dir" value="/Users/ndw/java"/>
+
+  <path id="build.classpath">
+    <fileset dir="${lib.dir}">
+      <include name="*.jar"/>
+    </fileset>
+    <pathelement location="${ant.library.dir}/ant.jar"/>
+  </path>
+
+  <path id="full.classpath">
+    <pathelement location="${license.dir}"/>
+    <fileset dir="${lib.dir}">
+      <include name="*.jar"/>
+    </fileset>
+  </path>
+
+  <available property="saxon94"
+             classname="net.sf.saxon.expr.flwor.ForClause">
+    <classpath refid="build.classpath"/>
+  </available>
+
+  <available property="saxon95"
+             classname="net.sf.saxon.event.OnEmptyHandler">
+    <classpath refid="build.classpath"/>
+  </available>
+
+  <pathconvert property="run.classpath" refid="build.classpath" pathsep=" ">
+    <map from="${basedir}/" to=""/>
+  </pathconvert>
+
+  <target name="default" depends="docs"/>
+
+  <target name="clean" depends="init">
+    <delete dir="${dist.dir}"/>
+    <ant dir="docs" target="clean"/>
+  </target>
+
+  <target name="distclean" depends="init">
+    <delete dir="${dist.dir}"/>
+  </target>
+
+  <target name="init">
+    <!-- docs explicitly exclude the saxon version from the name -->
+    <property name="dist-version" value="${version}"/>
+    <property name="install.dir" value="${dist.dir}/calabash-${dist-version}"/>
+  </target>
+
+  <target name="docs" depends="init">
+    <ant dir="docs"/>
+  </target>
+
+  <target name="distrib" depends="docs">
+    <mkdir dir="${install.dir}"/>
+    <mkdir dir="${install.dir}/docs"/>
+    <mkdir dir="${install.dir}/docs/notices"/>
+    <mkdir dir="${install.dir}/docs/reference"/>
+    <mkdir dir="${install.dir}/docs/reference/css"/>
+    <mkdir dir="${install.dir}/docs/reference/js"/>
+    <mkdir dir="${install.dir}/docs/reference/img"/>
+    <copy todir="${install.dir}/docs/reference">
+      <fileset dir="docs/build"/>
+    </copy>
+    <copy todir="${install.dir}/docs/reference/css">
+      <fileset dir="docs/css"/>
+    </copy>
+    <copy todir="${install.dir}/docs/reference/js">
+      <fileset dir="docs/js"/>
+    </copy>
+    <copy todir="${install.dir}/docs/reference/img">
+      <fileset dir="docs/img"/>
+    </copy>
+
+    <copy todir="${install.dir}/docs/notices">
+      <fileset file="resources/notices/**"/>
+    </copy>
+    <copy todir="${install.dir}">
+      <fileset file="resources/README"/>
+    </copy>
+  </target>
+
+</project>
