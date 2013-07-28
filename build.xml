@@ -67,7 +67,7 @@
     <ant dir="docs"/>
   </target>
 
-  <target name="distrib" depends="docs">
+  <target name="dist" depends="docs">
     <mkdir dir="${install.dir}"/>
     <mkdir dir="${install.dir}/docs"/>
     <mkdir dir="${install.dir}/docs/notices"/>
