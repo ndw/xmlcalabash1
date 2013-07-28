@@ -94,6 +94,7 @@
     <copy todir="${install.dir}">
       <fileset file="resources/README"/>
     </copy>
-  </target>
 
+    <delete dir="docs/build"/>
+  </target>
 </project>
