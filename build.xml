@@ -52,23 +52,26 @@
     <echo>Cannot find IzPack; request to build dist ignored.</echo>
   </target>
 
-  <!-- define Maven coordinates -->
-  <property name="groupId" value="com.xmlcalabash" />
-  <property name="artifactId" value="xmlcalabash" />
+  <target name="maven-properties" depends="init">
+    <!-- define Maven coordinates -->
+    <property name="groupId" value="com.xmlcalabash" />
+    <property name="artifactId" value="xmlcalabash" />
+    <property name="mvn-version" value="${version}-${saxon-version}"/>
 
-  <!-- define artifact names, which follow the convention of Maven -->
-  <property name="maven.dir" value="${dist.dir}/maven" />
-  <property name="maven-jar" value="${maven.dir}/${artifactId}-${version}.jar" />
-  <property name="maven-javadoc-jar" value="${maven.dir}/${artifactId}-${version}-javadoc.jar" />
-  <property name="maven-sources-jar" value="${maven.dir}/${artifactId}-${version}-sources.jar" />
+    <!-- define artifact names, which follow the convention of Maven -->
+    <property name="maven.dir" value="${dist.dir}/maven" />
+    <property name="maven-jar" value="${maven.dir}/${artifactId}-${mvn-version}.jar" />
+    <property name="maven-javadoc-jar" value="${maven.dir}/${artifactId}-${mvn-version}-javadoc.jar" />
+    <property name="maven-sources-jar" value="${maven.dir}/${artifactId}-${mvn-version}-sources.jar" />
 
-  <!-- define maven snapshots and staging repository id and url -->
-  <property name="maven-snapshots-repository-id" value="sonatype-nexus-snapshots" />
-  <property name="maven-snapshots-repository-url"
-            value="https://oss.sonatype.org/content/repositories/snapshots/" />
-  <property name="maven-staging-repository-id" value="sonatype-nexus-staging" />
-  <property name="maven-staging-repository-url"
-            value="https://oss.sonatype.org/service/local/staging/deploy/maven2/" />
+    <!-- define maven snapshots and staging repository id and url -->
+    <property name="maven-snapshots-repository-id" value="sonatype-nexus-snapshots" />
+    <property name="maven-snapshots-repository-url"
+              value="https://oss.sonatype.org/content/repositories/snapshots/" />
+    <property name="maven-staging-repository-id" value="sonatype-nexus-staging" />
+    <property name="maven-staging-repository-url"
+              value="https://oss.sonatype.org/service/local/staging/deploy/maven2/" />
+  </target>
 
   <path id="build.classpath">
     <fileset dir="${lib.dir}">
@@ -477,7 +480,7 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
              classpathref="build.classpath"/>
   </target>
 
-  <target name="maven-dist" depends="init,compile-everything,jar,javadoc"
+  <target name="maven-dist" depends="maven-properties,compile-everything,jar,javadoc"
           description="generate Maven jars">
     <!-- copy the main artifact -->
     <copy file="calabash.jar" toFile="${maven-jar}"/>
