@@ -100,7 +100,6 @@
 
   <target name="init" depends="saxon-version">
     <mkdir dir="${build.dir}"/>
-    <mkdir dir="docs/build"/>
     <property name="dist-version" value="${version}-${saxon-version}"/>
     <property name="install.dir" value="${dist.dir}/calabash-${dist-version}"/>
   </target>
@@ -140,7 +139,7 @@
       output="calabash.jar"/>
   </target>
 
-  <target name="clean" depends="init">
+  <target name="clean">
     <delete dir="${build.dir}"/>
     <delete dir="${dist.dir}"/>
   </target>
@@ -333,8 +332,23 @@
     </javac>
   </target>
 
-  <target name="dist" depends="init,compile-everything,distrib,izpacktool,izpackmissing"
-          if="izpack.present">
+  <available property="docs.present" file="${dist.dir}/calabash-${version}/README"/>
+
+  <target name="docs.missing" unless="docs.present">
+    <echo>You must run the 'dist' target on the 'docs' branch first.</echo>
+  </target>
+
+  <condition property="dist.ready">
+    <and>
+      <istrue value="${docs.present}"/>
+      <istrue value="${izpack.present}"/>
+    </and>
+  </condition>
+
+  <target name="dist"
+          depends="init,izpacktool,izpackmissing,docs.missing"
+          if="dist.ready">
+    <ant target="distrib"/>
     <delete file="${dist.dir}/install.xml"/>
 
     <xslt in="resources/etc/install-proto.xsl" style="resources/etc/install-proto.xsl"
@@ -357,37 +371,25 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
             izPackDir="${izpack.dir}"/>
   </target>
 
-  <target name="distrib" depends="jar">
+  <target name="distrib" depends="compile-everything,jar">
     <mkdir dir="${install.dir}"/>
     <mkdir dir="${install.dir}/lib"/>
     <mkdir dir="${install.dir}/docs"/>
     <mkdir dir="${install.dir}/schemas"/>
     <mkdir dir="${install.dir}/xpl"/>
-    <ant dir="docs"/>
+
     <mkdir dir="${install.dir}/docs/notices"/>
     <mkdir dir="${install.dir}/docs/reference"/>
-    <mkdir dir="${install.dir}/docs/reference/css"/>
-    <mkdir dir="${install.dir}/docs/reference/js"/>
-    <mkdir dir="${install.dir}/docs/reference/img"/>
+    <copy todir="${install.dir}">
+      <fileset file="${dist.dir}/calabash-${version}/README"/>
+    </copy>
+    <copy todir="${install.dir}/docs/notices">
+      <fileset dir="${dist.dir}/calabash-${version}/docs/notices"/>
+    </copy>
     <copy todir="${install.dir}/docs/reference">
-      <fileset dir="docs/build"/>
-    </copy>
-    <copy todir="${install.dir}/docs/reference/css">
-      <fileset dir="docs/css"/>
-    </copy>
-    <copy todir="${install.dir}/docs/reference/js">
-      <fileset dir="docs/js"/>
-    </copy>
-    <copy todir="${install.dir}/docs/reference/img">
-      <fileset dir="docs/img"/>
+      <fileset dir="${dist.dir}/calabash-${version}/docs/reference"/>
     </copy>
 
-    <copy todir="${install.dir}/docs/notices">
-      <fileset file="resources/notices/**"/>
-    </copy>
-    <copy todir="${install.dir}">
-      <fileset file="docs/README"/>
-    </copy>
     <copy todir="${install.dir}" file="calabash.jar"/>
 
     <copy todir="${install.dir}/lib">
