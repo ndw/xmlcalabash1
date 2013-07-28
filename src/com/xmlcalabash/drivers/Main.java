@@ -93,10 +93,6 @@ public class Main {
         try {
             XProcConfiguration config = userArgs.createConfiguration();
 
-            if (userArgs.isShowVersion()) {
-                showVersion();
-            }
-
             if (run(userArgs, config)) {
                 // It's just sooo much nicer if there's a newline at the end.
                 System.out.println();
@@ -142,6 +138,10 @@ public class Main {
     boolean run(UserArgs userArgs, XProcConfiguration config) throws SaxonApiException, IOException, URISyntaxException {
         runtime = new XProcRuntime(config);
         debug = config.debug;
+
+        if (userArgs.isShowVersion()) {
+            showVersion();
+        }
 
         XPipeline pipeline = null;
 
