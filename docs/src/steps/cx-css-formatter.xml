@@ -4,6 +4,7 @@
           xmlns:pxf="http://exproc.org/proposed/steps/file"
           xmlns:ml="http://xmlcalabash.com/ns/extensions/marklogic"
           xmlns:cxu="http://xmlcalabash.com/ns/extensions/xmlunit"
+          xmlns:xlink="http://www.w3.org/1999/xlink"
           xmlns="http://docbook.org/ns/docbook"
           xmlns:xi="http://www.w3.org/2001/XInclude"
           xmlns:pos="http://exproc.org/proposed/steps/os"
@@ -15,8 +16,104 @@
    <refsynopsisdiv>
       <xi:include href="../declarations.xml" xpointer="xpath(/*/*[@type='cx:css-formatter'])"/>
    </refsynopsisdiv>
-   <refsection>
-      <title>Description</title>
-      <para>TBD.</para>
-   </refsection>
+<refsection>
+<title>Description</title>
+
+<para>This method calls the underlying CSS formatter. Two formatters are supported,
+the <link xlink:href="http://www.antennahouse.com/">Antenna House</link> formatter
+and <link xlink:href="http://www.princexml.com/">Prince</link>.</para>
+
+<para><citetitle>XML Calabash</citetitle> does not provide a license for either
+of these products. You must have the relevant classes on your classpath in order
+to use them. You may also need to purchase a license.</para>
+
+<refsection>
+<title>Antenna House Formatter</title>
+
+<para>To specify the <application>Antenna House Formatter</application>, use the value
+<literal>com.xmlcalabash.util.CssAH</literal> for the <literal>css-processor</literal>
+configuration item.</para>
+
+<para>The following parameters are supported:</para>
+
+<itemizedlist>
+<listitem><para><literal>OptionsFileURI</literal></para></listitem>
+<listitem><para><literal>ExitLevel</literal></para></listitem>
+<listitem><para><literal>EmbedAllFontsEx</literal></para>
+<para>The accepted values are “<literal>part</literal>”,
+“<literal>base14</literal>”, and “<literal>all</literal>”.</para>
+</listitem>
+<listitem><para><literal>ImageCompression</literal></para></listitem>
+<listitem><para><literal>NoAccessibility</literal></para></listitem>
+<listitem><para><literal>NoAddingOrChangingComments</literal></para></listitem>
+<listitem><para><literal>NoAssembleDoc</literal></para></listitem>
+<listitem><para><literal>NoChanging</literal></para></listitem>
+<listitem><para><literal>NoContentCopying</literal></para></listitem>
+<listitem><para><literal>NoFillForm</literal></para></listitem>
+<listitem><para><literal>NoPrinting</literal></para></listitem>
+<listitem><para><literal>OwnersPassword</literal></para></listitem>
+<listitem><para><literal>TwoPassFormatting</literal></para></listitem>
+</itemizedlist>
+
+<para>For further information on the value of these parameters and
+their meanings, consult the <orgname>Antenna House</orgname> documentation.</para>
+</refsection>
+
+<refsection>
+<title>Prince Formatter</title>
+
+<para>To specify the <application>Prince</application> Formatter, use the value
+<literal>com.xmlcalabash.util.CssPrince</literal> for the <literal>css-processor</literal>
+configuration item.</para>
+
+<para>The following parameters are supported:</para>
+
+<itemizedlist>
+<listitem><para><literal>exePath</literal></para>
+<para>The <literal>exePath</literal> must be specified to identify the location
+of the <application>Prince</application> formatter. It can also be specified using the
+<literal>com.xmlcalabash.css.prince.exepath</literal> Java system property.</para>
+</listitem>
+<listitem><para><literal>baseURL</literal></para></listitem>
+<listitem><para><literal>compress</literal></para></listitem>
+<listitem><para><literal>debug</literal></para></listitem>
+<listitem><para><literal>embedFonts</literal></para></listitem>
+<listitem><para><literal>encrypt</literal></para></listitem>
+<listitem><para><literal>keyBits</literal></para></listitem>
+<listitem><para><literal>userPassword</literal></para></listitem>
+<listitem><para><literal>ownerPassword</literal></para></listitem>
+<listitem><para><literal>disallowPrint</literal></para></listitem>
+<listitem><para><literal>disallowModify</literal></para></listitem>
+<listitem><para><literal>disallowCopy</literal></para></listitem>
+<listitem><para><literal>disallowAnnotate</literal></para></listitem>
+<listitem><para><literal>fileRoot</literal></para></listitem>
+<listitem><para><literal>html</literal></para></listitem>
+<listitem><para><literal>httpPassword</literal></para></listitem>
+<listitem><para><literal>httpUsername</literal></para></listitem>
+<listitem><para><literal>httpProxy</literal></para></listitem>
+<listitem><para><literal>inputType</literal></para></listitem>
+<listitem><para><literal>javascript</literal></para></listitem>
+<listitem><para><literal>log</literal></para></listitem>
+<listitem><para><literal>network</literal></para></listitem>
+<listitem><para><literal>subsetFonts</literal></para></listitem>
+<listitem><para><literal>verbose</literal></para></listitem>
+<listitem><para><literal>XInclude</literal></para></listitem>
+<listitem><para><literal>scripts</literal></para>
+<para><application>Prince</application> accepts an arbitrary number of
+JavaScript files. In order to support that in a parameter, this value
+is treated as a space-delimited list of URIs.</para>
+</listitem>
+</itemizedlist>
+
+<para>For further information on the value of these parameters and
+their meanings, consult the <application>Prince</application> documentation.</para>
+
+<para>As of <application>Prince</application> 9.0, there's still
+<link xlink:href="http://www.princexml.com/forum/topic/379/princeevents-java-api-not-functioning-prince-5.1?p=1&amp;a#7749">a bug</link>
+that prevents the formatter from producing error and warning messages.
+Your best bet until this bug is fixed is to specify a
+<parameter>log</parameter> parameter.</para>
+</refsection>
+
+</refsection>
 </refentry>
