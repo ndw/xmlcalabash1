@@ -588,7 +588,9 @@ public class HttpRequest extends DefaultStep {
                 } else if (xmlContentType(contentType)) {
                     Serializer serializer = makeSerializer();
 
-                    if (!S9apiUtils.isDocumentContent(body.axisIterator(Axis.CHILD))) {
+                    try {
+                        S9apiUtils.assertDocumentContent(body.axisIterator(Axis.CHILD));
+                    } catch (XProcException xe) {
                         throw XProcException.stepError(22);
                     }
 
