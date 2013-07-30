@@ -51,10 +51,8 @@ public class DocumentSequence {
         if (closed) {
             throw new XProcException("You can't add a document to a closed DocumentSequence.");
         } else {
-            if (!S9apiUtils.isDocument(document)) {
-                throw XProcException.dynamicError(1);
-            }
-            
+            S9apiUtils.assertDocument(document);
+
             //runtime.finest(logger, null, "Wrote " + (document == null ? "null" : document.getBaseURI()) + " to " + toString());
             documents.add(document);
             if (outputlog != null) {

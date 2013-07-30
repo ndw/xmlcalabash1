@@ -40,6 +40,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Stack;
 import java.util.Vector;
 import java.util.logging.Logger;
 
@@ -932,7 +933,11 @@ public class XProcRuntime {
 
     // ===========================================================
 
+    private Stack<XStep> runningSteps = new Stack<XStep>();
+
     public void start(XStep step) {
+        runningSteps.push(step);
+
         if (profile == null) {
             return;
         }
@@ -963,7 +968,13 @@ public class XProcRuntime {
         profileWriter.startContent();
     }
 
+    public XStep runningStep() {
+        return runningSteps.peek();
+    }
+
     public void finish(XStep step) {
+        runningSteps.pop();
+
         if (profile == null) {
             return;
         }
