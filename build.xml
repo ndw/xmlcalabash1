@@ -408,6 +408,8 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
 
     <copy todir="${install.dir}/lib">
       <fileset file="lib/commons*.jar"/>
+      <fileset file="lib/http*.jar"/>
+      <fileset file="lib/xmlresolver.jar"/>
       <fileset file="lib/saxon9he.jar"/>
     </copy>
 
