@@ -47,11 +47,8 @@ public class WaitForUpdate extends DefaultStep {
     private static final long HTTP_WAIT = 1000;
     private WritablePipe result = null;
     private URI uri = null;
-    private long fuzz = 0;
     private long pauseBefore = 0;
     private long pauseAfter = 0;
-    private long now = 0;
-    private Calendar cal = null;
 
     /**
      * Creates a new instance of Identity
@@ -75,12 +72,8 @@ public class WaitForUpdate extends DefaultStep {
         URI baseURI = getOption(_href).getBaseURI();
         URI uri = baseURI.resolve(href);
 
-        fuzz = getOption(_fuzz, (long) 0) * 1000;
         pauseBefore = getOption(_pause_before, (long) 0) * 1000;
         pauseAfter = getOption(_pause_after, (long) 0) * 1000;
-
-        cal = GregorianCalendar.getInstance();
-        now = cal.getTimeInMillis();
 
         if (pauseBefore > 0) {
             try {
@@ -139,7 +132,7 @@ public class WaitForUpdate extends DefaultStep {
         long dt = f.lastModified();
         long cdt = dt;
 
-        if (!newFile && (Math.abs(dt - now) > fuzz)) {
+        if (!newFile) {
             runtime.fine(this, step.getNode(), "Update wait: " + f.getAbsolutePath());
             if (runtime.getDebug()) {
                 System.err.println("Update wait: " + f.getAbsolutePath());
@@ -154,6 +147,7 @@ public class WaitForUpdate extends DefaultStep {
             }
         }
 
+        Calendar cal = GregorianCalendar.getInstance();
         TimeZone tz = TimeZone.getDefault();
         long gmt = cdt - tz.getRawOffset();
         if (tz.useDaylightTime() && tz.inDaylightTime(cal.getTime())) {
@@ -199,7 +193,7 @@ public class WaitForUpdate extends DefaultStep {
         long dt = lastModified(httpResponse);
         long cdt = dt;
 
-        if (statusCode == 200 && !newUri && (Math.abs(dt - now) > fuzz)) {
+        if (statusCode == 200 && !newUri) {
             runtime.fine(this, step.getNode(), "Update wait: " + uri.toASCIIString());
             if (runtime.getDebug()) {
                 System.err.println("Update wait: " + uri.toASCIIString());
@@ -216,6 +210,7 @@ public class WaitForUpdate extends DefaultStep {
             }
         }
 
+        Calendar cal = GregorianCalendar.getInstance();
         TimeZone tz = TimeZone.getDefault();
         long gmt = cdt - tz.getRawOffset();
         if (tz.useDaylightTime() && tz.inDaylightTime(cal.getTime())) {
@@ -241,7 +236,7 @@ public class WaitForUpdate extends DefaultStep {
             // ignore
         }
 
-        return now;
+        return GregorianCalendar.getInstance().getTimeInMillis();
     }
 
     private HttpResponse head(SystemDefaultHttpClient client, HttpUriRequest httpRequest, HttpContext localContext) {
