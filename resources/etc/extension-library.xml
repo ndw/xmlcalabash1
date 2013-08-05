@@ -60,7 +60,6 @@
 <p:declare-step type="cx:wait-for-update">
   <p:output port="result"/>
   <p:option name="href" required="true"/>
-  <p:option name="fuzz" cx:type="xsd:int"/>
   <p:option name="pause-before" cx:type="xsd:int"/>
   <p:option name="pause-after" cx:type="xsd:int"/>
 </p:declare-step>
