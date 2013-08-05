@@ -122,6 +122,13 @@ public class DefaultStep implements XProcStep {
         return options.get(name).getInt();
     }
 
+    public long getOption(QName name, long defaultValue) {
+        if (options == null || !options.containsKey(name)) {
+            return defaultValue;
+        }
+        return options.get(name).getLong();
+    }
+
     public void reset() {
         throw new XProcException("XProcStep implementation must override reset().");
     }

@@ -163,6 +163,9 @@
 <implementation type="cx:message"
 		class-name="com.xmlcalabash.extensions.Message"/>
 
+<implementation type="cx:wait-for-update"
+		class-name="com.xmlcalabash.extensions.WaitForUpdate"/>
+
 <implementation type="cx:pretty-print"
 		class-name="com.xmlcalabash.extensions.PrettyPrint"/>
 
