@@ -1,0 +1,80 @@
+<refentry xmlns:p="http://www.w3.org/ns/xproc"
+          xmlns:e="http://www.w3.org/1999/XSL/Spec/ElementSyntax"
+          xmlns:pxp="http://exproc.org/proposed/steps"
+          xmlns:pxf="http://exproc.org/proposed/steps/file"
+          xmlns:ml="http://xmlcalabash.com/ns/extensions/marklogic"
+          xmlns:cxu="http://xmlcalabash.com/ns/extensions/xmlunit"
+          xmlns="http://docbook.org/ns/docbook"
+          xmlns:xi="http://www.w3.org/2001/XInclude"
+          xmlns:pos="http://exproc.org/proposed/steps/os"
+          xml:id="cx-wait-for-update">
+   <refnamediv>
+      <refname>cx:wait-for-update</refname>
+      <refpurpose>Pause execution until a URI has changed</refpurpose>
+   </refnamediv>
+   <refsynopsisdiv>
+      <xi:include href="../declarations.xml" xpointer="xpath(/*/*[@type='cx:wait-for-update'])"/>
+   </refsynopsisdiv>
+   <refsection>
+      <title>Description</title>
+
+<para>This step pauses execution of the pipeline until the URI specified in
+the <option>href</option> option has changed. At present, only <literal>file:</literal>
+and <literal>http:</literal> (<literal>https:</literal>) URIs are supported.</para>
+
+<para>Additionally, the following options are supported:</para>
+
+<variablelist>
+<varlistentry>
+<term><option>pause-before</option></term>
+<listitem>
+<para>If specified, the step will unconditionally pause for
+<option>pause-before</option> seconds before beginning to test for updates.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><option>pause-after</option></term>
+<listitem>
+<para>If specified, the step will unconditionally pause for
+<option>pause-after</option> seconds after detecting an update.
+</para>
+</listitem>
+</varlistentry>
+</variablelist>
+
+<para>For the purpose of determining if a file has changed, one of the following
+conditions must be satisfied:</para>
+
+<orderedlist>
+<listitem>
+<para>If the file does not exist when the step begins running, then it is
+deemed to have changed as soon as it is seen to exist.</para>
+</listitem>
+<listitem>
+<para>If the file exists when the step begins running, then it is deemed to
+have changed as soon as the last modified time changes.</para>
+</listitem>
+</orderedlist>
+
+<para>For the purpose of determining if an HTTP URI has changed, one of the following
+conditions must be satisfied:</para>
+
+<orderedlist>
+<listitem>
+<para>If a HEAD request returns 404 when the step begins running, then it is
+deemed to have changed as soon as it returns something else.</para>
+</listitem>
+<listitem>
+<para>If HEAD returns 200 when the step begins running, then it is deemed to
+have changed as soon as the last modified time changes. The last modified time
+is taken from the <literal>last-modified</literal> header, if it exists, or the
+<literal>date</literal> header if it exists.</para>
+</listitem>
+</orderedlist>
+
+<para>It follows that if neither header exists, or if the server returns anything
+other than 200 or 404, the URI is deemed to exist.</para>
+
+</refsection>
+</refentry>

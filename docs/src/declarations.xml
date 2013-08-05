@@ -420,6 +420,13 @@
       <p:option name="message" required="true" e:type="xsd:string"/>
    </p:declare-step>
 
+   <p:declare-step type="cx:wait-for-update">
+     <p:output port="result"/>
+     <p:option name="href" required="true" e:type="xd:anyURI"/>
+     <p:option name="pause-before" e:type="xsd:int"/>
+     <p:option name="pause-after" e:type="xsd:int"/>
+   </p:declare-step>
+
    <p:declare-step type="cx:send-mail">
      <p:input port="source" sequence="true"/>
      <p:output port="result"/>

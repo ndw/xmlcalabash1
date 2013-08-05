@@ -123,6 +123,7 @@
 <xi:include href="steps/cx-send-mail.xml"/>
 <xi:include href="steps/cx-set-cookies.xml"/>
 <xi:include href="steps/cx-uri-info.xml"/>
+<xi:include href="steps/cx-wait-for-update.xml"/>
 <xi:include href="steps/cxu-compare.xml"/>
 
 </reference>
