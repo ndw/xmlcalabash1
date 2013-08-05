@@ -40,7 +40,6 @@ import java.util.TimeZone;
 
 public class WaitForUpdate extends DefaultStep {
     private static final QName _href = new QName("","href");
-    private static final QName _fuzz = new QName("","fuzz");
     private static final QName _pause_before = new QName("","pause-before");
     private static final QName _pause_after = new QName("","pause-after");
     private static final long FILESYSTEM_WAIT = 100;
