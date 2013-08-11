@@ -37,6 +37,7 @@ public class DataBinding extends Binding {
     private String href = null;
     private QName wrapper = XProcConstants.c_data;
     private String contentType = null;
+    private String forcedContentType = null;
 
     /* Creates a new instance of DocumentBinding */
     public DataBinding() {
@@ -73,6 +74,14 @@ public class DataBinding extends Binding {
 
     public String getContentType() {
         return contentType;
+    }
+
+    public void setForcedContentType(String forcedContentType) {
+        this.forcedContentType = forcedContentType;
+    }
+
+    public String getForcedContentType() {
+        return forcedContentType;
     }
 
     protected void dump(int depth) {
