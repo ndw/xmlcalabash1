@@ -46,6 +46,7 @@ import java.util.logging.Logger;
  */
 public class ReadableData implements ReadablePipe {
     protected String contentType = null;
+    protected String forcedContentType = null;
     private Logger logger = Logger.getLogger(this.getClass().getName());
     public static final QName _contentType = new QName("","content-type");
     public static final QName c_contentType = new QName("c",XProcConstants.NS_XPROC_STEP, "content-type");
@@ -62,19 +63,28 @@ public class ReadableData implements ReadablePipe {
 
     /** Creates a new instance of ReadableDocument */
     public ReadableData(XProcRuntime runtime, QName wrapper, String uri, String contentType) {
-        this(runtime, wrapper, uri, null, contentType);
+        this(runtime, wrapper, uri, null, contentType, null);
+    }
+
+    public ReadableData(XProcRuntime runtime, QName wrapper, String uri, String contentType, String forcedContentType) {
+        this(runtime, wrapper, uri, null, contentType, forcedContentType);
     }
 
     public ReadableData(XProcRuntime runtime, QName wrapper, InputStream inputStream, String contentType) {
-        this(runtime, wrapper, null, inputStream, contentType);
+        this(runtime, wrapper, null, inputStream, contentType, null);
     }
 
-    private ReadableData(XProcRuntime runtime, QName wrapper, String uri, InputStream inputStream, String contentType) {
+    public ReadableData(XProcRuntime runtime, QName wrapper, InputStream inputStream, String contentType, String forcedContentType) {
+        this(runtime, wrapper, null, inputStream, contentType, forcedContentType);
+    }
+
+    private ReadableData(XProcRuntime runtime, QName wrapper, String uri, InputStream inputStream, String contentType, String forcedContentType) {
         this.runtime = runtime;
         this.uri = uri;
         this.inputStream = inputStream;
         this.wrapper = wrapper;
         this.contentType = contentType;
+        this.forcedContentType = forcedContentType;
     }
 
     private DocumentSequence ensureDocuments() {
@@ -101,7 +111,10 @@ public class ReadableData implements ReadablePipe {
             stream = (uri == null) ? inputStream : ("-".equals(uri) ? System.in : getStream(dataURI));
             String serverContentType = getContentType();
 
-            if (contentType != null && "content/unknown".equals(serverContentType)) {
+            if ((forcedContentType != null) && !"content/unknown".equals(forcedContentType)) {
+                // pretend...
+                serverContentType = forcedContentType;
+            } else if ((contentType != null) && "content/unknown".equals(serverContentType)) {
                 // pretend...
                 serverContentType = contentType;
             }

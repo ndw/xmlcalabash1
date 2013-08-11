@@ -29,6 +29,7 @@ import net.sf.saxon.s9api.XdmNode;
 import org.xml.sax.InputSource;
 
 import static com.xmlcalabash.core.XProcConstants.NS_XPROC;
+import static com.xmlcalabash.core.XProcConstants.cx_forced_content_type;
 import static com.xmlcalabash.core.XProcConstants.p_data;
 import static com.xmlcalabash.core.XProcConstants.p_declare_step;
 import static com.xmlcalabash.core.XProcConstants.p_document;
@@ -686,8 +687,8 @@ public class UserArgs {
                             } else {
                                 tree.addStartElement(qname);
                                 tree.addAttribute(new QName("href"), uri);
-                                if (input.getType() == DATA) {
-                                    tree.addAttribute(new QName("content-type"), input.getContentType());
+                                if ((input.getType() == DATA) && (input.getContentType() != null)) {
+                                    tree.addAttribute(cx_forced_content_type, input.getContentType());
                                 }
                                 tree.startContent();
                                 tree.addEndElement();
@@ -699,8 +700,8 @@ public class UserArgs {
                             if (System.in.equals(inputStream)) {
                                 tree.addStartElement(qname);
                                 tree.addAttribute(new QName("href"), "-");
-                                if (input.getType() == DATA) {
-                                    tree.addAttribute(new QName("content-type"), input.getContentType());
+                                if ((input.getType() == DATA) && (input.getContentType() != null)) {
+                                    tree.addAttribute(cx_forced_content_type, input.getContentType());
                                 }
                                 tree.startContent();
                                 tree.addEndElement();
@@ -714,8 +715,8 @@ public class UserArgs {
 
                                 tree.addStartElement(qname);
                                 tree.addAttribute(new QName("href"), tempInput.toURI().toASCIIString());
-                                if (input.getType() == DATA) {
-                                    tree.addAttribute(new QName("content-type"), input.getContentType());
+                                if ((input.getType() == DATA) && (input.getContentType() != null)) {
+                                    tree.addAttribute(cx_forced_content_type, input.getContentType());
                                 }
                                 tree.startContent();
                                 tree.addEndElement();
