@@ -1014,7 +1014,7 @@ care.</para>
 <para>T.B.D.</para>
 </section>
 
-<section xml:id="cfg.">
+<section xml:id="cfg.sendmail">
 <title>Send mail configuration</title>
 
 <para>There are two ways to specify the SMTP configuration for sending mail.</para>
@@ -1037,7 +1037,7 @@ care.</para>
 </row>
 <row>
   <entry>XML configuration:</entry>
-  <entry><tag class="emptytag">cc:saxon-configuration-property
+  <entry><tag class="emptytag">cc:sendmail
 <tag class="attribute"><replaceable>host</replaceable></tag>="<tag class="attvalue"><replaceable>hostname</replaceable></tag>"
 <tag class="attribute"><replaceable>port</replaceable></tag>="<tag class="attvalue"><replaceable>portnumber</replaceable></tag>"
 <tag class="attribute"><replaceable>username</replaceable></tag>="<tag class="attvalue"><replaceable>name</replaceable></tag>"
