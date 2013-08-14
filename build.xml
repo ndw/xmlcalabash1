@@ -56,7 +56,7 @@
     <!-- define Maven coordinates -->
     <property name="groupId" value="com.xmlcalabash" />
     <property name="artifactId" value="xmlcalabash" />
-    <property name="mvn-version" value="${version}-${saxon-version}"/>
+    <property name="mvn-version" value="${version}-${saxon-version-short}"/>
 
     <!-- define artifact names, which follow the convention of Maven -->
     <property name="maven.dir" value="${dist.dir}/maven" />
@@ -100,16 +100,18 @@
 
   <target name="init" depends="saxon-version">
     <mkdir dir="${build.dir}"/>
-    <property name="dist-version" value="${version}-${saxon-version}"/>
+    <property name="dist-version" value="${version}-${saxon-version-short}"/>
     <property name="install.dir" value="${dist.dir}/calabash-${dist-version}"/>
   </target>
 
   <target name="saxon94" if="saxon94">
-    <property name="saxon-version" value="94"/>
+    <property name="saxon-version-short" value="94"/>
+    <property name="saxon-version" value="9.4.0.7"/>
   </target>
 
   <target name="saxon93" unless="saxon94">
-    <property name="saxon-version" value="93"/>
+    <property name="saxon-version-short" value="93"/>
+    <property name="saxon-version" value="9.3.0"/>
   </target>
 
   <target name="saxon-version" depends="saxon93,saxon94">
@@ -517,6 +519,7 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
     <copy file="pom.xml" toFile="${maven.dir}/pom.xml">
       <filterset>
         <filter token="version" value="${mvn-version}"/>
+        <filter token="saxon-version" value="${saxon-version}"/>
       </filterset>
     </copy>
   </target>
