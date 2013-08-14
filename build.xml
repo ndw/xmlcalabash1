@@ -516,7 +516,7 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
     <!-- Update the version in the POM -->
     <copy file="pom.xml" toFile="${maven.dir}/pom.xml">
       <filterset>
-        <filter token="version" value="${version}"/>
+        <filter token="version" value="${mvn-version}"/>
       </filterset>
     </copy>
   </target>
