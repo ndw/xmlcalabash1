@@ -1863,8 +1863,8 @@ public class Parser {
         Processor processor = runtime.getProcessor();
 
         String sed = processor.getUnderlyingConfiguration().getEditionCode();
-        if ("HE".equals(sed)) {
-            throw new XProcException("Importing functions is not supported by Saxon HE.");
+        if (!"EE".equals(sed)) {
+            throw new XProcException("Importing functions is only supported by Saxon EE.");
         }
 
         try {
