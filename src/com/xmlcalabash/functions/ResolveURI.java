@@ -6,6 +6,7 @@ import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
 import net.sf.saxon.om.Item;
+import net.sf.saxon.om.Sequence;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.trans.XPathException;
@@ -82,9 +83,8 @@ public class ResolveURI extends XProcExtensionFunctionDefinition {
     }
 
     private class ResolveURICall extends ExtensionFunctionCall {
-        public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
-            SequenceIterator iter = arguments[0];
-            String relativeURI = iter.next().getStringValue();
+        public Sequence call(XPathContext xPathContext, Sequence[] sequences) throws XPathException {
+            String relativeURI = sequences[0].head().getStringValue();
 
             XProcRuntime runtime = tl_runtime.get();
             XStep step = runtime.getXProcData().getStep();
@@ -95,14 +95,13 @@ public class ResolveURI extends XProcExtensionFunctionDefinition {
             }
 
             String baseURI = null;
-            if (arguments.length > 1) {
-                iter = arguments[1];
-                baseURI = iter.next().getStringValue();
+            if (sequences.length > 1) {
+                baseURI = sequences[1].head().getStringValue();
             } else {
                 baseURI = runtime.getStaticBaseURI().toASCIIString();
                 try {
                     // FIXME: TinyDocumentImpl? Surely we can do better than that!
-                    Item item = context.getContextItem();
+                    Item item = xPathContext.getContextItem();
                     baseURI = ((TinyDocumentImpl) item).getBaseURI();
                 } catch (Exception e) {
                     // nop
@@ -114,7 +113,7 @@ public class ResolveURI extends XProcExtensionFunctionDefinition {
             try {
                 URI abs = net.sf.saxon.functions.ResolveURI.makeAbsolute(relativeURI, baseURI);
                 String resolvedURI = abs.toASCIIString();
-                return SingletonIterator.makeIterator(new AnyURIValue(resolvedURI));
+                return new AnyURIValue(resolvedURI);
             } catch (URISyntaxException use) {
                 throw new XProcException(use);
             }

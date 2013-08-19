@@ -122,6 +122,9 @@ public class MetadataExtractor extends DefaultStep {
             throw new XProcException(ioe);
         } catch (JpegProcessingException e) {
             // Not a JPEG? Let's try to do at least the intrinsics...
+            if (runtime.getDebug()) {
+                e.printStackTrace();
+            }
             runIntrinsics(href);
         }
     }

@@ -28,6 +28,7 @@ import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.util.ProcessMatch;
 import com.xmlcalabash.util.ProcessMatchingNodes;
+import com.xmlcalabash.util.S9apiUtils;
 import net.sf.saxon.om.InscopeNamespaceResolver;
 import net.sf.saxon.om.NamePool;
 import net.sf.saxon.om.NodeInfo;
@@ -189,7 +190,7 @@ public class Template extends DefaultStep implements ProcessMatchingNodes {
         while (parent != null
                 && parent.getNodeKind() != XdmNodeKind.ELEMENT
                 && parent.getNodeKind() != XdmNodeKind.DOCUMENT) {
-            parent = parent.getParent();
+            parent = S9apiUtils.getParent(parent);
         }
 
         if (parent.getNodeKind() == XdmNodeKind.ELEMENT) {

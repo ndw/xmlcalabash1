@@ -7,6 +7,7 @@ import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
 import net.sf.saxon.om.Item;
+import net.sf.saxon.om.Sequence;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.trans.XPathException;
@@ -85,7 +86,7 @@ public class ValueAvailable extends XProcExtensionFunctionDefinition {
             staticContext = context;
         }
 
-        public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
+        public Sequence call(XPathContext xPathContext, Sequence[] sequences) throws XPathException {
             StructuredQName sVarName = null;
 
             XProcRuntime runtime = tl_runtime.get();
@@ -97,12 +98,12 @@ public class ValueAvailable extends XProcExtensionFunctionDefinition {
             }
 
             try {
-                SequenceIterator iter = arguments[0];
-                String lexicalQName = iter.next().getStringValue();
+                String lexicalQName = sequences[0].head().getStringValue();
                 sVarName = StructuredQName.fromLexicalQName(
                      lexicalQName,
                      false,
-                     context.getConfiguration().getNameChecker(),
+                     false,
+                     xPathContext.getConfiguration().getNameChecker(),
                      staticContext.getNamespaceResolver());
             } catch (XPathException e) {
                 // FIXME: bad formatting
@@ -111,11 +112,8 @@ public class ValueAvailable extends XProcExtensionFunctionDefinition {
 
             boolean failIfUnknown = true;
 
-            if (arguments.length > 1) {
-                SequenceIterator iter = arguments[1];
-                iter = iter.next().getTypedValue();
-                Item item = iter.next();
-                failIfUnknown = ((BooleanValue) item).effectiveBooleanValue();
+            if (sequences.length > 1) {
+                failIfUnknown = ((BooleanValue) sequences[1].head()).effectiveBooleanValue();
             }
 
             boolean value = false;
@@ -131,7 +129,7 @@ public class ValueAvailable extends XProcExtensionFunctionDefinition {
                 value = step.hasInScopeVariableValue(varName);
             }
             
-            return SingletonIterator.makeIterator(value ? BooleanValue.TRUE : BooleanValue.FALSE);
+            return value ? BooleanValue.TRUE : BooleanValue.FALSE;
         }
     }
 }

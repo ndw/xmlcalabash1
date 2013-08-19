@@ -648,7 +648,8 @@ public class XAtomicStep extends XStep {
                     XdmSequenceIterator nsIter = element.axisIterator(Axis.NAMESPACE);
                     while (nsIter.hasNext()) {
                         XdmNode ns = (XdmNode) nsIter.next();
-                        localBindings.put(ns.getNodeName().getLocalName(),ns.getStringValue());
+                        QName prefix = ns.getNodeName();
+                        localBindings.put(prefix == null ? "" : prefix.getLocalName(),ns.getStringValue());
                     }
                 } catch (SaxonApiException sae) {
                     throw new XProcException(sae);

@@ -1,34 +1,45 @@
 package com.xmlcalabash.model;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.logging.Logger;
-import java.util.Stack;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.HashSet;
-import java.util.Vector;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import javax.xml.transform.sax.SAXSource;
-import javax.xml.XMLConstants;
+import java.util.Stack;
+import java.util.Vector;
+import java.util.logging.Logger;
 
-import com.xmlcalabash.extensions.UntilUnchanged;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmNodeKind;
-import net.sf.saxon.s9api.DocumentBuilder;
-import net.sf.saxon.s9api.Axis;
-import net.sf.saxon.s9api.XdmSequenceIterator;
-import org.xml.sax.InputSource;
-import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.util.RelevantNodes;
-import com.xmlcalabash.util.TypeUtils;
-import com.xmlcalabash.util.URIUtils;
-import com.xmlcalabash.util.S9apiUtils;
+import javax.xml.XMLConstants;
+import javax.xml.transform.sax.SAXSource;
+
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.extensions.UntilUnchanged;
+import com.xmlcalabash.util.RelevantNodes;
+import com.xmlcalabash.util.S9apiUtils;
+import com.xmlcalabash.util.TypeUtils;
+import com.xmlcalabash.util.URIUtils;
+import net.sf.saxon.query.QueryModule;
+import net.sf.saxon.query.StaticQueryContext;
+import net.sf.saxon.query.XQueryExpression;
+import net.sf.saxon.query.XQueryFunctionLibrary;
+import net.sf.saxon.s9api.Axis;
+import net.sf.saxon.s9api.DocumentBuilder;
+import net.sf.saxon.s9api.Processor;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XQueryCompiler;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmNodeKind;
+import net.sf.saxon.s9api.XdmSequenceIterator;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
@@ -43,26 +54,38 @@ public class Parser {
     private static QName px_name = new QName(XProcConstants.NS_CALABASH_EX,"name");
     private static QName _name = new QName("name");
     private static QName _href = new QName("href");
+    private static QName _namespace = new QName("namespace");
     private static QName _type = new QName("type");
     private static QName _version = new QName("version");
     private static QName err_XS0063 = new QName(XProcConstants.NS_XPROC_ERROR, "XS0063");
     private static QName p_use_when = new QName(XProcConstants.NS_XPROC, "use-when");
     private static QName _use_when = new QName("use-when");
     private static QName _exclude_inline_prefixes = new QName("exclude-inline-prefixes");
+    private static QName cx_import = new QName(XProcConstants.NS_CALABASH_EX, "import");
 
     private XProcRuntime runtime = null;
     private Stack<DeclareStep> declStack = null;
     protected HashSet<String> topLevelImports = new HashSet<String> ();
-    private boolean loadingStandardLibrary = false;                                                             
+    private boolean loadingStandardLibrary = false;
     private Logger logger = Logger.getLogger(this.getClass().getName());
 
     public Parser(XProcRuntime runtime) {
         this.runtime = runtime;
         declStack = new Stack<DeclareStep> ();
     }
-    
+
+    public DeclareStep loadPipeline(InputStream inputStream) throws SaxonApiException, IOException {
+        XdmNode doc = runtime.parse(new InputSource(inputStream));
+        inputStream.close();
+        return loadPipeline(doc);
+    }
+
     public DeclareStep loadPipeline(String uri) throws SaxonApiException {
         XdmNode doc = runtime.parse(uri, URIUtils.cwdAsURI().toASCIIString());
+        return loadPipeline(doc);
+    }
+
+    private DeclareStep loadPipeline(XdmNode doc) throws SaxonApiException {
         XdmNode root = S9apiUtils.getDocumentElement(doc);
 
         if (!XProcConstants.p_declare_step.equals(root.getNodeName())
@@ -124,6 +147,13 @@ public class Parser {
         }
 
         return doc;
+    }
+
+    public PipelineLibrary loadLibrary(InputStream libraryInputStream) throws SaxonApiException, IOException {
+        XdmNode doc = runtime.parse(new InputSource(libraryInputStream));
+        libraryInputStream.close();
+        XdmNode root = S9apiUtils.getDocumentElement(doc);
+        return useLibrary(root);
     }
 
     public PipelineLibrary loadLibrary(String libraryURI) throws SaxonApiException {
@@ -295,14 +325,14 @@ public class Parser {
                 if (node.getNodeKind() == XdmNodeKind.TEXT) {
                     throw XProcException.staticError(37, node, "Unexpected text: " + node.getStringValue());
                 }
-                
+
                 rest.add(node);
                 continue;
             }
 
             if (sig.contains(node.getNodeName())) {
                 QName nodeName = node.getNodeName();
-                
+
                 if (XProcConstants.p_input.equals(nodeName)
                     || XProcConstants.p_iteration_source.equals(nodeName)
                     || XProcConstants.p_viewport_source.equals(nodeName)
@@ -414,7 +444,7 @@ public class Parser {
                 if (node.getNodeKind() == XdmNodeKind.TEXT) {
                     throw XProcException.staticError(37, node, "Unexpected text: " + node.getStringValue());
                 }
-                
+
                 done = true;
                 rest.add(node);
             }
@@ -468,7 +498,7 @@ public class Parser {
                     serializations.remove(port);
                 }
             }
-        
+
             if (serializations.size() != 0) {
                 // We know this is true here and now because p:pipeline can't have defaulted inputs/outputs
                 throw XProcException.staticError(39, step.getNode(), "A p:serialization specifies a non-existant port.");
@@ -500,11 +530,11 @@ public class Parser {
         }
 
         return rest.size() == 0 ? null : rest;
-    }    
+    }
 
     private Input readInput(Step parent, XdmNode node) {
         QName nodeName = node.getNodeName();
-        
+
         if (XProcConstants.p_input.equals(nodeName)) {
             checkAttributes(node, new String[] { "kind", "port", "primary", "sequence", "select" }, false);
         } else if (XProcConstants.p_iteration_source.equals(nodeName)) {
@@ -529,7 +559,7 @@ public class Parser {
         if (kind == null) {
             kind = "document";
         }
-        
+
         if (!"document".equals(kind) && !"parameter".equals(kind)) {
             runtime.error(null, node, "Kind must be document or parameter", XProcConstants.staticError(33));
         }
@@ -537,7 +567,7 @@ public class Parser {
         if (primary != null &&  !"true".equals(primary) && !"false".equals(primary)) {
             runtime.error(null, node, "Primary must be 'true' or 'false'", XProcConstants.staticError(40));
         }
-        
+
         if (sequence != null) {
             if ("parameter".equals(kind)) {
                 if (!"true".equals(sequence)) {
@@ -546,10 +576,10 @@ public class Parser {
             } else {
                 if (!"true".equals(sequence) && !"false".equals(sequence)) {
                     runtime.error(null, node, "Sequence must be 'true' or 'false'", XProcConstants.staticError(40));
-                }                
+                }
             }
         }
-        
+
         if (XProcConstants.p_iteration_source.equals(nodeName)) {
             port = "#iteration-source";
             sequence = "true";
@@ -570,15 +600,15 @@ public class Parser {
         input.setPort(port);
         input.setSequence(sequence);
         input.setPrimary(primary);
-        
+
         if ("parameter".equals(kind)) {
             input.setParameterInput();
             input.setSequence(true);
         }
-        
+
         input.setDebugReader(node.getAttributeValue(new QName(XProcConstants.NS_CALABASH_EX, "debug-reader")) != null);
         input.setDebugWriter(node.getAttributeValue(new QName(XProcConstants.NS_CALABASH_EX, "debug-writer")) != null);
-        
+
         if (select != null) {
             input.setSelect(select);
         }
@@ -623,7 +653,7 @@ public class Parser {
 
         return output;
     }
-    
+
     private Binding readBinding(Step parent, XdmNode node) {
         Binding binding = null;
 
@@ -646,10 +676,10 @@ public class Parser {
 
         return binding;
     }
-    
+
     private PipeNameBinding readPipe(XdmNode node) {
         checkAttributes(node, new String[] { "port", "step" }, false);
-        
+
         String step = checkNCName(node.getAttributeValue(new QName("step")));
         String port = checkNCName(node.getAttributeValue(new QName("port")));
 
@@ -677,12 +707,12 @@ public class Parser {
 
         return pipe;
     }
-    
+
     private DocumentBinding readDocument(XdmNode node) {
         checkAttributes(node, new String[] { "href" }, false);
 
         String href = node.getAttributeValue(new QName("href"));
-        
+
         DocumentBinding doc = new DocumentBinding(runtime, node);
         doc.setHref(href);
 
@@ -719,7 +749,7 @@ public class Parser {
         if (wrapns == null && wrapstr != null && wrapstr.indexOf(":") <= 0) {
             throw XProcException.dynamicError(25, node, "FIXME: what error is this?");
         }
-        
+
         DataBinding doc = new DataBinding(runtime, node);
         doc.setHref(href); // FIXME: what about making it absolute?
 
@@ -759,7 +789,7 @@ public class Parser {
 
         return empty;
     }
-    
+
     private InlineBinding readInline(Step parent, XdmNode node) {
         checkAttributes(node, new String[] { "exclude-inline-prefixes" }, false);
 
@@ -793,7 +823,7 @@ public class Parser {
         } else {
             throw new UnsupportedOperationException("This can't happen: parent of inline is not a step!?");
         }
-        
+
         checkExtensionAttributes(node, inline);
 
         inline.excludeNamespaces(excludeURIs);
@@ -819,7 +849,7 @@ public class Parser {
         } else {
             oname = new QName(name);
         }
-        
+
         if (XProcConstants.NS_XPROC.equals(oname.getNamespaceURI())) {
             throw XProcException.staticError(28, node, "You cannot specify an option in the p: namespace.");
         }
@@ -827,7 +857,7 @@ public class Parser {
         if (required != null && !"false".equals(required) && !"true".equals(required)) {
             throw XProcException.staticError(19, node, "The required attribute must be 'true' or 'false'.");
         }
-        
+
         Option option = new Option(runtime, node);
         option.setName(oname);
         option.setRequired(required);
@@ -878,6 +908,11 @@ public class Parser {
         String select = node.getAttributeValue(new QName("select"));
 
         QName oname = new QName(name, node);
+
+        // If it has no prefix, then it's in no namespace, not the default namespace
+        if (oname.getPrefix() == null || "".equals(oname.getPrefix())) {
+            oname = new QName("", name);
+        }
 
         if (XProcConstants.NS_XPROC.equals(oname.getNamespaceURI())) {
             throw XProcException.staticError(28, node, "You cannot specify a variable in the p: namespace.");
@@ -966,13 +1001,13 @@ public class Parser {
 
         String value = node.getAttributeValue(new QName("port"));
         serial.setPort(value);
-        
+
         value = node.getAttributeValue(new QName("byte-order-mark"));
         if (value != null) {
             checkBoolean(node, "byte-order-mark", value);
             serial.setByteOrderMark("true".equals(value));
         }
-        
+
         value = node.getAttributeValue(new QName("cdata-section-elements"));
         if (value != null) {
             throw new UnsupportedOperationException("cdata-section-elements not yet supported");
@@ -983,16 +1018,16 @@ public class Parser {
 
         value = node.getAttributeValue(new QName("doctype-system"));
         serial.setDoctypeSystem(value);
-        
+
         value = node.getAttributeValue(new QName("encoding"));
         serial.setEncoding(value);
-        
+
         value = node.getAttributeValue(new QName("escape-uri-attributes"));
         if (value != null) {
             checkBoolean(node, "escape-uri-attributes", value);
             serial.setEscapeURIAttributes("true".equals(value));
         }
-        
+
         value = node.getAttributeValue(new QName("include-content-type"));
         if (value != null) {
             checkBoolean(node, "include-content-type", value);
@@ -1007,7 +1042,7 @@ public class Parser {
 
         value = node.getAttributeValue(new QName("media-type"));
         serial.setMediaType(value);
-        
+
         value = node.getAttributeValue(new QName("method"));
         if (value != null) {
             QName name = new QName(value, node);
@@ -1026,10 +1061,10 @@ public class Parser {
                         XProcConstants.stepError(1));
             }
         }
-        
+
         value = node.getAttributeValue(new QName("normalization-form"));
         serial.setNormalizationForm(value);
-        
+
         value = node.getAttributeValue(new QName("omit-xml-declaration"));
         if (value != null) {
             checkBoolean(node, "omit-xml-declaration", value);
@@ -1038,7 +1073,7 @@ public class Parser {
 
         value = node.getAttributeValue(new QName("standalone"));
         serial.setStandalone(value);
-        
+
         value = node.getAttributeValue(new QName("undeclare-prefixes"));
         if (value != null) {
             checkBoolean(node, "undeclare-prefixes", value);
@@ -1062,7 +1097,7 @@ public class Parser {
             runtime.error(null, node, name + " on serialization must be 'true' or 'false'", XProcConstants.staticError(40));
         }
     }
-    
+
     private Log readLog(XdmNode node) {
         checkAttributes(node, new String[] { "port", "href" }, false);
         String port = checkNCName(node.getAttributeValue(new QName("port")));
@@ -1122,7 +1157,7 @@ public class Parser {
         } else {
             decl = ((DeclareStep) parent).getStepDeclaration(stepType);
         }
-        
+
         /*
         if (declStack.isEmpty()) {
             decl = runtime.getBuiltinDeclaration(stepType);
@@ -1158,7 +1193,7 @@ public class Parser {
                 || (!pStep && aname.equals(p_use_when))) {
                 continue;
             }
-            
+
             if (XMLConstants.NULL_NS_URI.equals(aname.getNamespaceURI())) {
                 if (!"name".equals(aname.getLocalName())) {
                     Option option = new Option(runtime, node);
@@ -1261,7 +1296,7 @@ public class Parser {
             }
         }
         // Special case: if your parent is a p:library, get the exclusions from there too...
-        if (node.getParent() != null) {
+        if (S9apiUtils.getParent(node) != null) {
             XdmNode parent = node.getParent();
             if (XProcConstants.p_library.equals(parent.getNodeName()) && parent.getAttributeValue(_exclude_inline_prefixes) != null) {
                 HashSet<String> pexcl = S9apiUtils.excludeInlinePrefixes(parent, parent.getAttributeValue(_exclude_inline_prefixes));
@@ -1306,7 +1341,7 @@ public class Parser {
         if (!declStack.isEmpty()) {
             step.setParentDecl(declStack.peek());
         }
-        
+
         declStack.push(step);
 
         // Check that we have legitimate bindings
@@ -1341,6 +1376,8 @@ public class Parser {
                 if (XProcConstants.p_variable.equals(substepNode.getNodeName())) {
                     Variable var = readVariable(step, substepNode);
                     step.addVariable(var);
+                } else if (cx_import.equals(substepNode.getNodeName())) {
+                    importFunctions(substepNode);
                 } else {
                     if ((XProcConstants.p_declare_step.equals(substepNode.getNodeName()))
                             || XProcConstants.p_pipeline.equals(substepNode.getNodeName())) {
@@ -1377,7 +1414,7 @@ public class Parser {
         for (DeclareStep substep : step.getStepDeclarations()) {
             parseDeclareStepBodyPassTwo(substep);
         }
-        
+
         Vector<XdmNode> rest = step.getXmlContent();
 
         if (rest != null) {
@@ -1389,7 +1426,7 @@ public class Parser {
     }
 
     private Double inheritedVersion(XdmNode node) {
-        XdmNode parent = node.getParent();
+        XdmNode parent = S9apiUtils.getParent(node);
 
         if (XProcConstants.p_declare_step.equals(node.getNodeName())
                 || XProcConstants.p_pipeline.equals(node.getNodeName())
@@ -1456,7 +1493,7 @@ public class Parser {
         if (imported) {
             return importElem;
         }
-        
+
         if (!declStack.isEmpty()) {
             declStack.peek().addImport(importURI.toASCIIString());
         } else {
@@ -1731,7 +1768,7 @@ public class Parser {
     }
 
     // ================================================================================================
-    
+
     private HashSet<String> checkAttributes(XdmNode node, String[] attrs, boolean optionShortcutsOk) {
         HashSet<String> hash = null;
         if (attrs != null) {
@@ -1774,7 +1811,7 @@ public class Parser {
             }
             // Everything else is ok
         }
-        
+
         return options;
     }
 
@@ -1818,5 +1855,38 @@ public class Parser {
             }
         }
         return name;
+    }
+
+    private void importFunctions(XdmNode node) {
+        String href = node.getAttributeValue(_href);
+        String ns = node.getAttributeValue(_namespace);
+        Processor processor = runtime.getProcessor();
+
+        String sed = processor.getUnderlyingConfiguration().getEditionCode();
+        if (!"EE".equals(sed)) {
+            throw new XProcException("Importing functions is only supported by Saxon EE.");
+        }
+
+        try {
+            URL url = runtime.getStaticBaseURI().resolve(href).toURL();
+            URLConnection connection = url.openConnection();
+
+            XQueryCompiler xqcomp = processor.newXQueryCompiler();
+
+            StaticQueryContext sqc = xqcomp.getUnderlyingStaticContext();
+            sqc.compileLibrary(connection.getInputStream(), "utf-8");
+            XQueryExpression xqe = sqc.compileQuery("import module namespace f='" + ns + "'; .");
+            QueryModule qm = xqe.getStaticContext();
+            XQueryFunctionLibrary xfl = qm.getGlobalFunctionLibrary();
+
+            // We think this will work because we know from the test above that we're not in Saxon HE.
+            // It's a bit fragile, but I can't think of a better way.
+            Class pc = Class.forName("com.saxonica.config.ProfessionalConfiguration");
+            Class fc = Class.forName("net.sf.saxon.functions.FunctionLibrary");
+            Method setBinder = pc.getMethod("setExtensionBinder", String.class, fc);
+            setBinder.invoke(processor.getUnderlyingConfiguration(), "calabash", xfl);
+        } catch (Exception e) {
+            throw new XProcException(e);
+        }
     }
 }

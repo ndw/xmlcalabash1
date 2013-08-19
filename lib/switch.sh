@@ -12,7 +12,12 @@ else if [ "$1" = "94" ]; then
     echo "Switching to Saxon 9.4"
     cp saxon9ee.94 saxon9ee.jar
     cp saxon9he.94 saxon9he.jar
+else if [ "$1" = "95" ]; then
+    echo "Switching to Saxon 9.5"
+    cp saxon9ee.95 saxon9ee.jar
+    cp saxon9he.95 saxon9he.jar
 else
     echo "Unknown saxon version: $1"
+fi
 fi
 fi

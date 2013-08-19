@@ -103,8 +103,8 @@ public class WritableDocument implements WritablePipe {
     public void setWriter(Step step) {
         writer = step;
     }
-    
-    public void write(final XdmNode doc) {
+
+    public void write(XdmNode doc) {
         try {
             serializer = new Serializer();
 
@@ -179,7 +179,9 @@ public class WritableDocument implements WritablePipe {
                 }
             }
 
-            if (uri == null && runtime.getDebug()) {
+            S9apiUtils.serialize(runtime, doc, serializer);
+
+            if ((((ostream == null) && (uri == null)) || (System.out.equals(ostream))) && runtime.getDebug()) {
                 System.out.println("\n--<document boundary>--------------------------------------------------------------------------");
             }
         } catch (SaxonApiException sae) {

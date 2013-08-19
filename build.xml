@@ -52,23 +52,26 @@
     <echo>Cannot find IzPack; request to build dist ignored.</echo>
   </target>
 
-  <!-- define Maven coordinates -->
-  <property name="groupId" value="com.xmlcalabash" />
-  <property name="artifactId" value="xmlcalabash" />
+  <target name="maven-properties" depends="init">
+    <!-- define Maven coordinates -->
+    <property name="groupId" value="com.xmlcalabash" />
+    <property name="artifactId" value="xmlcalabash" />
+    <property name="mvn-version" value="${version}-${saxon-version}"/>
 
-  <!-- define artifact names, which follow the convention of Maven -->
-  <property name="maven.dir" value="${dist.dir}/maven" />
-  <property name="maven-jar" value="${maven.dir}/${artifactId}-${version}.jar" />
-  <property name="maven-javadoc-jar" value="${maven.dir}/${artifactId}-${version}-javadoc.jar" />
-  <property name="maven-sources-jar" value="${maven.dir}/${artifactId}-${version}-sources.jar" />
+    <!-- define artifact names, which follow the convention of Maven -->
+    <property name="maven.dir" value="${dist.dir}/maven" />
+    <property name="maven-jar" value="${maven.dir}/${artifactId}-${mvn-version}.jar" />
+    <property name="maven-javadoc-jar" value="${maven.dir}/${artifactId}-${mvn-version}-javadoc.jar" />
+    <property name="maven-sources-jar" value="${maven.dir}/${artifactId}-${mvn-version}-sources.jar" />
 
-  <!-- define maven snapshots and staging repository id and url -->
-  <property name="maven-snapshots-repository-id" value="sonatype-nexus-snapshots" />
-  <property name="maven-snapshots-repository-url"
-            value="https://oss.sonatype.org/content/repositories/snapshots/" />
-  <property name="maven-staging-repository-id" value="sonatype-nexus-staging" />
-  <property name="maven-staging-repository-url"
-            value="https://oss.sonatype.org/service/local/staging/deploy/maven2/" />
+    <!-- define maven snapshots and staging repository id and url -->
+    <property name="maven-snapshots-repository-id" value="sonatype-nexus-snapshots" />
+    <property name="maven-snapshots-repository-url"
+              value="https://oss.sonatype.org/content/repositories/snapshots/" />
+    <property name="maven-staging-repository-id" value="sonatype-nexus-staging" />
+    <property name="maven-staging-repository-url"
+              value="https://oss.sonatype.org/service/local/staging/deploy/maven2/" />
+  </target>
 
   <path id="build.classpath">
     <fileset dir="${lib.dir}">
@@ -89,6 +92,11 @@
     <classpath refid="build.classpath"/>
   </available>
 
+  <available property="saxon95"
+             classname="net.sf.saxon.event.OnEmptyHandler">
+    <classpath refid="build.classpath"/>
+  </available>
+
   <pathconvert property="run.classpath" refid="build.classpath" pathsep=" ">
     <map from="${basedir}/" to=""/>
   </pathconvert>
@@ -97,12 +105,15 @@
 
   <target name="init" depends="saxon-version">
     <mkdir dir="${build.dir}"/>
-    <mkdir dir="docs/build"/>
     <property name="dist-version" value="${version}-${saxon-version}"/>
     <property name="install.dir" value="${dist.dir}/calabash-${dist-version}"/>
   </target>
 
-  <target name="saxon94" if="saxon94">
+  <target name="saxon95" if="saxon95">
+    <property name="saxon-version" value="95"/>
+  </target>
+
+  <target name="saxon94" if="saxon94" unless="saxon95">
     <property name="saxon-version" value="94"/>
   </target>
 
@@ -110,7 +121,7 @@
     <property name="saxon-version" value="93"/>
   </target>
 
-  <target name="saxon-version" depends="saxon93,saxon94">
+  <target name="saxon-version" depends="saxon93,saxon94,saxon95">
     <echo>Currently using saxon ${saxon-version}</echo>
   </target>
 
@@ -137,7 +148,7 @@
       output="calabash.jar"/>
   </target>
 
-  <target name="clean" depends="init">
+  <target name="clean">
     <delete dir="${build.dir}"/>
     <delete dir="${dist.dir}"/>
   </target>
@@ -154,7 +165,7 @@
 
     <javac destdir="${build.dir}"
 	   classpathref="build.classpath"
-           includeantruntime="false"
+           source="1.6" target="1.6" includeantruntime="false"
 	   debug="${javac.debug}">
       <!--
       <compilerarg value="-Xlint"/>
@@ -172,6 +183,7 @@
       <exclude name="com/xmlcalabash/util/FoFOP.java"/>
       <exclude name="com/xmlcalabash/util/FoAH.java"/>
       <exclude name="com/xmlcalabash/util/CssAH.java"/>
+      <exclude name="com/xmlcalabash/util/CssPrince.java"/>
 
       <!-- Only for debugging -->
       <exclude name="com/xmlcalabash/drivers/SaxonProblem.java"/>
@@ -181,7 +193,7 @@
   <!-- this target won't work unless you have all the optional/commercial jars -->
   <target name="compile-everything" depends="init,update-output">
     <javac destdir="${build.dir}"
-           includeantruntime="false">
+           source="1.6" target="1.6" includeantruntime="false">
       <classpath>
         <!-- Yes, I know these are explicit. This target is really only for me. -->
         <fileset dir="lib">
@@ -213,7 +225,7 @@
   <target name="compile-XMLUnit" depends="init" if="XMLUnit.present">
     <javac destdir="${build.dir}"
 	   classpathref="build.classpath"
-           includeantruntime="false">
+           source="1.6" target="1.6" includeantruntime="false">
       <src path="src"/>
       <include name="com/xmlcalabash/extensions/xmlunit/Compare.java"/>
     </javac>
@@ -226,7 +238,7 @@
   <target name="compile-XCC" depends="init" if="MarkLogicXCC.present">
     <javac destdir="${build.dir}"
 	   classpathref="build.classpath"
-           includeantruntime="false">
+           source="1.6" target="1.6" includeantruntime="false">
       <src path="src"/>
       <include name="com/xmlcalabash/extensions/marklogic/XCCAdhocQuery.java"/>
       <include name="com/xmlcalabash/extensions/marklogic/XCCInsertDocument.java"/>
@@ -241,7 +253,7 @@
   <target name="compile-MetadataException" depends="init" if="MetadataException.present">
     <javac destdir="${build.dir}"
 	   classpathref="build.classpath"
-           includeantruntime="false">
+           source="1.6" target="1.6" includeantruntime="false">
       <!--
       <compilerarg value="-Xlint"/>
       -->
@@ -257,7 +269,7 @@
   <target name="compile-DeltaXML" depends="init" if="DeltaXML.present">
     <javac destdir="${build.dir}"
 	   classpathref="build.classpath"
-           includeantruntime="false">
+           source="1.6" target="1.6" includeantruntime="false">
       <src path="src"/>
       <include name="com/xmlcalabash/extensions/DeltaXML.java"/>
     </javac>
@@ -270,7 +282,7 @@
   <target name="compile-XEP" depends="init" if="XEP.present">
     <javac destdir="${build.dir}"
 	   classpathref="build.classpath"
-           includeantruntime="false">
+           source="1.6" target="1.6" includeantruntime="false">
       <src path="src"/>
       <include name="com/xmlcalabash/util/FoXEP.java"/>
     </javac>
@@ -283,10 +295,23 @@
   <target name="compile-AH" depends="init" if="AH.present">
     <javac destdir="${build.dir}"
 	   classpathref="build.classpath"
-           includeantruntime="false">
+           source="1.6" target="1.6" includeantruntime="false">
       <src path="src"/>
       <include name="com/xmlcalabash/util/FoAH.java"/>
       <include name="com/xmlcalabash/util/CssAH.java"/>
+    </javac>
+  </target>
+
+  <available classname="com.princexml.Prince" property="Prince.present">
+    <classpath refid="build.classpath"/>
+  </available>
+
+  <target name="compile-Prince" depends="init" if="Prince.present">
+    <javac destdir="${build.dir}"
+	   classpathref="build.classpath"
+           source="1.6" target="1.6" includeantruntime="false">
+      <src path="src"/>
+      <include name="com/xmlcalabash/util/CssPrince.java"/>
     </javac>
   </target>
 
@@ -297,7 +322,7 @@
   <target name="compile-SendMail" depends="init" if="Mail.present">
     <javac destdir="${build.dir}"
 	   classpathref="build.classpath"
-           includeantruntime="false">
+           source="1.6" target="1.6" includeantruntime="false">
       <src path="src"/>
       <include name="com/xmlcalabash/extensions/SendMail.java"/>
     </javac>
@@ -324,14 +349,29 @@
   <target name="compile-FOP" depends="init" if="FOP.present">
     <javac destdir="${build.dir}"
 	   classpathref="build.classpath"
-           includeantruntime="false">
+           source="1.6" target="1.6" includeantruntime="false">
       <src path="src"/>
       <include name="com/xmlcalabash/util/FoFOP.java"/>
     </javac>
   </target>
 
-  <target name="dist" depends="init,compile-everything,distrib,izpacktool,izpackmissing"
-          if="izpack.present">
+  <available property="docs.present" file="${dist.dir}/calabash-${version}/README"/>
+
+  <target name="docs.missing" unless="docs.present">
+    <echo>You must run the 'dist' target on the 'docs' branch first.</echo>
+  </target>
+
+  <condition property="dist.ready">
+    <and>
+      <istrue value="${docs.present}"/>
+      <istrue value="${izpack.present}"/>
+    </and>
+  </condition>
+
+  <target name="dist"
+          depends="init,izpacktool,izpackmissing,docs.missing"
+          if="dist.ready">
+    <ant target="distrib"/>
     <delete file="${dist.dir}/install.xml"/>
 
     <xslt in="resources/etc/install-proto.xsl" style="resources/etc/install-proto.xsl"
@@ -354,41 +394,31 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
             izPackDir="${izpack.dir}"/>
   </target>
 
-  <target name="distrib" depends="jar">
+  <target name="distrib" depends="compile-everything,jar">
     <mkdir dir="${install.dir}"/>
     <mkdir dir="${install.dir}/lib"/>
     <mkdir dir="${install.dir}/docs"/>
     <mkdir dir="${install.dir}/schemas"/>
     <mkdir dir="${install.dir}/xpl"/>
-    <ant dir="docs"/>
+
     <mkdir dir="${install.dir}/docs/notices"/>
     <mkdir dir="${install.dir}/docs/reference"/>
-    <mkdir dir="${install.dir}/docs/reference/css"/>
-    <mkdir dir="${install.dir}/docs/reference/js"/>
-    <mkdir dir="${install.dir}/docs/reference/img"/>
+    <copy todir="${install.dir}">
+      <fileset file="${dist.dir}/calabash-${version}/README"/>
+    </copy>
+    <copy todir="${install.dir}/docs/notices">
+      <fileset dir="${dist.dir}/calabash-${version}/docs/notices"/>
+    </copy>
     <copy todir="${install.dir}/docs/reference">
-      <fileset dir="docs/build"/>
-    </copy>
-    <copy todir="${install.dir}/docs/reference/css">
-      <fileset dir="docs/css"/>
-    </copy>
-    <copy todir="${install.dir}/docs/reference/js">
-      <fileset dir="docs/js"/>
-    </copy>
-    <copy todir="${install.dir}/docs/reference/img">
-      <fileset dir="docs/img"/>
+      <fileset dir="${dist.dir}/calabash-${version}/docs/reference"/>
     </copy>
 
-    <copy todir="${install.dir}/docs/notices">
-      <fileset file="resources/notices/**"/>
-    </copy>
-    <copy todir="${install.dir}">
-      <fileset file="docs/README"/>
-    </copy>
     <copy todir="${install.dir}" file="calabash.jar"/>
 
     <copy todir="${install.dir}/lib">
       <fileset file="lib/commons*.jar"/>
+      <fileset file="lib/http*.jar"/>
+      <fileset file="lib/xmlresolver.jar"/>
       <fileset file="lib/saxon9he.jar"/>
     </copy>
 
@@ -434,7 +464,6 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
         <path refid="full.classpath"/>
       </classpath>
       <jvmarg value="-Xmx1024m"/>
-      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
       <arg value="-D"/>
       <arg value="-a"/>
       <arg value="${tests.root}/tests/required/test-suite.xml"/>
@@ -465,7 +494,6 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
         <path refid="full.classpath"/>
       </classpath>
       <jvmarg value="-Xmx1024m"/>
-      <sysproperty key="com.xmlcalabash.phonehome" value="false"/>
       <arg value="-isource=${test.report}"/>
       <arg value="xpl/submit-test-report.xpl"/>
       <arg value="username=${submit.username}"/>
@@ -479,7 +507,7 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
              classpathref="build.classpath"/>
   </target>
 
-  <target name="maven-dist" depends="init,compile-everything,jar,javadoc"
+  <target name="maven-dist" depends="maven-properties,compile-everything,jar,javadoc"
           description="generate Maven jars">
     <!-- copy the main artifact -->
     <copy file="calabash.jar" toFile="${maven-jar}"/>

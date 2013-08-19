@@ -245,7 +245,8 @@ public class HttpRequest extends DefaultStep {
             }
         }
         localContext.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
-        params.setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.RFC_2109);
+        // FIXME: Is browser compatability the right thing? It's the right thing for my unit test...
+        params.setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.BROWSER_COMPATIBILITY);
 
         String timeOutStr = step.getExtensionAttribute(cx_timeout);
         if (timeOutStr != null) {
@@ -588,7 +589,9 @@ public class HttpRequest extends DefaultStep {
                 } else if (xmlContentType(contentType)) {
                     Serializer serializer = makeSerializer();
 
-                    if (!S9apiUtils.isDocumentContent(body.axisIterator(Axis.CHILD))) {
+                    try {
+                        S9apiUtils.assertDocumentContent(body.axisIterator(Axis.CHILD));
+                    } catch (XProcException xe) {
                         throw XProcException.stepError(22);
                     }
 
