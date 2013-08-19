@@ -344,6 +344,81 @@ always be returned.</para>
 
 </section>
 
+<section xml:id="user-extfunc">
+<title>User defined extension functions</title>
+
+<para>When <citetitle>XML Calabash</citetitle> is used with
+<citetitle>Saxon EE</citetitle> (and only EE, other editions do not
+support separate compilation), you can load user defined functions
+written in XQuery with the <tag>cx:import</tag> extension.</para>
+
+<programlisting>&lt;cx:import namespace="<replaceable>namespace-uri</replaceable>“
+           href="<replaceable>module-file.xqy</replaceable>"/></programlisting>
+
+<variablelist>
+<varlistentry>
+<term><replaceable>namespace-uri</replaceable></term>
+<listitem>
+<para>The module namespace declared in the library module.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><replaceable>module-file.xqy</replaceable></term>
+<listitem>
+<para>The URI of the module file.</para>
+</listitem>
+</varlistentry>
+</variablelist>
+
+<para>These extension functions are then available in XPath expressions.</para>
+
+<para>For example, if <filename>f.xqy</filename> contains:</para>
+
+<programlisting>xquery version "1.0";
+
+module namespace f="http://xmlcalabash.com/ns/functions";
+
+declare default function namespace "http://www.w3.org/2005/xpath-functions";
+
+declare function f:count(
+  $seq as item()*
+) as xs:integer
+{
+  count($seq)
+};</programlisting>
+
+<para>Then this pipeline will run:</para>
+
+<programlisting><![CDATA[<p:declare-step xmlns:p="http://www.w3.org/ns/xproc"
+                xmlns:cx="http://xmlcalabash.com/ns/extensions"
+                xmlns:f="http://xmlcalabash.com/ns/functions"
+                xmlns:c="http://www.w3.org/ns/xproc-step"
+                version="1.0" exclude-inline-prefixes="c">
+   <p:output port="result">
+     <p:pipe step="params" port="result"/>
+   </p:output>
+
+   <cx:import namespace="http://xmlcalabash.com/ns/functions" href="f.xqy"/>
+
+   <p:parameters name="params">
+     <p:input port="parameters">
+       <p:empty/>
+     </p:input>
+     <p:with-param name="three" port="parameters" select="f:count((1,2,3))"/>
+   </p:parameters>
+</p:declare-step>]]></programlisting>
+
+<para>and produce output something like this:</para>
+
+<programlisting><![CDATA[<c:param-set xmlns:c="http://www.w3.org/ns/xproc-step">
+  <c:param name="three" namespace="" value="3"/>
+</c:param-set>]]></programlisting>
+
+<para>At present, the dynamically loaded functions are not scoped in any way.
+They're available globally after they've been loaded.</para>
+
+</section>
+
 <section xml:id="extsteps">
 <title>Extension steps</title>
 
