@@ -3,8 +3,11 @@ package com.xmlcalabash.model;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -23,10 +26,16 @@ import com.xmlcalabash.util.RelevantNodes;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TypeUtils;
 import com.xmlcalabash.util.URIUtils;
+import net.sf.saxon.query.QueryModule;
+import net.sf.saxon.query.StaticQueryContext;
+import net.sf.saxon.query.XQueryExpression;
+import net.sf.saxon.query.XQueryFunctionLibrary;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.DocumentBuilder;
+import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XQueryCompiler;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
@@ -45,12 +54,14 @@ public class Parser {
     private static QName px_name = new QName(XProcConstants.NS_CALABASH_EX,"name");
     private static QName _name = new QName("name");
     private static QName _href = new QName("href");
+    private static QName _namespace = new QName("namespace");
     private static QName _type = new QName("type");
     private static QName _version = new QName("version");
     private static QName err_XS0063 = new QName(XProcConstants.NS_XPROC_ERROR, "XS0063");
     private static QName p_use_when = new QName(XProcConstants.NS_XPROC, "use-when");
     private static QName _use_when = new QName("use-when");
     private static QName _exclude_inline_prefixes = new QName("exclude-inline-prefixes");
+    private static QName cx_import = new QName(XProcConstants.NS_CALABASH_EX, "import");
 
     private XProcRuntime runtime = null;
     private Stack<DeclareStep> declStack = null;
@@ -1365,6 +1376,8 @@ public class Parser {
                 if (XProcConstants.p_variable.equals(substepNode.getNodeName())) {
                     Variable var = readVariable(step, substepNode);
                     step.addVariable(var);
+                } else if (cx_import.equals(substepNode.getNodeName())) {
+                    importFunctions(substepNode);
                 } else {
                     if ((XProcConstants.p_declare_step.equals(substepNode.getNodeName()))
                             || XProcConstants.p_pipeline.equals(substepNode.getNodeName())) {
@@ -1842,5 +1855,38 @@ public class Parser {
             }
         }
         return name;
+    }
+
+    private void importFunctions(XdmNode node) {
+        String href = node.getAttributeValue(_href);
+        String ns = node.getAttributeValue(_namespace);
+        Processor processor = runtime.getProcessor();
+
+        String sed = processor.getUnderlyingConfiguration().getEditionCode();
+        if ("HE".equals(sed)) {
+            throw new XProcException("Importing functions is not supported by Saxon HE.");
+        }
+
+        try {
+            URL url = runtime.getStaticBaseURI().resolve(href).toURL();
+            URLConnection connection = url.openConnection();
+
+            XQueryCompiler xqcomp = processor.newXQueryCompiler();
+
+            StaticQueryContext sqc = xqcomp.getUnderlyingStaticContext();
+            sqc.compileLibrary(connection.getInputStream(), "utf-8");
+            XQueryExpression xqe = sqc.compileQuery("import module namespace f='" + ns + "'; .");
+            QueryModule qm = xqe.getStaticContext();
+            XQueryFunctionLibrary xfl = qm.getGlobalFunctionLibrary();
+
+            // We think this will work because we know from the test above that we're not in Saxon HE.
+            // It's a bit fragile, but I can't think of a better way.
+            Class pc = Class.forName("com.saxonica.config.ProfessionalConfiguration");
+            Class fc = Class.forName("net.sf.saxon.functions.FunctionLibrary");
+            Method setBinder = pc.getMethod("setExtensionBinder", String.class, fc);
+            setBinder.invoke(processor.getUnderlyingConfiguration(), "calabash", xfl);
+        } catch (Exception e) {
+            throw new XProcException(e);
+        }
     }
 }
