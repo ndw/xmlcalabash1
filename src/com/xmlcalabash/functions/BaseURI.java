@@ -7,6 +7,7 @@ import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
 import net.sf.saxon.om.NodeInfo;
+import net.sf.saxon.om.Sequence;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.trans.XPathException;
@@ -78,7 +79,7 @@ public class BaseURI extends XProcExtensionFunctionDefinition {
     }
 
     private class BaseURICall extends ExtensionFunctionCall {
-        public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
+        public Sequence call(XPathContext xPathContext, Sequence[] sequences) throws XPathException {
             String baseURI = null;
 
             XProcRuntime runtime = tl_runtime.get();
@@ -89,22 +90,19 @@ public class BaseURI extends XProcExtensionFunctionDefinition {
                 throw XProcException.dynamicError(23);
             }
 
-            if (arguments.length > 0) {
-                SequenceIterator iter = arguments[0];
-                NodeInfo item = (NodeInfo) iter.next();
+            if (sequences.length > 0) {
+                NodeInfo item = (NodeInfo) sequences[0].head();
                 baseURI = item.getBaseURI();
             } else {
-                NodeInfo item = (NodeInfo) context.getContextItem();
+                NodeInfo item = (NodeInfo) xPathContext.getContextItem();
                 baseURI = item.getBaseURI();
             }
 
             if (baseURI == null) {
-                return SingletonIterator.makeIterator(
-                        new AnyURIValue(""));
+                return new AnyURIValue("");
             }
 
-            return SingletonIterator.makeIterator(
-                    new AnyURIValue(baseURI));
+            return new AnyURIValue(baseURI);
         }
     }
 }

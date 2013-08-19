@@ -192,51 +192,54 @@ public class XSLT extends DefaultStep {
         config.setOutputURIResolver(new OutputResolver());
         config.setCollectionURIResolver(new CollectionResolver(runtime, defaultCollection, collectionResolver));
 
-        XsltCompiler compiler = runtime.getProcessor().newXsltCompiler();
-        compiler.setSchemaAware(processor.isSchemaAware());
-        XsltExecutable exec = compiler.compile(stylesheet.asSource());
-        XsltTransformer transformer = exec.load();
+        XdmDestination result = null;
+        try {
+            XsltCompiler compiler = runtime.getProcessor().newXsltCompiler();
+            compiler.setSchemaAware(processor.isSchemaAware());
+            XsltExecutable exec = compiler.compile(stylesheet.asSource());
+            XsltTransformer transformer = exec.load();
 
-        for (QName name : params.keySet()) {
-            RuntimeValue v = params.get(name);
-            if (runtime.getAllowGeneralExpressions()) {
-                transformer.setParameter(name, v.getValue());
-            } else {
-                transformer.setParameter(name, new XdmAtomicValue(v.getString()));
+            for (QName name : params.keySet()) {
+                RuntimeValue v = params.get(name);
+                if (runtime.getAllowGeneralExpressions()) {
+                    transformer.setParameter(name, v.getValue());
+                } else {
+                    transformer.setParameter(name, new XdmAtomicValue(v.getString()));
+                }
             }
-        }
 
-        if (document != null) {
-            transformer.setInitialContextNode(document);
-        }
-        transformer.setMessageListener(new CatchMessages());
-        XdmDestination result = new XdmDestination();
-        transformer.setDestination(result);
-
-        if (initialMode != null) {
-            transformer.setInitialMode(initialMode);
-        }
-
-        if (templateName != null) {
-            transformer.setInitialTemplate(templateName);
-        }
-
-        if (outputBaseURI != null) {
-            transformer.setBaseOutputURI(outputBaseURI);
-            // The following hack works around https://saxonica.plan.io/issues/1724
-            try {
-                result.setBaseURI(new URI(outputBaseURI));
-            } catch (URISyntaxException use) {
-                // whatever
+            if (document != null) {
+                transformer.setInitialContextNode(document);
             }
+            transformer.setMessageListener(new CatchMessages());
+            result = new XdmDestination();
+            transformer.setDestination(result);
+
+            if (initialMode != null) {
+                transformer.setInitialMode(initialMode);
+            }
+
+            if (templateName != null) {
+                transformer.setInitialTemplate(templateName);
+            }
+
+            if (outputBaseURI != null) {
+                transformer.setBaseOutputURI(outputBaseURI);
+                // The following hack works around https://saxonica.plan.io/issues/1724
+                try {
+                    result.setBaseURI(new URI(outputBaseURI));
+                } catch (URISyntaxException use) {
+                    // whatever
+                }
+            }
+
+            transformer.setSchemaValidationMode(ValidationMode.DEFAULT);
+            transformer.getUnderlyingController().setUnparsedTextURIResolver(unparsedTextURIResolver);
+            transformer.transform();
+        } finally {
+            config.setOutputURIResolver(uriResolver);
+            config.setCollectionURIResolver(collectionResolver);
         }
-
-        transformer.setSchemaValidationMode(ValidationMode.DEFAULT);
-        transformer.getUnderlyingController().setUnparsedTextURIResolver(unparsedTextURIResolver);
-        transformer.transform();
-
-        config.setOutputURIResolver(uriResolver);
-        config.setCollectionURIResolver(collectionResolver);
 
         XdmNode xformed = result.getXdmNode();
 
@@ -294,6 +297,11 @@ public class XSLT extends DefaultStep {
 
     class OutputResolver implements OutputURIResolver {
         public OutputResolver() {
+        }
+
+        @Override
+        public OutputURIResolver newInstance() {
+            return new OutputResolver();
         }
 
         public Result resolve(String href, String base) throws TransformerException {

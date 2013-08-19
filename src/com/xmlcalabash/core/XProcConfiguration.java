@@ -1,6 +1,8 @@
 package com.xmlcalabash.core;
 
+import com.xmlcalabash.util.Input;
 import com.xmlcalabash.util.JSONtoXML;
+import com.xmlcalabash.util.Output;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.DocumentBuilder;
@@ -18,7 +20,6 @@ import java.io.FileNotFoundException;
 import java.util.Hashtable;
 import java.util.Vector;
 import java.util.HashSet;
-import java.util.logging.Level;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
@@ -39,6 +40,10 @@ import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.Source;
 
 import org.xml.sax.InputSource;
+
+import static com.xmlcalabash.util.URIUtils.encode;
+import static java.lang.String.format;
+import static java.lang.System.getProperty;
 
 /**
  * Created by IntelliJ IDEA.
@@ -63,10 +68,10 @@ public class XProcConfiguration {
 
     public String saxonProcessor = "he";
     public boolean schemaAware = false;
-    public String saxonConfigFile = null;
+    public Input saxonConfig = null;
     public Hashtable<String,String> nsBindings = new Hashtable<String,String> ();
     public boolean debug = false;
-    public String profileFile = null;
+    public Output profile = null;
     public Hashtable<String,Vector<ReadablePipe>> inputs = new Hashtable<String,Vector<ReadablePipe>> ();
     public ReadablePipe pipeline = null;
     public Hashtable<String,String> outputs = new Hashtable<String,String> ();
@@ -110,7 +115,7 @@ public class XProcConfiguration {
         init("he", schemaAware, null);
     }
 
-    public XProcConfiguration(String saxoncfg) {
+    public XProcConfiguration(Input saxoncfg) {
         init(null, false, saxoncfg);
     }
 
@@ -130,7 +135,7 @@ public class XProcConfiguration {
         return cfgProcessor;
     }
 
-    private void init(String proctype, boolean schemaAware, String saxoncfg) {
+    private void init(String proctype, boolean schemaAware, Input saxoncfg) {
         if (schemaAware) {
             proctype = "ee";
         }
@@ -144,7 +149,7 @@ public class XProcConfiguration {
         this.saxonProcessor = Configuration.softwareEdition.toLowerCase();
 
         if (!(proctype == null || saxonProcessor.equals(proctype)) || schemaAware != this.schemaAware ||
-            (saxoncfg == null && saxonConfigFile != null)) {
+            (saxoncfg == null && saxonConfig != null)) {
             // Drat. We have to restart to get the right configuration.
             nsBindings.clear();
             inputs.clear();
@@ -153,8 +158,8 @@ public class XProcConfiguration {
             options.clear();
             implementations.clear();
             extensionFunctions.clear();
-            
-            createSaxonProcessor(saxonProcessor, this.schemaAware, saxonConfigFile);
+
+            createSaxonProcessor(saxonProcessor, this.schemaAware, saxonConfig);
             loadConfiguration();
 
             // If we got a schema aware processor, make sure it's reflected in our config
@@ -164,12 +169,26 @@ public class XProcConfiguration {
         }
     }
 
-    private void createSaxonProcessor(String proctype, boolean schemaAware, String saxoncfg) {
+    private void createSaxonProcessor(String proctype, boolean schemaAware, Input saxoncfg) {
         boolean licensed = schemaAware || !"he".equals(proctype);
 
         if (saxoncfg != null) {
             try {
-                InputStream instream = new FileInputStream(saxoncfg);
+                InputStream instream = null;
+                switch (saxoncfg.getKind()) {
+                    case URI:
+                        URI furi = URI.create(saxoncfg.getUri());
+                        instream = new FileInputStream(new File(furi));
+                        break;
+
+                    case INPUT_STREAM:
+                        instream = saxoncfg.getInputStream();
+                        break;
+
+                    default:
+                        throw new UnsupportedOperationException(format("Unsupported saxonConfig kind '%s'", saxoncfg.getKind()));
+                }
+
                 SAXSource source = new SAXSource(new InputSource(instream));
                 cfgProcessor = new Processor(source);
             } catch (FileNotFoundException e) {
@@ -186,7 +205,17 @@ public class XProcConfiguration {
             System.err.println("Failed to obtain " + proctype.toUpperCase() + " processor; using " + actualtype + " instead.");
         }
     }
-    
+
+    private String fixUpURI(String uri) {
+        File f = new File(uri);
+        String fn = encode(f.getAbsolutePath());
+        // FIXME: HACK!
+        if ("\\".equals(getProperty("file.separator"))) {
+            fn = "/" + fn;
+        }
+        return fn;
+    }
+
     private void loadConfiguration() {
         URI home = URIUtils.homeAsURI();
         URI cwd = URIUtils.cwdAsURI();
@@ -256,11 +285,17 @@ public class XProcConfiguration {
             throw new XProcException("Invalid Saxon processor specified in com.xmlcalabash.saxon-processor property.");
         }
 
-        saxonConfigFile = System.getProperty("com.xmlcalabash.saxon-configuration", saxonConfigFile);
+        String saxonConfigProperty = System.getProperty("com.xmlcalabash.saxon-configuration");
+        if (saxonConfigProperty != null) {
+            saxonConfig = new Input("file://" + fixUpURI(saxonConfigProperty));
+        }
 
         schemaAware = "true".equals(System.getProperty("com.xmlcalabash.schema-aware", ""+schemaAware));
         debug = "true".equals(System.getProperty("com.xmlcalabash.debug", ""+debug));
-        profileFile = System.getProperty("com.xmlcalabash.profile", profileFile);
+        String profileProperty = System.getProperty("com.xmlcalabash.profile");
+        if (profileProperty != null) {
+            profile = new Output("file://" + fixUpURI(profileProperty));
+        }
         extensionValues = "true".equals(System.getProperty("com.xmlcalabash.general-values", ""+extensionValues));
         xpointerOnText = "true".equals(System.getProperty("com.xmlcalabash.xpointer-on-text", ""+xpointerOnText));
         transparentJSON = "true".equals(System.getProperty("com.xmlcalabash.transparent-json", ""+transparentJSON));
@@ -409,7 +444,7 @@ public class XProcConfiguration {
 	public boolean isStepAvailable(QName type) {
 		return implementations.containsKey(type);
 	}
-	
+
 	public XProcStep newStep(XProcRuntime runtime,XAtomicStep step){
         String className = implementations.get(step.getType());
         if (className == null) {
@@ -420,7 +455,7 @@ public class XProcConfiguration {
         if (runtime.getSafeMode() && !className.startsWith("com.xmlcalabash.")) {
             throw XProcException.dynamicError(21);
         }
-        
+
 		try {
 			Constructor constructor = Class.forName(className).getConstructor(XProcRuntime.class, XAtomicStep.class);
 			return (XProcStep) constructor.newInstance(runtime,step);
@@ -449,7 +484,7 @@ public class XProcConfiguration {
 
     private void parseSaxonConfiguration(XdmNode node) {
         String value = node.getStringValue().trim();
-        saxonConfigFile = value;
+        saxonConfig = new Input("file://" + fixUpURI(value));
     }
 
     private void parseSchemaAware(XdmNode node) {
@@ -477,7 +512,7 @@ public class XProcConfiguration {
     }
 
     private void parseProfile(XdmNode node) {
-        profileFile = node.getStringValue().trim();
+        profile = new Output("file://" + fixUpURI(node.getStringValue().trim()));
     }
 
     private void parseEntityResolver(XdmNode node) {

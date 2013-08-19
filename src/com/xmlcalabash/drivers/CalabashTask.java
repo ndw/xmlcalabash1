@@ -18,41 +18,40 @@
 
 package com.xmlcalabash.drivers;
 
-import com.xmlcalabash.core.XProcConfiguration;
-import com.xmlcalabash.core.XProcConstants;
-import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.model.RuntimeValue;
-import com.xmlcalabash.model.Serialization;
-import com.xmlcalabash.io.ReadablePipe;
-import com.xmlcalabash.io.WritableDocument;
-import com.xmlcalabash.runtime.XPipeline;
-import com.xmlcalabash.util.JSONtoXML;
+import java.io.File;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
 
-import org.apache.tools.ant.Project;
+import com.xmlcalabash.util.Input.Type;
+import com.xmlcalabash.util.UserArgs;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
+import org.apache.tools.ant.Project;
 import org.apache.tools.ant.PropertyHelper;
+import org.apache.tools.ant.taskdefs.LogOutputStream;
 import org.apache.tools.ant.taskdefs.MatchingTask;
 import org.apache.tools.ant.types.CommandlineJava;
 import org.apache.tools.ant.types.Environment;
 import org.apache.tools.ant.types.Mapper;
 import org.apache.tools.ant.types.PropertySet;
-import org.apache.tools.ant.types.ResourceCollection;
 import org.apache.tools.ant.types.Resource;
+import org.apache.tools.ant.types.ResourceCollection;
 import org.apache.tools.ant.types.resources.FileResource;
 import org.apache.tools.ant.types.resources.Resources;
 import org.apache.tools.ant.types.resources.Union;
 import org.apache.tools.ant.util.FileNameMapper;
 
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.XdmNode;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.net.URI;
-import java.util.*;
-import org.xml.sax.InputSource;
+import static com.xmlcalabash.util.Input.Type.DATA;
+import static com.xmlcalabash.util.Input.Type.XML;
+import static java.lang.Long.MAX_VALUE;
+import static java.util.Arrays.asList;
 
 /**
  * Ant task to run Calabash.
@@ -76,243 +75,272 @@ public class CalabashTask extends MatchingTask {
      * then the rest.
      */
 
-    /** Input ports and the resources associated with each. */
-    private HashMap<String,Union> inputResources = new HashMap<String,Union> ();
+    private UserArgs userArgs = new UserArgs();
 
-    /** Input ports and the mapper associated with each. */
-    private Map<String,FileNameMapper> inputMappers = new HashMap<String,FileNameMapper> ();
+    /**
+     * Input ports and the resources associated with each.
+     */
+    private Map<String, List<TypedResource>> inputResources = new HashMap<String, List<TypedResource>>();
 
-    /** Where to find the source XML file, default is the project's
-     * basedir */
+    /**
+     * Input ports and the mapper associated with each.
+     */
+    private Map<String, TypedFileNameMapper> inputMappers = new HashMap<String, TypedFileNameMapper>();
+
+    /**
+     * Where to find the source XML file, default is the project's basedir
+     */
     private File baseDir = null;
 
-    /** Port of the pipeline input. As attribute. */
+    /**
+     * Port of the pipeline input. As attribute.
+     */
     private String inPort = null;
 
-    /** URI of the input XML. As attribute. */
+    /**
+     * URI of the input XML. As attribute.
+     */
     private Resource inResource = null;
 
-    /** Whether the build should fail if the nested resource
-     * collection is empty. */
+    /**
+     * Type of the input resource.
+     */
+    private Type inType = XML;
+
+    /**
+     * Whether the build should fail if the nested resource collection is empty.
+     */
     private boolean failOnNoResources = true;
 
-    /** URI of the pipeline to run. As attribute. */
-    private String pipelineURI = null;
-
-    /** Pipeline as a {@link org.apache.tools.ant.types.Resource} */
+    /**
+     * The pipeline to run as a {@link org.apache.tools.ant.types.Resource}
+     */
     private Resource pipelineResource = null;
 
-    /** destination directory */
+    /**
+     * destination directory
+     */
     private File destDir = null;
 
-    /** Port of the pipeline output. As attribute. */
+    /**
+     * Port of the pipeline output. As attribute.
+     */
     private String outPort = null;
 
-    /** Resource of the output XML. As attribute. */
-    private  Resource outResource = null;
+    /**
+     * Resource of the output XML. As attribute.
+     */
+    private Resource outResource = null;
 
-    /** Output ports and the resources associated with each. */
-    private HashMap<String,Union> outputResources = new HashMap<String,Union> ();
+    /**
+     * Output ports and the resources associated with each.
+     */
+    private HashMap<String, Union> outputResources = new HashMap<String, Union>();
 
-    /** Output ports and the mapper associated with each. */
-    private Map<String,FileNameMapper> outputMappers = new HashMap<String,FileNameMapper> ();
+    /**
+     * Output ports and the mapper associated with each.
+     */
+    private Map<String, FileNameMapper> outputMappers = new HashMap<String, FileNameMapper>();
 
-    /** extension of the files produced by pipeline processing */
+    /**
+     * extension of the files produced by pipeline processing
+     */
     private String targetExtension = "-out.xml";
 
-    /** whether target extension has been set from build file */
+    /**
+     * whether target extension has been set from build file
+     */
     private boolean isTargetExtensionSet = false;
 
-    /** Whether to fail the build if an error occurs. */
+    /**
+     * Whether to fail the build if an error occurs.
+     */
     private boolean failOnError = true;
 
-    /** Additional resource collections to process. */
+    /**
+     * Additional resource collections to process.
+     */
     private Union resources = new Union();
 
-    /** whether resources has been set from nested resource collection */
-    private boolean isResourcesSet = false;
-
-    /** Whether to use the implicit fileset. */
+    /**
+     * Whether to use the implicit fileset.
+     */
     private boolean useImplicitFileset = true;
 
-    /** Whether to process all files in the included directories as
-     * well. */
+    /**
+     * Whether to process all files in the included directories as well.
+     */
     private boolean performDirectoryScan = true;
 
-    /** Mapper to use when a set of files gets processed. */
+    /**
+     * Mapper to use when a set of files gets processed.
+     */
     private FileNameMapper mapper = null;
 
-    /** force output of target files even if they already exist */
+    /**
+     * force output of target files even if they already exist
+     */
     private boolean force = false;
 
-    /** System properties to set during transformation. */
+    /**
+     * System properties to set during transformation.
+     */
     private CommandlineJava.SysProperties sysProperties =
-        new CommandlineJava.SysProperties();
+            new CommandlineJava.SysProperties();
 
-    /** Namespace prefix--URI bindings */
-    private Hashtable<String, String> bindings =
-	new Hashtable<String,String> ();
+    /**
+     * The list of parameters.
+     */
+    private List<Parameter> parameters = new ArrayList<Parameter>();
 
-    /** The <option>s, ready for further processing */
-    private Vector<Option> options = new Vector<Option> ();
+    /**
+     * The list of options.
+     */
+    private List<Option> options = new ArrayList<Option>();
 
-    /** The processed options, ready for passing to Calabash */
-    private Map<QName,RuntimeValue> optionsMap =
-	new HashMap<QName,RuntimeValue> ();
-
-    /** The <param>s, ready for further processing */
-    private Vector<Parameter> parameters = new Vector<Parameter> ();
-
-    /** The processed parameters, ready for passing to Calabash */
-    private Map<String,Hashtable<QName,RuntimeValue>> parametersTable =
-	new Hashtable<String,Hashtable<QName,RuntimeValue>> ();
-
-    /** whether to enable debug output */
-    private boolean debug = false;
-
-    /** whether to enable general values.  Description is about
-     * 'general values', but XProcConfiguration field is
-     * 'extensionValues'. */
-    private boolean extensionValues = false;
-
-    /** whether the xpointer attribute on an XInclude element can be
-     * used when parse="text" */
-    private boolean allowXPointerOnText = false;
-
-    /** whether to use XSLT 1.0 when ??? */
-    private boolean useXslt10 = false;
-
-    /** whether to automatically translate between JSON and XML */
-    private boolean transparentJSON = false;
-
-    /** flavor of JSON to use. As attribute. */
-    String jsonFlavor = null;
+    /**
+     * The list of steps.
+     */
+    private List<Step> steps = new ArrayList<Step>();
 
     /* End of fields to reset at end of execute(). */
 
     /**
-     * Set the base directory;
-     * optional, default is the project's basedir.
+     * Set the base directory; optional, default is the project's basedir.
      *
      * @param dir the base directory
-     **/
+     */
     public void setBasedir(File dir) {
         baseDir = dir;
     }
 
     /**
-     * Set the input port name.
-     * optional, default is the first unmatched pipeline input port.
+     * Set the input port name. optional, default is the first unmatched pipeline input port.
      *
      * @param port the port name
-     **/
-    public void setinPort(String port) {
+     */
+    public void setInPort(String port) {
         inPort = port;
     }
 
     /**
-     * Set the input resource.
-     * optional, implicit and/or explicit filest will be used if this
-     * and outResource are not set.
+     * Set the input resource. optional, implicit and/or explicit fileset will be used if this and outResource are not
+     * set.
      *
      * @param inResource the {@link org.apache.tools.ant.types.Resource}
-     **/
+     */
     public void setIn(Resource inResource) {
         this.inResource = inResource;
     }
 
     /**
-     * Work with an instance of an <input> element already configured
-     * by Ant.
-     * @param i the configured input Port
+     * Set the input type. optional, default is XML. This is used for the implicit and / or explicit fileset or the
+     * {@code in} attribute value.
+     *
+     * @param inType the input type
      */
-    public void addConfiguredInput(Port i) {
-	if (!i.shouldUse()) {
-	    log("Skipping input '" + i.getPort() + "' as it is configured to be unused.", Project.MSG_DEBUG);
-	    return;
-	}
-
-	String port = i.getPort();
-	FileNameMapper inputMapper = i.getMapper();
-	Union resources = i.getResources();
-
-	if (port == null) {
-            port = inPort;
-        }
-
-	if (inputMapper != null && resources.size() != 0) {
-	    handleError("Both mapper and fileset on input port: " + port);
-	    return;
-	}
-
-	if (inputMapper != null) {
-	    if (port.equals(inPort)) {
-		handleError("Cannot use mapper on main input port: " + port);
-		return;
-	    }
-	    if (inputResources.containsKey(port)) {
-		handleError("Mapper used on input port that already has resources: " + port);
-		return;
-	    }
-
-	    if (inputMappers.containsKey(port)) {
-		handleError("Mapper used on input port that already has a mapper: " + port);
-		return;
-	    }
-
-	    inputMappers.put(port, inputMapper);
-	} else {
-	    if (inputMappers.containsKey(port)) {
-		handleError("Resources used on input port that already has a mapper: " + port);
-		return;
-	    }
-
-	    if (!inputResources.containsKey(port)) {
-		inputResources.put(port, new Union ());
-	    }
-
-	    inputResources.get(port).add(resources);
-	}
+    public void setInType(Type inType) {
+        this.inType = inType;
     }
 
     /**
-     * Whether the build should fail if the nested resource collection
-     * is empty.
+     * Work with an instance of an {@code <input>} element already configured by Ant.
+     *
+     * @param input the configured input Port
+     */
+    public void addConfiguredInput(Input input) {
+        if (!input.shouldUse()) {
+            log("Skipping input '" + input.getPort() + "' as it is configured to be unused.", Project.MSG_DEBUG);
+            return;
+        }
+
+        String port = input.getPort();
+        FileNameMapper inputMapper = input.getMapper();
+        Union resources = input.getResources();
+
+        if (port == null) {
+            port = inPort;
+        }
+
+        if (inputMapper != null) {
+            if (resources.size() != 0) {
+                handleError("Both mapper and fileset on input port: " + port);
+                return;
+            }
+
+            if (port.equals(inPort)) {
+                handleError("Cannot use mapper on main input port: " + port);
+                return;
+            }
+
+            if (inputResources.containsKey(port)) {
+                handleError("Mapper used on input port that already has resources: " + port);
+                return;
+            }
+
+            if (inputMappers.containsKey(port)) {
+                handleError("Mapper used on input port that already has a mapper: " + port);
+                return;
+            }
+
+            inputMappers.put(port, new TypedFileNameMapper(inputMapper, input.getType(), input.getContentType()));
+        } else {
+            if (inputMappers.containsKey(port)) {
+                handleError("Resources used on input port that already has a mapper: " + port);
+                return;
+            }
+
+            if ((resources.size() != 0) && !inputResources.containsKey(port)) {
+                inputResources.put(port, new ArrayList<TypedResource>());
+            }
+
+            for (Resource resource : resources.listResources()) {
+                inputResources.get(port).add(new TypedResource(resource, input.getType(), input.getContentType()));
+            }
+        }
+    }
+
+    /**
+     * Whether the build should fail if the nested resource collection is empty.
      */
     public void setFailOnNoResources(boolean b) {
         failOnNoResources = b;
     }
 
     /**
-     * Set the pipeline.
-     * optional, nested &lt;pipeline> will be used if not set.
+     * Set the pipeline. optional, nested &lt;pipeline> will be used if not set.
      *
-     * @param uri pipeline location
-     **/
-    public void setPipeline(String uri) {
-        pipelineURI = uri;
-    }
-
-    /**
-     * API method to set the pipeline Resource.
-     * @param pipelineResource Resource to set as the pipeline.
+     * @param pipeline pipeline location
      */
-    public void setPipelineResource(Resource pipelineResource) {
- 	this.pipelineResource = pipelineResource;
+    public void setPipeline(Resource pipeline) {
+        try {
+            userArgs.setPipeline(pipeline.getInputStream(), pipeline.toString());
+            this.pipelineResource = pipeline;
+        } catch (Exception e) {
+            handleError(e);
+        }
     }
 
     /**
      * Add a nested &lt;pipeline&gt; element.
-     * @param rc the configured Resources object represented as
-     * &lt;pipeline&gt;.
+     *
+     * @param pipeline the configured Resources object represented as &lt;pipeline&gt;.
      */
-    public void addConfiguredPipeline(Resources rc) {
- 	if (rc.size() != 1) {
-	    throw new BuildException("The pipeline element must be specified with exactly one"
-			+ " nested resource.");
- 	} else {
-	    setPipelineResource((Resource) rc.iterator().next());
- 	}
+    public void addConfiguredPipeline(UseableResources pipeline) {
+        if (!pipeline.shouldUse()) {
+            log("Skipping pipeline as it is configured to be unused.", Project.MSG_DEBUG);
+            return;
+        }
+
+        if (pipeline.size() == 0) {
+            return;
+        }
+
+        if (pipeline.size() > 1) {
+            handleError("The pipeline element must be specified with at most one nested resource.");
+        }
+
+        setPipeline((Resource) pipeline.iterator().next());
     }
 
     /**
@@ -320,8 +348,9 @@ public class CalabashTask extends MatchingTask {
      * files should be copied to;
      * required, unless <tt>in</tt> and <tt>out</tt> are
      * specified.
+     *
      * @param dir the name of the destination directory
-     **/
+     */
     public void setDestdir(File dir) {
         destDir = dir;
     }
@@ -331,79 +360,80 @@ public class CalabashTask extends MatchingTask {
      * optional, default is the first unmatched pipeline output port.
      *
      * @param port the port name
-     **/
+     */
     public void setOutPort(String port) {
         outPort = port;
     }
 
     /**
      * Set the output resource.
-     * optional, implicit and/or explicit filest will be used if this
+     * optional, implicit and/or explicit fileset will be used if this
      * and inResource are not set.
      *
      * @param outResource the {@link org.apache.tools.ant.types.Resource}
-     **/
+     */
     public void setOut(Resource outResource) {
         this.outResource = outResource;
     }
 
     /**
-     * Work with an instance of an <output> element already configured
-     * by Ant.
+     * Work with an instance of an <output> element already configured by Ant.
+     *
      * @param o the configured Port
      */
     public void addConfiguredOutput(Port o) {
-	if (!o.shouldUse()) {
-	    log("Skipping output '" + o.getPort() + "' as it is configured to be unused.", Project.MSG_DEBUG);
-	    return;
-	}
+        if (!o.shouldUse()) {
+            log("Skipping output '" + o.getPort() + "' as it is configured to be unused.", Project.MSG_DEBUG);
+            return;
+        }
 
-	String port = o.getPort();
- 	FileNameMapper outputMapper = o.getMapper();
-	Union resources = o.getResources();
+        String port = o.getPort();
+        FileNameMapper outputMapper = o.getMapper();
+        Union resources = o.getResources();
 
-	if (port == null) {
+        if (port == null) {
             port = outPort;
         }
 
-	if (outputMapper != null && resources.size() != 0) {
-	    handleError("Both mapper and fileset on input port: " + port);
-	    return;
-	}
+        if (outputMapper != null && resources.size() != 0) {
+            handleError("Both mapper and fileset on output port: " + port);
+            return;
+        }
 
-	if (outputMapper != null) {
-	    if (outputResources.containsKey(port)) {
-		handleError("Mapper used on output port that already has resources: " + port);
-		return;
-	    }
+        if (outputMapper != null) {
+            if (outputResources.containsKey(port)) {
+                handleError("Mapper used on output port that already has resources: " + port);
+                return;
+            }
 
-	    if (outputMappers.containsKey(port)) {
-		handleError("Mapper used on output port that already has a mapper: " + port);
-		return;
-	    }
+            if (outputMappers.containsKey(port)) {
+                handleError("Mapper used on output port that already has a mapper: " + port);
+                return;
+            }
 
-	    outputMappers.put(port, outputMapper);
-	} else {
-	    if (outputMappers.containsKey(port)) {
-		handleError("Resources used on output port that already has a mapper: " + port);
-		return;
-	    }
+            outputMappers.put(port, outputMapper);
+        } else {
+            if (outputMappers.containsKey(port)) {
+                handleError("Resources used on output port that already has a mapper: " + port);
+                return;
+            }
 
-	    if (!outputResources.containsKey(port)) {
-		outputResources.put(port, new Union ());
-	    }
-	    outputResources.get(port).add(o.getResources());
-	}
+            if (!outputResources.containsKey(port)) {
+                outputResources.put(port, new Union());
+            }
+            outputResources.get(port).add(resources);
+        }
     }
 
     /**
      * Set the desired file extension to be used for the target;
      * optional, default is '-out.xml'.
+     *
      * @param name the extension to use
-     **/
+     */
     public void setExtension(String name) {
         targetExtension = name;
-	isTargetExtensionSet = true;
+        isTargetExtensionSet = true;
     }
 
     /**
@@ -421,24 +451,22 @@ public class CalabashTask extends MatchingTask {
      */
     public void add(ResourceCollection rc) {
         resources.add(rc);
-	isResourcesSet = true;
     }
 
     /**
      * Whether to use the implicit fileset.
      *
-     * <p>Set this to false if you want explicit control with nested
-     * resource collections.</p>
-     * @param useimplicitfileset set to true if you want to use
-     * implicit fileset
+     * <p>Set this to false if you want explicit control with nested resource collections.</p>
+     *
+     * @param useimplicitfileset set to true if you want to use implicit fileset
      */
     public void setUseImplicitFileset(boolean useimplicitfileset) {
         useImplicitFileset = useimplicitfileset;
     }
 
     /**
-     * Whether to process all files in the included directories as
-     * well; optional, default is true.
+     * Whether to process all files in the included directories as well;
+     * optional, default is true.
      *
      * @param b true if files in included directories are processed.
      */
@@ -448,30 +476,31 @@ public class CalabashTask extends MatchingTask {
 
     /**
      * Defines the mapper to map source to destination files.
+     *
      * @param mapper the mapper to use
-     * @exception BuildException if more than one mapper is defined
+     * @throws BuildException if more than one mapper is defined
      */
     public void addMapper(Mapper mapper) throws BuildException {
-	add(mapper.getImplementation());
+        add(mapper.getImplementation());
     }
 
     /**
-     * Adds a nested filenamemapper.
+     * Adds a nested FileNameMapper.
+     *
      * @param fileNameMapper the mapper to add
-     * @exception BuildException if more than one mapper is defined
+     * @throws BuildException if more than one mapper is defined
      */
     public void add(FileNameMapper fileNameMapper) throws BuildException {
         if (mapper != null) {
             handleError("Cannot define more than one mapper");
-	    return;
+            return;
         }
 
-	mapper = fileNameMapper;
+        mapper = fileNameMapper;
     }
 
     /**
-     * Set whether to check dependencies, or always generate;
-     * optional, default is false.
+     * Set whether to check dependencies, or always generate; optional, default is false.
      *
      * @param force true if always generate.
      */
@@ -494,57 +523,97 @@ public class CalabashTask extends MatchingTask {
     }
 
     /**
-     * Work with an instance of a <binding> element already configured
-     * by Ant.
-     * @param n the configured Namespace
+     * Work with an instance of a <binding> element already configured by Ant.
+     *
+     * @param namespace the configured Namespace
      */
-    public void addConfiguredNamespace(Namespace n) {
-	// prefix and/or uri may have been omitted in build file
-	// without Ant complaining
-	if (n.getPrefix() == null) {
-	   handleError("<namespace> prefix cannot be null");
-	   return;
-	}
+    public void addConfiguredNamespace(Namespace namespace) {
+        if (!namespace.shouldUse()) {
+            log("Skipping namespace '" + namespace.getPrefix() + "=" + namespace.getURI() + "' as it is configured to be unused.", Project.MSG_DEBUG);
+            return;
+        }
 
-	if (n.getURI() == null) {
-	   handleError("<namespace> URI cannot be null");
-	   return;
-	}
+        // prefix and/or uri may have been omitted in build file
+        // without Ant complaining
+        if (namespace.getPrefix() == null) {
+            handleError("<namespace> prefix cannot be null");
+            return;
+        }
 
-	if (bindings.containsKey(n.getPrefix())) {
-	    handleError("Duplicated <namespace> prefix: " + n.getPrefix());
-	   return;
-	}
+        if (namespace.getURI() == null) {
+            handleError("<namespace> URI cannot be null");
+            return;
+        }
 
-        bindings.put(n.getPrefix(), n.getURI());
+        try {
+            userArgs.addBinding(namespace.getPrefix(), namespace.getURI());
+        } catch (Exception e) {
+            handleError(e);
+        }
     }
 
     /**
-     * Work with an instance of a <option> element already configured
-     * by Ant.
-     * @param o the configured Option
+     * Work with an instance of a <option> element already configured by Ant.
+     *
+     * @param option the configured Option
      */
-    public void addConfiguredOption(Option o) {
-	if (!o.shouldUse()) {
-	    log("Skipping option '" + o.getName() + "' as it is configured to be unused.", Project.MSG_DEBUG);
-	    return;
-	}
+    public void addConfiguredOption(Option option) {
+        if (!option.shouldUse()) {
+            log("Skipping option '" + option.getName() + "' as it is configured to be unused.", Project.MSG_DEBUG);
+            return;
+        }
 
-	options.add(o);
+        options.add(option);
     }
 
     /**
-     * Work with an instance of a <parameter> element already
-     * configured by Ant.
-     * @param p the configured Parameter
+     * Use an {@code <option>} element.
+     *
+     * @param option the Option
      */
-    public void addConfiguredParameter(Parameter p) {
-	if (!p.shouldUse()) {
-	    log("Skipping parameter '" + p.getName() + "' as it is configured to be unused.", Project.MSG_DEBUG);
-	    return;
-	}
+    public void useOption(Option option) {
+        if (!option.shouldUse()) {
+            log("Skipping option '" + option.getName() + "' as it is configured to be unused.", Project.MSG_DEBUG);
+            return;
+        }
 
-	parameters.add(p);
+        try {
+            userArgs.addOption(option.getName(), option.getValue());
+        } catch (Exception e) {
+            handleError(e);
+        }
+    }
+
+    /**
+     * Work with an instance of a <parameter> element already configured by Ant.
+     *
+     * @param parameter the configured Parameter
+     */
+    public void addConfiguredParameter(Parameter parameter) {
+        if (!parameter.shouldUse()) {
+            log("Skipping parameter '" + parameter.getName() + "' as it is configured to be unused.", Project.MSG_DEBUG);
+            return;
+        }
+
+        parameters.add(parameter);
+    }
+
+    /**
+     * Use a {@code <parameter>} element.
+     *
+     * @param parameter the Parameter
+     */
+    public void useParameter(Parameter parameter) {
+        if (!parameter.shouldUse()) {
+            log("Skipping parameter '" + parameter.getName() + "' as it is configured to be unused.", Project.MSG_DEBUG);
+            return;
+        }
+
+        try {
+            userArgs.addParam(parameter.getPort(), parameter.getName(), parameter.getValue());
+        } catch (Exception e) {
+            handleError(e);
+        }
     }
 
     /**
@@ -554,7 +623,11 @@ public class CalabashTask extends MatchingTask {
      * @param debug true if enable debug output
      */
     public void setDebug(boolean debug) {
-        this.debug = debug;
+        try {
+            userArgs.setDebug(debug);
+        } catch (Exception e) {
+            handleError(e);
+        }
     }
 
     /**
@@ -565,18 +638,25 @@ public class CalabashTask extends MatchingTask {
      * @param generalValues true if enable general values
      */
     public void setGeneralValues(boolean generalValues) {
-        this.extensionValues = generalValues;
+        try {
+            userArgs.setExtensionValues(generalValues);
+        } catch (Exception e) {
+            handleError(e);
+        }
     }
 
     /**
-     * Set whether xpointer attribute on an XInclude element can be
-     * used when parse="text";
+     * Set whether xpointer attribute on an XInclude element can be used when parse="text";
      * optional, default is false.
      *
-     * @param xpointerOnText true if enable XPointer on text
+     * @param xPointerOnText true if enable XPointer on text
      */
-    public void setXPointerOnText(boolean xpointerOnText) {
-        this.allowXPointerOnText = xpointerOnText;
+    public void setXPointerOnText(boolean xPointerOnText) {
+        try {
+            userArgs.setAllowXPointerOnText(xPointerOnText);
+        } catch (Exception e) {
+            handleError(e);
+        }
     }
 
     /**
@@ -586,7 +666,11 @@ public class CalabashTask extends MatchingTask {
      * @param useXslt10 true if enable XSLT 1.0 support
      */
     public void setUseXslt10(boolean useXslt10) {
-        this.useXslt10 = useXslt10;
+        try {
+            userArgs.setUseXslt10(useXslt10);
+        } catch (Exception e) {
+            handleError(e);
+        }
     }
 
     /**
@@ -596,306 +680,481 @@ public class CalabashTask extends MatchingTask {
      * @param transparentJSON true if enable translation
      */
     public void setTransparentJSON(boolean transparentJSON) {
-        this.transparentJSON = transparentJSON;
+        try {
+            userArgs.setTransparentJSON(transparentJSON);
+        } catch (Exception e) {
+            handleError(e);
+        }
     }
 
     /**
-     * Set whether to automatically translate between JSON and XML;
-     * optional, default is false.
+     * Set the desired JSON flavor.
      *
      * @param jsonFlavor the flavor of JSON/XML transformation to use
      */
     public void setJSONFlavor(String jsonFlavor) {
-        this.jsonFlavor = jsonFlavor;
+        try {
+            userArgs.setJsonFlavor(jsonFlavor);
+        } catch (Exception e) {
+            handleError(e);
+        }
     }
 
+    /**
+     * Set the path to the file where profile information should be written to, or {@code -} for stdout.
+     *
+     * @param profileFile the path to the file where profile information should be written to, or {@code -} for stdout
+     */
+    public void setProfileFile(Resource profileFile) {
+        try {
+            userArgs.setProfile(profileFile.getOutputStream());
+        } catch (Exception e) {
+            handleError(e);
+        }
+    }
 
-    /** Do the work. */
-    public void execute() {
-	Resource usePipelineResource = null;
-	if (pipelineURI != null) {
-	    // If we enter here, it means that the pipeline is supplied
-	    // via 'pipeline' attribute
-	    File pipelineFile = getProject().resolveFile(pipelineURI);
-	    FileResource fr = new FileResource();
-	    fr.setProject(getProject());
-	    fr.setFile(pipelineFile);
-	    usePipelineResource = fr;
-	} else {
-	    usePipelineResource = pipelineResource;
-	}
+    /**
+     * Add a nested {@code <profile>} element.
+     *
+     * @param profile the configured Resources object represented as {@code <profile>}
+     */
+    public void addConfiguredProfile(UseableResources profile) {
+        if (!profile.shouldUse()) {
+            log("Skipping profile as it is configured to be unused.", Project.MSG_DEBUG);
+            return;
+        }
 
-	if (!usePipelineResource.isExists()) {
-	    handleError("pipeline '" + usePipelineResource.getName() + "' does not exist");
-	    return;
-	}
+        if (profile.size() == 0) {
+            return;
+        }
 
-	if (inResource != null && !inResource.isExists()) {
-	    handleError("input file '" + inResource.getName() + "' does not exist");
-	    return;
-	}
+        if (profile.size() > 1) {
+            handleError("The profile element must be specified with at most one nested resource.");
+        }
 
-	if (inResource != null && resources.size() != 0) {
-	    handleError("'in' and explicit filesets cannot be used together.");
-	    return;
-	}
+        setProfileFile((Resource) profile.iterator().next());
+    }
 
-	if ((inResource != null || outResource != null) && useImplicitFileset) {
-	    log("'in' and/or 'out' cannot be used with implicit fileset: ignoring implicit fileset.", Project.MSG_VERBOSE);
-	    useImplicitFileset = false;
-	}
+    /**
+     * Request a specific edition of Saxon. Must be {@code he} (default), {@code pe} or {@code ee}.
+     *
+     * @param saxonProcessor the edition of Saxon that should be used, must be {@code he} (default), {@code pe} or {@code ee}
+     */
+    public void setSaxonProcessor(String saxonProcessor) {
+        try {
+            userArgs.setSaxonProcessor(saxonProcessor);
+        } catch (Exception e) {
+            handleError(e);
+        }
+    }
 
-	if (outResource != null && mapper != null) {
-	    handleError("Nested <mapper> for default output and 'out' cannot be used together.");
-	    return;
-	}
+    /**
+     * Load the specified Saxon configuration file.
+     *
+     * @param saxonConfigFile the path to the Saxon configuration file to be loaded
+     */
+    public void setSaxonConfigFile(Resource saxonConfigFile) {
+        try {
+            userArgs.setSaxonConfig(saxonConfigFile.getInputStream(), saxonConfigFile.toString());
+        } catch (Exception e) {
+            handleError(e);
+        }
+    }
 
-	if ((outputMappers.containsKey(outPort) ||
-	     outputResources.containsKey(outPort)) &&
-	    mapper != null) {
-	    handleError("Nested <mapper> and port for default output cannot be used together.");
-	    return;
-	}
+    /**
+     * Add a nested {@code <saxonConfig>} element.
+     *
+     * @param saxonConfig the configured Resources object represented as {@code <saxonConfig>}
+     */
+    public void addConfiguredSaxonConfig(UseableResources saxonConfig) {
+        if (!saxonConfig.shouldUse()) {
+            log("Skipping saxonConfig as it is configured to be unused.", Project.MSG_DEBUG);
+            return;
+        }
 
-	if (outResource != null && isTargetExtensionSet) {
-	    handleError("'extension' and 'out' cannot be used together.");
-	    return;
-	}
+        if (saxonConfig.size() == 0) {
+            return;
+        }
 
-	if (isTargetExtensionSet && mapper != null) {
-	    handleError("'extension' and nested <mapper> cannot be used together.");
-	    return;
-	}
+        if (saxonConfig.size() > 1) {
+            handleError("The saxonConfig element must be specified with at most one nested resource.");
+        }
 
-	File savedBaseDir = baseDir;
+        setSaxonConfigFile((Resource) saxonConfig.iterator().next());
+    }
+
+    /**
+     * Specify whether schema-aware processing should be done.
+     *
+     * @param schemaAware whether schema-aware processing should be done
+     */
+    public void setSchemaAware(boolean schemaAware) {
+        try {
+            userArgs.setSchemaAware(schemaAware);
+        } catch (Exception e) {
+            handleError(e);
+        }
+    }
+
+    /**
+     * Specify whether "safe" execution should be done.
+     *
+     * @param safeMode whether "safe" execution should be done
+     */
+    public void setSafeMode(boolean safeMode) {
+        try {
+            userArgs.setSafeMode(safeMode);
+        } catch (Exception e) {
+            handleError(e);
+        }
+    }
+
+    /**
+     * Specify a particular configuration file to be loaded.
+     *
+     * @param configFile the path to a particular configuration file to be loaded
+     */
+    public void setConfigFile(Resource configFile) {
+        try {
+            userArgs.setConfig(configFile.getInputStream(), configFile.toString());
+        } catch (Exception e) {
+            handleError(e);
+        }
+    }
+
+    /**
+     * Add a nested {@code <config>} element.
+     *
+     * @param config the configured Resources object represented as {@code <config>}
+     */
+    public void addConfiguredConfig(UseableResources config) {
+        if (!config.shouldUse()) {
+            log("Skipping config as it is configured to be unused.", Project.MSG_DEBUG);
+            return;
+        }
+
+        if (config.size() == 0) {
+            return;
+        }
+
+        if (config.size() > 1) {
+            handleError("The config element must be specified with at most one nested resource.");
+        }
+
+        setConfigFile((Resource) config.iterator().next());
+    }
+
+    /**
+     * Specify the default style for p:log output. Must be {@code off}, {@code plain}, {@code wrapped} (default), or {@code directory}.
+     *
+     * @param logStyle the default style for p:log output, must be {@code off}, {@code plain}, {@code wrapped} (default), or {@code directory}
+     */
+    public void setLogStyle(String logStyle) {
+        try {
+            userArgs.setLogStyle(logStyle);
+        } catch (Exception e) {
+            handleError(e);
+        }
+    }
+
+    /**
+     * Specify a resolver class for entity resolution.
+     *
+     * @param entityResolver the resolver class for entity resolution
+     */
+    public void setEntityResolver(Class entityResolver) {
+        try {
+            userArgs.setEntityResolverClass(entityResolver.getName());
+        } catch (Exception e) {
+            handleError(e);
+        }
+    }
+
+    /**
+     * Specify a resolver class for URI resolution.
+     *
+     * @param uriResolver the resolver class for URI resolution
+     */
+    public void setURIResolver(Class uriResolver) {
+        try {
+            userArgs.setUriResolverClass(uriResolver.getName());
+        } catch (Exception e) {
+            handleError(e);
+        }
+    }
+
+    /**
+     * Add a nested {@code <library>} element.
+     *
+     * @param libraries the configured Resources object represented as {@code <library>}.
+     */
+    public void addConfiguredLibrary(UseableResources libraries) {
+        if (!libraries.shouldUse()) {
+            log("Skipping library as it is configured to be unused.", Project.MSG_DEBUG);
+            return;
+        }
 
         try {
-	    if (baseDir == null) {
-		baseDir = getProject().getBaseDir();
-	    }
-
-	    if (sysProperties.size() > 0) {
-		sysProperties.setSystem();
-	    }
-
-	    // When prefix "p" not set, default to the XProc namespace
-	    if (!bindings.containsKey("p")) {
-		bindings.put("p", XProcConstants.NS_XPROC);
-	    }
-
-	    // Can only really work with options now bindings all present
-	    for (Option o : options) {
-		QName qname = makeQName(o.getName());
-		String value = o.getValue();
-
-		if (optionsMap.containsKey(qname)) {
-		    handleError("Duplicated option QName: " + qname.getClarkName());
-		    continue;
-		}
-
-		optionsMap.put(qname, new RuntimeValue(value));
-	    }
-
-	    // Can only really work with parameters now bindings all present
-	    for (Parameter p : parameters) {
-		String port = p.getPort();
-		QName qname = makeQName(p.getName());
-		String value = p.getValue();
-
-		Hashtable<QName,RuntimeValue> portParams;
-		if (!parametersTable.containsKey(port)) {
-		    portParams = new Hashtable<QName,RuntimeValue> ();
-		} else {
-		    portParams = parametersTable.get(port);
-		    if (portParams.containsKey(qname)) {
-			handleError("Duplicated parameter QName: " + qname.getClarkName());
-			continue;
-		    }
-		}
-
-		portParams.put(qname, new RuntimeValue(value));
-		parametersTable.put(port, portParams);
-	    }
-
-	    //-- make sure destination directory exists...
-	    checkDest();
-
-	    // if we have an in file or out file then process them
-	    if (inResource != null) {
-		Port i = new Port();
-		i.setPort(inPort);
-		i.add(inResource);
-		addConfiguredInput(i);
-	    }
-	    // Since processing specified inputs, use outResource too
-	    if (outResource != null) {
-		Port o = new Port();
-		o.setPort(outPort);
-		o.add(outResource);
-		addConfiguredOutput(o);
-	    }
-
-	    if (outputResources.containsKey(outPort)
-		&& (isTargetExtensionSet || mapper != null)) {
-		handleError("Either 'out' or <output> corresponding to default output port and either 'extension' and nested <mapper> for naming output cannot be used together.");
-		return;
-	    }
-
-	    // Set up Calabash config.
-	    XProcConfiguration config =
-		new XProcConfiguration("he", false);
-            config.extensionValues |= extensionValues;
-            config.xpointerOnText |= allowXPointerOnText;
-            config.transparentJSON |= transparentJSON;
-            if (jsonFlavor != null) {
-		if (!JSONtoXML.knownFlavor(jsonFlavor)) {
-		    handleError("Can't parse JSON flavor '" + jsonFlavor + "' or unrecognized format: " + jsonFlavor);
-		    return;
-                    }
-                config.jsonFlavor = jsonFlavor;
+            for (Iterator iterator = libraries.iterator(); iterator.hasNext(); ) {
+                Resource library = (Resource) iterator.next();
+                userArgs.addLibrary(library.getInputStream(), library.toString());
             }
-            config.useXslt10 |= useXslt10;
+        } catch (Exception e) {
+            handleError(e);
+        }
+    }
 
-            config.debug = debug;
+    /**
+     * Add a nested {@code <step>} element.
+     *
+     * @param step the configured Step object represented as {@code <step>}.
+     */
+    public void addConfiguredStep(Step step) {
+        if (!step.shouldUse()) {
+            log("Skipping step '" + step.getName() + "' as it is configured to be unused.", Project.MSG_DEBUG);
+            return;
+        }
 
-	    // If neither implicit or explicit fileset, assume user
-	    // knows what they're doing even though there may be no
-	    // input or output ports.
-	    if (!useImplicitFileset && resources.size() == 0) {
-		HashMap<String, Union> useInputResources =
-		    new HashMap<String, Union> ();
-		// Any fixed resources on any input ports.
-		useInputResources.putAll(inputResources);
-		// Any mapped resources on non-inPort input ports.
-		for (String port : inputMappers.keySet()) {
-		    FileNameMapper inputMapper = inputMappers.get(port);
-		    for (Resource resource : inputResources.get(inPort).listResources()) {
-			String[] inputFileNames =
-			    inputMapper.mapFileName(resource.getName());
-			// Mapper may produce zero or more filenames,
-			// which may or may not be what was wanted but
-			// only the user will know that.
-			Union mappedResources = new Union();
-			for (String fileName : inputFileNames) {
-			    FileResource mappedResource =
-				new FileResource(baseDir, fileName);
-			    if (mappedResource.isExists()) {
-				mappedResources.add(mappedResource);
-			    } else {
-				log("Skipping non-exstent mapped resource: " + mappedResource.toString(), Project.MSG_DEBUG);
-			    }
-			}
-			useInputResources.put(port, mappedResources);
-		    }
-		}
-		HashMap<String, Union> useOutputResources =
-		    new HashMap<String, Union> ();
-		useOutputResources.putAll(outputResources);
+        if (step.getName() == null) {
+            handleError("Steps must have their 'name' attribute set");
+        }
 
-		if (outputMappers.size() != 0) {
-		    for (Resource resource : inputResources.get(inPort).listResources()) {
-			// Aadd any mapped resources on output ports.
-			for (String port : outputMappers.keySet()) {
-			    FileNameMapper outputMapper = outputMappers.get(port);
+        steps.add(step);
+    }
 
-			    String[] outputFileNames =
-				outputMapper.mapFileName(resource.getName());
-			    // Mapper may produce zero or more filenames,
-			    // which may or may not be what was wanted but
-			    // only the user will know that.
-			    if (outputFileNames != null) {
-				Union outputResources = new Union();
-				for (String fileName : outputFileNames) {
-				    outputResources.add(new FileResource(baseDir, fileName));
-				}
-				useOutputResources.put(port, outputResources);
-			    }
-			}
-		    }
-		}
-		process(config,
-			useInputResources,
-			useOutputResources,
-			usePipelineResource,
-			optionsMap,
-			parametersTable,
-			force);
-		//return;
-	    } else { // Using implicit and/or explicit filesets
-		if (useImplicitFileset) {
-		    DirectoryScanner scanner = getDirectoryScanner(baseDir);
-		    log("Pipelining into " + destDir, Project.MSG_INFO);
+    /**
+     * Do the work.
+     */
+    public void execute() {
+        if (((inResource != null) || (resources.size() != 0) || !inputResources.isEmpty() || !inputMappers.isEmpty())
+            && !steps.isEmpty()) {
 
-		    // Process all the files marked for styling
-		    String[] includedFiles = scanner.getIncludedFiles();
-		    for (int i = 0; i < includedFiles.length; ++i) {
-			resources.add(new FileResource(baseDir, includedFiles[i]));
-		    }
-		    if (performDirectoryScan) {
-			// Process all the directories marked for styling
-			String[] includedDirs = scanner.getIncludedDirectories();
-			for (int j = 0; j < includedDirs.length; ++j) {
-			    includedFiles = new File(baseDir, includedDirs[j]).list();
-			    for (int i = 0; i < includedFiles.length; ++i) {
-				resources.add(new FileResource(baseDir, includedDirs[j] + File.separator + includedFiles[i]));
-			    }
-			}
-		    }
-		} else { // only resource collections, there better be some
-		    if (resources.size() == 0) {
-			if (failOnNoResources) {
-			    handleError("no resources specified");
-			}
-			return;
-		    }
-		}
+            handleError("if steps are given, only active inputs nested in these steps are supported");
+        }
 
-    		FileNameMapper useMapper = null;
-		if (!outputResources.containsKey(outPort)) {
-		    if (mapper != null) {
-			useMapper = mapper;
-		    } else {
-			useMapper = new ExtensionMapper();
-		    }
+        if (!parameters.isEmpty() && !steps.isEmpty()) {
+            handleError("if steps are given, only active parameters nested in these steps are supported");
+        }
+
+        if (!options.isEmpty() && !steps.isEmpty()) {
+            handleError("if steps are given, only active options nested in these steps are supported");
+        }
+
+        if ((pipelineResource != null) && !pipelineResource.isExists()) {
+            handleError("pipeline '" + pipelineResource.getName() + "' does not exist");
+            return;
+        }
+
+        if (inResource != null && !inResource.isExists()) {
+            handleError("input file '" + inResource.getName() + "' does not exist");
+            return;
+        }
+
+        if (inResource != null && resources.size() != 0) {
+            handleError("'in' and explicit filesets cannot be used together.");
+            return;
+        }
+
+        if ((inResource != null || outResource != null) && useImplicitFileset) {
+            log("'in' and/or 'out' cannot be used with implicit fileset: ignoring implicit fileset.", Project.MSG_VERBOSE);
+            useImplicitFileset = false;
+        }
+
+        if (!steps.isEmpty() && useImplicitFileset) {
+            log("steps cannot be used with implicit fileset: ignoring implicit fileset.", Project.MSG_VERBOSE);
+            useImplicitFileset = false;
+        }
+
+        if (outResource != null && mapper != null) {
+            handleError("Nested <mapper> for default output and 'out' cannot be used together.");
+            return;
+        }
+
+        if ((outputMappers.containsKey(outPort) ||
+             outputResources.containsKey(outPort)) &&
+            mapper != null) {
+            handleError("Nested <mapper> and port for default output cannot be used together.");
+            return;
+        }
+
+        if (outResource != null && isTargetExtensionSet) {
+            handleError("'extension' and 'out' cannot be used together.");
+            return;
+        }
+
+        if (isTargetExtensionSet && mapper != null) {
+            handleError("'extension' and nested <mapper> cannot be used together.");
+            return;
+        }
+
+        try {
+            if (baseDir == null) {
+                baseDir = getProject().getBaseDir();
+            }
+
+            if (sysProperties.size() > 0) {
+                sysProperties.setSystem();
+            }
+
+            //-- make sure destination directory exists...
+            checkDest();
+
+            // if we have an in file or out file then process them
+            if (inResource != null) {
+                Input i = new Input();
+                i.setPort(inPort);
+                i.add(inResource);
+                i.setType(inType);
+                addConfiguredInput(i);
+            }
+            // Since processing specified inputs, use outResource too
+            if (outResource != null) {
+                Port o = new Port();
+                o.setPort(outPort);
+                o.add(outResource);
+                addConfiguredOutput(o);
+            }
+
+            if (outputResources.containsKey(outPort)
+                && (isTargetExtensionSet || mapper != null)) {
+                handleError("Either 'out' or <output> corresponding to default output port and either 'extension' or nested <mapper> for naming output cannot be used together.");
+                return;
+            }
+
+            for (Parameter parameter : parameters) {
+                useParameter(parameter);
+            }
+
+            for (Option option : options) {
+                useOption(option);
+            }
+
+            // If neither implicit or explicit fileset, assume user
+            // knows what they're doing even though there may be no
+            // input or output ports.
+            if (!useImplicitFileset && resources.size() == 0) {
+                Map<String, List<TypedResource>> useInputResources = new HashMap<String, List<TypedResource>>();
+                // Any fixed resources on any input ports.
+                useInputResources.putAll(inputResources);
+                // Any mapped resources on non-inPort input ports.
+                for (String port : inputMappers.keySet()) {
+                    TypedFileNameMapper inputMapper = inputMappers.get(port);
+                    for (TypedResource typedResource : inputResources.get(inPort)) {
+                        String[] inputFileNames = inputMapper.mapFileName(typedResource.getResource().getName());
+                        // Mapper may produce zero or more filenames,
+                        // which may or may not be what was wanted but
+                        // only the user will know that.
+                        if (inputFileNames != null) {
+                            List<TypedResource> mappedResources = new ArrayList<TypedResource>();
+                            for (String fileName : inputFileNames) {
+                                FileResource mappedResource = new FileResource(baseDir, fileName);
+                                if (mappedResource.isExists()) {
+                                    mappedResources.add(new TypedResource(mappedResource, inputMapper.getType(), inputMapper.getContentType()));
+                                } else {
+                                    log("Skipping non-exstent mapped resource: " + mappedResource.toString(), Project.MSG_DEBUG);
+                                }
+                            }
+                            useInputResources.put(port, mappedResources);
+                        }
+                    }
+                }
+                HashMap<String, Union> useOutputResources = new HashMap<String, Union>();
+                useOutputResources.putAll(outputResources);
+
+                if (outputMappers.size() != 0) {
+                    for (TypedResource typedResource : inputResources.get(inPort)) {
+                        // Add any mapped resources on output ports.
+                        for (String port : outputMappers.keySet()) {
+                            FileNameMapper outputMapper = outputMappers.get(port);
+
+                            String[] outputFileNames = outputMapper.mapFileName(typedResource.getResource().getName());
+                            // Mapper may produce zero or more filenames,
+                            // which may or may not be what was wanted but
+                            // only the user will know that.
+                            if (outputFileNames != null) {
+                                Union outputResources = new Union();
+                                for (String fileName : outputFileNames) {
+                                    outputResources.add(new FileResource(destDir, fileName));
+                                }
+                                useOutputResources.put(port, outputResources);
+                            }
+                        }
+                    }
+                }
+                process(useInputResources, useOutputResources);
+            } else { // Using implicit and/or explicit filesets
+                if (useImplicitFileset) {
+                    DirectoryScanner scanner = getDirectoryScanner(baseDir);
+                    log("Pipelining into " + destDir, Project.MSG_INFO);
+
+                    // Process all the files marked for styling
+                    String[] includedFiles = scanner.getIncludedFiles();
+                    for (int i = 0; i < includedFiles.length; ++i) {
+                        resources.add(new FileResource(baseDir, includedFiles[i]));
+                    }
+                    if (performDirectoryScan) {
+                        // Process all the directories marked for styling
+                        String[] includedDirs = scanner.getIncludedDirectories();
+                        for (int j = 0; j < includedDirs.length; ++j) {
+                            includedFiles = new File(baseDir, includedDirs[j]).list();
+                            for (int i = 0; i < includedFiles.length; ++i) {
+                                resources.add(new FileResource(baseDir, includedDirs[j] + File.separator + includedFiles[i]));
+                            }
+                        }
+                    }
+                } else { // only resource collections, there better be some
+                    if (resources.size() == 0) {
+                        if (failOnNoResources) {
+                            handleError("no resources specified");
+                        }
+                        return;
+                    }
                 }
 
-		// Process implicit and/or explicit resources one at a
-		// time.
+                FileNameMapper useMapper = null;
+                if (!outputResources.containsKey(outPort)) {
+                    if (mapper != null) {
+                        useMapper = mapper;
+                    } else {
+                        useMapper = new ExtensionMapper();
+                    }
+                }
+
+                // Process implicit and/or explicit resources one at a
+                // time.
                 for (Resource resource : resources.listResources()) {
                     log("Resource: " + resource.getName(), Project.MSG_DEBUG);
-                    HashMap<String, Union> useInputResources =
-			new HashMap<String, Union> ();
+                    Map<String, List<TypedResource>> useInputResources = new HashMap<String, List<TypedResource>>();
 
-		    // Any fixed resources on other input ports.
-		    useInputResources.putAll(inputResources);
-		    // The resource.
-                    useInputResources.put(inPort, new Union(resource));
-		    // Any mapped resources on other input ports.
-		    for (String port : inputMappers.keySet()) {
-			FileNameMapper inputMapper = inputMappers.get(port);
+                    // Any fixed resources on other input ports.
+                    useInputResources.putAll(inputResources);
+                    // The resource.
+                    useInputResources.put(inPort, asList(new TypedResource(resource, inType)));
+                    // Any mapped resources on other input ports.
+                    for (String port : inputMappers.keySet()) {
+                        TypedFileNameMapper inputMapper = inputMappers.get(port);
 
-                        String[] inputFileNames =
-			    inputMapper.mapFileName(resource.getName());
-			// Mapper may produce zero or more filenames,
-			// which may or may not be what was wanted but
-			// only the user will know that.
-			if (inputFileNames != null) {
-			    Union mappedResources = new Union();
-			    for (String fileName : inputFileNames) {
-				mappedResources.add(new FileResource(baseDir, fileName));
-			    }
-			    useInputResources.put(port, mappedResources);
-			}
-		    }
+                        String[] inputFileNames = inputMapper.mapFileName(resource.getName());
+                        // Mapper may produce zero or more filenames,
+                        // which may or may not be what was wanted but
+                        // only the user will know that.
+                        if (inputFileNames != null) {
+                            List<TypedResource> mappedResources = new ArrayList<TypedResource>();
+                            for (String fileName : inputFileNames) {
+                                FileResource mappedResource = new FileResource(baseDir, fileName);
+                                mappedResources.add(new TypedResource(mappedResource, inputMapper.getType(), inputMapper.getContentType()));
+                            }
+                            useInputResources.put(port, mappedResources);
+                        }
+                    }
 
-                    HashMap<String, Union> useOutputResources =
-			new HashMap<String, Union> ();
-		    useOutputResources.putAll(outputResources);
-		    // FIXME: Why is it necessary to check for null?
+                    HashMap<String, Union> useOutputResources = new HashMap<String, Union>();
+                    useOutputResources.putAll(outputResources);
+                    // FIXME: Why is it necessary to check for null?
                     if (useMapper != null) {
                         String[] outFileName = useMapper.mapFileName(resource.getName());
-			// Require exactly one output for each mapped
-			// input.
+                        // Require exactly one output for each mapped
+                        // input.
                         if (outFileName == null || outFileName.length == 0) {
                             log("Skipping '" + resource.getName() + "' as it cannot be mapped to output.", Project.MSG_VERBOSE);
                             continue;
@@ -906,262 +1165,133 @@ public class CalabashTask extends MatchingTask {
                         useOutputResources.put(outPort, new Union(new FileResource(destDir, outFileName[0])));
                     }
 
-		    // Any mapped resources on other output ports.
-		    for (String port : outputMappers.keySet()) {
-			FileNameMapper outputMapper = outputMappers.get(port);
+                    // Any mapped resources on other output ports.
+                    for (String port : outputMappers.keySet()) {
+                        FileNameMapper outputMapper = outputMappers.get(port);
 
-                        String[] outputFileNames =
-			    outputMapper.mapFileName(resource.getName());
-			// Mapper may produce zero or more filenames,
-			// which may or may not be what was wanted but
-			// only the user will know that.
-			if (outputFileNames != null) {
-			    Union outputResources = new Union();
-			    for (String fileName : outputFileNames) {
-				outputResources.add(new FileResource(baseDir, fileName));
-			    }
-			    useOutputResources.put(port, outputResources);
-			}
-		    }
-                    process(config, useInputResources, useOutputResources, usePipelineResource, optionsMap, parametersTable, force);
+                        String[] outputFileNames = outputMapper.mapFileName(resource.getName());
+                        // Mapper may produce zero or more filenames,
+                        // which may or may not be what was wanted but
+                        // only the user will know that.
+                        if (outputFileNames != null) {
+                            Union outputResources = new Union();
+                            for (String fileName : outputFileNames) {
+                                outputResources.add(new FileResource(destDir, fileName));
+                            }
+                            useOutputResources.put(port, outputResources);
+                        }
+                    }
+                    process(useInputResources, useOutputResources);
                 }
-	    }
-	} finally {
-	    // Same instance is reused when Ant runs this task
-	    // again, so reset everything.
-	    inputResources.clear();
-	    inputMappers.clear();
-	    outputResources.clear();
+            }
+        } finally {
+            // Same instance is reused when Ant runs this task
+            // again, so reset everything.
+            userArgs = new UserArgs();
+            inputResources.clear();
+            inputMappers.clear();
             baseDir = null;
-	    inPort = null;
-	    inResource = null;
-	    failOnNoResources = true;
-	    pipelineURI = null;
-	    pipelineResource = null;
-	    destDir = null;
-	    outPort = null;
-	    outResource = null;
-	    targetExtension = "-out.xml";
-	    isTargetExtensionSet = false;
-	    failOnError = true;
-	    resources = new Union();
-	    isResourcesSet = false;
-	    useImplicitFileset = true;
-	    performDirectoryScan = true;
-	    mapper = null;
-	    force = false;
+            inPort = null;
+            inResource = null;
+            inType = XML;
+            failOnNoResources = true;
+            pipelineResource = null;
+            destDir = null;
+            outPort = null;
+            outResource = null;
+            outputResources.clear();
+            outputMappers.clear();
+            targetExtension = "-out.xml";
+            isTargetExtensionSet = false;
+            failOnError = true;
+            resources = new Union();
+            useImplicitFileset = true;
+            performDirectoryScan = true;
+            mapper = null;
+            force = false;
             if (sysProperties.size() > 0) {
                 sysProperties.restoreSystem();
-		// No way to clear CommandlineJava.SysProperties
-		sysProperties = new CommandlineJava.SysProperties();
+                // No way to clear CommandlineJava.SysProperties
+                sysProperties = new CommandlineJava.SysProperties();
             }
-	    bindings.clear();
-	    options.clear();
-	    optionsMap.clear();
-	    parameters.clear();
-	    parametersTable.clear();
-	    debug = false;
-	    extensionValues = false;
-	    allowXPointerOnText = false;
-	    useXslt10 = false;
-	    transparentJSON = false;
-	    jsonFlavor = null;
-	}
+            parameters.clear();
+            options.clear();
+            steps.clear();
+        }
     }
 
     /**
      * Process the input file to the output file with the given pipeline.
      *
-     * @param inputResources the map of input ports to resources
-     * @param outputResources the map of output ports to resources
-     * @param pipelineResource the pipeline to use.
-     * @exception BuildException if the processing fails.
+     * @param inputResources   the map of input ports to resources
+     * @param outputResources  the map of output ports to resources
+     * @throws BuildException if the processing fails.
      */
-    private void process(XProcConfiguration config,
-			 Map<String,Union> inputResources,
-			 Map<String,Union> outputResources,
-			 Resource pipelineResource,
-			 Map<QName,RuntimeValue> optionsMap,
-			 Map<String,Hashtable<QName,RuntimeValue>> parametersMap,
-			 boolean force) throws BuildException {
-
-	long pipelineLastModified = pipelineResource.getLastModified();
-	Collection<Long> inputsLastModified = new Vector<Long> ();
-	for (String port : inputResources.keySet()) {
-	    for (Resource resource : inputResources.get(port).listResources()) {
-		inputsLastModified.add(resource.getLastModified());
-	    }
-	}
-	long newestInputLastModified =
-	    inputsLastModified.isEmpty() ? 0 : Collections.max(inputsLastModified);
-
-	Collection<Long> outputsLastModified = new Vector<Long> ();
-	for (String port : outputResources.keySet()) {
-	    for (Resource resource : outputResources.get(port).listResources()) {
-		outputsLastModified.add(resource.getLastModified());
-	    }
-	}
-	long oldestOutputLastModified =
-	    outputsLastModified.isEmpty() ? 0 : Collections.min(outputsLastModified);
-
-	log("Newest input time: " + newestInputLastModified, Project.MSG_DEBUG);
-	log("Oldest output time: " + oldestOutputLastModified, Project.MSG_DEBUG);
-	log("Pipeline file " + pipelineResource + " time: " + pipelineLastModified, Project.MSG_DEBUG);
-
-	if (!force) {
-	    if (newestInputLastModified < oldestOutputLastModified &&
-		pipelineLastModified < oldestOutputLastModified) {
-		log("Skipping because all outputs are newer than inputs and newer than pipeline", Project.MSG_DEBUG);
-		return;
-	    }
-	}
-
-	//log("Processing " + in + " to " + out, Project.MSG_INFO);
-        XProcRuntime runtime = new XProcRuntime(config);
-
-	XPipeline pipeline = null;
-	try {
-	    pipeline =
-		runtime.load(pipelineResource.toString());
-
-	    // The unnamed input is matched to one unmatched input
-	    for (String port : pipeline.getInputs()) {
-                if (pipeline.getInput(port).getParameters()) {
-                    continue;
+    private void process(Map<String, List<TypedResource>> inputResources, Map<String, Union> outputResources) throws BuildException {
+        if (!force && (pipelineResource != null)) {
+            long pipelineLastModified = pipelineResource.getLastModified();
+            pipelineLastModified = (pipelineLastModified == 0) ? MAX_VALUE : pipelineLastModified;
+            Collection<Long> inputsLastModified = new Vector<Long>();
+            for (String port : inputResources.keySet()) {
+                for (TypedResource typedResource : inputResources.get(port)) {
+                    long lastModified = typedResource.getResource().getLastModified();
+                    inputsLastModified.add((lastModified == 0) ? MAX_VALUE : lastModified);
                 }
-		if (!inputResources.containsKey(port)) {
-                    if (inputResources.containsKey(null)) {
-                        inputResources.put(port, inputResources.remove(null));
-                        log("Binding unnamed input port to '" + port + "'.", Project.MSG_INFO);
-                    } else {
-                        log("You didn't specify any binding for the input port '" + port + "'.", Project.MSG_WARN);
-                        continue;
+            }
+            long newestInputLastModified = inputsLastModified.isEmpty() ? MAX_VALUE : Collections.max(inputsLastModified);
+
+            Collection<Long> outputsLastModified = new Vector<Long>();
+            for (String port : outputResources.keySet()) {
+                for (Resource resource : outputResources.get(port).listResources()) {
+                    outputsLastModified.add(resource.getLastModified());
+                }
+            }
+            long oldestOutputLastModified = outputsLastModified.isEmpty() ? 0 : Collections.min(outputsLastModified);
+
+            log("Newest input time: " + newestInputLastModified, Project.MSG_DEBUG);
+            log("Oldest output time: " + oldestOutputLastModified, Project.MSG_DEBUG);
+            log("Pipeline file " + pipelineResource + " time: " + pipelineLastModified, Project.MSG_DEBUG);
+
+            if (newestInputLastModified <= oldestOutputLastModified &&
+                pipelineLastModified <= oldestOutputLastModified) {
+                log("Skipping because all outputs are newer than inputs and newer than pipeline", Project.MSG_DEBUG);
+                return;
+            }
+        }
+
+        try {
+            for (String port : outputResources.keySet()) {
+                Union resources = outputResources.get(port);
+                for (Iterator iterator = resources.iterator(); iterator.hasNext(); ) {
+                    Resource resource = (Resource) iterator.next();
+                    userArgs.addOutput(port, resource.getOutputStream());
+                }
+            }
+            for (String port : inputResources.keySet()) {
+                for (TypedResource typedResource : inputResources.get(port)) {
+                    Resource resource = typedResource.getResource();
+                    userArgs.addInput(port, resource.getInputStream(), resource.toString(), typedResource.getType(), typedResource.getContentType());
+                }
+            }
+            for (Step step : steps) {
+                for (Input input : step.getInputs()) {
+                    for (Resource resource : input.getResources().listResources()) {
+                        userArgs.addInput(input.getPort(), resource.getInputStream(), resource.toString(), input.getType(), input.getContentType());
                     }
                 }
-            }
-
-	    for (String port : pipeline.getInputs()) {
-                if (inputResources.containsKey(port)) {
-		    for (Resource resource : inputResources.get(port).listResources()) {
-			log(resource.getName() + "::" + resource.isExists(), Project.MSG_INFO);
-			if (!resource.isExists()) {
-			    log("Skipping non-existent input: " + resource, Project.MSG_DEBUG);
-			}
-
-			InputStream is = resource.getInputStream();
-			XdmNode doc = runtime.parse(new InputSource(resource.getInputStream()));
-			pipeline.writeTo(port, doc);
-		    }
+                for (Parameter parameter : step.getParameters()) {
+                    useParameter(parameter);
+                }
+                userArgs.setCurStepName(step.getName());
+                for (Option option : step.getOptions()) {
+                    useOption(option);
                 }
             }
 
-	    // Pass any options to the pipeline
-	    for (QName name : optionsMap.keySet()) {
-		pipeline.passOption(name, optionsMap.get(name));
-	    }
-
-	    // Pass any parameters to the pipeline
-	    for (String port : parametersMap.keySet()) {
-		Hashtable<QName,RuntimeValue> useTable = parametersMap.get(port);
-		if ("*".equals(port)) { // For primary parameter input port
-		    for (QName name : useTable.keySet()) {
-			pipeline.setParameter(name, useTable.get(name));
-		    }
-		} else { // For specified parameter input port
-		    for (QName name : useTable.keySet()) {
-			pipeline.setParameter(port, name, useTable.get(name));
-		    }
-		}
-	    }
-
-	    pipeline.run();
-
-            // The unamed output is matched to one unmatched output
-            for (String port : pipeline.getOutputs()) {
-		if (!outputResources.containsKey(port)) {
-		    if (outputResources.containsKey(null)) {
-			outputResources.put(port, outputResources.remove(null));
-			log("Binding unnamed output port to '" + port + "'.", Project.MSG_INFO);
-		    } else {
-			log("You didn't specify any binding for the output port '" + port + "': its output will be discarded.", Project.MSG_WARN);
-		    }
-		}
-            }
-
-            for (String port : pipeline.getOutputs()) {
-                String uri = null;
-
-                if (outputResources.containsKey(port)) {
-                    Union resources = outputResources.get(port);
-		    if (resources.size() != 1) {
-			handleError("The '" + port + "' output port must be specified with exactly one"
-                        + " nested resource.");
-		    }
-		    uri = ((Resource) resources.iterator().next()).toString();
-                    log("Writing port '" + port + "' to '" + uri + "'.", Project.MSG_INFO);
-               }
-
-                if (uri == null) {
-                    // You didn't bind it, and it isn't going to stdout, so it's going into the bit bucket.
-                    continue;
-                }
-
-                Serialization serial = pipeline.getSerialization(port);
-
-                if (serial == null) {
-                    // Use the configuration options
-                    // FIXME: should each of these be considered separately?
-                    // FIXME: should there be command-line options to override these settings?
-                    serial = new Serialization(runtime, pipeline.getNode()); // The node's a hack
-                    for (String name : config.serializationOptions.keySet()) {
-                        String value = config.serializationOptions.get(name);
-
-                        if ("byte-order-mark".equals(name)) serial.setByteOrderMark("true".equals(value));
-                        if ("escape-uri-attributes".equals(name)) serial.setEscapeURIAttributes("true".equals(value));
-                        if ("include-content-type".equals(name)) serial.setIncludeContentType("true".equals(value));
-                        if ("indent".equals(name)) serial.setIndent("true".equals(value));
-                        if ("omit-xml-declaration".equals(name)) serial.setOmitXMLDeclaration("true".equals(value));
-                        if ("undeclare-prefixes".equals(name)) serial.setUndeclarePrefixes("true".equals(value));
-                        if ("method".equals(name)) serial.setMethod(new QName("", value));
-
-                        // FIXME: if ("cdata-section-elements".equals(name)) serial.setCdataSectionElements();
-                        if ("doctype-public".equals(name)) serial.setDoctypePublic(value);
-                        if ("doctype-system".equals(name)) serial.setDoctypeSystem(value);
-                        if ("encoding".equals(name)) serial.setEncoding(value);
-                        if ("media-type".equals(name)) serial.setMediaType(value);
-                        if ("normalization-form".equals(name)) serial.setNormalizationForm(value);
-                        if ("standalone".equals(name)) serial.setStandalone(value);
-                        if ("version".equals(name)) serial.setVersion(value);
-                    }
-                }
-
-                // ndw wonders if there's a better way...
-                WritableDocument wd = null;
-                if (uri != null) {
-                    URI furi = new URI(uri);
-                    String filename = furi.getPath();
-                    FileOutputStream outfile = new FileOutputStream(filename);
-                    wd = new WritableDocument(runtime,filename,serial,outfile);
-                } else {
-                    wd = new WritableDocument(runtime,uri,serial);
-                }
-
-                ReadablePipe rpipe = pipeline.readFrom(port);
-                while (rpipe.moreDocuments()) {
-                    wd.write(rpipe.read());
-                }
-
-                if (uri!=null) {
-		    wd.close();
-                }
-            }
-	} catch (Exception err) {
-	   handleError("Pipeline failed: " + err.toString());
-	} finally {
-	    pipeline = null;
-	    runtime = null;
-	    config = null;
-	}
+            new Main().run(userArgs, userArgs.createConfiguration());
+        } catch (Exception e) {
+            handleError(e);
+        }
     }
 
     /**
@@ -1173,52 +1303,25 @@ public class CalabashTask extends MatchingTask {
     private class ExtensionMapper implements FileNameMapper {
         public void setFrom(String from) {
         }
+
         public void setTo(String to) {
         }
+
         public String[] mapFileName(String xmlFile) {
             int dotPos = xmlFile.lastIndexOf('.');
             if (dotPos > 0) {
                 xmlFile = xmlFile.substring(0, dotPos);
             }
-            return new String[] {xmlFile + targetExtension};
+            return new String[] { xmlFile + targetExtension };
         }
     }
 
     /**
-     * Makes a QName using the bindings defined on the task.
-     * @param name possibly-prefixed name
-     * @returns QName
-     */
-    private QName makeQName(String name) {
-	String uri = null;
-	QName qname;
-
-	if (name.indexOf("{") == 0) {
-	    qname = QName.fromClarkName(name);
-	} else {
-	    int cpos = name.indexOf(":");
-	    if (cpos > 0) {
-		String prefix = name.substring(0, cpos);
-		if (!bindings.containsKey(prefix)) {
-		    handleError("Unbound prefix \"" + prefix + "\" in: " + name);
-		}
-		uri = bindings.get(prefix);
-		qname = new QName(prefix, uri, name.substring(cpos+1));
-	    } else {
-		qname = new QName("", name);
-	    }
-	}
-
-	return qname;
-    }
-
-    /**
-     * Throws a BuildException if the destination directory hasn't
-     * been specified.
+     * Sets the destination directory to the base directory if it is not set explicitly.
      */
     private void checkDest() {
         if (destDir == null) {
-	    destDir = baseDir;
+            destDir = baseDir;
             log("destdir defaulting to basedir", Project.MSG_DEBUG);
         }
     }
@@ -1234,36 +1337,27 @@ public class CalabashTask extends MatchingTask {
         log(msg, Project.MSG_WARN);
     }
 
-
     /**
      * Throws an exception with the given nested exception if
-     * failOnError is true, otherwise logs the message using the WARN
-     * level.
+     * failOnError is true, otherwise logs the message using the WARN level.
      */
     protected void handleError(Throwable ex) {
         if (failOnError) {
             throw new BuildException(ex);
         } else {
             log("Caught an exception: " + ex, Project.MSG_WARN);
+            ex.printStackTrace(new PrintStream(new LogOutputStream(this, Project.MSG_VERBOSE)));
         }
     }
 
     /**
-     * The Port inner class used to represent input and output ports.
+     * The {@code Useable} inner class used to represent something which usage
+     * can be controlled by {@code if} and {@code unless} properties.
      */
-    public static class Port {
-        /** The input port */
-        private String port = null;
-
-        /** The input's resources */
-        private Union resources = new Union();
-
-	/** Mapper to inPort files. */
-	private FileNameMapper mapper = null;
-
+    private static class Useable {
+        private Project project;
         private Object ifCond;
         private Object unlessCond;
-        private Project project;
 
         /**
          * Set the current project
@@ -1275,6 +1369,59 @@ public class CalabashTask extends MatchingTask {
         }
 
         /**
+         * Set whether this {@code Useable} should be used. It will be used if
+         * the expression evaluates to {@code true} or the name of a property
+         * which has been set, otherwise it won't.
+         *
+         * @param ifCond evaluated expression
+         */
+        public void setIf(Object ifCond) {
+            this.ifCond = ifCond;
+        }
+
+        /**
+         * Set whether this {@code Useable} should NOT be used. It will not be
+         * used if the expression evaluates to {@code true} or the name of a
+         * property which has been set, otherwise it will be used.
+         *
+         * @param unlessCond evaluated expression
+         */
+        public void setUnless(Object unlessCond) {
+            this.unlessCond = unlessCond;
+        }
+
+        /**
+         * Ensures that the {@code Useable} passes the conditions placed
+         * on it with {@code if} and {@code unless} properties.
+         *
+         * @return {@code true} if the task passes the {@code if} and {@code unless} parameters
+         */
+        public boolean shouldUse() {
+            PropertyHelper ph = PropertyHelper.getPropertyHelper(project);
+            return ph.testIfCondition(ifCond) && ph.testUnlessCondition(unlessCond);
+        }
+    }
+
+    /**
+     * The {@code Port} inner class used to represent output on a port.
+     */
+    public static class Port extends Useable {
+        /**
+         * The input port
+         */
+        private String port = null;
+
+        /**
+         * The input's resources
+         */
+        private Union resources = new Union();
+
+        /**
+         * Mapper to inPort files.
+         */
+        private FileNameMapper mapper = null;
+
+        /**
          * Set the input port.
          *
          * @param port the name of the port.
@@ -1283,37 +1430,38 @@ public class CalabashTask extends MatchingTask {
             this.port = port;
         }
 
-	/**
-	 * Adds a collection of resources to process in addition to the
-	 * given file or the implicit fileset.
-	 *
-	 * @param rc the collection of resources to use
-	 */
-	public void add(ResourceCollection rc) {
-	    resources.add(rc);
-	}
+        /**
+         * Adds a collection of resources to process in addition to the given file or the implicit fileset.
+         *
+         * @param rc the collection of resources to use
+         */
+        public void add(ResourceCollection rc) {
+            resources.add(rc);
+        }
 
-	/**
-	 * Defines the mapper to map source to destination files.
-	 * @param mapper the mapper to use
-	 * @exception BuildException if more than one mapper is defined
-	 */
-	public void addMapper(Mapper mapper) throws BuildException {
-	    add(mapper.getImplementation());
-	}
+        /**
+         * Defines the mapper to map source to destination files.
+         *
+         * @param mapper the mapper to use
+         * @throws BuildException if more than one mapper is defined
+         */
+        public void addConfiguredMapper(Mapper mapper) throws BuildException {
+            add(mapper.getImplementation());
+        }
 
-	/**
-	 * Adds a nested filenamemapper.
-	 * @param fileNameMapper the mapper to add
-	 * @exception BuildException if more than one mapper is defined
-	 */
-	public void add(FileNameMapper fileNameMapper) throws BuildException {
-	    if (mapper != null) {
-		throw new BuildException("Cannot define more than one mapper");
-	    }
+        /**
+         * Adds a nested FileNameMapper.
+         *
+         * @param fileNameMapper the mapper to add
+         * @throws BuildException if more than one mapper is defined
+         */
+        public void add(FileNameMapper fileNameMapper) throws BuildException {
+            if (mapper != null) {
+                throw new BuildException("Cannot define more than one mapper");
+            }
 
-	    mapper = fileNameMapper;
-	}
+            mapper = fileNameMapper;
+        }
 
         /**
          * Get the port name
@@ -1336,82 +1484,90 @@ public class CalabashTask extends MatchingTask {
         /**
          * Get the port's Mapper element, if any
          *
-         * @return the ports's mapper
+         * @return the ports' mapper
          */
         public FileNameMapper getMapper() {
             return mapper;
         }
-
-        /**
-         * Set whether this input should be used.  It will be used if
-         * the expression evalutes to true or the name of a property
-         * which has been set, otherwise it won't.
-         * @param ifCond evaluated expression
-         */
-        public void setIf(Object ifCond) {
-            this.ifCond = ifCond;
-        }
-
-        /**
-         * Set whether this input should be used.  It will be used if
-         * the expression evalutes to true or the name of a property
-         * which has been set, otherwise it won't.
-         * @param ifProperty evaluated expression
-         */
-        public void setIf(String ifProperty) {
-            setIf((Object) ifProperty);
-        }
-
-        /**
-         * Set whether this input should NOT be used. It will not be
-         * used if the expression evaluates to true or the name of a
-         * property which has been set, otherwise it will be used.
-         * @param unlessCond evaluated expression
-         */
-        public void setUnless(Object unlessCond) {
-            this.unlessCond = unlessCond;
-        }
-
-        /**
-         * Set whether this input should NOT be used. It will not be
-         * used if the expression evaluates to true or the name of a
-         * property which has been set, otherwise it will be used.
-         * @param unlessProperty evaluated expression
-         */
-        public void setUnless(String unlessProperty) {
-            setUnless((Object) unlessProperty);
-        }
-
-        /**
-         * Ensures that the input passes the conditions placed
-         * on it with <code>if</code> and <code>unless</code> properties.
-         * @return true if the task passes the "if" and "unless" parameters
-         */
-        public boolean shouldUse() {
-            PropertyHelper ph = PropertyHelper.getPropertyHelper(project);
-            return ph.testIfCondition(ifCond)
-                && ph.testUnlessCondition(unlessCond);
-        }
     } // Port
 
     /**
-     * The Namespace inner class represents a namespace binding.
+     * The {@code Input} inner class used to represent input on a port.
      */
-    public static class Namespace {
-        /** The prefix */
+    public static class Input extends Port {
+        /**
+         * The input type
+         */
+        private Type type = XML;
+
+        /**
+         * The content type
+         */
+        private String contentType;
+
+        /**
+         * Get the input type
+         *
+         * @return the input type
+         */
+        public Type getType() {
+            return type;
+        }
+
+        /**
+         * Set the input type
+         *
+         * @param type the input type
+         */
+        public void setType(Type type) {
+            this.type = type;
+        }
+
+        /**
+         * Get the content type
+         *
+         * @return the content type
+         */
+        public String getContentType() {
+            if ((contentType != null) && (type != DATA)) {
+                throw new IllegalStateException("contentType of input can only be set if type is DATA");
+            }
+            return contentType;
+        }
+
+        /**
+         * Set the content type
+         *
+         * @param contentType the content type
+         */
+        public void setContentType(String contentType) {
+            this.contentType = contentType;
+        }
+    } // Input
+
+    /**
+     * The {@code Namespace} inner class represents a namespace binding.
+     */
+    public static class Namespace extends Useable {
+        /**
+         * The prefix
+         */
         private String prefix = null;
-        /** The URI */
+        /**
+         * The URI
+         */
         private String uri = null;
 
         /**
          * Set the prefix.
+         *
          * @param prefix prefix to which to bind the namespace
          */
         public void setPrefix(String prefix) {
             this.prefix = prefix;
         }
 
-	/**
+        /**
          * Get the prefix
          *
          * @return the namespace prefix
@@ -1420,15 +1576,16 @@ public class CalabashTask extends MatchingTask {
             return prefix;
         }
 
-       /**
+        /**
          * Set the namespace URI.
+         *
          * @param uri the namespace URI
          */
         public void setURI(String uri) {
             this.uri = uri;
         }
 
-	/**
+        /**
          * Get the namespace URI
          *
          * @return the namespace URI
@@ -1439,36 +1596,29 @@ public class CalabashTask extends MatchingTask {
     } // Namespace
 
     /**
-     * The Option inner class represents a pipeline option.
+     * The {@code Option} inner class represents a pipeline option.
      */
-    public static class Option {
-        /** The name */
+    public static class Option extends Useable {
+        /**
+         * The name
+         */
         private String name = null;
-        /** The parameter value */
-        private String value = null;
-
-        private Object ifCond;
-        private Object unlessCond;
-        private Project project;
 
         /**
-         * Set the current project
-         *
-         * @param project the current project
+         * The parameter value
          */
-        public void setProject(Project project) {
-            this.project = project;
-        }
+        private String value = null;
 
-       /**
+        /**
          * Set the name.
+         *
          * @param name the parameter name
          */
         public void setName(String name) {
             this.name = name;
         }
 
-	/**
+        /**
          * Get the parameter name
          *
          * @return the parameter name
@@ -1477,15 +1627,16 @@ public class CalabashTask extends MatchingTask {
             return name;
         }
 
-       /**
+        /**
          * Set the value.
+         *
          * @param value the parameter value
          */
         public void setValue(String value) {
             this.value = value;
         }
 
-	/**
+        /**
          * Get the parameter value
          *
          * @return the parameter value
@@ -1493,57 +1644,28 @@ public class CalabashTask extends MatchingTask {
         public String getValue() {
             return value;
         }
-
-        /**
-         * Set whether this input should NOT be used. It will not be
-         * used if the expression evaluates to true or the name of a
-         * property which has been set, otherwise it will be used.
-         * @param unlessCond evaluated expression
-         */
-        public void setUnless(Object unlessCond) {
-            this.unlessCond = unlessCond;
-        }
-
-        /**
-         * Set whether this input should NOT be used. It will not be
-         * used if the expression evaluates to true or the name of a
-         * property which has been set, otherwise it will be used.
-         * @param unlessProperty evaluated expression
-         */
-        public void setUnless(String unlessProperty) {
-            setUnless((Object) unlessProperty);
-        }
-
-        /**
-         * Ensures that the input passes the conditions placed
-         * on it with <code>if</code> and <code>unless</code> properties.
-         * @return true if the task passes the "if" and "unless" parameters
-         */
-        public boolean shouldUse() {
-            PropertyHelper ph = PropertyHelper.getPropertyHelper(project);
-            return ph.testIfCondition(ifCond)
-                && ph.testUnlessCondition(unlessCond);
-        }
     } // Option
 
     /**
-     * The Parameter inner class represents a pipeline parameter,
-     * which looks a lot like an option sent to a parameter port (or
-     * ports).
+     * The {@code Parameter} inner class represents a pipeline parameter,
+     * which looks a lot like an option sent to a parameter port (or ports).
      */
     public static class Parameter extends Option {
-        /** The port */
+        /**
+         * The port
+         */
         private String port = "*";
 
         /**
          * Set the port.
+         *
          * @param port port to which to bind the parameter
          */
         public void setPort(String port) {
             this.port = port;
         }
 
-	/**
+        /**
          * Get the port
          *
          * @return the parameter port
@@ -1552,4 +1674,189 @@ public class CalabashTask extends MatchingTask {
             return port;
         }
     } // Parameter
+
+    /**
+     * The {@code Step} inner class represents a pipeline step.
+     */
+    public static class Step extends Useable {
+        private String name = null;
+        private List<Input> inputs = new ArrayList<Input>();
+        private List<Parameter> parameters = new ArrayList<Parameter>();
+        private List<Option> options = new ArrayList<Option>();
+
+        /**
+         * Set the name.
+         *
+         * @param name the name
+         */
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        /**
+         * Get the name.
+         *
+         * @return the name
+         */
+        public String getName() {
+            return name;
+        }
+
+        /**
+         * Add a nested {@code <input>}.
+         *
+         * @param input the {@code Input} object
+         */
+        public void addConfiguredInput(Input input) {
+            if (!input.shouldUse()) {
+                super.project.log("Skipping input '" + input.getPort() + "' as it is configured to be unused.", Project.MSG_DEBUG);
+                return;
+            }
+
+            inputs.add(input);
+            if (input.getMapper() != null) {
+                throw new BuildException("Mappers are not supported for inputs that are nested in steps");
+            }
+        }
+
+        /**
+         * Get the inputs.
+         *
+         * @return the inputs
+         */
+        public List<Input> getInputs() {
+            return inputs;
+        }
+
+        /**
+         * Add a nested {@code <parameter>}.
+         *
+         * @param parameter the {@code Parameter} object
+         */
+        public void addConfiguredParameter(Parameter parameter) {
+            parameters.add(parameter);
+        }
+
+        /**
+         * Get the parameters.
+         *
+         * @return the parameters
+         */
+        public List<Parameter> getParameters() {
+            return parameters;
+        }
+
+        /**
+         * Add a nested {@code <option>}.
+         *
+         * @param option the {@code Option} object
+         */
+        public void addConfiguredOption(Option option) {
+            options.add(option);
+        }
+
+        /**
+         * Get the options.
+         *
+         * @return the options
+         */
+        public List<Option> getOptions() {
+            return options;
+        }
+    } // Step
+
+    public static class UseableResources extends Resources {
+        private Useable useable = new Useable();
+
+        public void setIf(Object ifCond) {
+            useable.setIf(ifCond);
+        }
+
+        public void setUnless(Object unlessCond) {
+            useable.setUnless(unlessCond);
+        }
+
+        public boolean shouldUse() {
+            return useable.shouldUse();
+        }
+    }
+
+    private static class TypedResource {
+        private Resource resource = null;
+        private Type type = null;
+        private String contentType = null;
+
+        private TypedResource(Resource resource, Type type) {
+            this(resource, type, null);
+        }
+
+        private TypedResource(Resource resource, Type type, String contentType) {
+            if (resource == null) {
+                throw new IllegalArgumentException("resource must not be null");
+            }
+            this.resource = resource;
+            if (type == null) {
+                throw new IllegalArgumentException("type must not be null");
+            }
+            this.type = type;
+            this.contentType = contentType;
+        }
+
+        public Resource getResource() {
+            return resource;
+        }
+
+        public Type getType() {
+            return type;
+        }
+
+        public String getContentType() {
+            return contentType;
+        }
+    } // TypedResource
+
+    private static class TypedFileNameMapper implements FileNameMapper {
+        private FileNameMapper fileNameMapper;
+        private Type type;
+        private String contentType;
+
+        private TypedFileNameMapper(FileNameMapper fileNameMapper, Type type) {
+            this(fileNameMapper, type, null);
+        }
+
+        private TypedFileNameMapper(FileNameMapper fileNameMapper, Type type, String contentType) {
+            if (fileNameMapper == null) {
+                throw new IllegalArgumentException("fileNameMapper must not be null");
+            }
+            this.fileNameMapper = fileNameMapper;
+            if (type == null) {
+                throw new IllegalArgumentException("type must not be null");
+            }
+            this.type = type;
+            this.contentType = contentType;
+        }
+
+        public Type getType() {
+            return type;
+        }
+
+        public String getContentType() {
+            return contentType;
+        }
+
+        @Override
+        public void setFrom(String s) {
+            fileNameMapper.setFrom(s);
+        }
+
+        @Override
+        public void setTo(String s) {
+            fileNameMapper.setTo(s);
+        }
+
+        @Override
+        public String[] mapFileName(String s) {
+            return fileNameMapper.mapFileName(s);
+        }
+    } // TypedFileNameMapper
 }

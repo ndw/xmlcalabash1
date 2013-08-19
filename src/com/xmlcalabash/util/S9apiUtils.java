@@ -153,6 +153,7 @@ public class S9apiUtils {
     public static void serialize(XProcRuntime xproc, Vector<XdmNode> nodes, Serializer serializer) throws SaxonApiException {
         Processor qtproc = xproc.getProcessor();
         XQueryCompiler xqcomp = qtproc.newXQueryCompiler();
+        xqcomp.setModuleURIResolver(xproc.getResolver());
 
         // Patch suggested by oXygen to avoid errors that result from attempting to serialize
         // a schema-valid document with a schema-naive query
@@ -381,42 +382,44 @@ public class S9apiUtils {
         return (cause != null && cause instanceof XPathException);
     }
 
-    public static
-    boolean isDocument(XdmNode doc) {
-        boolean ok = true;
-
+    public static void assertDocument(XdmNode doc) {
         if (doc.getNodeKind() == XdmNodeKind.DOCUMENT) {
-            ok = S9apiUtils.isDocumentContent(doc.axisIterator(Axis.CHILD));
+            S9apiUtils.assertDocumentContent(doc.axisIterator(Axis.CHILD));
         } else if (doc.getNodeKind() == XdmNodeKind.ELEMENT) {
             // this is ok
         } else {
-            ok = false;
+            throw XProcException.dynamicError(1, "Document root cannot be " + doc.getNodeKind());
         }
-
-        return ok;
     }
 
-    public static
-    boolean isDocumentContent(XdmSequenceIterator iter) {
-        boolean ok = true;
-
+    public static void assertDocumentContent(XdmSequenceIterator iter) {
         int elemCount = 0;
-        while (ok && iter.hasNext()) {
+        while (iter.hasNext()) {
             XdmNode child = (XdmNode) iter.next();
             if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
                 elemCount++;
-                ok = ok && elemCount == 1;
+                if (elemCount > 1) {
+                    throw XProcException.dynamicError(1, "Document must have exactly one top-level element");
+                }
             } else if (child.getNodeKind() == XdmNodeKind.PROCESSING_INSTRUCTION
                     || child.getNodeKind() == XdmNodeKind.COMMENT) {
                 // that's ok
             } else if (child.getNodeKind() == XdmNodeKind.TEXT) {
-                ok = ok && "".equals(child.getStringValue().trim());
+                if (!"".equals(child.getStringValue().trim()))
+                    throw XProcException.dynamicError(1, "Only whitespace text nodes can appear at the top level in a document");
             } else {
-                ok = false;
+                throw XProcException.dynamicError(1, "Document cannot have top level " + child.getNodeKind());
             }
         }
+    }
 
-        return ok;
+    // FIXME: This method exists only to work around a bug in SaxonHE 9.5.1.1
+    public static XdmNode getParent(XdmNode node) {
+        try {
+            return node.getParent();
+        } catch (ClassCastException cce) {
+            return null;
+        }
     }
 
 }

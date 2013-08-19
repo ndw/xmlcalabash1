@@ -4,6 +4,7 @@ import com.xmlcalabash.runtime.XCompoundStep;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
+import net.sf.saxon.om.Sequence;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.om.SequenceIterator;
@@ -74,7 +75,7 @@ public class IterationPosition extends XProcExtensionFunctionDefinition {
     }
 
     private class IterationPositionCall extends ExtensionFunctionCall {
-        public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
+        public Sequence call(XPathContext xPathContext, Sequence[] sequences) throws XPathException {
             XProcRuntime runtime = tl_runtime.get();
             XProcData data = runtime.getXProcData();
             XStep step = data.getStep();
@@ -83,8 +84,7 @@ public class IterationPosition extends XProcExtensionFunctionDefinition {
             if (step != null && !(step instanceof XCompoundStep)) {
                 throw XProcException.dynamicError(23);
             }
-            return SingletonIterator.makeIterator(
-                    new Int64Value(runtime.getXProcData().getIterationPosition()));
+            return new Int64Value(runtime.getXProcData().getIterationPosition());
         }
     }
 }

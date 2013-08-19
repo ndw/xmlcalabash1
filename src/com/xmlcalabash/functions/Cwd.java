@@ -5,6 +5,7 @@ import com.xmlcalabash.runtime.XCompoundStep;
 import com.xmlcalabash.runtime.XStep;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
+import net.sf.saxon.om.Sequence;
 import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.tree.iter.SingletonIterator;
@@ -74,7 +75,7 @@ public class Cwd extends XProcExtensionFunctionDefinition {
     }
 
     private class CwdCall extends ExtensionFunctionCall {
-        public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
+        public Sequence call(XPathContext xPathContext, Sequence[] sequences) throws XPathException {
 
             XProcRuntime runtime = tl_runtime.get();
             XStep step = runtime.getXProcData().getStep();
@@ -87,7 +88,7 @@ public class Cwd extends XProcExtensionFunctionDefinition {
             // In 0.9.20, I removed the trailing slash from cwd().
             // The community didn't like that, so I put it back.
             String cwd = runtime.getStaticBaseURI().toASCIIString();
-            return SingletonIterator.makeIterator(new AnyURIValue(cwd));
+            return new AnyURIValue(cwd);
         }
     }
 }

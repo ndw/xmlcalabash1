@@ -6,10 +6,14 @@ import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.*;
+import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.QName;
+import net.sf.saxon.trans.XPathException;
 
+import javax.xml.transform.SourceLocator;
+import javax.xml.transform.TransformerException;
 import java.util.Vector;
 
 /**
@@ -21,6 +25,11 @@ import java.util.Vector;
  */
 public class XTry extends XCompoundStep {
     private static final QName c_errors = new QName("c", XProcConstants.NS_XPROC_STEP, "errors");
+    private static final QName c_error = new QName("c", XProcConstants.NS_XPROC_STEP, "error");
+    private static QName _href = new QName("", "href");
+    private static QName _line = new QName("", "line");
+    private static QName _column = new QName("", "column");
+    private static QName _code = new QName("", "code");
     private Vector<XdmNode> errors = new Vector<XdmNode> ();
 
     public XTry(XProcRuntime runtime, Step step, XCompoundStep parent) {
@@ -92,12 +101,67 @@ public class XTry extends XCompoundStep {
             treeWriter.addStartElement(c_errors);
             treeWriter.startContent();
 
+            boolean reported = false;
             for (XdmNode doc : runtime.getXProcData().errors()) {
                 treeWriter.addSubtree(doc);
+                reported = true;
             }
 
             for (XdmNode doc : errors) {
                 treeWriter.addSubtree(doc);
+                reported = true;
+            }
+
+            if (!reported) {
+                // Hey, no one reported this exception. We better do it.
+                treeWriter.addStartElement(c_error);
+
+                String message = xe.getMessage();
+                StructuredQName qCode = null;
+
+                if (xe instanceof XPathException) {
+                    XPathException xxx = (XPathException) xe;
+                    qCode = xxx.getErrorCodeQName();
+
+                    Throwable underlying = xe.getCause();
+                    if (underlying != null) {
+                        message = underlying.toString();
+                    }
+                }
+
+                if (xe instanceof XProcException) {
+                    XProcException xxx = (XProcException) xe;
+                    QName code = xxx.getErrorCode();
+                    qCode = new StructuredQName(code.getPrefix(), code.getNamespaceURI(), code.getLocalName());
+                    message = xxx.getMessage();
+                    Throwable underlying = xe.getCause();
+                    if (underlying != null) {
+                        message = underlying.getMessage();
+                    }
+                }
+
+                if (qCode != null) {
+                    treeWriter.addNamespace(qCode.getPrefix(), qCode.getNamespaceBinding().getURI());
+                    treeWriter.addAttribute(_code, qCode.getDisplayName());
+                }
+
+                XStep step = runtime.runningStep();
+                if (step != null && step.getNode() != null) {
+                    XdmNode node = step.getNode();
+                    if (node.getBaseURI() != null) {
+                        treeWriter.addAttribute(_href, node.getBaseURI().toString());
+                    }
+                    if (node.getLineNumber() > 0) {
+                        treeWriter.addAttribute(_line, ""+node.getLineNumber());
+                    }
+                    if (node.getColumnNumber() > 0) {
+                        treeWriter.addAttribute(_column, ""+node.getColumnNumber());
+                    }
+                }
+
+                treeWriter.startContent();
+                treeWriter.addText(message);
+                treeWriter.addEndElement();
             }
 
             treeWriter.addEndElement();

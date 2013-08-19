@@ -179,6 +179,11 @@ public class RuntimeValue {
         return result;
     }
 
+    public long getLong() {
+        long result = Long.parseLong(value);
+        return result;
+    }
+
     public XdmSequenceIterator getNamespaces() {
         return node.axisIterator(Axis.NAMESPACE);
     }

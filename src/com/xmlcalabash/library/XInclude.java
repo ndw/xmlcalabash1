@@ -395,6 +395,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
         }
 
         public boolean processStartElement(XdmNode node) throws SaxonApiException {
+            HashSet<QName> copied = new HashSet<QName> ();
             matcher.addStartElement(node);
 
             if (root) {
@@ -404,7 +405,14 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                     XdmSequenceIterator iter = xinclude.axisIterator(Axis.ATTRIBUTE);
                     while (iter.hasNext()) {
                         XdmNode child = (XdmNode) iter.next();
-                        if (!"".equals(child.getNodeName().getNamespaceURI())) {
+
+                        boolean copy = !"".equals(child.getNodeName().getNamespaceURI()); // must be in a ns
+                        copy = copy && !(XProcConstants.xml_base.equals(child.getNodeName()) && fixupBase);
+                        copy = copy && !(XProcConstants.xml_lang.equals(child.getNodeName()) && fixupLang);
+                        copy = copy && !(cx_mark_roots.equals(child.getNodeName()) && markRoots);
+
+                        if (copy) {
+                            copied.add(child.getNodeName());
                             matcher.addAttribute(child);
                         }
                     }
@@ -418,21 +426,34 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                         || (cx_mark_roots.equals(child.getNodeName()) && markRoots)) {
                         // nop;
                     } else {
-                        matcher.addAttribute(child);
+                        if (!copied.contains(child.getNodeName())) {
+                            copied.add(child.getNodeName());
+                            matcher.addAttribute(child);
+                        }
                     }
                 }
                 if (fixupBase) {
+                    copied.add(XProcConstants.xml_base);
                     matcher.addAttribute(XProcConstants.xml_base, node.getBaseURI().toASCIIString());
                 }
                 if (markRoots) {
+                    copied.add(cx_root);
                     matcher.addAttribute(cx_root, "true");
                 }
                 String lang = getLang(node);
                 if (fixupLang && lang != null) {
+                    copied.add(XProcConstants.xml_lang);
                     matcher.addAttribute(XProcConstants.xml_lang, lang);
                 }
             } else {
-                matcher.addAttributes(node);
+                // Careful. Don't copy ones you've already copied...
+                XdmSequenceIterator iter = node.axisIterator(Axis.ATTRIBUTE);
+                while (iter.hasNext()) {
+                    XdmNode child = (XdmNode) iter.next();
+                    if (!copied.contains(child.getNodeName())) {
+                        matcher.addAttribute(child);
+                    }
+                }
             }
 
             matcher.startContent();
