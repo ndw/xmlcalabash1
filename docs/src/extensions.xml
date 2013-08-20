@@ -350,22 +350,31 @@ always be returned.</para>
 <para>When <citetitle>XML Calabash</citetitle> is used with
 <citetitle>Saxon EE</citetitle> (and only EE, other editions do not
 support separate compilation), you can load user defined functions
-written in XQuery with the <tag>cx:import</tag> extension.</para>
+written in XSLT or XQuery with the <tag>cx:import</tag> extension.</para>
 
 <programlisting>&lt;cx:import namespace="<replaceable>namespace-uri</replaceable>“
-           href="<replaceable>module-file.xqy</replaceable>"/></programlisting>
+           href="<replaceable>module-file</replaceable>"
+           type="<replaceable>content-type</replaceable>"/></programlisting>
 
 <variablelist>
 <varlistentry>
 <term><replaceable>namespace-uri</replaceable></term>
 <listitem>
-<para>The module namespace declared in the library module.</para>
+<para>The module namespace declared in the library module. (This attribute
+is only necessary for loading XQuery functions.)</para>
 </listitem>
 </varlistentry>
 <varlistentry>
-<term><replaceable>module-file.xqy</replaceable></term>
+<term><replaceable>module-file</replaceable></term>
 <listitem>
-<para>The URI of the module file.</para>
+<para>The URI of the module file or stylesheet.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><replaceable>content-type</replaceable></term>
+<listitem>
+<para>The type of extensions you are trying to load,
+<literal>application/xquery</literal> or <literal>application/xml+xslt</literal>.</para>
 </listitem>
 </varlistentry>
 </variablelist>
