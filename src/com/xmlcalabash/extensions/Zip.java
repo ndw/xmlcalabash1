@@ -2,51 +2,50 @@ package com.xmlcalabash.extensions;
 
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
-import java.net.URLConnection;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 import java.util.zip.CRC32;
+import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
-import java.util.zip.Deflater;
+
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import net.sf.saxon.s9api.Axis;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.Serializer;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmNodeKind;
+
+import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.core.XProcConstants;
-import com.xmlcalabash.model.RuntimeValue;
-import com.xmlcalabash.util.TreeWriter;
-import com.xmlcalabash.util.S9apiUtils;
-import com.xmlcalabash.util.RelevantNodes;
-import com.xmlcalabash.io.WritablePipe;
+import com.xmlcalabash.io.DataStore;
+import com.xmlcalabash.io.DataStore.DataInfo;
+import com.xmlcalabash.io.DataStore.DataReader;
 import com.xmlcalabash.io.ReadablePipe;
-import com.xmlcalabash.io.Pipe;
+import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.library.DefaultStep;
-import com.xmlcalabash.library.HttpRequest;
 import com.xmlcalabash.runtime.XAtomicStep;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.Axis;
-import net.sf.saxon.s9api.XdmNodeKind;
-import net.sf.saxon.s9api.Serializer;
+import com.xmlcalabash.util.RelevantNodes;
+import com.xmlcalabash.util.S9apiUtils;
+import com.xmlcalabash.util.TreeWriter;
 
 /**
  *
@@ -123,7 +122,7 @@ public class Zip extends DefaultStep {
     public void run() throws SaxonApiException {
         super.run();
 
-        String zipFn = getOption(_href).getString();
+        final String zipFn = getOption(_href).getString();
 
         XdmNode man = S9apiUtils.getDocumentElement(manifest.read());
 
@@ -139,31 +138,56 @@ public class Zip extends DefaultStep {
 
         parseManifest(man);
 
-        File zipFile = null;
         try {
-            zipFile = new File(new URI(zipFn));
-        } catch (URISyntaxException e) {
+            final String base = getOption(_href).getBaseURI().toASCIIString();
+            final DataStore store = runtime.getDataStore();
+            store.writeEntry(zipFn, base, "application/zip", new DataStore.DataWriter() {
+                public void store(OutputStream content) throws IOException {
+                    final ZipOutputStream outZip = new ZipOutputStream(content);
+                    try {
+                        store.readEntry(zipFn, base, "application/zip", new DataStore.DataReader() {
+                            public void load(URI id, String media, InputStream content, long len)
+                                    throws IOException {
+                                ZipInputStream inZip = new ZipInputStream(content);
+                                try {
+                                    update(inZip, outZip);
+                                } finally {
+                                    inZip.close();
+                                }
+                            }
+                        });
+                    } catch (FileNotFoundException e) {
+                        update(null, outZip);
+                    } finally {
+                        outZip.close();
+                    }
+                }
+            });
+        } catch (IOException e) {
             throw new XProcException(e);
         }
 
-        File zipParent = zipFile.getParentFile();
-        File zipTemp = null;
-        ZipFile inZip = null;
-        ZipOutputStream outZip = null;
-
         try {
-            zipTemp = File.createTempFile("calabashZip",".zip",zipParent);
-            zipTemp.deleteOnExit();
-            if (zipFile.exists()) {
-                inZip = new ZipFile(zipFile);
-            }
-            outZip = new ZipOutputStream(new FileOutputStream(zipTemp));
+            final DatatypeFactory dfactory = DatatypeFactory.newInstance();
+            DataStore store = runtime.getDataStore();
+            store.readEntry(zipFn, zipFn, "application/zip, */*", new DataReader() {
+                public void load(URI id, String media, InputStream stream,
+                        long len) throws IOException {
+                    read(id, stream, dfactory);
+                }
+            });
+        } catch (MalformedURLException mue) {
+            throw new XProcException(XProcException.err_E0001, mue);
         } catch (IOException ioe) {
-            throw new XProcException(ioe);
+            throw new XProcException(XProcException.err_E0001, ioe);
+        } catch (DatatypeConfigurationException dce) {
+            throw new XProcException(XProcException.err_E0001, dce);
         }
+    }
 
+    void update(ZipInputStream inZip, final ZipOutputStream outZip) {
         String command = getOption(_command).getString();
-
+    
         if ("create".equals(command)) {
             try {
                 if (inZip != null) {
@@ -184,64 +208,48 @@ public class Zip extends DefaultStep {
         } else {
             throw new XProcException(step.getNode(), "Unexpected cx:zip command: " + command);
         }
+    }
 
-        if (zipFile.exists()) {
-            zipFile.delete();
-        }
-
-        zipTemp.renameTo(zipFile);
-
+    void read(URI id, InputStream stream, final DatatypeFactory dfactory)
+            throws IOException {
         TreeWriter tree = new TreeWriter(runtime);
-
+    
         tree.startDocument(step.getNode().getBaseURI());
         tree.addStartElement(c_zipfile);
-        tree.addAttribute(_href, zipFile.toURI().toASCIIString());
+        tree.addAttribute(_href, id.toASCIIString());
         tree.startContent();
-
-        try {
-            URL url = zipFile.toURI().toURL();
-            URLConnection connection = url.openConnection();
-            InputStream stream = connection.getInputStream();
-
-            ZipInputStream zipStream = new ZipInputStream(stream);
-
-            DatatypeFactory dfactory = DatatypeFactory.newInstance();
-            GregorianCalendar cal = new GregorianCalendar();
-
-            ZipEntry entry = zipStream.getNextEntry();
-            while (entry != null) {
-                cal.setTimeInMillis(entry.getTime());
-                XMLGregorianCalendar xmlCal = dfactory.newXMLGregorianCalendar(cal);
-
-                if (entry.isDirectory()) {
-                    tree.addStartElement(c_directory);
-                } else {
-                    tree.addStartElement(c_file);
-
-                    tree.addAttribute(_compressed_size, ""+entry.getCompressedSize());
-                    tree.addAttribute(_size, ""+entry.getSize());
-                }
-
-                if (entry.getComment() != null) {
-                    tree.addAttribute(_comment, entry.getComment());
-                }
-
-                tree.addAttribute(_name, ""+entry.getName());
-                tree.addAttribute(_date, xmlCal.toXMLFormat());
-                tree.startContent();
-                tree.addEndElement();
-                entry = zipStream.getNextEntry();
+    
+        ZipInputStream zipStream = new ZipInputStream(stream);
+    
+        GregorianCalendar cal = new GregorianCalendar();
+    
+        ZipEntry entry = zipStream.getNextEntry();
+        while (entry != null) {
+            cal.setTimeInMillis(entry.getTime());
+            XMLGregorianCalendar xmlCal = dfactory.newXMLGregorianCalendar(cal);
+    
+            if (entry.isDirectory()) {
+                tree.addStartElement(c_directory);
+            } else {
+                tree.addStartElement(c_file);
+    
+                tree.addAttribute(_compressed_size, ""+entry.getCompressedSize());
+                tree.addAttribute(_size, ""+entry.getSize());
             }
-
-            zipStream.close();
-        } catch (MalformedURLException mue) {
-            throw new XProcException(XProcException.err_E0001, mue);
-        } catch (IOException ioe) {
-            throw new XProcException(XProcException.err_E0001, ioe);
-        } catch (DatatypeConfigurationException dce) {
-            throw new XProcException(XProcException.err_E0001, dce);
+    
+            if (entry.getComment() != null) {
+                tree.addAttribute(_comment, entry.getComment());
+            }
+    
+            tree.addAttribute(_name, ""+entry.getName());
+            tree.addAttribute(_date, xmlCal.toXMLFormat());
+            tree.startContent();
+            tree.addEndElement();
+            entry = zipStream.getNextEntry();
         }
-
+    
+        zipStream.close();
+    
         tree.addEndElement();
         tree.endDocument();
         result.write(tree.getResult());
@@ -292,14 +300,13 @@ public class Zip extends DefaultStep {
         }
     }
 
-    public void update(ZipFile inZip, ZipOutputStream outZip, boolean freshen) {
-        byte[] buffer = new byte[bufsize];
+    public void update(ZipInputStream inZip, final ZipOutputStream outZip, boolean freshen) {
+        final byte[] buffer = new byte[bufsize];
 
         try {
             if (inZip != null) {
-                Enumeration zenum = inZip.entries();
-                while (zenum.hasMoreElements()) {
-                    ZipEntry entry = (ZipEntry) zenum.nextElement();
+                ZipEntry entry;
+                while ((entry = inZip.getNextEntry()) != null) {
                     String name = entry.getName();
 
                     boolean skip = srcManifest.containsKey(name);
@@ -321,13 +328,11 @@ public class Zip extends DefaultStep {
 
                     if (!skip) {
                         outZip.putNextEntry(entry);
-                        InputStream stream = inZip.getInputStream(entry);
-                        int read = stream.read(buffer, 0, bufsize);
+                        int read = inZip.read(buffer, 0, bufsize);
                         while (read >= 0) {
                             outZip.write(buffer,0, read);
-                            read = stream.read(buffer, 0, bufsize);
+                            read = inZip.read(buffer, 0, bufsize);
                         }
-                        stream.close();
                         outZip.closeEntry();
                     }
                 }
@@ -349,21 +354,25 @@ public class Zip extends DefaultStep {
                 
                 if(ze.getMethod() == ZipEntry.STORED) {
                     // FIXME: Using a boas is risky here, it will fail for huge files; but who STOREs a huge file?
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    final ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     if (srcManifest.containsKey(uri.toString())) {
                         XdmNode doc = srcManifest.get(href);
                         Serializer serializer = makeSerializer(file.getOptions());
                         serializer.setOutputStream(baos);
                         S9apiUtils.serialize(runtime, doc, serializer);
                     } else {
-                        URLConnection connection = uri.toURL().openConnection();
-                        InputStream stream = connection.getInputStream();
-                        int read = stream.read(buffer, 0, bufsize);
-                        while (read>0){
-                            baos.write(buffer,0,read);
-                            read = stream.read(buffer, 0, bufsize);
-                        }
-                        stream.close();
+                        DataStore store = runtime.getDataStore();
+                        store.readEntry(href, href, "*/*", new DataReader() {
+                            public void load(URI id, String media,
+                                    InputStream stream, long len)
+                                    throws IOException {
+                                int read = stream.read(buffer, 0, bufsize);
+                                while (read>0){
+                                    baos.write(buffer,0,read);
+                                    read = stream.read(buffer, 0, bufsize);
+                                }
+                            }
+                        });
                     }
                     byte[] bytes =  baos.toByteArray();
                     ze.setSize(bytes.length);
@@ -380,21 +389,22 @@ public class Zip extends DefaultStep {
                     serializer.setOutputStream(outZip);
                     S9apiUtils.serialize(runtime, doc, serializer);
                 } else {
-                    URL url = uri.toURL();
-                    URLConnection connection = url.openConnection();
-                    InputStream stream = connection.getInputStream();
-                    int read = stream.read(buffer, 0, bufsize);
-                    while (read >= 0) {
-                        outZip.write(buffer,0, read);
-                        read = stream.read(buffer, 0, bufsize);
-                    }
-                    stream.close();
+                    DataStore store = runtime.getDataStore();
+                    store.readEntry(href, href, "*/*", new DataReader() {
+                        public void load(URI id, String media,
+                                InputStream stream, long len)
+                                throws IOException {
+                            int read = stream.read(buffer, 0, bufsize);
+                            while (read >= 0) {
+                                outZip.write(buffer,0, read);
+                                read = stream.read(buffer, 0, bufsize);
+                            }
+                        }
+                    });
                 }
 
                 outZip.closeEntry();
             }
-
-            outZip.close();
         } catch (IOException ioe) {
             throw new XProcException(ioe);
         } catch (SaxonApiException sae) {
@@ -402,12 +412,11 @@ public class Zip extends DefaultStep {
         }
     }
 
-    public void delete(ZipFile inZip, ZipOutputStream outZip) {
+    public void delete(ZipInputStream inZip, ZipOutputStream outZip) {
         try {
             if (inZip != null) {
-                Enumeration zenum = inZip.entries();
-                while (zenum.hasMoreElements()) {
-                    ZipEntry entry = (ZipEntry) zenum.nextElement();
+                ZipEntry entry;
+                while ((entry = inZip.getNextEntry()) != null) {
                     String name = entry.getName();
                     boolean delete = false;
 
@@ -417,20 +426,16 @@ public class Zip extends DefaultStep {
 
                     if (!delete) {
                         outZip.putNextEntry(entry);
-                        InputStream stream = inZip.getInputStream(entry);
                         byte[] buffer = new byte[bufsize];
-                        int read = stream.read(buffer, 0, bufsize);
+                        int read = inZip.read(buffer, 0, bufsize);
                         while (read >= 0) {
                             outZip.write(buffer,0, read);
-                            read = stream.read(buffer, 0, bufsize);
+                            read = inZip.read(buffer, 0, bufsize);
                         }
-                        stream.close();
                         outZip.closeEntry();
                     }
                 }
             }
-
-            outZip.close();
         } catch (IOException ioe) {
             throw new XProcException(ioe);
         }
@@ -509,85 +514,22 @@ public class Zip extends DefaultStep {
                 return date.getTime();
             }
 
-            if (uri.getScheme().equals("file")) {
-                String fn = uri.toASCIIString();
-                if (fn.startsWith("file:")) {
-                    fn = fn.substring(5);
-                    if (fn.startsWith("///")) {
-                        fn = fn.substring(2);
+            final List<Long> list = new ArrayList<Long>(1);
+            DataStore store = runtime.getDataStore();
+            try {
+                store.infoEntry(uri.toASCIIString(), uri.toASCIIString(), "*/*", new DataInfo() {
+                    public void list(URI id, String media, long lastModified)
+                            throws IOException {
+                        list.add(lastModified);
                     }
-                }
-
-                File f = new File(fn);
-                return f.lastModified();
+                });
+            } catch (IOException e) {
+                throw new XProcException(e);
+            }
+            if (list.size() == 1) {
+                return list.get(0);
             } else {
-                // Let's try HTTP
-                HttpRequest httpReq = new HttpRequest(runtime, step);
-                Pipe inputPipe = new Pipe(runtime);
-                Pipe outputPipe = new Pipe(runtime);
-                httpReq.setInput("source", inputPipe);
-                httpReq.setOutput("result", outputPipe);
-
-                TreeWriter req = new TreeWriter(runtime);
-                req.startDocument(step.getNode().getBaseURI());
-                req.addStartElement(XProcConstants.c_request);
-                req.addAttribute(_method, "HEAD");
-                req.addAttribute(_href, uri.toASCIIString());
-                req.addAttribute(_status_only, "true");
-                req.addAttribute(_detailed, "true");
-
-                req.startContent();
-                req.addEndElement();
-                req.endDocument();
-
-                inputPipe.write(req.getResult());
-
-                try {
-                    httpReq.run();
-                } catch (SaxonApiException sae) {
-                    throw new XProcException(sae);
-                }
-
-                XdmNode result = S9apiUtils.getDocumentElement(outputPipe.read());
-                int status = Integer.parseInt(result.getAttributeValue(_status));
-
-                if (status == 200) {
-                    for (XdmNode node : new RelevantNodes(runtime, result, Axis.CHILD)) {
-                        if ("Last-Modified".equals(node.getAttributeValue(_name))) {
-                            String months[] = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN",
-                                               "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
-                            String dateStr = node.getAttributeValue(_value);
-                            // dateStr = Fri, 13 Mar 2009 12:12:07 GMT
-                            //           00000000001111111111222222222
-                            //           01234567890123456789012345678
-
-                            //System.err.println("dateStr: " + dateStr);
-
-                            int day = Integer.parseInt(dateStr.substring(5,7));
-                            String monthStr = dateStr.substring(8,11).toUpperCase();
-                            int year = Integer.parseInt(dateStr.substring(12,16));
-                            int hour = Integer.parseInt(dateStr.substring(17,19));
-                            int min = Integer.parseInt(dateStr.substring(20,22));
-                            int sec = Integer.parseInt(dateStr.substring(23,25));
-                            String tzStr = dateStr.substring(26,29);
-
-                            int month = 0;
-                            for (month = 0; month < 12; month++) {
-                                if (months[month].equals(monthStr)) {
-                                    break;
-                                }
-                            }
-
-                            // FIXME: check if this is correct!
-                            GregorianCalendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
-                            cal.set(year,month,day,hour,min,sec);
-                            return cal.getTimeInMillis();
-                        }
-                    }
-                    return -1;
-                } else {
-                    return -1;
-                }
+                return -1;
             }
         }
     }

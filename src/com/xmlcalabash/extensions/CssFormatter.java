@@ -1,27 +1,25 @@
 package com.xmlcalabash.extensions;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Properties;
+
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XdmNode;
+
 import com.xmlcalabash.config.CssProcessor;
-import com.xmlcalabash.config.FoProcessor;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.io.DataStore;
+import com.xmlcalabash.io.DataStore.DataWriter;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.library.DefaultStep;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.util.TreeWriter;
-import com.xmlcalabash.util.URIUtils;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XdmNode;
-
-import java.io.BufferedOutputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Properties;
-import java.util.Vector;
 
 /**
  * Created by IntelliJ IDEA.
@@ -74,23 +72,14 @@ public class CssFormatter extends DefaultStep {
             throw new XProcException("No CSS processor class defined");
         }
 
-        CssProcessor provider = null;
+        final CssProcessor provider;
         try {
             provider = (CssProcessor) Class.forName(cssClass).newInstance();
             provider.initialize(runtime,step,options);
-        } catch (NoClassDefFoundError ncdfe) {
-            provider = null;
-            if (runtime.getDebug()) {
-                ncdfe.printStackTrace();
-            }
         } catch (Exception e) {
-            provider = null;
             if (runtime.getDebug()) {
                 e.printStackTrace();
             }
-        }
-
-        if (provider == null) {
             throw new XProcException(step.getNode(), "Failed to instantiate CSS provider");
         }
 
@@ -99,33 +88,34 @@ public class CssFormatter extends DefaultStep {
             provider.addStylesheet(style);
         }
 
-        String contentType = null;
+        final String contentType;
         if (getOption(_content_type) != null) {
             contentType = getOption(_content_type).getString();
-        }
-
-        String href = getOption(_href).getBaseURI().resolve(getOption(_href).getString()).toASCIIString();
-        String output = null;
-        if (href.startsWith("file:/")) {
-            output = URIUtils.getFile(href).getPath();
         } else {
-            throw new XProcException(step.getNode(), "Don't know how to write cx:css-formatter output to " + href);
+            contentType = "application/xml";
         }
 
-        OutputStream out = null;
+        String href = getOption(_href).getString();
+        String base = getOption(_href).getBaseURI().toASCIIString();
+
         try {
-            try {
-                out = new BufferedOutputStream(new FileOutputStream(output));
-                provider.format(source.read(),out,contentType);
-            } catch (XProcException e) {
-                throw e;
-            } catch (Exception e) {
-                throw new XProcException(step.getNode(), "Failed to style with CSS document", e);
-            } finally {
-                out.close();
+            DataStore store = runtime.getDataStore();
+            store.writeEntry(href, base, contentType, new DataWriter() {
+                public void store(OutputStream out) throws IOException {
+                    try {
+                        provider.format(source.read(),out,contentType);
+                    } catch(SaxonApiException e) {
+                        throw new IOException(e);
+                    }
+                }
+            });
+        } catch (XProcException e) {
+            throw e;
+        } catch (Exception e) {
+            if (e.getCause() instanceof SaxonApiException) {
+                throw (SaxonApiException) e.getCause();
             }
-        } catch (IOException e) {
-            // Oh, nevermind if we couldn't close the file
+            throw new XProcException(step.getNode(), "Failed to style with CSS document", e);
         }
 
         TreeWriter tree = new TreeWriter(runtime);
