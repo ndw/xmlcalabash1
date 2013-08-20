@@ -26,6 +26,8 @@ import com.xmlcalabash.util.RelevantNodes;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TypeUtils;
 import com.xmlcalabash.util.URIUtils;
+import net.sf.saxon.PreparedStylesheet;
+import net.sf.saxon.functions.FunctionLibrary;
 import net.sf.saxon.query.QueryModule;
 import net.sf.saxon.query.StaticQueryContext;
 import net.sf.saxon.query.XQueryExpression;
@@ -39,6 +41,8 @@ import net.sf.saxon.s9api.XQueryCompiler;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
+import net.sf.saxon.s9api.XsltCompiler;
+import net.sf.saxon.s9api.XsltExecutable;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
@@ -68,6 +72,7 @@ public class Parser {
     protected HashSet<String> topLevelImports = new HashSet<String> ();
     private boolean loadingStandardLibrary = false;
     private Logger logger = Logger.getLogger(this.getClass().getName());
+    private static int importCount = 0;
 
     public Parser(XProcRuntime runtime) {
         this.runtime = runtime;
@@ -1860,6 +1865,7 @@ public class Parser {
     private void importFunctions(XdmNode node) {
         String href = node.getAttributeValue(_href);
         String ns = node.getAttributeValue(_namespace);
+        String type = node.getAttributeValue(_type);
         Processor processor = runtime.getProcessor();
 
         String sed = processor.getUnderlyingConfiguration().getEditionCode();
@@ -1870,21 +1876,30 @@ public class Parser {
         try {
             URL url = runtime.getStaticBaseURI().resolve(href).toURL();
             URLConnection connection = url.openConnection();
+            FunctionLibrary fl = null;
 
-            XQueryCompiler xqcomp = processor.newXQueryCompiler();
-
-            StaticQueryContext sqc = xqcomp.getUnderlyingStaticContext();
-            sqc.compileLibrary(connection.getInputStream(), "utf-8");
-            XQueryExpression xqe = sqc.compileQuery("import module namespace f='" + ns + "'; .");
-            QueryModule qm = xqe.getStaticContext();
-            XQueryFunctionLibrary xfl = qm.getGlobalFunctionLibrary();
+            if (type.contains("xsl")) {
+                SAXSource stylesheet = new SAXSource(new InputSource(connection.getInputStream()));
+                XsltCompiler compiler = processor.newXsltCompiler();
+                XsltExecutable exec = compiler.compile(stylesheet);
+                PreparedStylesheet ps = exec.getUnderlyingCompiledStylesheet();
+                fl = ps.getFunctionLibrary();
+            } else {
+                XQueryCompiler xqcomp = processor.newXQueryCompiler();
+                StaticQueryContext sqc = xqcomp.getUnderlyingStaticContext();
+                sqc.compileLibrary(connection.getInputStream(), "utf-8");
+                XQueryExpression xqe = sqc.compileQuery("import module namespace f='" + ns + "'; .");
+                QueryModule qm = xqe.getStaticContext();
+                fl = qm.getGlobalFunctionLibrary();
+            }
 
             // We think this will work because we know from the test above that we're not in Saxon HE.
             // It's a bit fragile, but I can't think of a better way.
             Class pc = Class.forName("com.saxonica.config.ProfessionalConfiguration");
             Class fc = Class.forName("net.sf.saxon.functions.FunctionLibrary");
             Method setBinder = pc.getMethod("setExtensionBinder", String.class, fc);
-            setBinder.invoke(processor.getUnderlyingConfiguration(), "calabash", xfl);
+            setBinder.invoke(processor.getUnderlyingConfiguration(), "xmlcalabash" + importCount, fl);
+            importCount++;
         } catch (Exception e) {
             throw new XProcException(e);
         }
