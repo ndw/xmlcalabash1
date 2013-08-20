@@ -56,7 +56,7 @@
     <dependency>
       <groupId>net.sf.saxon</groupId>
       <artifactId>Saxon-HE</artifactId>
-      <version>9.4.0.7</version>
+      <version>@saxon-version@</version>
     </dependency>
 
     <!-- No need to specify commons-logging or commons-codec - they're transitive dependencies of httpclient -->
