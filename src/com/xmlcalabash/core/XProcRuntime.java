@@ -107,8 +107,13 @@ import com.xmlcalabash.functions.ValueAvailable;
 import com.xmlcalabash.functions.VersionAvailable;
 import com.xmlcalabash.functions.XPathVersionAvailable;
 import com.xmlcalabash.functions.XProcExtensionFunctionDefinition;
+import com.xmlcalabash.io.DataStore;
+import com.xmlcalabash.io.FallbackDataStore;
+import com.xmlcalabash.io.FileDataStore;
+import com.xmlcalabash.io.HttpClientDataStore;
 import com.xmlcalabash.io.ReadableData;
 import com.xmlcalabash.io.ReadablePipe;
+import com.xmlcalabash.io.URLDataStore;
 import com.xmlcalabash.model.DeclareStep;
 import com.xmlcalabash.model.Parser;
 import com.xmlcalabash.model.PipelineLibrary;
@@ -158,6 +163,7 @@ public class XProcRuntime {
     private XLibrary xStandardLibrary = null;
     private HttpClient httpClient;
     private Map<String, CookieStore> cookieStores;
+    private DataStore dataStore;
     private XProcConfigurer configurer = null;
     private String htmlParser = null;
     private Vector<XProcExtensionFunctionDefinition> exFuncs = new Vector<XProcExtensionFunctionDefinition>();
@@ -368,6 +374,21 @@ public class XProcRuntime {
 
     public void setEntityResolver(EntityResolver resolver) {
         uriResolver.setUnderlyingEntityResolver(resolver);
+    }
+
+    public synchronized DataStore getDataStore() {
+        if (dataStore == null) {
+            DataStore fallback = new URLDataStore(new FallbackDataStore());
+            if (!getSafeMode()) {
+                fallback = new FileDataStore(fallback);
+            }
+            dataStore = new HttpClientDataStore(getHttpClient(), fallback);
+        }
+        return dataStore;
+    }
+
+    public synchronized void setDataStore(DataStore dataStore) {
+        this.dataStore = dataStore;
     }
 
     public XProcURIResolver getResolver() {
