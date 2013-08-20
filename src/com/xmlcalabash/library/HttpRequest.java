@@ -20,8 +20,6 @@ package com.xmlcalabash.library;
  */
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -87,6 +85,8 @@ import org.xml.sax.InputSource;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.io.DataStore;
+import com.xmlcalabash.io.DataStore.DataReader;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.runtime.XAtomicStep;
@@ -208,8 +208,9 @@ public class HttpRequest extends DefaultStep {
 
         requestURI = start.getBaseURI().resolve(start.getAttributeValue(_href));
 
-        if ("file".equals(requestURI.getScheme())) {
-            doFile();
+        String scheme = requestURI.getScheme();
+        if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
+            doFile(start.getAttributeValue(_href), start.getBaseURI().toASCIIString());
             return;
         }
 
@@ -259,9 +260,9 @@ public class HttpRequest extends DefaultStep {
 
             List<String> authpref;
             if ("basic".equalsIgnoreCase(meth)) {
-            	authpref = Collections.singletonList(AuthPolicy.BASIC);
+                authpref = Collections.singletonList(AuthPolicy.BASIC);
             } else if ("digest".equalsIgnoreCase(meth)) {
-            	authpref = Collections.singletonList(AuthPolicy.DIGEST);
+                authpref = Collections.singletonList(AuthPolicy.DIGEST);
             } else {
                 throw XProcException.stepError(3, "Unsupported auth-method: " + meth);
             }
@@ -1104,7 +1105,7 @@ public class HttpRequest extends DefaultStep {
         }
     }
 
-    private void doFile() {
+    private void doFile(String href, String base) {
         // Find the content type
         String contentType = overrideContentType;
 
@@ -1112,38 +1113,42 @@ public class HttpRequest extends DefaultStep {
             contentType = "application/octet-stream";
         }
 
-        // FIXME: Is ISO-8859-1 the right default?
-        String charset = HttpUtils.getCharset(contentType, "ISO-8859-1");
-
-        TreeWriter tree = new TreeWriter(runtime);
-        tree.startDocument(requestURI);
-
         try {
-            File file = new File(requestURI.getPath());
-            FileInputStream bodyStream = null;
-            bodyStream = new FileInputStream(file);
+            DataStore store = runtime.getDataStore();
+            store.readEntry(href, base, "application/xml, text/xml, */*", new DataReader() {
+                public void load(URI id, String contentType, InputStream bodyStream, long len)
+                        throws IOException {
+                    // FIXME: Is ISO-8859-1 the right default?
+                    String charset = HttpUtils.getCharset(contentType, "ISO-8859-1");
 
-            if (xmlContentType(contentType)) {
-                readBodyContentPart(tree, bodyStream, contentType, charset);
-            } else {
-                tree.addStartElement(XProcConstants.c_body);
-                tree.addAttribute(_content_type, contentType);
-                if (!xmlContentType(contentType) && !textContentType(contentType)) {
-                    tree.addAttribute(_encoding, "base64");
+                    TreeWriter tree = new TreeWriter(runtime);
+                    tree.startDocument(id);
+
+                    try {
+                        if (xmlContentType(contentType)) {
+                            readBodyContentPart(tree, bodyStream, contentType, charset);
+                        } else {
+                            tree.addStartElement(XProcConstants.c_body);
+                            tree.addAttribute(_content_type, contentType);
+                            if (!xmlContentType(contentType) && !textContentType(contentType)) {
+                                tree.addAttribute(_encoding, "base64");
+                            }
+                            tree.startContent();
+                            readBodyContentPart(tree, bodyStream, contentType, charset);
+                            tree.addEndElement();
+                        }
+
+                        tree.endDocument();
+
+                        XdmNode doc = tree.getResult();
+                        result.write(doc);
+                    } catch (SaxonApiException sae) {
+                        throw new XProcException(sae);
+                    }
                 }
-                tree.startContent();
-                readBodyContentPart(tree, bodyStream, contentType, charset);
-                tree.addEndElement();
-            }
-
-            tree.endDocument();
-
-            XdmNode doc = tree.getResult();
-            result.write(doc);
+            });
         } catch (FileNotFoundException fnfe) {
             throw new XProcException(fnfe);
-        } catch (SaxonApiException sae) {
-            throw new XProcException(sae);
         } catch (IOException ioe) {
             throw new XProcException(ioe);
         }

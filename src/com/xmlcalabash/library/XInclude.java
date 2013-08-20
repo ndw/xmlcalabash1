@@ -19,30 +19,39 @@
 
 package com.xmlcalabash.library;
 
-import java.util.Stack;
-import java.util.Hashtable;
-import java.util.Vector;
-import java.util.Iterator;
-import java.util.HashSet;
-import java.net.URI;
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.URISyntaxException;
 import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.regex.Matcher;
+import java.net.URI;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Stack;
+import java.util.Vector;
 import java.util.regex.Pattern;
 
+import net.sf.saxon.s9api.Axis;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmNodeKind;
+import net.sf.saxon.s9api.XdmSequenceIterator;
+
+import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.io.DataStore;
+import com.xmlcalabash.io.DataStore.DataReader;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
-import com.xmlcalabash.util.*;
-import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.core.XProcException;
-import com.xmlcalabash.core.XProcConstants;
-import com.xmlcalabash.model.*;
-import net.sf.saxon.s9api.*;
-
+import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.util.HttpUtils;
+import com.xmlcalabash.util.ProcessMatch;
+import com.xmlcalabash.util.ProcessMatchingNodes;
+import com.xmlcalabash.util.RelevantNodes;
+import com.xmlcalabash.util.TreeWriter;
+import com.xmlcalabash.util.XPointer;
 
 /**
  *
@@ -162,15 +171,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                     throw XProcException.stepError(1, "XPointer is not allowed on XInclude when parse='text'");
                 }
 
-                String text = readText(href, node, node.getBaseURI().toASCIIString(), xpointer);
-                if (text == null) {
-                    finest(node, "XInclude text parse failed: " + href);
-                    fallback(node, href);
-                    return false;
-                } else {
-                    finest(node, "XInclude text parse: " + href);
-                }
-                matcher.addText(text);
+                readText(href, node, node.getBaseURI().toASCIIString(), xpointer, matcher);
                 return false;
             } else {
                 subdoc = readXML(href, node.getBaseURI().toASCIIString());
@@ -260,60 +261,59 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
         throw new UnsupportedOperationException("processPI can't happen in XInclude");
     }
 
-    public String readText(String href, XdmNode node, String base, XPointer xpointer) {
+    private void readText(final String href, final XdmNode node,
+            String base, final XPointer xpointer, final TreeWriter matcher) {
         finest(null, "XInclude read text: " + href + " (" + base + ")");
 
-        URI baseURI = null;
+        DataStore store = runtime.getDataStore();
         try {
-            baseURI = new URI(base);
-        } catch (URISyntaxException use) {
-            throw new XProcException(use);
-        }
-
-        URI hrefURI = baseURI.resolve(href);
-
-        String data = "";
-
-        try {
-            URL url = hrefURI.toURL();
-            URLConnection conn = url.openConnection();
-            String contentType = conn.getContentType();
-            int contentLength = conn.getContentLength();
-            String charset = HttpUtils.getCharset(contentType);
-
-            if (charset == null && node.getAttributeValue(_encoding) != null) {
-                charset = node.getAttributeValue(_encoding);
-            }
-
-            if (charset == null) {
-                charset = "utf-8";
-            }
-
-            // Get the response
-            InputStreamReader stream = null;
-            BufferedReader rd = null;
-
-            if (charset == null) {
-                stream = new InputStreamReader(conn.getInputStream());
-            } else {
-                stream = new InputStreamReader(conn.getInputStream(), charset);
-            }
-
-            if (xpointer != null) {
-                data = xpointer.selectText(stream, contentLength);
-            } else {
-                rd = new BufferedReader(stream);
-                String line;
-                while ((line = rd.readLine()) != null) {
-                    data += line + "\n";
+            store.readEntry(href, base, "text/plain, text/*, */*", new DataReader() {
+                public void load(URI id, String media, InputStream content,
+                        long len) throws IOException {
+                    String text = readText(node, xpointer, media, content, len);
+                    if (text == null) {
+                        finest(node, "XInclude text parse failed: " + href);
+                        fallback(node, href);
+                    } else {
+                        finest(node, "XInclude text parse: " + href);
+                        matcher.addText(text);
+                    }
                 }
-                rd.close();
-            }
-            stream.close();
+            });
         } catch (Exception e) {
             finest(null, "XInclude read text failed");
             mostRecentException = e;
-            return null;
+            fallback(node, href);
+        }
+    }
+
+    String readText(final XdmNode node, final XPointer xpointer, String media,
+            InputStream content, long len) throws IOException {
+        String charset = HttpUtils.getCharset(media);
+
+        if (charset == null && node.getAttributeValue(_encoding) != null) {
+            charset = node.getAttributeValue(_encoding);
+        }
+
+        if (charset == null) {
+            charset = "utf-8";
+        }
+
+        // Get the response
+        InputStreamReader stream = new InputStreamReader(content, charset);
+        BufferedReader rd = null;
+
+
+        String data = "";
+        if (xpointer != null) {
+            data = xpointer.selectText(stream, (int) len);
+        } else {
+            rd = new BufferedReader(stream);
+            String line;
+            while ((line = rd.readLine()) != null) {
+                data += line + "\n";
+            }
+            rd.close();
         }
 
         return data;

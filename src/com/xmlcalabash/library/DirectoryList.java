@@ -19,21 +19,25 @@
 
 package com.xmlcalabash.library;
 
-import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
 
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.util.TreeWriter;
-import com.xmlcalabash.util.URIUtils;
+import com.xmlcalabash.io.DataStore;
+import com.xmlcalabash.io.DataStore.DataInfo;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.SaxonApiException;
-
 import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.util.TreeWriter;
+import com.xmlcalabash.util.URIUtils;
 
 /**
  *
@@ -46,7 +50,6 @@ public class DirectoryList extends DefaultStep {
     private static final QName _exclude_filter = new QName("", "exclude-filter");
     private static final QName c_directory = new QName("c", XProcConstants.NS_XPROC_STEP, "directory");
     private static final QName c_file = new QName("c", XProcConstants.NS_XPROC_STEP, "file");
-    private static final QName c_other  = new QName("c", XProcConstants.NS_XPROC_STEP, "other");
     private static final QName px_show_excluded = new QName(XProcConstants.NS_CALABASH_EX, "show-excluded");
     private WritablePipe result = null;
     private String path = ".";
@@ -94,72 +97,57 @@ public class DirectoryList extends DefaultStep {
             runtime.finer(null, step.getNode(), "exclude: " + exclFilter);
         }
 
-        File dir = URIUtils.getFile(path);
-        String dirname = null;
+        final boolean showExcluded = "true".equals(step.getExtensionAttribute(px_show_excluded));
 
-        try {
-            dir = dir.getCanonicalFile();
-            dirname = dir.getName();
-        } catch (IOException ioe) {
-            throw new XProcException(ioe);
-        }
-
-        if (!dir.isDirectory()) {
-            throw XProcException.stepError(17);
-        }
-
-        if (!dir.canRead()) {
-            throw XProcException.stepError(12);
-        }
-
-        boolean showExcluded = "true".equals(step.getExtensionAttribute(px_show_excluded));
-
-        TreeWriter tree = new TreeWriter(runtime);
+        final URI uri = URI.create("file:///").resolve(path);
+        final TreeWriter tree = new TreeWriter(runtime);
         tree.startDocument(step.getNode().getBaseURI());
         tree.addStartElement(c_directory);
-        tree.addAttribute(_name, dirname);
-        tree.addAttribute(XProcConstants.xml_base, dir.toURI().toASCIIString());
+        tree.addAttribute(_name, getName(uri));
+        tree.addAttribute(XProcConstants.xml_base, uri.toASCIIString());
         tree.startContent();
 
-        File[] contents = dir.listFiles();
+        final DataStore store = runtime.getDataStore();
+        try {
+            store.listEachEntry(path, "file:///", "*/*", new DataInfo() {
+                public void list(URI id, String media, long lastModified) throws IOException {
+                    boolean use = true;
+                    String filename = getName(id);
 
-        for (File file : contents) {
-            boolean use = true;
-            String filename = file.getName();
+                    runtime.finer(null, step.getNode(), "name: " + filename);
 
-            runtime.finer(null, step.getNode(), "name: " + filename);
+                    if (inclFilter != null) {
+                        use = filename.matches(inclFilter);
+                        runtime.finer(null, step.getNode(), "include: " + use);
+                    }
 
-            if (inclFilter != null) {
-                use = filename.matches(inclFilter);
-                runtime.finer(null, step.getNode(), "include: " + use);
-            }
+                    if (exclFilter != null) {
+                        use = use && !filename.matches(exclFilter);
+                        runtime.finer(null, step.getNode(), "exclude: " + !use);
+                    }
 
-            if (exclFilter != null) {
-                use = use && !filename.matches(exclFilter);
-                runtime.finer(null, step.getNode(), "exclude: " + !use);
-            }
-
-            if (use) {
-                if (file.isDirectory()) {
-                    tree.addStartElement(c_directory);
-                    tree.addAttribute(_name, file.getName());
-                    tree.addEndElement();
-                    finest(step.getNode(), "Including directory: " + file.getName());
-                } else if (file.isFile()) {
-                    tree.addStartElement(c_file);
-                    tree.addAttribute(_name, file.getName());
-                    tree.addEndElement();
-                    finest(step.getNode(), "Including file: " + file.getName());
-                } else {
-                    tree.addStartElement(c_other);
-                    tree.addAttribute(_name, file.getName());
-                    tree.addEndElement();
-                    finest(step.getNode(), "Including other: " + file.getName());
+                    if (use) {
+                        if (!isFile(id)) {
+                            tree.addStartElement(c_directory);
+                            tree.addAttribute(_name, filename);
+                            tree.addEndElement();
+                            finest(step.getNode(), "Including directory: " + filename);
+                        } else {
+                            tree.addStartElement(c_file);
+                            tree.addAttribute(_name, filename);
+                            tree.addEndElement();
+                            finest(step.getNode(), "Including file: " + filename);
+                        }
+                    } else if (showExcluded) {
+                        tree.addComment(" excluded: " + filename + " ");
+                        finest(step.getNode(), "Excluding: " + filename);
+                    }
                 }
-            } else if (showExcluded) {
-                tree.addComment(" excluded: " + file.getName() + " ");
-                finest(step.getNode(), "Excluding: " + file.getName());
-            }
+            });
+        } catch (FileNotFoundException e) {
+            throw XProcException.stepError(17);
+        } catch (IOException e) {
+            throw XProcException.stepError(12);
         }
 
         tree.addEndElement();
@@ -167,5 +155,24 @@ public class DirectoryList extends DefaultStep {
 
         result.write(tree.getResult());
     }
+
+    String getName(URI id) {
+        return id.getPath().replaceAll("^.*/", "");
+	}
+
+	boolean isFile(URI id) throws IOException {
+		final String entry = id.toASCIIString();
+		final List<String> entries = new ArrayList<String>();
+		DataStore store = runtime.getDataStore();
+		store.infoEntry(entry, entry, "*/*", new DataInfo() {
+			public void list(URI id, String media, long lastModified)
+					throws IOException {
+				if (media != null) {
+					entries.add(media);
+				}
+			}
+		});
+		return !entries.isEmpty();
+	}
 }
 

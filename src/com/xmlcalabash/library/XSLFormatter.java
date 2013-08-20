@@ -1,27 +1,26 @@
 package com.xmlcalabash.library;
 
-import com.xmlcalabash.config.FoProcessor;
-import com.xmlcalabash.io.ReadablePipe;
-import com.xmlcalabash.io.WritablePipe;
-import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.core.XProcException;
-import com.xmlcalabash.core.XProcConstants;
-import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.util.S9apiUtils;
-import com.xmlcalabash.util.TreeWriter;
-import com.xmlcalabash.model.RuntimeValue;
-
-import java.io.IOException;
-import java.util.Properties;
-import java.io.OutputStream;
-import java.io.FileOutputStream;
 import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URI;
+import java.util.Properties;
 import java.util.Vector;
 
-import com.xmlcalabash.util.URIUtils;
-import org.xml.sax.InputSource;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
+
+import com.xmlcalabash.config.FoProcessor;
+import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.io.DataStore;
+import com.xmlcalabash.io.DataStore.DataWriter;
+import com.xmlcalabash.io.ReadablePipe;
+import com.xmlcalabash.io.WritablePipe;
+import com.xmlcalabash.model.RuntimeValue;
+import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.util.TreeWriter;
 
 /**
  * Created by IntelliJ IDEA.
@@ -77,6 +76,7 @@ public class XSLFormatter extends DefaultStep {
                 try {
                     provider = (FoProcessor) Class.forName(className).newInstance();
                     provider.initialize(runtime,step,options);
+                    break;
                 } catch (NoClassDefFoundError ncdfe) {
                     pexcept = ncdfe;
                     provider = null;
@@ -91,42 +91,42 @@ public class XSLFormatter extends DefaultStep {
             throw new XProcException(step.getNode(), "Failed to instantiate FO provider", pexcept);
         }
 
-        String contentType = null;
+        final String contentType;
         if (getOption(_content_type) != null) {
             contentType = getOption(_content_type).getString();
-        }
-
-        String href = getOption(_href).getBaseURI().resolve(getOption(_href).getString()).toASCIIString();
-        String output = null;
-        if (href.startsWith("file:/")) {
-            output = URIUtils.getFile(href).getPath();
         } else {
-            throw new XProcException(step.getNode(), "Don't know how to write p:xsl-formatter output to " + href);
+            contentType = "application/octet-stream";
         }
 
-        OutputStream out = null;
+        String base = getOption(_href).getBaseURI().toASCIIString();
+        String href = getOption(_href).getString();
+
         try {
-            try {
-                out = new BufferedOutputStream(new FileOutputStream(output));
-                provider.format(source.read(),out,contentType);
-            } catch (XProcException e) {
-                throw e;
-            } catch (Exception e) {
-                throw new XProcException(step.getNode(), "Failed to process FO document", e);
-            } finally {
-                out.close();
-            }
-        } catch (IOException e) {
-            // Oh, nevermind if we couldn't close the file
-        }
+            final FoProcessor processor = provider;
+            DataStore store = runtime.getDataStore();
+            URI id = store.writeEntry(href, base, contentType, new DataWriter() {
+                public void store(OutputStream content) throws IOException {
+                    OutputStream out = new BufferedOutputStream(content);
+                    try {
+                        processor.format(source.read(),out,contentType);
+                    } catch (SaxonApiException e) {
+                        throw new XProcException(step.getNode(), "Failed to process FO document", e);
+                    }
+                }
+            });
 
-        TreeWriter tree = new TreeWriter(runtime);
-        tree.startDocument(step.getNode().getBaseURI());
-        tree.addStartElement(XProcConstants.c_result);
-        tree.startContent();
-        tree.addText(href);
-        tree.addEndElement();
-        tree.endDocument();
-        result.write(tree.getResult());
+            TreeWriter tree = new TreeWriter(runtime);
+            tree.startDocument(step.getNode().getBaseURI());
+            tree.addStartElement(XProcConstants.c_result);
+            tree.startContent();
+            tree.addText(id.toASCIIString());
+            tree.addEndElement();
+            tree.endDocument();
+            result.write(tree.getResult());
+        } catch (XProcException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new XProcException(step.getNode(), "Failed to process FO document", e);
+        }
     }
 }
