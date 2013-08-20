@@ -114,7 +114,7 @@
     <property name="saxon-version" value="9.5.1.1"/>
   </target>
 
-  <target name="saxon94" if="saxon94">
+  <target name="saxon94" if="saxon94" unless="saxon95">
     <property name="saxon-version-short" value="94"/>
     <property name="saxon-version" value="9.4.0.7"/>
   </target>
