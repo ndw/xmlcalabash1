@@ -4,7 +4,6 @@ import com.drew.imaging.jpeg.JpegMetadataReader;
 import com.drew.imaging.jpeg.JpegProcessingException;
 import com.drew.metadata.Directory;
 import com.drew.metadata.Metadata;
-import com.drew.metadata.MetadataException;
 import com.drew.metadata.Tag;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
@@ -82,11 +81,11 @@ public class MetadataExtractor extends DefaultStep {
             tree.startContent();
 
             // iterate through metadata directories
-            Iterator directories = metadata.getDirectoryIterator();
+            Iterator directories = metadata.getDirectories().iterator();
             while (directories.hasNext()) {
                 Directory directory = (Directory) directories.next();
                 String dir = directory.getName();
-                Iterator tags = directory.getTagIterator();
+                Iterator tags = directory.getTags().iterator();
                 while (tags.hasNext()) {
                     Tag tag = (Tag) tags.next();
 
@@ -95,12 +94,7 @@ public class MetadataExtractor extends DefaultStep {
                     tree.addAttribute(_type, tag.getTagTypeHex());
                     tree.addAttribute(_name, tag.getTagName());
 
-                    String value = "";
-                    try {
-                        value = tag.getDescription();
-                    } catch (MetadataException me) {
-                        tree.addAttribute(_error, me.toString());
-                    }
+                    String value = tag.getDescription();
 
                     // Bah humbug...I don't see an easy way to tell if ti's a date/time
                     if (value.matches("^\\d\\d\\d\\d:\\d\\d:\\d\\d \\d\\d:\\d\\d:\\d\\d$")) {
