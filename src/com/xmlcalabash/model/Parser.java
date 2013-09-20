@@ -58,9 +58,9 @@ public class Parser {
     private static QName px_name = new QName(XProcConstants.NS_CALABASH_EX,"name");
     private static QName _name = new QName("name");
     private static QName _href = new QName("href");
-    private static QName _namespace = new QName("namespace");
     private static QName _type = new QName("type");
     private static QName _version = new QName("version");
+    private static QName _namespace = new QName("namespace");
     private static QName err_XS0063 = new QName(XProcConstants.NS_XPROC_ERROR, "XS0063");
     private static QName p_use_when = new QName(XProcConstants.NS_XPROC, "use-when");
     private static QName _use_when = new QName("use-when");
