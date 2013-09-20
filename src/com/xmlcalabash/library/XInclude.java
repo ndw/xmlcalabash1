@@ -22,7 +22,6 @@ package com.xmlcalabash.library;
 import java.util.Stack;
 import java.util.Hashtable;
 import java.util.Vector;
-import java.util.Iterator;
 import java.util.HashSet;
 import java.net.URI;
 import java.net.URL;
@@ -30,7 +29,6 @@ import java.net.URLConnection;
 import java.net.URISyntaxException;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.xmlcalabash.io.ReadablePipe;
@@ -59,6 +57,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
     private static final QName _encoding = new QName("", "encoding");
     private static final QName _href = new QName("", "href");
     private static final QName _parse = new QName("", "parse");
+    private static final QName _fragid = new QName("", "fragid");
     private static final QName _xpointer = new QName("", "xpointer");
     private static final Pattern linesXptrRE = Pattern.compile("\\s*lines\\s*\\(\\s*(\\d+)\\s*-\\s*(\\d+)\\s*\\)\\s*");
 
@@ -152,13 +151,20 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
             String xptr = node.getAttributeValue(_xpointer);
             XPointer xpointer = null;
             XdmNode subdoc = null;
+            boolean textfragok = runtime.getAllowXPointerOnText();
+
+            /* HACK */
+            if ("text".equals(parse) && node.getAttributeValue(_fragid) != null) {
+                xptr = "text(" + node.getAttributeValue(_fragid) + ")";
+                textfragok = true;
+            }
 
             if (xptr != null) {
                 xpointer = new XPointer(xptr);
             }
 
             if ("text".equals(parse)) {
-                if (!runtime.getAllowXPointerOnText() && xpointer != null) {
+                if (!textfragok && xpointer != null) {
                     throw XProcException.stepError(1, "XPointer is not allowed on XInclude when parse='text'");
                 }
 
