@@ -66,6 +66,7 @@ public class XPointer {
 
     public String selectText(InputStreamReader stream, int contentLength) {
         String result = null;
+        RuntimeException except = null;
 
         for (XPointerScheme scheme : parts) {
             String select = scheme.textEquivalent();
@@ -73,11 +74,13 @@ public class XPointer {
                 try {
                     result = scheme.selectText(stream, contentLength);
                 } catch (IllegalArgumentException iae) {
-                    result = null;
                     // in this case we will never have started reading the file, so we're good to go
-                } catch (XProcException xe) {
+                    except = iae;
                     result = null;
+                } catch (XProcException xe) {
                     // try the next one
+                    except = xe;
+                    result = null;
                     try {
                         stream.reset();
                     } catch (IOException ioe) {
@@ -85,6 +88,10 @@ public class XPointer {
                     }
                 }
             }
+        }
+
+        if (result == null && except != null) {
+            throw except;
         }
 
         return result;
