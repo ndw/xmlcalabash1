@@ -95,8 +95,10 @@ public class MetadataExtractor extends DefaultStep {
                     tree.addAttribute(_name, tag.getTagName());
 
                     String value = tag.getDescription();
+                    // Delete all control characters
+                    value = value.replaceAll("[\\u0000-\\u0008,\\u000b\\u000c,\\u000e-\\u001f]","");
 
-                    // Bah humbug...I don't see an easy way to tell if ti's a date/time
+                    // Bah humbug...I don't see an easy way to tell if it's a date/time
                     if (value.matches("^\\d\\d\\d\\d:\\d\\d:\\d\\d \\d\\d:\\d\\d:\\d\\d$")) {
                         String iso = value.substring(0, 4) + "-" + value.substring(5, 7) + "-" + value.substring(8, 10)
                                 + "T" + value.substring(11,19);
