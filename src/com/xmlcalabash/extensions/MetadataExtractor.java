@@ -4,7 +4,6 @@ import com.drew.imaging.jpeg.JpegMetadataReader;
 import com.drew.imaging.jpeg.JpegProcessingException;
 import com.drew.metadata.Directory;
 import com.drew.metadata.Metadata;
-import com.drew.metadata.MetadataException;
 import com.drew.metadata.Tag;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
@@ -27,6 +26,8 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
+import java.text.CharacterIterator;
+import java.text.StringCharacterIterator;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 
@@ -45,7 +46,13 @@ public class MetadataExtractor extends DefaultStep {
     private final static QName _dir = new QName("", "dir");
     private final static QName _type = new QName("", "type");
     private final static QName _name = new QName("", "name");
-    private final static QName _error = new QName("", "error");
+
+    private final static String[] controls = new String[] {
+            "0000", "0001", "0002", "0003", "0004", "0005", "0006", "0007",
+            "0008",                 "000b", "000c",         "000e", "000f",
+            "0010", "0011", "0012", "0013", "0014", "0015", "0016", "0017",
+            "0018", "0019", "001a", "001b", "001c", "001d", "001e", "001f",
+            "007c" };
 
     private WritablePipe result = null;
 
@@ -82,11 +89,11 @@ public class MetadataExtractor extends DefaultStep {
             tree.startContent();
 
             // iterate through metadata directories
-            Iterator directories = metadata.getDirectoryIterator();
+            Iterator directories = metadata.getDirectories().iterator();
             while (directories.hasNext()) {
                 Directory directory = (Directory) directories.next();
                 String dir = directory.getName();
-                Iterator tags = directory.getTagIterator();
+                Iterator tags = directory.getTags().iterator();
                 while (tags.hasNext()) {
                     Tag tag = (Tag) tags.next();
 
@@ -95,14 +102,19 @@ public class MetadataExtractor extends DefaultStep {
                     tree.addAttribute(_type, tag.getTagTypeHex());
                     tree.addAttribute(_name, tag.getTagName());
 
-                    String value = "";
-                    try {
-                        value = tag.getDescription();
-                    } catch (MetadataException me) {
-                        tree.addAttribute(_error, me.toString());
+                    String value = tag.getDescription();
+
+                    // Laboriously escape all the control characters with \\uxxxx, but first replace
+                    // \\uxxxx with \\u005cuxxxx so we don't inadvertantly change the meaning of a string
+                    value = value.replaceAll("\\\\u([0-9a-fA-F]{4}+)", "\\\\u005cu$1");
+                    for (String control : controls) {
+                        String match = "^.*\\u" + control + ".*$";
+                        if (value.matches(match)) {
+                            value = value.replaceAll("[\\u" + control + "]", "\\\\u" + control);
+                        }
                     }
 
-                    // Bah humbug...I don't see an easy way to tell if ti's a date/time
+                    // Bah humbug...I don't see an easy way to tell if it's a date/time
                     if (value.matches("^\\d\\d\\d\\d:\\d\\d:\\d\\d \\d\\d:\\d\\d:\\d\\d$")) {
                         String iso = value.substring(0, 4) + "-" + value.substring(5, 7) + "-" + value.substring(8, 10)
                                 + "T" + value.substring(11,19);

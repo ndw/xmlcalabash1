@@ -111,17 +111,27 @@ public abstract class XStep implements XProcRunnable
         Set<String> ports = getParameterPorts();
         int pportCount = 0;
         String pport = null;
+        String ppport = null;
         for (String port : ports) {
             pport = port;
             pportCount++;
+
+            Input pin = getStep().getInput(port);
+            if (pin.getPrimary()) {
+                ppport = port;
+            }
         }
 
         if (pportCount == 0) {
             throw new XProcException(step.getNode(), "Attempt to set parameter but there's no parameter port.");
         }
 
-        if (pportCount > 1) {
-            throw new XProcException(step.getNode(), "Attempt to set parameter w/o specifying a port (and there's more than one)");
+        if (ppport != null) {
+            pport = ppport;
+        } else {
+            if (pportCount > 1) {
+                throw new XProcException(step.getNode(), "Attempt to set parameter w/o specifying a port (and there's more than one)");
+            }
         }
 
         setParameter(pport, name, value);
