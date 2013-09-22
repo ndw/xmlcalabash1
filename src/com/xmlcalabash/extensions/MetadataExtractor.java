@@ -26,6 +26,8 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
+import java.text.CharacterIterator;
+import java.text.StringCharacterIterator;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 
@@ -44,7 +46,13 @@ public class MetadataExtractor extends DefaultStep {
     private final static QName _dir = new QName("", "dir");
     private final static QName _type = new QName("", "type");
     private final static QName _name = new QName("", "name");
-    private final static QName _error = new QName("", "error");
+
+    private final static String[] controls = new String[] {
+            "0000", "0001", "0002", "0003", "0004", "0005", "0006", "0007",
+            "0008",                 "000b", "000c",         "000e", "000f",
+            "0010", "0011", "0012", "0013", "0014", "0015", "0016", "0017",
+            "0018", "0019", "001a", "001b", "001c", "001d", "001e", "001f",
+            "007c" };
 
     private WritablePipe result = null;
 
@@ -95,8 +103,16 @@ public class MetadataExtractor extends DefaultStep {
                     tree.addAttribute(_name, tag.getTagName());
 
                     String value = tag.getDescription();
-                    // Delete all control characters
-                    value = value.replaceAll("[\\u0000-\\u0008,\\u000b\\u000c,\\u000e-\\u001f]","");
+
+                    // Laboriously escape all the control characters with \\uxxxx, but first replace
+                    // \\uxxxx with \\u005cuxxxx so we don't inadvertantly change the meaning of a string
+                    value = value.replaceAll("\\\\u([0-9a-fA-F]{4}+)", "\\\\u005cu$1");
+                    for (String control : controls) {
+                        String match = "^.*\\u" + control + ".*$";
+                        if (value.matches(match)) {
+                            value = value.replaceAll("[\\u" + control + "]", "\\\\u" + control);
+                        }
+                    }
 
                     // Bah humbug...I don't see an easy way to tell if it's a date/time
                     if (value.matches("^\\d\\d\\d\\d:\\d\\d:\\d\\d \\d\\d:\\d\\d:\\d\\d$")) {
