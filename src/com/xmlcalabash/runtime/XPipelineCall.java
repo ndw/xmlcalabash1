@@ -69,7 +69,13 @@ public class XPipelineCall extends XAtomicStep {
         for (QName name : step.getParameters()) {
             Parameter param = step.getParameter(name);
             RuntimeValue value = computeValue(param);
-            newstep.setParameter(name, value);
+
+            String port = param.getPort();
+            if (port == null) {
+                newstep.setParameter(name, value);
+            } else {
+                newstep.setParameter(port, name, value);
+            }
         }
 
         for (String port : inputs.keySet()) {
