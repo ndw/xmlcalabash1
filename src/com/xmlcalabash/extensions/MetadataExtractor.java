@@ -171,7 +171,7 @@ public class MetadataExtractor extends DefaultStep {
 
             while (!imageFailed && (width == -1 || depth == -1)) {
                 try {
-                    java.lang.Thread.currentThread().sleep(50);
+                    Thread.sleep(50);
                 } catch (Exception e) {
                     // nop;
                 }
