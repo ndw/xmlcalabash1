@@ -63,7 +63,7 @@ public class SystemProperty extends XProcExtensionFunctionDefinition {
              staticContext = context;
          }
 
-         public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
+         public SequenceIterator<?> call(SequenceIterator<?>[] arguments, XPathContext context) throws XPathException {
              StructuredQName propertyName = null;
 
              XProcRuntime runtime = tl_runtime.get();
@@ -75,7 +75,7 @@ public class SystemProperty extends XProcExtensionFunctionDefinition {
              }
 
              try {
-                 SequenceIterator iter = arguments[0];
+                 SequenceIterator<?> iter = arguments[0];
                  String lexicalQName = iter.next().getStringValue();
                  propertyName = StructuredQName.fromLexicalQName(
                       lexicalQName,

@@ -84,7 +84,7 @@ public class StepAvailable extends XProcExtensionFunctionDefinition {
             staticContext = context;
         }
 
-        public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
+        public SequenceIterator<?> call(SequenceIterator<?>[] arguments, XPathContext context) throws XPathException {
             StructuredQName stepName = null;
 
             XProcRuntime runtime = tl_runtime.get();
@@ -96,7 +96,7 @@ public class StepAvailable extends XProcExtensionFunctionDefinition {
             }
 
             try {
-                SequenceIterator iter = arguments[0];
+                SequenceIterator<?> iter = arguments[0];
                 String lexicalQName = iter.next().getStringValue();
                 stepName = StructuredQName.fromLexicalQName(
                      lexicalQName,

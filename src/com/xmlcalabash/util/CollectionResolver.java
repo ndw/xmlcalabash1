@@ -3,6 +3,7 @@ package com.xmlcalabash.util;
 import net.sf.saxon.lib.CollectionURIResolver;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.expr.XPathContext;
+import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.s9api.XdmNode;
@@ -34,14 +35,14 @@ public class CollectionResolver implements CollectionURIResolver {
         this.chainedResolver = chainedResolver;
     }
 
-    public SequenceIterator resolve(String href, String base, XPathContext context) throws XPathException {
+    public SequenceIterator<?> resolve(String href, String base, XPathContext context) throws XPathException {
         runtime.finest(null, null, "Collection: " + href + " (" + base + ")");
         if (href == null) {
-            Item[] array = new Item[docs.size()];
+            Item<?>[] array = new Item<?>[docs.size()];
             for (int pos = 0; pos < docs.size(); pos++) {
                 array[pos] = docs.get(pos).getUnderlyingNode();
             }
-            return new ArrayIterator(array);
+            return new ArrayIterator<Item<?>>(array);
         } else {
             try {
                 URI hrefuri;
@@ -53,11 +54,11 @@ public class CollectionResolver implements CollectionURIResolver {
                 }
                 Vector<XdmNode> docs = runtime.getCollection(hrefuri);
                 if (docs != null) {
-                    Item[] items = new Item[docs.size()];
+                    Item<?>[] items = new Item<?>[docs.size()];
                     for (int pos = 0; pos < docs.size(); pos++) {
                         items[pos] = docs.get(pos).getUnderlyingNode();
                     }
-                    return new ArrayIterator(items);
+                    return new ArrayIterator<Item<?>>(items);
                 }
             } catch (URISyntaxException use) {
                 runtime.finest(null, null, "URI Syntax exception resolving collection URI: " + href + " (" + base + ")");

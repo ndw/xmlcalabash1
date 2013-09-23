@@ -78,7 +78,7 @@ public class BaseURI extends XProcExtensionFunctionDefinition {
     }
 
     private class BaseURICall extends ExtensionFunctionCall {
-        public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
+        public SequenceIterator<?> call(SequenceIterator<?>[] arguments, XPathContext context) throws XPathException {
             String baseURI = null;
 
             XProcRuntime runtime = tl_runtime.get();
@@ -90,7 +90,7 @@ public class BaseURI extends XProcExtensionFunctionDefinition {
             }
 
             if (arguments.length > 0) {
-                SequenceIterator iter = arguments[0];
+                SequenceIterator<?> iter = arguments[0];
                 NodeInfo item = (NodeInfo) iter.next();
                 baseURI = item.getBaseURI();
             } else {

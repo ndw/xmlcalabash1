@@ -74,7 +74,7 @@ public class IterationPosition extends XProcExtensionFunctionDefinition {
     }
 
     private class IterationPositionCall extends ExtensionFunctionCall {
-        public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
+        public SequenceIterator<?> call(SequenceIterator<?>[] arguments, XPathContext context) throws XPathException {
             XProcRuntime runtime = tl_runtime.get();
             XProcData data = runtime.getXProcData();
             XStep step = data.getStep();

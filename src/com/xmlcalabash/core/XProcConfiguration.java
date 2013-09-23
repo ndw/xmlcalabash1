@@ -474,8 +474,8 @@ public class XProcConfiguration {
         }
 
 		try {
-			Constructor constructor = Class.forName(className).getConstructor(XProcRuntime.class, XAtomicStep.class);
-			return (XProcStep) constructor.newInstance(runtime,step);
+			Constructor<? extends XProcStep> constructor = Class.forName(className).asSubclass(XProcStep.class).getConstructor(XProcRuntime.class, XAtomicStep.class);
+			return constructor.newInstance(runtime,step);
 		} catch (NoSuchMethodException nsme) {
 			throw new UnsupportedOperationException("No such method: " + className, nsme);
 		} catch (ClassNotFoundException cfne) {

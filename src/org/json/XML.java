@@ -334,7 +334,7 @@ public class XML {
         JSONArray    ja;
         JSONObject   jo;
         String       k;
-        Iterator     keys;
+        Iterator<String> keys;
         int          len;
         String       s;
         Object       v;
@@ -353,7 +353,7 @@ public class XML {
             jo = (JSONObject)o;
             keys = jo.keys();
             while (keys.hasNext()) {
-                k = keys.next().toString();
+                k = keys.next();
                 v = jo.opt(k);
                 if (v == null) {
                 	v = "";
