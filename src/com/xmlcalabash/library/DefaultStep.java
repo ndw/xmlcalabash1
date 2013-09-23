@@ -63,6 +63,10 @@ public class DefaultStep implements XProcStep {
         return step;
     }
 
+    public static boolean isAvailable() {
+        return true;
+    }
+
     public void setInput(String port, ReadablePipe pipe) {
         throw new XProcException("No inputs allowed.");
     }
