@@ -17,6 +17,7 @@ import net.sf.saxon.value.Whitespace;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.lang.reflect.Method;
 import java.util.Hashtable;
 import java.util.Vector;
 import java.util.HashSet;
@@ -82,7 +83,7 @@ public class XProcConfiguration {
     public String entityResolver = null;
     public String uriResolver = null;
     public String errorListener = null;
-    public Hashtable<QName,String> implementations = new Hashtable<QName,String> ();
+    public Hashtable<QName,Class> implementations = new Hashtable<QName,Class> ();
     public Hashtable<String,String> serializationOptions = new Hashtable<String,String>();
     public LogOptions logOpt = LogOptions.WRAPPED;
     public Vector<String> extensionFunctions = new Vector<String>();
@@ -442,15 +443,31 @@ public class XProcConfiguration {
 
 
 	public boolean isStepAvailable(QName type) {
-		return implementations.containsKey(type);
+        if (implementations.containsKey(type)) {
+            Class klass = implementations.get(type);
+            try {
+                Method method = klass.getMethod("isAvailable");
+                Boolean available = (Boolean) method.invoke(null);
+                return available.booleanValue();
+            } catch (NoSuchMethodException e) {
+                return true; // Failure to implement the method...
+            } catch (InvocationTargetException e) {
+                return true; // ...or to implement it...
+            } catch (IllegalAccessException e) {
+                return true; // ...badly doesn't mean it's not available.
+            }
+        } else {
+            return false;
+        }
 	}
 
 	public XProcStep newStep(XProcRuntime runtime,XAtomicStep step){
-        String className = implementations.get(step.getType());
-        if (className == null) {
-            throw new UnsupportedOperationException("Misconfigured. No 'class' in configuration for " + step.getType());
+        Class klass = implementations.get(step.getType());
+        if (klass == null) {
+            throw new XProcException("Misconfigured. No 'class' in configuration for " + step.getType());
         }
 
+        String className = klass.getName();
         // FIXME: This isn't really very secure...
         if (runtime.getSafeMode() && !className.startsWith("com.xmlcalabash.")) {
             throw XProcException.dynamicError(21);
@@ -810,7 +827,14 @@ public class XProcConfiguration {
 
         for (String tname : nameStr.split("\\s+")) {
             QName name = new QName(tname,node);
-            implementations.put(name, value);
+            try {
+                Class klass = Class.forName(value);
+                implementations.put(name, klass);
+            } catch (ClassNotFoundException e) {
+                // nop
+            } catch (NoClassDefFoundError e) {
+                // nop
+            }
         }
     }
 
