@@ -306,7 +306,7 @@ public class JSONML {
     	int			 i;
     	JSONObject   jo;
     	String       k;
-	    Iterator     keys;
+	    Iterator<String> keys;
 	    int			 length;
     	StringBuffer sb = new StringBuffer();
 	    String       tagName;
@@ -329,7 +329,7 @@ public class JSONML {
 			
 	        keys = jo.keys();
 	        while (keys.hasNext()) {
-	            k = keys.next().toString();
+	            k = keys.next();
             	XML.noSpace(k);
 	            v = jo.optString(k);
 	            if (v != null) {
@@ -389,7 +389,7 @@ public class JSONML {
 	    int          i;
 	    JSONArray    ja;
 	    String       k;
-	    Iterator     keys;
+	    Iterator<String> keys;
 	    int          len;
 	    String       tagName;
 	    String       v;
@@ -409,7 +409,7 @@ public class JSONML {
 	
         keys = jo.keys();
         while (keys.hasNext()) {
-            k = keys.next().toString();
+            k = keys.next();
             if (!k.equals("tagName") && !k.equals("childNodes")) {
             	XML.noSpace(k);
 	            v = jo.optString(k);

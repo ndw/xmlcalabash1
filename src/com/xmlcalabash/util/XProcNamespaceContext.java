@@ -78,7 +78,7 @@ public class XProcNamespaceContext {
         return nshash;
     }
     
-    public Iterator getPrefixes(String namespace) {
+    public Iterator<String> getPrefixes(String namespace) {
         Vector<String> pfxs = new Vector<String> ();
         for (String key : nshash.keySet()) {
             if (namespace.equals(nshash.get(key))) {
@@ -88,7 +88,7 @@ public class XProcNamespaceContext {
         return pfxs.iterator();
     }
 
-    public Iterator getPrefixes() {
+    public Iterator<String> getPrefixes() {
         return null;
     }
 

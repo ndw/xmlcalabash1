@@ -89,13 +89,13 @@ public class MetadataExtractor extends DefaultStep {
             tree.startContent();
 
             // iterate through metadata directories
-            Iterator directories = metadata.getDirectories().iterator();
+            Iterator<Directory> directories = metadata.getDirectories().iterator();
             while (directories.hasNext()) {
-                Directory directory = (Directory) directories.next();
+                Directory directory = directories.next();
                 String dir = directory.getName();
-                Iterator tags = directory.getTags().iterator();
+                Iterator<Tag> tags = directory.getTags().iterator();
                 while (tags.hasNext()) {
-                    Tag tag = (Tag) tags.next();
+                    Tag tag = tags.next();
 
                     tree.addStartElement(c_tag);
                     tree.addAttribute(_dir, dir);
@@ -171,7 +171,7 @@ public class MetadataExtractor extends DefaultStep {
 
             while (!imageFailed && (width == -1 || depth == -1)) {
                 try {
-                    java.lang.Thread.currentThread().sleep(50);
+                    Thread.sleep(50);
                 } catch (Exception e) {
                     // nop;
                 }

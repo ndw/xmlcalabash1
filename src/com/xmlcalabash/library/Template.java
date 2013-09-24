@@ -195,9 +195,9 @@ public class Template extends DefaultStep implements ProcessMatchingNodes {
         if (parent.getNodeKind() == XdmNodeKind.ELEMENT) {
             NodeInfo inode = parent.getUnderlyingNode();
             InscopeNamespaceResolver inscopeNS = new InscopeNamespaceResolver(inode);
-            Iterator<String> prefixes = inscopeNS.iteratePrefixes();
+            Iterator<?> prefixes = inscopeNS.iteratePrefixes();
             while (prefixes.hasNext()) {
-                String nspfx = prefixes.next();
+                String nspfx = (String)prefixes.next();
                 String nsuri = inscopeNS.getURIForPrefix(nspfx, true);
                 nsbindings.put(nspfx,nsuri);
             }

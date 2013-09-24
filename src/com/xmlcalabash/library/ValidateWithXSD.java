@@ -75,7 +75,7 @@ public class ValidateWithXSD extends DefaultStep {
     private static final QName _line = new QName("line");
     private static final QName _column = new QName("column");
 
-    private static final Class [] paramTypes = new Class [] {};
+    private static final Class<?>[] paramTypes = new Class<?>[] {};
     private ReadablePipe source = null;
     private ReadablePipe schemas = null;
     private WritablePipe result = null;
