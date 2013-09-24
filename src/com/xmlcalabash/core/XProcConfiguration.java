@@ -83,7 +83,7 @@ public class XProcConfiguration {
     public String entityResolver = null;
     public String uriResolver = null;
     public String errorListener = null;
-    public Hashtable<QName,Class> implementations = new Hashtable<QName,Class> ();
+    public Hashtable<QName,Class<?>> implementations = new Hashtable<QName,Class<?>> ();
     public Hashtable<String,String> serializationOptions = new Hashtable<String,String>();
     public LogOptions logOpt = LogOptions.WRAPPED;
     public Vector<String> extensionFunctions = new Vector<String>();
@@ -444,7 +444,7 @@ public class XProcConfiguration {
 
 	public boolean isStepAvailable(QName type) {
         if (implementations.containsKey(type)) {
-            Class klass = implementations.get(type);
+            Class<?> klass = implementations.get(type);
             try {
                 Method method = klass.getMethod("isAvailable");
                 Boolean available = (Boolean) method.invoke(null);
@@ -462,7 +462,7 @@ public class XProcConfiguration {
 	}
 
 	public XProcStep newStep(XProcRuntime runtime,XAtomicStep step){
-        Class klass = implementations.get(step.getType());
+        Class<?> klass = implementations.get(step.getType());
         if (klass == null) {
             throw new XProcException("Misconfigured. No 'class' in configuration for " + step.getType());
         }
@@ -828,7 +828,7 @@ public class XProcConfiguration {
         for (String tname : nameStr.split("\\s+")) {
             QName name = new QName(tname,node);
             try {
-                Class klass = Class.forName(value);
+                Class<?> klass = Class.forName(value);
                 implementations.put(name, klass);
             } catch (ClassNotFoundException e) {
                 // nop
