@@ -77,6 +77,9 @@
       <groupId>net.sf.saxon</groupId>
       <artifactId>Saxon-HE</artifactId>
       <version>9.5.1-1</version>
+      <!-- Marking this dependency as optional allows users to explicitly include
+           the correct Saxon version in the calling library. -->
+      <optional>true</optional>
     </dependency>
 
     <!-- No need to specify commons-logging or commons-codec - they're transitive dependencies of httpclient -->
