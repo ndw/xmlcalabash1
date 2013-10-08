@@ -155,7 +155,11 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
 
             /* HACK */
             if ("text".equals(parse) && node.getAttributeValue(_fragid) != null) {
-                xptr = "text(" + node.getAttributeValue(_fragid) + ")";
+                xptr = node.getAttributeValue(_fragid);
+                // FIXME: This is a total hack
+                if (!xptr.startsWith("text(")) {
+                    xptr = "text(" + xptr + ")";
+                }
                 textfragok = true;
             }
 
