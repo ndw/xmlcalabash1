@@ -19,6 +19,21 @@
       <xsl:for-each select="@*">
 	<xsl:call-template name="doAttr"/>
       </xsl:for-each>
+
+      <!-- make sure the namespace declaration for the step type is in the output -->
+      <xsl:choose>
+        <xsl:when test="empty(@type)"/>
+        <xsl:when test="starts-with(@type,'p:')"/>
+        <xsl:otherwise>
+          <xsl:variable name="prefix" select="substring-before(@type, ':')"/>
+          <xsl:variable name="uri" select="namespace-uri-for-prefix($prefix, .)"/>
+          <xsl:call-template name="doNamespace">
+            <xsl:with-param name="prefix" select="$prefix"/>
+            <xsl:with-param name="uri" select="$uri"/>
+          </xsl:call-template>
+        </xsl:otherwise>
+      </xsl:choose>
+
       <code>&gt;</code>
     </span>
     <xsl:apply-templates mode="xprocelem"/>
@@ -39,6 +54,23 @@
    </code>
  </xsl:if>
  <code>"</code>
+</xsl:template>
+
+<xsl:template name="doNamespace">
+  <xsl:param name="prefix"/>
+  <xsl:param name="uri"/>
+
+  <xsl:text> </xsl:text>
+  <code class="attr xmlns-attr">
+    <xsl:value-of select="concat('xmlns:', $prefix)"/>
+  </code>
+  <code>="</code>
+  <xsl:if test="$uri != ''">
+    <code class="value xmlns-value">
+      <xsl:value-of select="$uri"/>
+    </code>
+  </xsl:if>
+  <code>"</code>
 </xsl:template>
 
 <xsl:template match="*" mode="xprocelem">
