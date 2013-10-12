@@ -163,6 +163,9 @@
 <implementation type="cx:message"
 		class-name="com.xmlcalabash.extensions.Message"/>
 
+<implementation type="cx:rdfa"
+		class-name="com.xmlcalabash.extensions.RDFa"/>
+
 <implementation type="cx:wait-for-update"
 		class-name="com.xmlcalabash.extensions.WaitForUpdate"/>
 
