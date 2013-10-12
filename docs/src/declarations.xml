@@ -420,6 +420,12 @@
       <p:option name="message" required="true" e:type="xsd:string"/>
    </p:declare-step>
 
+   <p:declare-step type="cx:rdfa">
+     <p:input port="source"/>
+     <p:output port="result" sequence="true"/>
+     <p:option name="max-triples-per-document" select="100" e:type="xsd:long"/>
+   </p:declare-step>
+
    <p:declare-step type="cx:wait-for-update">
      <p:output port="result"/>
      <p:option name="href" required="true" e:type="xd:anyURI"/>

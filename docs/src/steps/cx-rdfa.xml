@@ -1,0 +1,101 @@
+<refentry xmlns="http://docbook.org/ns/docbook"
+          xmlns:cxu="http://xmlcalabash.com/ns/extensions/xmlunit"
+          xmlns:e="http://www.w3.org/1999/XSL/Spec/ElementSyntax"
+          xmlns:ml="http://xmlcalabash.com/ns/extensions/marklogic"
+          xmlns:p="http://www.w3.org/ns/xproc"
+          xmlns:pos="http://exproc.org/proposed/steps/os"
+          xmlns:pxf="http://exproc.org/proposed/steps/file"
+          xmlns:pxp="http://exproc.org/proposed/steps"
+          xmlns:xi="http://www.w3.org/2001/XInclude"
+          xmlns:xlink="http://www.w3.org/1999/xlink"
+          xml:id="cx-rdfa">
+   <refnamediv>
+      <refname>cx:rdfa</refname>
+      <refpurpose>Extract RDF triples from RDFa encoded documents</refpurpose>
+   </refnamediv>
+   <refsynopsisdiv>
+      <xi:include href="../declarations.xml" xpointer="xpath(/*/*[@type='cx:rdfa'])"/>
+   </refsynopsisdiv>
+   <refsection>
+      <title>Description</title>
+
+<para>This step uses the <link xlink:href="http://semarglproject.org/">Semargl</link>
+project libraries to extract RDF triples from RDFa encoded documents. The results
+are returned in a sequence of XML documents that encode the triples directly.
+If there are no triples in the source document, an empty sequence of documents
+is produced.</para>
+
+<para>If there are triples, they will be encoded in one or more
+<tag>sem:triples</tag> documents.</para>
+
+<para>Consider this example:</para>
+
+<programlisting><![CDATA[<p:declare-step xmlns:p="http://www.w3.org/ns/xproc"
+                xmlns:cx="http://xmlcalabash.com/ns/extensions"
+                version="1.0">
+   <p:output port="result" sequence="true"/>
+   <p:serialization port="result" indent="true"/>
+
+   <p:declare-step type="cx:rdfa">
+     <p:input port="source"/>
+     <p:output port="result" sequence="true"/>
+     <p:option name="max-triples-per-document" select="100"/>
+   </p:declare-step>
+
+   <cx:rdfa max-triples-per-document="100">
+     <p:input port="source">
+       <p:document href="http://examples.tobyinkster.co.uk/hcard"/>
+     </p:input>
+   </cx:rdfa>
+
+</p:declare-step>]]></programlisting>
+
+<para>On 12 October 2013, using the Semargl 0.6.1 libraries, the following
+triples are extracted<footnote><para>Given the intended purpose of the page,
+I'm surprised more triples aren't found; perhaps the page is encoded in a way
+that the Semargl libraries don't recognize.</para></footnote>:</para>
+
+<programlisting><![CDATA[<sem:triples xmlns:sem="http://marklogic.com/semantics">
+   <sem:triple>
+      <sem:subject>http://examples.tobyinkster.co.uk/hcard</sem:subject>
+      <sem:predicate>http://purl.org/dc/terms/abstract</sem:predicate>
+      <sem:object xml:lang="en">This page is intended to be a demonstration of
+                the use of RDFa (including FOAF, Dublin Core and W3C PIM vocabularies) in
+                conjunction with Microformats (including hCard and rel-tag).</sem:object>
+   </sem:triple>
+   <sem:triple>
+      <sem:subject>http://examples.tobyinkster.co.uk/hcard#jack</sem:subject>
+      <sem:predicate>http://www.w3.org/2006/vcard/ns#category</sem:predicate>
+      <sem:object xml:lang="en">Counter-Terrorist Unit</sem:object>
+   </sem:triple>
+   <sem:triple>
+      <sem:subject>http://examples.tobyinkster.co.uk/hcard#jack</sem:subject>
+      <sem:predicate>http://xmlns.com/foaf/0.1/plan</sem:predicate>
+      <sem:object xml:lang="en">I will kick your terrorist ass!</sem:object>
+   </sem:triple>
+</sem:triples>]]></programlisting>
+
+<para>The format of <code>sem:triples</code> files is straightforward, it contains
+a set of one or more <tag>sem:triple</tag> elements. Each <tag>sem:triple</tag>
+in turn contains a <tag>sem:subject</tag>, a <tag>sem:predicate</tag>, and a
+<tag>sem:object</tag>.</para>
+
+<para>The subject and predicate are always IRIs, the object is either
+an IRI or a literal value. The object is an IRI unless it has a <tag
+class="attribute">datatype</tag> or <tag
+class="attribute">xml:lang</tag> attribute, in which case it is a
+literal.</para>
+
+<para>If any IRI begins with “<literal>http://marklogic.com/semantics/blank/</literal>”,
+it represents a blank node.</para>
+
+<note>
+<title>What the heck is this format?</title>
+<para>This format is a serialization of the internal format that
+<link xlink:href="http://www.marklogic.com/">MarkLogic</link> uses to represent
+semantics data. It's convenient for me and easy to convert into other formats.
+Eventually, I'll add serialization options to produce more common formats.</para>
+</note>
+
+   </refsection>
+</refentry>
