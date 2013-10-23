@@ -444,7 +444,7 @@ public class XProcConfiguration {
 
 	public boolean isStepAvailable(QName type) {
         if (implementations.containsKey(type)) {
-            Class klass = implementations.get(type);
+            Class<?> klass = implementations.get(type);
             try {
                 Method method = klass.getMethod("isAvailable");
                 Boolean available = (Boolean) method.invoke(null);
@@ -462,7 +462,7 @@ public class XProcConfiguration {
 	}
 
 	public XProcStep newStep(XProcRuntime runtime,XAtomicStep step){
-        Class klass = implementations.get(step.getType());
+        Class<?> klass = implementations.get(step.getType());
         if (klass == null) {
             throw new XProcException("Misconfigured. No 'class' in configuration for " + step.getType());
         }
@@ -474,8 +474,8 @@ public class XProcConfiguration {
         }
 
 		try {
-			Constructor constructor = Class.forName(className).getConstructor(XProcRuntime.class, XAtomicStep.class);
-			return (XProcStep) constructor.newInstance(runtime,step);
+			Constructor<? extends XProcStep> constructor = Class.forName(className).asSubclass(XProcStep.class).getConstructor(XProcRuntime.class, XAtomicStep.class);
+			return constructor.newInstance(runtime,step);
 		} catch (NoSuchMethodException nsme) {
 			throw new UnsupportedOperationException("No such method: " + className, nsme);
 		} catch (ClassNotFoundException cfne) {
@@ -828,7 +828,7 @@ public class XProcConfiguration {
         for (String tname : nameStr.split("\\s+")) {
             QName name = new QName(tname,node);
             try {
-                Class klass = Class.forName(value);
+                Class<?> klass = Class.forName(value);
                 implementations.put(name, klass);
             } catch (ClassNotFoundException e) {
                 // nop

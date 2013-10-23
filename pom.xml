@@ -209,17 +209,23 @@
               <execution>
                 <id>default-compile</id>
                 <configuration>
-                  <compilerArguments>
-                    <bootclasspath>${bootclasspath.compile}</bootclasspath>
-                  </compilerArguments>
+                  <compilerArgs>
+                    <arg>-Xlint</arg>
+                    <arg>-Xlint:-serial</arg>
+                    <arg>-bootclasspath</arg>
+                    <arg>${bootclasspath.compile}</arg>
+                  </compilerArgs>
                 </configuration>
               </execution>
               <execution>
                 <id>default-testCompile</id>
                 <configuration>
-                  <compilerArguments>
-                    <bootclasspath>${bootclasspath.testCompile}</bootclasspath>
-                  </compilerArguments>
+                  <compilerArgs>
+                    <arg>-Xlint</arg>
+                    <arg>-Xlint:-serial</arg>
+                    <arg>-bootclasspath</arg>
+                    <arg>${bootclasspath.testCompile}</arg>
+                  </compilerArgs>
                 </configuration>
               </execution>
             </executions>
@@ -265,19 +271,21 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.1</version>
 
+        <configuration>
+          <showWarnings>true</showWarnings>
+          <showDeprecation>true</showDeprecation>
+          <source>1.6</source>
+          <target>1.6</target>
+          <compilerArgs>
+            <arg>-Xlint</arg>
+            <arg>-Xlint:-serial</arg>
+          </compilerArgs>
+        </configuration>
+
         <executions>
           <execution>
             <id>default-compile</id>
             <configuration>
-              <showWarnings>true</showWarnings>
-              <showDeprecation>true</showDeprecation>
-              <compilerArgument>-Xlint:-serial</compilerArgument>
-              <compilerArguments>
-                <Xlint/>
-              </compilerArguments>
-              <source>1.6</source>
-              <target>1.6</target>
-
               <excludes>
                 <!-- Requires Delta XML Core (not available through Maven) -->
                 <exclude>com/xmlcalabash/extensions/DeltaXML.java</exclude>
@@ -302,16 +310,6 @@
 
           <execution>
             <id>default-testCompile</id>
-            <configuration>
-              <showWarnings>true</showWarnings>
-              <showDeprecation>true</showDeprecation>
-              <compilerArgument>-Xlint:-serial</compilerArgument>
-              <compilerArguments>
-                <Xlint/>
-              </compilerArguments>
-              <source>1.6</source>
-              <target>1.6</target>
-            </configuration>
           </execution>
         </executions>
       </plugin>

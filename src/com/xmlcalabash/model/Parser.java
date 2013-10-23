@@ -1895,8 +1895,8 @@ public class Parser {
 
             // We think this will work because we know from the test above that we're not in Saxon HE.
             // It's a bit fragile, but I can't think of a better way.
-            Class pc = Class.forName("com.saxonica.config.ProfessionalConfiguration");
-            Class fc = Class.forName("net.sf.saxon.functions.FunctionLibrary");
+            Class<?> pc = Class.forName("com.saxonica.config.ProfessionalConfiguration");
+            Class<?> fc = Class.forName("net.sf.saxon.functions.FunctionLibrary");
             Method setBinder = pc.getMethod("setExtensionBinder", String.class, fc);
             setBinder.invoke(processor.getUnderlyingConfiguration(), "xmlcalabash" + importCount, fl);
             importCount++;
