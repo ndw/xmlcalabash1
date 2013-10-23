@@ -139,10 +139,10 @@ public class XPipeline extends XCompoundStep {
         } catch (SaxonApiException ex) {
             runtime.error(ex);
             throw ex;
+        } finally {
+            runtime.finish(this);
+            data.closeFrame();
         }
-        runtime.finish(this);
-
-        data.closeFrame();
     }
 
     private void setupParameters() {
