@@ -254,25 +254,28 @@ public class XCompoundStep extends XAtomicStep {
         }
 
         runtime.start(this);
-        for (XStep step : subpipeline) {
-            step.run();
-        }
-        runtime.finish(this);
 
-        for (String port : inputs.keySet()) {
-            if (port.startsWith("|")) {
-                String wport = port.substring(1);
-                WritablePipe pipe = outputs.get(wport);
-                for (ReadablePipe reader : inputs.get(port)) {
-                    while (reader.moreDocuments()) {
-                        XdmNode doc = reader.read();
-                        pipe.write(doc);
-                        finest(step.getNode(), "Compound output copy from " + reader + " to " + pipe);
+        try {
+            for (XStep step : subpipeline) {
+                step.run();
+            }
+
+            for (String port : inputs.keySet()) {
+                if (port.startsWith("|")) {
+                    String wport = port.substring(1);
+                    WritablePipe pipe = outputs.get(wport);
+                    for (ReadablePipe reader : inputs.get(port)) {
+                        while (reader.moreDocuments()) {
+                            XdmNode doc = reader.read();
+                            pipe.write(doc);
+                            finest(step.getNode(), "Compound output copy from " + reader + " to " + pipe);
+                        }
                     }
                 }
             }
+        } finally {
+            runtime.finish(this);
+            data.closeFrame();
         }
-
-        data.closeFrame();
     }
 }
