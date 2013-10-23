@@ -82,8 +82,8 @@ public class ResolveURI extends XProcExtensionFunctionDefinition {
     }
 
     private class ResolveURICall extends ExtensionFunctionCall {
-        public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
-            SequenceIterator iter = arguments[0];
+        public SequenceIterator<?> call(SequenceIterator<?>[] arguments, XPathContext context) throws XPathException {
+            SequenceIterator<?> iter = arguments[0];
             String relativeURI = iter.next().getStringValue();
 
             XProcRuntime runtime = tl_runtime.get();
@@ -102,7 +102,7 @@ public class ResolveURI extends XProcExtensionFunctionDefinition {
                 baseURI = runtime.getStaticBaseURI().toASCIIString();
                 try {
                     // FIXME: TinyDocumentImpl? Surely we can do better than that!
-                    Item item = context.getContextItem();
+                    Item<?> item = context.getContextItem();
                     baseURI = ((TinyDocumentImpl) item).getBaseURI();
                 } catch (Exception e) {
                     // nop

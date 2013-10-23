@@ -85,7 +85,7 @@ public class ValueAvailable extends XProcExtensionFunctionDefinition {
             staticContext = context;
         }
 
-        public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
+        public SequenceIterator<?> call(SequenceIterator<?>[] arguments, XPathContext context) throws XPathException {
             StructuredQName sVarName = null;
 
             XProcRuntime runtime = tl_runtime.get();
@@ -97,7 +97,7 @@ public class ValueAvailable extends XProcExtensionFunctionDefinition {
             }
 
             try {
-                SequenceIterator iter = arguments[0];
+                SequenceIterator<?> iter = arguments[0];
                 String lexicalQName = iter.next().getStringValue();
                 sVarName = StructuredQName.fromLexicalQName(
                      lexicalQName,
@@ -112,9 +112,9 @@ public class ValueAvailable extends XProcExtensionFunctionDefinition {
             boolean failIfUnknown = true;
 
             if (arguments.length > 1) {
-                SequenceIterator iter = arguments[1];
+                SequenceIterator<?> iter = arguments[1];
                 iter = iter.next().getTypedValue();
-                Item item = iter.next();
+                Item<?> item = iter.next();
                 failIfUnknown = ((BooleanValue) item).effectiveBooleanValue();
             }
 

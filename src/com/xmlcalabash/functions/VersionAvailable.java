@@ -74,8 +74,8 @@ public class VersionAvailable extends XProcExtensionFunctionDefinition {
     }
 
     private class SystemPropertyCall extends ExtensionFunctionCall {
-        public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
-            SequenceIterator iter = arguments[0];
+        public SequenceIterator<?> call(SequenceIterator<?>[] arguments, XPathContext context) throws XPathException {
+            SequenceIterator<?> iter = arguments[0];
 
             XProcRuntime runtime = tl_runtime.get();
             XStep step = runtime.getXProcData().getStep();

@@ -605,9 +605,9 @@ public class XAtomicStep extends XStep {
                     NodeInfo inode = nsbinding.getNode().getUnderlyingNode();
                     NamePool pool = inode.getNamePool();
                     InscopeNamespaceResolver inscopeNS = new InscopeNamespaceResolver(inode);
-                    Iterator<String> pfxiter = inscopeNS.iteratePrefixes();
+                    Iterator<?> pfxiter = inscopeNS.iteratePrefixes();
                     while (pfxiter.hasNext()) {
-                        String nspfx = pfxiter.next();
+                        String nspfx = (String)pfxiter.next();
                         String nsuri = inscopeNS.getURIForPrefix(nspfx, "".equals(nspfx));
                         lclnsBindings.put(nspfx, nsuri);
                     }

@@ -239,9 +239,9 @@ public class S9apiUtils {
             }
 
             if (all) {
-                Iterator<String> pfxiter = inscopeNS.iteratePrefixes();
+                Iterator<?> pfxiter = inscopeNS.iteratePrefixes();
                 while (pfxiter.hasNext()) {
-                    String pfx = pfxiter.next();
+                    String pfx = (String)pfxiter.next();
                     boolean def = ("".equals(pfx));
                     excludeURIs.add(inscopeNS.getURIForPrefix(pfx,def));
                 }

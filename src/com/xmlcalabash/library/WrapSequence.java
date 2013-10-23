@@ -136,7 +136,7 @@ public class WrapSequence extends DefaultStep {
             XdmNode node = source.read();
             pos++;
 
-            Item item = null;
+            Item<?> item = null;
 
             try {
                 XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
@@ -179,7 +179,7 @@ public class WrapSequence extends DefaultStep {
                 // Then evaluate the expression by calling iterate() on the
                 // net.sf.saxon.sxpath.XPathExpression object.
 
-                SequenceIterator results = xexpr.iterate(xdc);
+                SequenceIterator<?> results = xexpr.iterate(xdc);
                 item = results.next();
 
                 if (item == null) {

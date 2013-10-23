@@ -16,7 +16,7 @@ public class Test {
      * @param args
      */
     public static void main(String args[]) {
-        Iterator it;
+        Iterator<String> it;
         JSONArray a;
         JSONObject j;
         JSONStringer jj;
@@ -456,7 +456,7 @@ public class Test {
             System.out.println("\nKeys: ");
             it = j.keys();
             while (it.hasNext()) {
-                s = (String)it.next();
+                s = it.next();
                 System.out.println(s + ": " + j.getString(s));
             }
 
@@ -487,8 +487,8 @@ public class Test {
             System.out.println(a.toString(4));
             System.out.println(JSONML.toString(a));
             
-            Collection c = null;
-            Map m = null;
+            Collection<?> c = null;
+            Map<?, ?> m = null;
             
             j = new JSONObject(m);
             a = new JSONArray(c);

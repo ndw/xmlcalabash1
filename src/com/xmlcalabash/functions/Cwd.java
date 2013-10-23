@@ -74,7 +74,7 @@ public class Cwd extends XProcExtensionFunctionDefinition {
     }
 
     private class CwdCall extends ExtensionFunctionCall {
-        public SequenceIterator call(SequenceIterator[] arguments, XPathContext context) throws XPathException {
+        public SequenceIterator<?> call(SequenceIterator<?>[] arguments, XPathContext context) throws XPathException {
 
             XProcRuntime runtime = tl_runtime.get();
             XStep step = runtime.getXProcData().getStep();

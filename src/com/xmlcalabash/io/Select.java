@@ -95,9 +95,9 @@ public class Select implements ReadablePipe {
 
                 selector.setContextItem(doc);
 
-                Iterator iter = selector.iterator();
+                Iterator<XdmItem> iter = selector.iterator();
                 while (iter.hasNext()) {
-                    XdmItem item = (XdmItem) iter.next();
+                    XdmItem item = iter.next();
                     XdmNode node = null;
                     try {
                         node = (XdmNode) item;
