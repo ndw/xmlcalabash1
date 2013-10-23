@@ -35,48 +35,15 @@ import java.util.Vector;
  * To change this template use File | Settings | File Templates.
  */
 
-public class RDFa extends DefaultStep {
-    private static final QName sem_triples = new QName("sem","http://marklogic.com/semantics", "triples");
-    private static final QName sem_triple = new QName("sem","http://marklogic.com/semantics", "triple");
-    private static final QName sem_subject = new QName("sem","http://marklogic.com/semantics", "subject");
-    private static final QName sem_predicate = new QName("sem","http://marklogic.com/semantics", "predicate");
-    private static final QName sem_object = new QName("sem","http://marklogic.com/semantics", "object");
-    private static final QName _datatype = new QName("", "datatype");
-    private static final QName _max_triples = new QName("", "max-triples-per-document");
-    private ReadablePipe source = null;
-    private WritablePipe result = null;
-    private long limit = 100;
+public class RDFa extends RDFStep {
     private long count = 0;
 
-    /**
-     * Creates a new instance of Identity
-     */
     public RDFa(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }
 
-    public void setInput(String port, ReadablePipe pipe) {
-        source = pipe;
-    }
-
-    public void setOutput(String port, WritablePipe pipe) {
-        result = pipe;
-    }
-
-    public void reset() {
-        source.resetReader();
-        result.resetWriter();
-    }
-
     public void run() throws SaxonApiException {
         super.run();
-
-        String limitStr = getOption(_max_triples).getString();
-        try {
-            limit = Integer.parseInt(limitStr);
-        } catch (NumberFormatException nfe) {
-            throw XProcException.dynamicError(19, "The max-triples-per-document on cx:rdf-a must be an integer");
-        }
 
         XdmNode doc = source.read();
 
@@ -116,7 +83,6 @@ public class RDFa extends DefaultStep {
 
         @Override
         public void addNonLiteral(String subj, String pred, String obj) {
-            /*
             tree.addStartElement(sem_triple);
             tree.startContent();
             tree.addStartElement(sem_subject);
@@ -132,7 +98,6 @@ public class RDFa extends DefaultStep {
             tree.addText(patchURI(obj));
             tree.addEndElement();
             tree.addEndElement();
-            */
             nextFile();
         }
 
@@ -241,21 +206,6 @@ public class RDFa extends DefaultStep {
             } else {
                 return uri;
             }
-        }
-
-        private long rotl(long x, long y)
-        {
-            return (x<<y)^(x>>(64-y));
-        }
-
-        private long fuse(long a, long b)
-        {
-            return rotl(a,8)^b;
-        }
-
-        private long scramble(long x)
-        {
-            return x^rotl(x,20)^rotl(x,40);
         }
     }
 }
