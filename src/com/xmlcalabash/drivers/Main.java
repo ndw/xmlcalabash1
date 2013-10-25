@@ -140,7 +140,7 @@ public class Main {
         debug = config.debug;
 
         if (userArgs.isShowVersion()) {
-            showVersion();
+            XProcConfiguration.showVersion(runtime);
         }
 
         XPipeline pipeline = null;
@@ -429,24 +429,9 @@ public class Main {
         }
     }
 
-    private void showVersion() {
-        System.out.println("XML Calabash version " + XProcConstants.XPROC_VERSION + ", an XProc processor.");
-        if (runtime != null) {
-            System.out.print("Running on Saxon version ");
-            System.out.print(runtime.getConfiguration().getProcessor().getSaxonProductVersion());
-            System.out.print(", ");
-            System.out.print(runtime.getConfiguration().getProcessor().getUnderlyingConfiguration().getEditionCode());
-            System.out.println(" edition.");
-        }
-        System.out.println("Copyright (c) 2007-2012 Norman Walsh");
-        System.out.println("See docs/notices/NOTICES in the distribution for licensing");
-        System.out.println("See also http://xmlcalabash.com/ for more information");
-        System.out.println("");
-    }
-
     private void usage() throws IOException {
         System.out.println();
-        showVersion();
+        XProcConfiguration.showVersion(runtime);
 
         InputStream instream = getClass().getResourceAsStream("/etc/usage.txt");
         if (instream == null) {

@@ -103,6 +103,9 @@ public class XProcConfiguration {
     public String jsonFlavor = JSONtoXML.MARKLOGIC;
     public boolean useXslt10 = false;
 
+    public int piperackPort = 8088;
+    public int piperackDefaultExpires = 300;
+
     private Processor cfgProcessor = null;
     private boolean firstInput = false;
     private boolean firstOutput = false;
@@ -431,6 +434,10 @@ public class XProcConfiguration {
                     saxonConfigurationProperty(node);
                 } else if ("pipeline-loader".equals(localName)) {
                     pipelineLoader(node);
+                } else if ("piperack-port".equals(localName)) {
+                    piperackPort(node);
+                } else if ("piperack-default-expires".equals(localName)) {
+                    piperackDefaultExpires(node);
                 } else {
                     throw new XProcException(doc, "Unexpected configuration option: " + localName);
                 }
@@ -487,6 +494,21 @@ public class XProcConfiguration {
 		} catch (InvocationTargetException ite) {
 			throw new UnsupportedOperationException("Invocation target exception", ite);
         }
+    }
+
+    public static void showVersion(XProcRuntime runtime) {
+        System.out.println("XML Calabash version " + XProcConstants.XPROC_VERSION + ", an XProc processor.");
+        if (runtime != null) {
+            System.out.print("Running on Saxon version ");
+            System.out.print(runtime.getConfiguration().getProcessor().getSaxonProductVersion());
+            System.out.print(", ");
+            System.out.print(runtime.getConfiguration().getProcessor().getUnderlyingConfiguration().getEditionCode());
+            System.out.println(" edition.");
+        }
+        System.out.println("Copyright (c) 2007-2013 Norman Walsh");
+        System.out.println("See docs/notices/NOTICES in the distribution for licensing");
+        System.out.println("See also http://xmlcalabash.com/ for more information");
+        System.out.println("");
     }
 
     private void parseSaxonProcessor(XdmNode node) {
@@ -663,6 +685,16 @@ public class XProcConfiguration {
         } else {
             loaders.put("data:" + data, loader);
         }
+    }
+
+    private void piperackPort(XdmNode node) {
+        String portno = node.getStringValue().trim();
+        piperackPort = Integer.parseInt(portno);
+    }
+
+    private void piperackDefaultExpires(XdmNode node) {
+        String secs = node.getStringValue().trim();
+        piperackDefaultExpires = Integer.parseInt(secs);
     }
 
     private void parseInput(XdmNode node) {
