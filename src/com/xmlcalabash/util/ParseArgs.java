@@ -262,8 +262,8 @@ public class ParseArgs {
                 continue;
             }
 
-            if (arg.startsWith("--piperack-expires")) {
-                String s = parseString(null, "piperack-expires");
+            if (arg.startsWith("--piperack-default-expires")) {
+                String s = parseString(null, "piperack-default-expires");
                 userArgs.setPiperackExpires(Integer.parseInt(s));
                 continue;
             }
