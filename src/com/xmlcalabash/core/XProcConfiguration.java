@@ -317,6 +317,14 @@ public class XProcConfiguration {
         mailUser = System.getProperty("com.xmlcalabash.mail-username", mailUser);
         mailPass = System.getProperty("com.xmlcalabash.mail-password", mailPass);
 
+        if (System.getProperty("com.xmlcalabash.piperack-port") != null) {
+            piperackPort = Integer.parseInt(System.getProperty("com.xmlcalabash.piperack-port"));
+        }
+
+        if (System.getProperty("com.xmlcalabash.piperack-default-expires") != null) {
+            piperackDefaultExpires = Integer.parseInt(System.getProperty("com.xmlcalabash.piperack-port"));
+        }
+
         String[] boolSerNames = new String[] {"byte-order-mark", "escape-uri-attributes",
                 "include-content-type","indent", "omit-xml-declaration", "undeclare-prefixes"};
         String[] strSerNames = new String[] {"doctype-public", "doctype-system", "encoding",
