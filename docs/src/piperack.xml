@@ -1,0 +1,415 @@
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xml:id="piperack" version="5.0">
+<title>Piperack</title>
+
+<para><application>Piperack</application> is a web server for running XProc
+pipelines. It provides two features:</para>
+
+<orderedlist>
+<listitem>
+<para>A REST API for running pipelines.</para>
+</listitem>
+<listitem>
+<para>A mechanism for avoiding the “Java VM startup” tax.</para>
+</listitem>
+</orderedlist>
+
+<section xml:id="runpiperack">
+<title>Running Piperack</title>
+
+<para><application>Piperack</application> is a simple wrapper around
+<application>XML Calabash</application>; everything in
+<xref linkend="javasetup"/> applies. The Java class name for
+<application>Piperack</application> is
+<literal>com.xmlcalabash.drivers.Piperack</literal>.</para>
+
+<section xml:id="piperack-cmdline">
+<title>The Piperack command line</title>
+
+<para>The following synopsis describes the
+<application>Piperack</application> command line:</para>
+
+<cmdsynopsis>
+  <command><replaceable>piperack</replaceable></command>
+  <arg>
+    <group choice="req">
+      <arg choice="plain">-P</arg>
+      <arg choice="plain">--saxon-processor</arg>
+    </group>
+    <group choice="req">
+      <arg choice="plain">he</arg>
+      <arg choice="plain">pe</arg>
+      <arg choice="plain">ee</arg>
+    </group>
+  </arg>
+  <arg>--saxon-configuration <replaceable>file</replaceable></arg>
+  <arg>
+    <group choice="req">
+      <arg choice="plain">-a</arg>
+      <arg choice="plain">--schema-aware</arg>
+    </group>
+  </arg>
+  <arg>
+    <group choice="req">
+      <arg choice="plain">-D</arg>
+      <arg choice="plain">--debug</arg>
+    </group>
+  </arg>
+  <arg>
+    <group choice="req">
+      <arg choice="plain">-v</arg>
+      <arg choice="plain">--version</arg>
+    </group>
+  </arg>
+  <arg>--profile <replaceable>file</replaceable></arg>
+  <arg>
+    <group choice="req">
+      <arg choice="plain">-S</arg>
+      <arg choice="plain">--safe-mode</arg>
+    </group>
+  </arg>
+  <arg>
+    <group choice="req">
+      <arg choice="plain">-c</arg>
+      <arg choice="plain">--config</arg>
+    </group>
+    <replaceable>configfile</replaceable>
+  </arg>
+  <arg>
+    <group choice="req">
+      <arg choice="plain">-G</arg>
+      <arg choice="plain">--log-style</arg>
+    </group>
+    <group choice="req">
+      <arg choice="plain">off</arg>
+      <arg choice="plain">plain</arg>
+      <arg choice="plain">wrapped</arg>
+      <arg choice="plain">directory</arg>
+    </group>
+  </arg>
+  <sbr/>
+  <arg>
+    <group choice="req">
+      <arg choice="plain">-E</arg>
+      <arg choice="plain">--entity-resolver</arg>
+    </group>
+    <replaceable>className</replaceable>
+  </arg>
+  <arg>
+    <group choice="req">
+      <arg choice="plain">-U</arg>
+      <arg choice="plain">--uri-resolver</arg>
+    </group>
+    <replaceable>className</replaceable>
+  </arg>
+  <arg rep="repeat">
+    <group choice="req">
+      <arg choice="plain">-X</arg>
+      <arg choice="plain">--extension</arg>
+    </group>
+    <group choice="req">
+      <arg choice="plain">general-values</arg>
+      <arg choice="plain">xpointer-on-text</arg>
+      <arg choice="plain">
+        <group choice="req">
+          <arg choice="plain">use-xslt-1.0</arg>
+	  <arg choice="plain">use-xslt-10</arg>
+        </group>
+      </arg>
+      <arg choice="plain">transparent-json</arg>
+      <arg choice="plain">json-flavor=<replaceable>flavor</replaceable></arg>
+    </group>
+  </arg>
+  <arg>
+    <arg choice="plain">--piperack-port</arg>
+    <replaceable>port-number</replaceable>
+  </arg>
+  <arg>
+    <arg choice="plain">--piperack-default-expires</arg>
+    <replaceable>seconds</replaceable>
+  </arg>
+</cmdsynopsis>
+
+<para>See <xref linkend="configuration"/> for a description of these arguments and what they
+mean.</para>
+</section>
+</section>
+
+<section xml:id="using-piperack">
+<title>Using Piperack</title>
+
+<para>Running pipelines with <application>Piperack</application> is
+performed through a RESTful web services API. The examples that follow
+use <application>curl</application>, but any tool that supports the ability to
+GET and POST resources to a web service will work.</para>
+
+<important>
+<para>When running, <application>Piperack</application> has all of the
+privileges of the user who started it. Just because you <emphasis>could</emphasis>
+allow the public to access it, doesn't mean you should. Your gun, your bullet,
+your foot.</para>
+</important>
+
+<para>When started, <application>Piperack</application> listens for requests
+on the configured port. In the examples that follow, it is running on
+“<literal>localhost</literal>” on port “<literal>8088</literal>”. If you're running
+it on a different machine or port, adjust the examples accordingly.</para>
+
+<para>For most endpoints, content negotiation is used to determine how the
+results should be returned. XML, HTML, plain text, and JSON are all supported.
+Endpoints that return the outputs of a pipeline after it has been run
+always return XML.</para>
+
+<para>Our example pipeline for this section is <filename>pipe.xpl</filename>:</para>
+
+<programlisting><![CDATA[<p:declare-step xmlns:p="http://www.w3.org/ns/xproc"
+                xmlns:ex="http://example.com/ns/example"
+                name="main" version="1.0" exclude-inline-prefixes="ex">
+   <p:input port="source" sequence="true"/>
+   <p:input port="parameters" kind="parameter"/>
+   <p:output port="result" sequence="true" primary="true"/>
+   <p:output port="result2" sequence="true">
+     <p:pipe step="id" port="result"/>
+   </p:output>
+   <p:option name="opt1" select="'default'"/>
+   <p:option name="ex:opt2" select="'default'"/>
+   <p:serialization port="result" indent="true"/>
+
+   <p:identity name="id"/>
+</p:declare-step>]]></programlisting>
+
+<para>It doesn't do anything useful, it simply copies its input to two different
+output ports.</para>
+
+<section xml:id="pr-status">
+<title><uri>/status</uri></title>
+<para>The <uri>/status</uri> endpoint just returns information about the
+status of the server. Only GET is supported.</para>
+
+<screen><prompt>$ </prompt><userinput>curl -H "Accept: text/plain" http://localhost:8088/status</userinput>
+<computeroutput>XML Calabash version 1.0.14a, an XProc processor.
+Running on Saxon version 9.5.1.1, EE edition.
+Copyright © 2007-2013 Norman Walsh
+See docs/notices/NOTICES in the distribution for licensing.
+See also http://xmlcalabash.com/ for more information.</computeroutput></screen>
+</section>
+
+<section xml:id="pr-help">
+<title><uri>/help</uri> (or just <uri>/</uri>)</title>
+<para>The <uri>/help</uri> endpoint returns a summary of the valid endpoints
+only GET is supported.</para>
+</section>
+
+<section xml:id="pr-pipelines">
+<title><uri>/pipelines</uri></title>
+<para>A new pipeline is added to the server by POSTing it to the
+<uri>/pipelines</uri> endpoint. The user can suggest an ID with the
+<parameter>name</parameter> parameter. (If the requested name is in use,
+a different, unique name will be returned.)</para>
+
+<screen><prompt>$ </prompt><userinput>curl -X POST -d@pipe.xpl http://localhost:8088/pipelines?name=mypipe</userinput>
+<computeroutput><![CDATA[<response xmlns="http://xmlcalabash.com/ns/piperack">
+   <code>201</code>
+   <expires>2013-10-25T15:49:04Z</expires>
+   <uri>http://localhost:8088/pipelines/mypipe</uri>
+   <message>Created http://localhost:8088/pipelines/mypipe</message>
+</response>]]></computeroutput></screen>
+
+<para>The response also includes the HTTP Location header, pointing to the
+newly minted URI for the pipeline.</para>
+
+<para>All pipelines get an expiration time when they are created. Periodically,
+the server will delete any pipelines that are past their expiration time.</para>
+
+<para>The default expiration time can be set in several ways, see
+<xref linkend="cfg.piperack"/>. The <parameter>expires</parameter> parameter
+can be used to specify a different expiration time for any particular pipeline
+when it is created. If -1 is specified, the pipeline will never expire.</para>
+
+<para>Performing a GET on <uri>/pipelines</uri> returns a list of the pipelines
+available.</para>
+
+<screen><prompt>$ </prompt><userinput>curl -H "Accept: application/json" http://localhost:8088/pipelines</userinput>
+<computeroutput>{"pipelines":["http://localhost:8088/pipelines/mypipe"]}</computeroutput></screen>
+</section>
+
+<section xml:id="pr-pipelines-id">
+<title><uri>/pipelines/{id}</uri></title>
+<para>Performing a GET on <uri>/pipelines/{id}</uri> returns information
+about the pipeline:</para>
+
+<screen><prompt>$ </prompt><userinput>curl http://localhost:8088/pipelines/mypipe</userinput>
+<computeroutput><![CDATA[<pipeline xmlns="http://xmlcalabash.com/ns/piperack">
+   <uri>http://localhost:8088/pipelines/mypipe</uri>
+   <has-run>false</has-run>
+   <input documents="0">source</input>
+   <input primary="true" documents="0">parameters</input>
+   <option>
+      <name>opt1</name>
+      <value default="true"/>
+   </option>
+   <option>
+      <name xmlns:ex="http://example.com/ns/example">ex:opt2</name>
+      <value default="true"/>
+   </option>
+</pipeline>]]></computeroutput></screen>
+
+<para>The exact information returned varies depending on the state of the pipeline
+(before or after it has been run) and on the state of the various inputs, outputs,
+options, and parameters.</para>
+
+<para>As we shall see, there are individual endpoints for sending documents to the
+pipeline, setting options, setting parameters, and running the pipeline. However,
+for the very common case where a pipeline has a single input port, you can post
+directly to the pipeline URI.</para>
+
+<para>POSTing to <uri>/pipelines/{id}</uri> has the following effects:</para>
+
+<orderedlist>
+<listitem>
+<para>The POSTed document is delivered to the pipeline's primary input port.
+It is an error if the pipeline does not have a primary input port.</para>
+</listitem>
+<listitem>
+<para>Any parameters passed as part of the URI are delivered to the pipeline
+as the values of named options. (Use parameters of the form
+<code>xmlns:<replaceable>prefix</replaceable></code> to specify namespace bindings,
+if necessary.)</para>
+</listitem>
+<listitem>
+<para>The pipeline is run.</para>
+</listitem>
+<listitem>
+<para>If the pipeline runs successfully, the first document on the pipeline's
+primary output port is returned. If the pipeline has no primary output port,
+nothing is returned.</para>
+</listitem>
+</orderedlist>
+
+<screen><prompt>$ </prompt><userinput>curl -X POST -H "Content-type: application/xml" -d @doc.xml http://localhost:8088/pipelines/mypipe</userinput>
+<computeroutput><![CDATA[<doc/>]]></computeroutput></screen>
+</section>
+
+<section xml:id="pr-pipelines-id-inputs-port">
+<title><uri>/pipelines/{id}/inputs/{port}</uri></title>
+<para>POSTing to <uri>/pipelines/{id}/inputs/{port}</uri> delivers the POSTed
+document to the specified port.</para>
+</section>
+
+<section xml:id="pr-piplines-id-options">
+<title><uri>/pipelines/{id}/options</uri></title>
+<para>POSTing to <uri>/pipelines/{id}/options</uri> delivers the POSTed
+parameters (from the <literal>application/x-www-form-urlencoded</literal>
+body or from the URI) to the pipeline as options.</para>
+
+<screen><prompt>$ </prompt><userinput><![CDATA[curl -X POST "http://localhost:8088/pipelines/mypipe/options?xmlns:x=http://example.com/ns/example&x:opt2=two&opt1=one"]]></userinput>
+<computeroutput><![CDATA[<response xmlns="http://xmlcalabash.com/ns/piperack">
+   <code>202</code>
+   <message>Options added: opt1, x:opt2</message>
+</response>]]></computeroutput></screen>
+
+<para>The pipeline information endpoint will now show that those values have
+been specified.</para>
+
+<screen><prompt>$ </prompt><userinput>curl http://localhost:8088/pipelines/mypipe</userinput>
+<computeroutput><![CDATA[<pipeline xmlns="http://xmlcalabash.com/ns/piperack">
+   <uri>http://localhost:8088/pipelines/mypipe</uri>
+   <has-run>false</has-run>
+   <input primary="true" documents="0">source</input>
+   <input documents="0">parameters</input>
+   <option>
+      <name>opt1</name>
+      <value>one</value>
+   </option>
+   <option>
+      <name xmlns:ex="http://example.com/ns/example">ex:opt2</name>
+      <value>two</value>
+   </option>
+</pipeline>]]></computeroutput></screen>
+
+</section>
+
+<section xml:id="pr-pipelines-id-options-option">
+<title><uri>/pipelines/{id}/options/{option}</uri></title>
+
+<para>POSTing to <uri>/pipelines/{id}/options/{option}</uri> sets the value
+of the option named “<replaceable>{option}</replaceable>” to the POSTed
+content. This option exists to support the “general values” extension; it's
+otherwise not necessary.</para>
+
+<para>If the option name is in a namespace, use a parameter of the form
+<code>xmlns:<replaceable>prefix</replaceable></code> on the URI to specify
+the namespace binding.</para>
+</section>
+
+<section xml:id="pr-pipelines-id-parameters">
+<title><uri>/pipelines/{id}/parameters</uri></title>
+<para>POSTing to <uri>/pipelines/{id}/parameters</uri> delivers the POSTed
+parameters (from the <literal>application/x-www-form-urlencoded</literal>
+body or from the URI) to the pipeline as parameters.</para>
+<para>This endpoint uses the primary parameter input port.</para>
+</section>
+
+<section xml:id="pr-pipelines-id-parameters-port">
+<title><uri>/pipelines/{id}/parameters/{port}</uri></title>
+<para>POSTing to <uri>/pipelines/{id}/parameters/{port}</uri> delivers the POSTed
+parameters (from the <literal>application/x-www-form-urlencoded</literal>
+body or from the URI) to the pipeline as parameters on the
+“<replaceable>{port}</replaceable>” parameter input port.</para>
+</section>
+
+<section xml:id="pr-pipelines-id-parameters-port-param">
+<title><uri>/pipelines/{id}/parameters/{port}/{param}</uri></title>
+<para>POSTing to <uri>/pipelines/{id}/parameters/{port}/{param}</uri> sets the value
+of the option named “<replaceable>{param}</replaceable>” to the POSTed
+content. This option exists to support the “general values” extension; it's
+otherwise not necessary.</para>
+
+<para>If the parameter name is in a namespace, use a parameter of the form
+<code>xmlns:<replaceable>prefix</replaceable></code> on the URI to specify
+the namespace binding.</para>
+</section>
+
+<section xml:id="pr-pipelines-id-run">
+<title><uri>/pipelines/{id}/run</uri></title>
+<para>POSTing to the <uri>/pipelines/{id}/run</uri> endpoint runs
+the pipeline and returns the first document on the primary output port.</para>
+
+<para>The pipeline information endpoint will now show outputs instead of
+inputs.</para>
+
+<screen><prompt>$ </prompt><userinput>curl http://localhost:8088/pipelines/mypipe</userinput>
+<computeroutput><![CDATA[<pipeline xmlns="http://xmlcalabash.com/ns/piperack">
+   <uri>http://localhost:8088/pipelines/mypipe</uri>
+   <has-run>true</has-run>
+   <output primary="true" documents="0">result</output>
+   <output documents="1">result2</output>
+</pipeline>]]></computeroutput></screen>
+</section>
+
+<section xml:id="pr-pipelines-id-outputs-port">
+<title><uri>/pipelines/{id}/outputs/{port}</uri></title>
+
+<para>After a pipeline has been run, a GET request to
+<uri>/pipelines/{id}/outputs/{port}</uri> returns the next document
+from the specified port.</para>
+
+<screen><prompt>$ </prompt><userinput>curl http://localhost:8088/pipelines/mypipe/outputs/result2</userinput>
+<computeroutput><![CDATA[<doc/>]]></computeroutput></screen>
+</section>
+
+<section xml:id="pr-pipelines-id-reset">
+<title><uri>/pipelines/{id}/reset</uri></title>
+<para>POSTing to <uri>/pipelines/{id}/reset</uri> resets the pipeline: deletes
+all inputs, outputs, options, and parameters.</para>
+</section>
+
+<section xml:id="pr-stop">
+<title><uri>/stop</uri></title>
+<para>POSTing to <uri>/stop</uri> stops <application>Piperack</application>.</para>
+</section>
+
+</section>
+</chapter>

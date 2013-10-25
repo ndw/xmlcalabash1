@@ -35,6 +35,7 @@
 <xi:include href="anttask.xml"/>
 <xi:include href="configuration.xml"/>
 <xi:include href="extensions.xml"/>
+<xi:include href="piperack.xml"/>
 
 <reference xml:id="p-steps">
 <title>Standard XProc Steps</title>

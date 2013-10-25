@@ -1054,4 +1054,41 @@ properties will be defaulted by JavaMail to whatever defaults JavaMail uses.</pa
 <para>T.B.D.</para>
 </section>
 
+<section xml:id="cfg.piperack">
+<title>Piperack configuration</title>
+
+<para>There are three ways to specify the port and default expiration time for
+pipelines in <application>Piperack</application>.</para>
+
+<informaltable frame="none" role="cfgprop">
+<tgroup cols="2" colsep="0" rowsep="0">
+<tbody>
+<row>
+  <entry morerows="1" valign="top">Java system properties:</entry>
+  <entry><property>com.xmlcalabash.piperack-port</property>=<replaceable>portnumber</replaceable></entry>
+</row>
+<row>
+  <entry><property>com.xmlcalabash.piperack-default-expires</property>=<replaceable>seconds</replaceable></entry>
+</row>
+<row>
+  <entry morerows="1" valign="top">XML configuration:</entry>
+  <entry><tag class="starttag">cc:piperack-port</tag><replaceable>portnumber</replaceable><tag class="endtag">cc:piperack-port</tag></entry>
+</row>
+<row>
+  <entry><tag class="starttag">cc:piperack-defalut-expires</tag><replaceable>seconds</replaceable><tag class="endtag">cc:piperack-default-expires</tag></entry>
+</row>
+<row>
+  <entry morerows="1" valign="top">Command line:</entry>
+  <entry><literal>--piperack-port</literal>=<replaceable>portnumber</replaceable></entry>
+</row>
+<row>
+  <entry><literal>--piperack-default-expires</literal>=<replaceable>seconds</replaceable></entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+
+<para>T.B.D.</para>
+</section>
+
 </chapter>
