@@ -44,7 +44,7 @@ public class PipelineConfiguration {
         for (String port : xpipeline.getInputs()) {
             inputPorts.add(port);
             com.xmlcalabash.model.Input input = pipeline.getInput(port);
-            if (input.getPrimary()) {
+            if (!input.getParameterInput() && input.getPrimary()) {
                 definput = port;
             }
         }

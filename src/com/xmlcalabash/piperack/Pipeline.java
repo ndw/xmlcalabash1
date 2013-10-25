@@ -5,6 +5,7 @@ import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.ReadableData;
 import com.xmlcalabash.io.ReadableDocument;
+import com.xmlcalabash.io.ReadableInline;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.model.DeclareStep;
 import com.xmlcalabash.model.RuntimeValue;
@@ -12,6 +13,7 @@ import com.xmlcalabash.runtime.XPipeline;
 import com.xmlcalabash.util.TreeWriter;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmValue;
 import org.restlet.Request;
 import org.restlet.data.Form;
 import org.restlet.data.MediaType;
@@ -24,11 +26,15 @@ import org.restlet.representation.Variant;
 import org.restlet.util.Series;
 import org.xml.sax.InputSource;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Random;
+import java.util.Vector;
 
 /**
  * Ths file is part of XMLCalabash.
@@ -78,7 +84,7 @@ public class Pipeline extends BaseResource {
             for (String port : pipeconfig.inputPorts) {
                 tree.addStartElement(pr_input);
                 if (port.equals(pipeconfig.definput)) {
-                    tree.addAttribute(_default, "true");
+                    tree.addAttribute(_primary, "true");
                 }
                 tree.addAttribute(_documents, "" + pipeconfig.documentCount(port));
                 tree.startContent();
@@ -187,19 +193,17 @@ public class Pipeline extends BaseResource {
         pipeconfig.writeTo(pipeconfig.definput);
 
         try {
-            ReadablePipe pipe = null;
+            XdmNode doc = null;
 
             if (MediaType.APPLICATION_XML.equals(entity.getMediaType())) {
-                XdmNode doc = runtime.parse(new InputSource(entity.getStream()));
-                pipe = new ReadableDocument(runtime, doc, null, null, null);
+                doc = runtime.parse(new InputSource(entity.getStream()));
             } else {
+                ReadablePipe pipe = null;
                 pipe = new ReadableData(runtime, XProcConstants.c_data, entity.getStream(), variant.getMediaType().toString());
+                doc = pipe.read();
             }
 
-            while (pipe.moreDocuments()) {
-                XdmNode doc = pipe.read();
-                xpipeline.writeTo(pipeconfig.definput, doc);
-            }
+            xpipeline.writeTo(pipeconfig.definput, doc);
         } catch (Exception e) {
             throw new XProcException(e);
         }
