@@ -459,7 +459,7 @@ public class Parser {
         int inputCount = 0;
         Input maybePrimaryInput = null;
         for (Input input : step.inputs()) {
-            if (!input.getParameterInput()) {
+            if (!input.getParameterInput() && !input.getPort().startsWith("|")) {
                 inputCount++;
                 maybePrimaryInput = input;
             }
@@ -472,7 +472,7 @@ public class Parser {
         inputCount = 0;
         maybePrimaryInput = null;
         for (Input input : step.inputs()) {
-            if (input.getParameterInput()) {
+            if (input.getParameterInput() && !input.getPort().startsWith("|")) {
                 inputCount++;
                 maybePrimaryInput = input;
             }
