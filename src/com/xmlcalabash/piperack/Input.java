@@ -45,19 +45,16 @@ public class Input extends BaseResource {
         pipeconfig.writeTo(port);
 
         try {
-            ReadablePipe pipe = null;
+            XdmNode doc = null;
 
             if (MediaType.APPLICATION_XML.equals(entity.getMediaType())) {
-                XdmNode doc = runtime.parse(new InputSource(entity.getStream()));
-                pipe = new ReadableDocument(runtime, doc, null, null, null);
+                doc = runtime.parse(new InputSource(entity.getStream()));
             } else {
+                ReadablePipe pipe = null;
                 pipe = new ReadableData(runtime, XProcConstants.c_data, entity.getStream(), variant.getMediaType().toString());
+                doc = pipe.read();
             }
-
-            while (pipe.moreDocuments()) {
-                XdmNode doc = pipe.read();
-                xpipeline.writeTo(port, doc);
-            }
+            xpipeline.writeTo(port, doc);
         } catch (Exception e) {
             throw new XProcException(e);
         }

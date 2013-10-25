@@ -29,6 +29,7 @@ import org.restlet.resource.ServerResource;
 import java.io.ByteArrayOutputStream;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
@@ -72,6 +73,7 @@ public class BaseResource extends ServerResource {
 
     protected static final Pattern xmlnsRE = Pattern.compile("^xmlns:(.+)$");
     protected static final Pattern qnameRE = Pattern.compile("^(.+):(.+)$");
+    protected static final HashSet<String> emptyExcludeNS = new HashSet<String> ();
 
     public BaseResource() {
         super();
