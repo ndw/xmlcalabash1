@@ -47,7 +47,7 @@ public class Input extends BaseResource {
         try {
             XdmNode doc = null;
 
-            if (MediaType.APPLICATION_XML.equals(entity.getMediaType())) {
+            if (isXml(entity.getMediaType())) {
                 doc = runtime.parse(new InputSource(entity.getStream()));
             } else {
                 ReadablePipe pipe = null;

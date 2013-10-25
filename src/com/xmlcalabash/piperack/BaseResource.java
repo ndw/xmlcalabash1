@@ -110,6 +110,11 @@ public class BaseResource extends ServerResource {
         return "http://" + hostname + ":" + serverInfo.getPort() + "/pipelines/" + id;
     }
 
+    protected boolean isXml(MediaType type) {
+        String isxml = type.getSubType();
+        return MediaType.APPLICATION_XML.equals(type) || isxml.endsWith("+xml");
+    }
+
     protected QName qnameFromForm(String name, Form params) {
         HashMap<String,String> bindings = bindingsFromForm(params);
         return qnameFromForm(name, bindings);
@@ -226,7 +231,6 @@ public class BaseResource extends ServerResource {
         tree.endDocument();
         return new StringRepresentation(serialize(tree.getResult(), type), type);
     }
-
 
     protected Representation runPipeline(String id) {
         PipelineConfiguration pipeconfig = getPipelines().get(id);
