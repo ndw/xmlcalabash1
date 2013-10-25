@@ -1,5 +1,6 @@
 package com.xmlcalabash.core;
 
+import com.xmlcalabash.piperack.PipelineSource;
 import com.xmlcalabash.util.Input;
 import com.xmlcalabash.util.JSONtoXML;
 import com.xmlcalabash.util.Output;
@@ -18,6 +19,7 @@ import net.sf.saxon.value.Whitespace;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Vector;
 import java.util.HashSet;
@@ -63,6 +65,7 @@ public class XProcConfiguration {
     public static final QName _data = new QName("", "data");
     public static final QName _name = new QName("", "name");
     public static final QName _key = new QName("", "key");
+    public static final QName _expires = new QName("", "expires");
     public static final QName _value = new QName("", "value");
     public static final QName _loader = new QName("", "loader");
     public static final QName _exclude_inline_prefixes = new QName("", "exclude-inline-prefixes");
@@ -105,6 +108,7 @@ public class XProcConfiguration {
 
     public int piperackPort = 8088;
     public int piperackDefaultExpires = 300;
+    public HashMap<String,PipelineSource> piperackDefaultPipelines = new HashMap<String,PipelineSource>();
 
     private Processor cfgProcessor = null;
     private boolean firstInput = false;
@@ -446,6 +450,8 @@ public class XProcConfiguration {
                     piperackPort(node);
                 } else if ("piperack-default-expires".equals(localName)) {
                     piperackDefaultExpires(node);
+                } else if ("piperack-load-pipeline".equals(localName)) {
+                    piperackLoadPipeline(node);
                 } else {
                     throw new XProcException(doc, "Unexpected configuration option: " + localName);
                 }
@@ -703,6 +709,24 @@ public class XProcConfiguration {
     private void piperackDefaultExpires(XdmNode node) {
         String secs = node.getStringValue().trim();
         piperackDefaultExpires = Integer.parseInt(secs);
+    }
+
+    private void piperackLoadPipeline(XdmNode node) {
+        String uri = node.getStringValue().trim();
+        String name = node.getAttributeValue(_name);
+        int expires = piperackDefaultExpires;
+
+        String s = node.getAttributeValue(_expires);
+        if (s != null) {
+            expires = Integer.parseInt(s);
+        }
+
+        if (name == null) {
+            throw new XProcException(node, "You must specify a name for default pipelines.");
+        }
+
+        PipelineSource src = new PipelineSource(uri, name, expires);
+        piperackDefaultPipelines.put(name, src);
     }
 
     private void parseInput(XdmNode node) {
