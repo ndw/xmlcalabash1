@@ -45,7 +45,7 @@ public class Parameter extends BaseResource {
         try {
             ReadablePipe pipe = null;
 
-            if (MediaType.APPLICATION_XML.equals(entity.getMediaType())) {
+            if (isXml(entity.getMediaType())) {
                 XdmNode doc = runtime.parse(new InputSource(entity.getStream()));
                 pipe = new ReadableDocument(runtime, doc, null, null, null);
             } else {
