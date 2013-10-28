@@ -122,9 +122,22 @@
 </xsl:template>
 
 <xsl:template match="pr:pipelines" mode="text">
-  <xsl:for-each select="pr:uri">
-    <xsl:value-of select="."/>
-    <xsl:text>&#10;</xsl:text>
+  <xsl:for-each select="pr:pipeline">
+    <xsl:value-of select="pr:uri"/>
+    <xsl:text> (</xsl:text>
+    <xsl:choose>
+      <xsl:when test="pr:has-run = 'true'">
+        <xsl:text>has run</xsl:text>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:text>has not run</xsl:text>
+      </xsl:otherwise>
+    </xsl:choose>
+    <xsl:if test="pr:expires">
+      <xsl:text>; expires: </xsl:text>
+      <xsl:value-of select="pr:expires"/>
+    </xsl:if>
+    <xsl:text>)&#10;</xsl:text>
   </xsl:for-each>
 </xsl:template>
 
@@ -326,11 +339,25 @@
     <body>
       <h1>Piperack pipelines</h1>
       <ul>
-        <xsl:for-each select="pr:uri">
+        <xsl:for-each select="pr:pipeline">
           <li>
             <code>
-              <xsl:value-of select="."/>
+              <xsl:value-of select="pr:uri"/>
             </code>
+            <xsl:text> (</xsl:text>
+            <xsl:choose>
+              <xsl:when test="pr:has-run = 'true'">
+                <xsl:text>has run</xsl:text>
+              </xsl:when>
+              <xsl:otherwise>
+                <xsl:text>has not run</xsl:text>
+              </xsl:otherwise>
+            </xsl:choose>
+            <xsl:if test="pr:expires">
+              <xsl:text>; expires: </xsl:text>
+              <xsl:value-of select="pr:expires"/>
+            </xsl:if>
+            <xsl:text>)&#10;</xsl:text>
           </li>
         </xsl:for-each>
       </ul>
@@ -562,9 +589,23 @@
 </xsl:template>
 
 <xsl:template match="pr:pipelines" mode="json">
-  <xsl:text>{"pipelines":[</xsl:text>
-  <xsl:apply-templates select="pr:uri" mode="json"/>
-  <xsl:text>]}</xsl:text>
+  <xsl:text>[</xsl:text>
+
+  <xsl:for-each select="pr:pipeline">
+    <xsl:text>{ "uri": "</xsl:text>
+    <xsl:value-of select="pr:uri"/>
+    <xsl:text>",</xsl:text>
+    <xsl:text>"has-run": </xsl:text>
+    <xsl:value-of select="pr:has-run"/>
+    <xsl:if test="pr:expires">
+      <xsl:text>, "expires": "</xsl:text>
+      <xsl:value-of select="pr:expires"/>
+      <xsl:text>"</xsl:text>
+    </xsl:if>
+    <xsl:text>}</xsl:text>
+    <xsl:if test="following-sibling::pr:pipeline">,</xsl:if>
+  </xsl:for-each>
+  <xsl:text>]</xsl:text>
 </xsl:template>
 
 <xsl:template match="pr:uri" mode="json">

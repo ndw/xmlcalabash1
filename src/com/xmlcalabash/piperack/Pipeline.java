@@ -61,6 +61,8 @@ public class Pipeline extends BaseResource {
         tree.addText(pipelineUri(id));
         tree.addEndElement();
 
+        formatExpires(tree, pipeconfig.expires);
+
         tree.addStartElement(pr_has_run);
         tree.startContent();
         tree.addText("" + pipeconfig.ran);
