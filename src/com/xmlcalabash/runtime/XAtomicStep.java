@@ -378,35 +378,37 @@ public class XAtomicStep extends XStep {
         data.openFrame(this);
 
         runtime.start(this);
-        xstep.run();
-        runtime.finish(this);
+        try {
+            xstep.run();
 
-        // FIXME: Is it sufficient to only do this for atomic steps?
-        String cache = getInheritedExtensionAttribute(XProcConstants.cx_cache);
-        if ("true".equals(cache)) {
-            for (String port : outputs.keySet()) {
-                WritablePipe wpipe = outputs.get(port);
-                // FIXME: Hack. There should be a better way...
-                if (wpipe instanceof Pipe) {
-                    ReadablePipe rpipe = new Pipe(runtime, ((Pipe) wpipe).documents());
-                    rpipe.canReadSequence(true);
-                    rpipe.setReader(step);
-                    while (rpipe.moreDocuments()) {
-                        XdmNode doc = rpipe.read();
-                        runtime.cache(doc, step.getNode().getBaseURI());
+            // FIXME: Is it sufficient to only do this for atomic steps?
+            String cache = getInheritedExtensionAttribute(XProcConstants.cx_cache);
+            if ("true".equals(cache)) {
+                for (String port : outputs.keySet()) {
+                    WritablePipe wpipe = outputs.get(port);
+                    // FIXME: Hack. There should be a better way...
+                    if (wpipe instanceof Pipe) {
+                        ReadablePipe rpipe = new Pipe(runtime, ((Pipe) wpipe).documents());
+                        rpipe.canReadSequence(true);
+                        rpipe.setReader(step);
+                        while (rpipe.moreDocuments()) {
+                            XdmNode doc = rpipe.read();
+                            runtime.cache(doc, step.getNode().getBaseURI());
+                        }
                     }
                 }
+            } else if (!"false".equals(cache) && cache != null) {
+                throw XProcException.dynamicError(19);
             }
-        } else if (!"false".equals(cache) && cache != null) {
-            throw XProcException.dynamicError(19);
-        }
 
-        for (String port : outputs.keySet()) {
-            WritablePipe wpipe = outputs.get(port);
-            wpipe.close(); // Indicate we're done
+            for (String port : outputs.keySet()) {
+                WritablePipe wpipe = outputs.get(port);
+                wpipe.close(); // Indicate we're done
+            }
+        } finally {
+            runtime.finish(this);
+            data.closeFrame();
         }
-
-        data.closeFrame();
     }
 
     public void reportError(XdmNode doc) {
@@ -605,9 +607,9 @@ public class XAtomicStep extends XStep {
                     NodeInfo inode = nsbinding.getNode().getUnderlyingNode();
                     NamePool pool = inode.getNamePool();
                     InscopeNamespaceResolver inscopeNS = new InscopeNamespaceResolver(inode);
-                    Iterator<String> pfxiter = inscopeNS.iteratePrefixes();
+                    Iterator<?> pfxiter = inscopeNS.iteratePrefixes();
                     while (pfxiter.hasNext()) {
-                        String nspfx = pfxiter.next();
+                        String nspfx = (String)pfxiter.next();
                         String nsuri = inscopeNS.getURIForPrefix(nspfx, "".equals(nspfx));
                         lclnsBindings.put(nspfx, nsuri);
                     }
@@ -783,7 +785,10 @@ public class XAtomicStep extends XStep {
 
         try {
             XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
-            xcomp.setBaseURI(step.getNode().getBaseURI());
+            URI baseURI = step.getNode().getBaseURI();
+            if (!"".equals(baseURI.toASCIIString())) {
+                xcomp.setBaseURI(baseURI);
+            }
 
             for (QName varname : boundOpts.keySet()) {
                 xcomp.declareVariable(varname);

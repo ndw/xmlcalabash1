@@ -130,10 +130,11 @@ public class XChoose extends XCompoundStep {
             }
         }
 
-        xstep.run();
-
-        runtime.finish(this);
-
-        data.closeFrame();
+        try {
+            xstep.run();
+        } finally {
+            runtime.finish(this);
+            data.closeFrame();
+        }
     }
 }

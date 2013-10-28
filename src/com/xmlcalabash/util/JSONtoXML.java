@@ -109,9 +109,9 @@ public class JSONtoXML {
 
     private static void buildJsonXPairs(TreeWriter tree, JSONObject jo) {
         try {
-            Iterator keys = jo.keys();
+            Iterator<String> keys = jo.keys();
             while (keys.hasNext()) {
-                String name = (String) keys.next();
+                String name = keys.next();
                 Object json = jo.get(name);
                 serializeJsonX(tree, json, name);
             }
@@ -196,9 +196,9 @@ public class JSONtoXML {
 
     private static void buildMarkLogicPairs(TreeWriter tree, JSONObject jo) {
         try {
-            Iterator keys = jo.keys();
+            Iterator<String> keys = jo.keys();
             while (keys.hasNext()) {
-                String name = (String) keys.next();
+                String name = keys.next();
                 Object json = jo.get(name);
                 serializeMarkLogic(tree, json, name);
             }
@@ -293,9 +293,9 @@ public class JSONtoXML {
 
     private static void buildJxmlPairs(TreeWriter tree, JSONObject jo) {
         try {
-            Iterator keys = jo.keys();
+            Iterator<String> keys = jo.keys();
             while (keys.hasNext()) {
-                String name = (String) keys.next();
+                String name = keys.next();
                 Object json = jo.get(name);
                 serializeJxml(tree, json, name);
             }
@@ -385,9 +385,9 @@ public class JSONtoXML {
 
     private static void buildMyPairs(TreeWriter tree, JSONObject jo, boolean usens) {
         try {
-            Iterator keys = jo.keys();
+            Iterator<String> keys = jo.keys();
             while (keys.hasNext()) {
-                String name = (String) keys.next();
+                String name = keys.next();
                 Object json = jo.get(name);
                 tree.addStartElement(usens ? c_pair : _pair);
                 tree.addAttribute(_name, name);

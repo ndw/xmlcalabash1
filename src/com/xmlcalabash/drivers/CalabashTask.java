@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import javax.xml.transform.URIResolver;
 
 import com.xmlcalabash.util.Input.Type;
 import com.xmlcalabash.util.UserArgs;
@@ -47,6 +48,7 @@ import org.apache.tools.ant.types.resources.FileResource;
 import org.apache.tools.ant.types.resources.Resources;
 import org.apache.tools.ant.types.resources.Union;
 import org.apache.tools.ant.util.FileNameMapper;
+import org.xml.sax.EntityResolver;
 
 import static com.xmlcalabash.util.Input.Type.DATA;
 import static com.xmlcalabash.util.Input.Type.XML;
@@ -862,7 +864,7 @@ public class CalabashTask extends MatchingTask {
      *
      * @param entityResolver the resolver class for entity resolution
      */
-    public void setEntityResolver(Class entityResolver) {
+    public void setEntityResolver(Class<? extends EntityResolver> entityResolver) {
         try {
             userArgs.setEntityResolverClass(entityResolver.getName());
         } catch (Exception e) {
@@ -875,7 +877,7 @@ public class CalabashTask extends MatchingTask {
      *
      * @param uriResolver the resolver class for URI resolution
      */
-    public void setURIResolver(Class uriResolver) {
+    public void setURIResolver(Class<? extends URIResolver> uriResolver) {
         try {
             userArgs.setUriResolverClass(uriResolver.getName());
         } catch (Exception e) {
@@ -895,8 +897,8 @@ public class CalabashTask extends MatchingTask {
         }
 
         try {
-            for (Iterator iterator = libraries.iterator(); iterator.hasNext(); ) {
-                Resource library = (Resource) iterator.next();
+            for (Iterator<Resource> iterator = libraries.iterator(); iterator.hasNext(); ) {
+                Resource library = iterator.next();
                 userArgs.addLibrary(library.getInputStream(), library.toString());
             }
         } catch (Exception e) {
@@ -1262,8 +1264,8 @@ public class CalabashTask extends MatchingTask {
         try {
             for (String port : outputResources.keySet()) {
                 Union resources = outputResources.get(port);
-                for (Iterator iterator = resources.iterator(); iterator.hasNext(); ) {
-                    Resource resource = (Resource) iterator.next();
+                for (Iterator<Resource> iterator = resources.iterator(); iterator.hasNext(); ) {
+                    Resource resource = iterator.next();
                     userArgs.addOutput(port, resource.getOutputStream());
                 }
             }

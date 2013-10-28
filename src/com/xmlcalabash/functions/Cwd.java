@@ -76,7 +76,6 @@ public class Cwd extends XProcExtensionFunctionDefinition {
 
     private class CwdCall extends ExtensionFunctionCall {
         public Sequence call(XPathContext xPathContext, Sequence[] sequences) throws XPathException {
-
             XProcRuntime runtime = tl_runtime.get();
             XStep step = runtime.getXProcData().getStep();
             // FIXME: this can't be the best way to do this...

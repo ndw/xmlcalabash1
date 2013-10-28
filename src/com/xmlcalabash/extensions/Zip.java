@@ -297,9 +297,9 @@ public class Zip extends DefaultStep {
 
         try {
             if (inZip != null) {
-                Enumeration zenum = inZip.entries();
+                Enumeration<? extends ZipEntry> zenum = inZip.entries();
                 while (zenum.hasMoreElements()) {
-                    ZipEntry entry = (ZipEntry) zenum.nextElement();
+                    ZipEntry entry = zenum.nextElement();
                     String name = entry.getName();
 
                     boolean skip = srcManifest.containsKey(name);
@@ -405,9 +405,9 @@ public class Zip extends DefaultStep {
     public void delete(ZipFile inZip, ZipOutputStream outZip) {
         try {
             if (inZip != null) {
-                Enumeration zenum = inZip.entries();
+                Enumeration<? extends ZipEntry> zenum = inZip.entries();
                 while (zenum.hasMoreElements()) {
-                    ZipEntry entry = (ZipEntry) zenum.nextElement();
+                    ZipEntry entry = zenum.nextElement();
                     String name = entry.getName();
                     boolean delete = false;
 

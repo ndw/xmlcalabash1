@@ -86,78 +86,79 @@ public class XForEach extends XCompoundStep {
 
         runtime.start(this);
 
-        for (XdmNode is_doc : nodes) {
-            // Setup the current port before we compute variables!
-            current.resetWriter();
-            current.write(is_doc);
-            finest(step.getNode(), "Copy to current");
+        try {
+            for (XdmNode is_doc : nodes) {
+                // Setup the current port before we compute variables!
+                current.resetWriter();
+                current.write(is_doc);
+                finest(step.getNode(), "Copy to current");
 
-            sequencePosition++;
-            runtime.getXProcData().setIterationPosition(sequencePosition);
+                sequencePosition++;
+                runtime.getXProcData().setIterationPosition(sequencePosition);
 
-            for (Variable var : step.getVariables()) {
-                RuntimeValue value = computeValue(var);
-                inScopeOptions.put(var.getName(), value);
-            }
+                for (Variable var : step.getVariables()) {
+                    RuntimeValue value = computeValue(var);
+                    inScopeOptions.put(var.getName(), value);
+                }
 
-            // N.B. At this time, there are no compound steps that accept parameters or options,
-            // so the order in which we calculate them doesn't matter. That will change if/when
-            // there are such compound steps.
+                // N.B. At this time, there are no compound steps that accept parameters or options,
+                // so the order in which we calculate them doesn't matter. That will change if/when
+                // there are such compound steps.
 
-            // Calculate all the variables
-            inScopeOptions = parent.getInScopeOptions();
-            for (Variable var : step.getVariables()) {
-                RuntimeValue value = computeValue(var);
-                inScopeOptions.put(var.getName(), value);
-            }
+                // Calculate all the variables
+                inScopeOptions = parent.getInScopeOptions();
+                for (Variable var : step.getVariables()) {
+                    RuntimeValue value = computeValue(var);
+                    inScopeOptions.put(var.getName(), value);
+                }
 
-            for (XStep step : subpipeline) {
-                step.run();
+                for (XStep step : subpipeline) {
+                    step.run();
+                }
+
+                for (String port : inputs.keySet()) {
+                    if (port.startsWith("|")) {
+                        String wport = port.substring(1);
+
+                        boolean seqOk = step.getOutput(wport).getSequence();
+                        int docsCopied = 0;
+
+                        WritablePipe pipe = outputs.get(wport);
+                        // The output of a for-each is a sequence, irrespective of what the output says
+                        pipe.canWriteSequence(true);
+
+                        for (ReadablePipe reader : inputs.get(port)) {
+                            reader.canReadSequence(true); // Hack again!
+                            while (reader.moreDocuments()) {
+                                XdmNode doc = reader.read();
+                                pipe.write(doc);
+                                docsCopied++;
+                                finest(step.getNode(), "Output copy from " + reader + " to " + pipe);
+                            }
+                            reader.resetReader();
+                        }
+
+                        if (docsCopied != 1 && !seqOk) {
+                            throw XProcException.dynamicError(6);
+                        }
+                    }
+                }
+
+                for (XStep step : subpipeline) {
+                    step.reset();
+                }
             }
 
             for (String port : inputs.keySet()) {
                 if (port.startsWith("|")) {
                     String wport = port.substring(1);
-
-                    boolean seqOk = step.getOutput(wport).getSequence();
-                    int docsCopied = 0;
-
                     WritablePipe pipe = outputs.get(wport);
-                    // The output of a for-each is a sequence, irrespective of what the output says
-                    pipe.canWriteSequence(true);
-
-                    for (ReadablePipe reader : inputs.get(port)) {
-                        reader.canReadSequence(true); // Hack again!
-                        while (reader.moreDocuments()) {
-                            XdmNode doc = reader.read();
-                            pipe.write(doc);
-                            docsCopied++;
-                            finest(step.getNode(), "Output copy from " + reader + " to " + pipe);
-                        }
-                        reader.resetReader();
-                    }
-
-                    if (docsCopied != 1 && !seqOk) {
-                        throw XProcException.dynamicError(6);
-                    }
+                    pipe.close(); // Indicate that we're done
                 }
             }
-
-            for (XStep step : subpipeline) {
-                step.reset();
-            }
+        } finally {
+            runtime.finish(this);
+            data.closeFrame();
         }
-
-        runtime.finish(this);
-
-        for (String port : inputs.keySet()) {
-            if (port.startsWith("|")) {
-                String wport = port.substring(1);
-                WritablePipe pipe = outputs.get(wport);
-                pipe.close(); // Indicate that we're done
-            }
-        }
-
-        data.closeFrame();
     }
 }

@@ -192,6 +192,131 @@ public class ParseArgs {
         return userArgs;
     }
 
+    public UserArgs parsePiperack(String[] args) {
+        this.args = args;
+        argpos = 0;
+
+        while (arg != null || argpos < args.length) {
+            if (arg == null) {
+                arg = args[argpos];
+            }
+
+            if (arg.startsWith("-P") || arg.startsWith("--saxon-processor")) {
+                userArgs.setSaxonProcessor(parseString("P","saxon-processor"));
+                continue;
+            }
+
+            if (arg.startsWith("--saxon-configuration")) {
+                userArgs.setSaxonConfig(parseString(null, "saxon-configuration"));
+                continue;
+            }
+
+            if (arg.startsWith("-a") || arg.startsWith("--schema-aware")) {
+                userArgs.setSchemaAware(parseBoolean("a","schema-aware"));
+                continue;
+            }
+
+            if (arg.startsWith("-D") || arg.startsWith("--debug")) {
+                userArgs.setDebug(parseBoolean("D","debug"));
+                continue;
+            }
+
+            if (arg.startsWith("--profile")) {
+                userArgs.setProfile(parseString(null, "profile"));
+                continue;
+            }
+
+            if (arg.startsWith("-S") || arg.startsWith("--safe-mode")) {
+                userArgs.setSafeMode(parseBoolean("S","safe-mode"));
+                continue;
+            }
+
+            if (arg.startsWith("-c") || arg.startsWith("--config")) {
+                userArgs.setConfig(parseString("c", "config"));
+                continue;
+            }
+
+            if (arg.startsWith("-G") || arg.startsWith("--log-style")) {
+                userArgs.setLogStyle(parseString("G","log-style"));
+                continue;
+            }
+
+            if (arg.startsWith("-E") || arg.startsWith("--entity-resolver")) {
+                userArgs.setEntityResolverClass(parseString("E","entity-resolver"));
+                continue;
+            }
+
+            if (arg.startsWith("-U") || arg.startsWith("--uri-resolver")) {
+                userArgs.setUriResolverClass(parseString("U","uri-resolver"));
+                continue;
+            }
+
+            if (arg.startsWith("-v") || arg.equals("--version")) {
+                userArgs.setShowVersion(parseBoolean("v","version"));
+                continue;
+            }
+
+            if (arg.startsWith("--piperack-port")) {
+                String s = parseString(null, "piperack-port");
+                userArgs.setPiperackPort(Integer.parseInt(s));
+                continue;
+            }
+
+            if (arg.startsWith("--piperack-default-expires")) {
+                String s = parseString(null, "piperack-default-expires");
+                userArgs.setPiperackExpires(Integer.parseInt(s));
+                continue;
+            }
+
+            if (arg.startsWith("-X") || arg.startsWith("--extension")) {
+                String ext = parseString("X", "extension");
+                if ("general-values".equals(ext)) {
+                    userArgs.setExtensionValues(true);
+                } else if ("xpointer-on-text".equals(ext)) {
+                    userArgs.setAllowXPointerOnText(true);
+                } else if ("use-xslt-1.0".equals(ext) || "use-xslt-10".equals(ext)) {
+                    userArgs.setUseXslt10(true);
+                } else if ("transparent-json".equals(ext)) {
+                    userArgs.setTransparentJSON(true);
+                } else if (ext.startsWith("json-flavor=")) {
+                    userArgs.setJsonFlavor(ext.substring(12));
+                } else {
+                    throw new XProcException("Unexpected extension: " + ext);
+                }
+                continue;
+            }
+
+            if (arg.startsWith("-")) {
+                throw new XProcException("Unrecognized option: '" + arg + "'.");
+            }
+
+            if (arg.contains("=")) {
+                KeyValuePair v = parseOption(arg);
+                userArgs.addOption(v.key, v.value);
+                arg = null;
+                argpos++;
+            } else {
+                break;
+            }
+        }
+
+        if (argpos < args.length) {
+            userArgs.setPipeline(args[argpos++]);
+        }
+
+        while (argpos < args.length) {
+            if (args[argpos].startsWith("-")) {
+                throw new XProcException("Only options can occur on the command line after the pipeline document.");
+            }
+            KeyValuePair v = parseOption(args[argpos++]);
+            userArgs.addOption(v.key, v.value);
+        }
+
+        userArgs.checkArgs();
+
+        return userArgs;
+    }
+
     private boolean parseBoolean(String shortName, String longName) {
         String sOpt = "-" + shortName;
         String lOpt = "--" + longName;

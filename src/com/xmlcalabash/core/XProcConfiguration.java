@@ -1,5 +1,6 @@
 package com.xmlcalabash.core;
 
+import com.xmlcalabash.piperack.PipelineSource;
 import com.xmlcalabash.util.Input;
 import com.xmlcalabash.util.JSONtoXML;
 import com.xmlcalabash.util.Output;
@@ -18,6 +19,7 @@ import net.sf.saxon.value.Whitespace;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Vector;
 import java.util.HashSet;
@@ -63,6 +65,7 @@ public class XProcConfiguration {
     public static final QName _data = new QName("", "data");
     public static final QName _name = new QName("", "name");
     public static final QName _key = new QName("", "key");
+    public static final QName _expires = new QName("", "expires");
     public static final QName _value = new QName("", "value");
     public static final QName _loader = new QName("", "loader");
     public static final QName _exclude_inline_prefixes = new QName("", "exclude-inline-prefixes");
@@ -102,6 +105,10 @@ public class XProcConfiguration {
     public boolean transparentJSON = false;
     public String jsonFlavor = JSONtoXML.MARKLOGIC;
     public boolean useXslt10 = false;
+
+    public int piperackPort = 8088;
+    public int piperackDefaultExpires = 300;
+    public HashMap<String,PipelineSource> piperackDefaultPipelines = new HashMap<String,PipelineSource>();
 
     private Processor cfgProcessor = null;
     private boolean firstInput = false;
@@ -314,6 +321,14 @@ public class XProcConfiguration {
         mailUser = System.getProperty("com.xmlcalabash.mail-username", mailUser);
         mailPass = System.getProperty("com.xmlcalabash.mail-password", mailPass);
 
+        if (System.getProperty("com.xmlcalabash.piperack-port") != null) {
+            piperackPort = Integer.parseInt(System.getProperty("com.xmlcalabash.piperack-port"));
+        }
+
+        if (System.getProperty("com.xmlcalabash.piperack-default-expires") != null) {
+            piperackDefaultExpires = Integer.parseInt(System.getProperty("com.xmlcalabash.piperack-port"));
+        }
+
         String[] boolSerNames = new String[] {"byte-order-mark", "escape-uri-attributes",
                 "include-content-type","indent", "omit-xml-declaration", "undeclare-prefixes"};
         String[] strSerNames = new String[] {"doctype-public", "doctype-system", "encoding",
@@ -431,6 +446,12 @@ public class XProcConfiguration {
                     saxonConfigurationProperty(node);
                 } else if ("pipeline-loader".equals(localName)) {
                     pipelineLoader(node);
+                } else if ("piperack-port".equals(localName)) {
+                    piperackPort(node);
+                } else if ("piperack-default-expires".equals(localName)) {
+                    piperackDefaultExpires(node);
+                } else if ("piperack-load-pipeline".equals(localName)) {
+                    piperackLoadPipeline(node);
                 } else {
                     throw new XProcException(doc, "Unexpected configuration option: " + localName);
                 }
@@ -444,7 +465,7 @@ public class XProcConfiguration {
 
 	public boolean isStepAvailable(QName type) {
         if (implementations.containsKey(type)) {
-            Class klass = implementations.get(type);
+            Class<?> klass = implementations.get(type);
             try {
                 Method method = klass.getMethod("isAvailable");
                 Boolean available = (Boolean) method.invoke(null);
@@ -462,7 +483,7 @@ public class XProcConfiguration {
 	}
 
 	public XProcStep newStep(XProcRuntime runtime,XAtomicStep step){
-        Class klass = implementations.get(step.getType());
+        Class<?> klass = implementations.get(step.getType());
         if (klass == null) {
             throw new XProcException("Misconfigured. No 'class' in configuration for " + step.getType());
         }
@@ -474,8 +495,8 @@ public class XProcConfiguration {
         }
 
 		try {
-			Constructor constructor = Class.forName(className).getConstructor(XProcRuntime.class, XAtomicStep.class);
-			return (XProcStep) constructor.newInstance(runtime,step);
+			Constructor<? extends XProcStep> constructor = Class.forName(className).asSubclass(XProcStep.class).getConstructor(XProcRuntime.class, XAtomicStep.class);
+			return constructor.newInstance(runtime,step);
 		} catch (NoSuchMethodException nsme) {
 			throw new UnsupportedOperationException("No such method: " + className, nsme);
 		} catch (ClassNotFoundException cfne) {
@@ -487,6 +508,21 @@ public class XProcConfiguration {
 		} catch (InvocationTargetException ite) {
 			throw new UnsupportedOperationException("Invocation target exception", ite);
         }
+    }
+
+    public static void showVersion(XProcRuntime runtime) {
+        System.out.println("XML Calabash version " + XProcConstants.XPROC_VERSION + ", an XProc processor.");
+        if (runtime != null) {
+            System.out.print("Running on Saxon version ");
+            System.out.print(runtime.getConfiguration().getProcessor().getSaxonProductVersion());
+            System.out.print(", ");
+            System.out.print(runtime.getConfiguration().getProcessor().getUnderlyingConfiguration().getEditionCode());
+            System.out.println(" edition.");
+        }
+        System.out.println("Copyright (c) 2007-2013 Norman Walsh");
+        System.out.println("See docs/notices/NOTICES in the distribution for licensing");
+        System.out.println("See also http://xmlcalabash.com/ for more information");
+        System.out.println("");
     }
 
     private void parseSaxonProcessor(XdmNode node) {
@@ -665,6 +701,34 @@ public class XProcConfiguration {
         }
     }
 
+    private void piperackPort(XdmNode node) {
+        String portno = node.getStringValue().trim();
+        piperackPort = Integer.parseInt(portno);
+    }
+
+    private void piperackDefaultExpires(XdmNode node) {
+        String secs = node.getStringValue().trim();
+        piperackDefaultExpires = Integer.parseInt(secs);
+    }
+
+    private void piperackLoadPipeline(XdmNode node) {
+        String uri = node.getStringValue().trim();
+        String name = node.getAttributeValue(_name);
+        int expires = -1;
+
+        String s = node.getAttributeValue(_expires);
+        if (s != null) {
+            expires = Integer.parseInt(s);
+        }
+
+        if (name == null) {
+            throw new XProcException(node, "You must specify a name for default pipelines.");
+        }
+
+        PipelineSource src = new PipelineSource(uri, name, expires);
+        piperackDefaultPipelines.put(name, src);
+    }
+
     private void parseInput(XdmNode node) {
         String port = node.getAttributeValue(_port);
         String href = node.getAttributeValue(_href);
@@ -828,7 +892,7 @@ public class XProcConfiguration {
         for (String tname : nameStr.split("\\s+")) {
             QName name = new QName(tname,node);
             try {
-                Class klass = Class.forName(value);
+                Class<?> klass = Class.forName(value);
                 implementations.put(name, klass);
             } catch (ClassNotFoundException e) {
                 // nop
