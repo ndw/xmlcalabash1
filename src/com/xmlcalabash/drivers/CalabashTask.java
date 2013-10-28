@@ -342,7 +342,7 @@ public class CalabashTask extends MatchingTask {
             handleError("The pipeline element must be specified with at most one nested resource.");
         }
 
-        setPipeline(pipeline.iterator().next());
+        setPipeline((Resource) pipeline.iterator().next());
     }
 
     /**
@@ -734,7 +734,7 @@ public class CalabashTask extends MatchingTask {
             handleError("The profile element must be specified with at most one nested resource.");
         }
 
-        setProfileFile(profile.iterator().next());
+        setProfileFile((Resource) profile.iterator().next());
     }
 
     /**
@@ -782,7 +782,7 @@ public class CalabashTask extends MatchingTask {
             handleError("The saxonConfig element must be specified with at most one nested resource.");
         }
 
-        setSaxonConfigFile(saxonConfig.iterator().next());
+        setSaxonConfigFile((Resource) saxonConfig.iterator().next());
     }
 
     /**
@@ -843,7 +843,7 @@ public class CalabashTask extends MatchingTask {
             handleError("The config element must be specified with at most one nested resource.");
         }
 
-        setConfigFile(config.iterator().next());
+        setConfigFile((Resource) config.iterator().next());
     }
 
     /**
