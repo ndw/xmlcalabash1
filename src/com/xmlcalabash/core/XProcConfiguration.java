@@ -714,7 +714,7 @@ public class XProcConfiguration {
     private void piperackLoadPipeline(XdmNode node) {
         String uri = node.getStringValue().trim();
         String name = node.getAttributeValue(_name);
-        int expires = piperackDefaultExpires;
+        int expires = -1;
 
         String s = node.getAttributeValue(_expires);
         if (s != null) {
