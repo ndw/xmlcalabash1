@@ -28,8 +28,12 @@ import org.restlet.resource.ServerResource;
 
 import java.io.ByteArrayOutputStream;
 import java.net.URI;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
+import java.util.TimeZone;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
@@ -113,6 +117,17 @@ public class BaseResource extends ServerResource {
     protected boolean isXml(MediaType type) {
         String isxml = type.getSubType();
         return MediaType.APPLICATION_XML.equals(type) || isxml.endsWith("+xml");
+    }
+
+    protected void formatExpires(TreeWriter tree, Calendar expires) {
+        if (expires.getTimeInMillis() != Long.MAX_VALUE) {
+            tree.addStartElement(pr_expires);
+            tree.startContent();
+            SimpleDateFormat gmtFrmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US);
+            gmtFrmt.setTimeZone(TimeZone.getTimeZone("GMT"));
+            tree.addText(gmtFrmt.format(expires.getTime()));
+            tree.addEndElement();
+        }
     }
 
     protected QName qnameFromForm(String name, Form params) {

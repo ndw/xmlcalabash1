@@ -37,9 +37,23 @@ public class Pipelines extends BaseResource {
         tree.addStartElement(pr_pipelines);
         tree.startContent();
         for (String id : getPipelines().keySet()) {
+            PipelineConfiguration pipeconfig = getPipelines().get(id);
+
+            tree.addStartElement(pr_pipeline);
+            tree.startContent();
+
             tree.addStartElement(pr_uri);
             tree.startContent();
             tree.addText(pipelineUri(id));
+            tree.addEndElement();
+
+            tree.addStartElement(pr_has_run);
+            tree.startContent();
+            tree.addText("" + pipeconfig.ran);
+            tree.addEndElement();
+
+            formatExpires(tree, pipeconfig.expires);
+
             tree.addEndElement();
         }
         tree.addEndElement();
