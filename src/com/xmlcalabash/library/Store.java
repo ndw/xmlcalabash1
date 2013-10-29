@@ -123,6 +123,11 @@ public class Store extends DefaultStep {
                  || ("".equals(root.getNodeName().getNamespaceURI())
                      && "base64".equals(root.getAttributeValue(c_encoding))))) {
             storeBinary(doc, href);
+        } else if (("true".equals(decode) || "1".equals(decode))
+            && XProcConstants.c_result.equals(root.getNodeName())
+                && root.getAttributeValue(_content_type) != null
+                    && root.getAttributeValue(_content_type).startsWith("text/")) {
+            storeText(doc, href);
         } else if (runtime.transparentJSON()
                    && (((c_body.equals(root.getNodeName())
                         && ("application/json".equals(root.getAttributeValue(_content_type))
@@ -224,6 +229,25 @@ public class Store extends DefaultStep {
             if (href == null) {
                 returnData(baos);
             }
+        } catch (IOException ioe) {
+            throw new XProcException(ioe);
+        }
+    }
+
+    private void storeText(XdmNode doc, URI href) {
+        try {
+            File output = new File(href);
+
+            File path = new File(output.getParent());
+            if (!path.isDirectory()) {
+                if (!path.mkdirs()) {
+                    throw XProcException.stepError(50);
+                }
+            }
+
+            OutputStream outstr = new FileOutputStream(output);
+            outstr.write(doc.getStringValue().getBytes());
+            outstr.close();
         } catch (IOException ioe) {
             throw new XProcException(ioe);
         }
