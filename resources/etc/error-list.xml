@@ -36,7 +36,7 @@
    <error code="XC0055">It is a dynamic error if the implementation does not support the specified mode.</error>
    <error code="XC0056">It is a dynamic error if the specified initial mode or named template cannot be applied to the specified stylesheet.</error>
    <error code="XC0057">It is a dynamic error if the sequence that results from evaluating the XQuery contains items other than documents and elements.</error>
-   <error code="XC0058">It is a dynamic error if the all and relative options are bothtrue.</error>
+   <error code="XC0058">It is a dynamic error if the all and relative options are both true.</error>
    <error code="XC0059">It is a dynamic error if the QName value in the attribute-name option uses the prefix “xmlns” or any other prefix that resolves to the namespace name “http://www.w3.org/2000/xmlns/”.</error>
    <error code="XC0060">It is a dynamic error if the processor does not support the specified version of the UUID algorithm.</error>
    <error code="XC0061">It is a dynamic error if the name of any encoded parameter name is not a valid xs:NCName.</error>
@@ -89,7 +89,7 @@
    <error code="XS0011">It is a static error to identify two ports with the same name on the same step.</error>
    <error code="XS0014">It is a static error to identify more than one output port as primary.</error>
    <error code="XS0015">It is a static error if a compound step has no contained steps.</error>
-   <error code="XS0017">It is a static error to specify that an option is both requiredand has a default value.</error>
+   <error code="XS0017">It is a static error to specify that an option is both required and has a default value.</error>
    <error code="XS0018">If an option is required, it is a static error to invoke the step without specifying a value for that option.</error>
    <error code="XS0019">it is a static error for a variable's document connection to refer to the output port of any step in the surrounding container's contained steps</error>
    <error code="XS0020">It is a static error if the binding attribute on p:namespaces is specified and its value is not the name of an in-scope binding.</error>
