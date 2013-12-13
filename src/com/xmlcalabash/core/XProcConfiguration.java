@@ -307,6 +307,7 @@ public class XProcConfiguration {
         extensionValues = "true".equals(System.getProperty("com.xmlcalabash.general-values", ""+extensionValues));
         xpointerOnText = "true".equals(System.getProperty("com.xmlcalabash.xpointer-on-text", ""+xpointerOnText));
         transparentJSON = "true".equals(System.getProperty("com.xmlcalabash.transparent-json", ""+transparentJSON));
+        safeMode = "true".equals(System.getProperty("com.xmlcalabash.safe-mode", ""+safeMode));
         jsonFlavor = System.getProperty("com.xmlcalabash.json-flavor", jsonFlavor);
         useXslt10 = "true".equals(System.getProperty("com.xmlcalabash.use-xslt-10", ""+useXslt10));
         entityResolver = System.getProperty("com.xmlcalabash.entity-resolver", entityResolver);
@@ -320,6 +321,21 @@ public class XProcConfiguration {
         mailPort = System.getProperty("com.xmlcalabash.mail-port", mailPort);
         mailUser = System.getProperty("com.xmlcalabash.mail-username", mailUser);
         mailPass = System.getProperty("com.xmlcalabash.mail-password", mailPass);
+
+        if (System.getProperty("com.xmlcalabash.log-style") != null) {
+            String s = System.getProperty("com.xmlcalabash.log-style");
+            if ("off".equals(s)) {
+                logOpt = LogOptions.OFF;
+            } else if ("plain".equals(s)) {
+                logOpt = LogOptions.PLAIN;
+            } else if ("wrapped".equals(s)) {
+                logOpt = LogOptions.WRAPPED;
+            } else if ("directory".equals(s)) {
+                logOpt = LogOptions.DIRECTORY;
+            } else {
+                throw new XProcException("Invalid log-style specified in com.xmlcalabash.log-style property");
+            }
+        }
 
         if (System.getProperty("com.xmlcalabash.piperack-port") != null) {
             piperackPort = Integer.parseInt(System.getProperty("com.xmlcalabash.piperack-port"));
@@ -444,6 +460,8 @@ public class XProcConfiguration {
                     parseSendMail(node);
                 } else if ("saxon-configuration-property".equals(localName)) {
                     saxonConfigurationProperty(node);
+                } else if ("log-style".equals(localName)) {
+                    logStyle(node);
                 } else if ("pipeline-loader".equals(localName)) {
                     pipelineLoader(node);
                 } else if ("piperack-port".equals(localName)) {
@@ -680,6 +698,21 @@ public class XProcConfiguration {
             cfgProcessor.setConfigurationProperty(key, valueObj);
         } catch (Exception e) {
             throw new XProcException(e);
+        }
+    }
+
+    private void logStyle(XdmNode node) {
+        String style = node.getAttributeValue(_value);
+        if ("off".equals(style)) {
+            logOpt = LogOptions.OFF;
+        } else if ("plain".equals(style)) {
+            logOpt = LogOptions.PLAIN;
+        } else if ("wrapped".equals(style)) {
+            logOpt = LogOptions.WRAPPED;
+        } else if ("directory".equals(style)) {
+            logOpt = LogOptions.DIRECTORY;
+        } else {
+            throw new XProcException("Configuration option 'log-style' must be one of 'off', 'plain', 'wrapped', or 'directory'");
         }
     }
 
