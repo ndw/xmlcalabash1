@@ -782,7 +782,17 @@ public class XAtomicStep extends XStep {
 
         try {
             XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
-            xcomp.setBaseURI(step.getNode().getBaseURI());
+            
+            URI baseURI = step.getNode().getBaseURI();
+            if (baseURI == null || !baseURI.isAbsolute()) {
+                
+                if (runtime.getBaseURI() != null) {
+                    xcomp.setBaseURI(runtime.getBaseURI().resolve(baseURI));
+                }
+                
+            } else {
+                xcomp.setBaseURI(baseURI);
+            }
 
             for (QName varname : boundOpts.keySet()) {
                 xcomp.declareVariable(varname);
