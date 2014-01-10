@@ -71,30 +71,6 @@ import org.apache.http.impl.client.SystemDefaultHttpClient;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.lang.reflect.Constructor;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.Hashtable;
-import java.util.Locale;
-import java.util.Vector;
-import java.util.logging.Logger;
-
-import javax.xml.transform.URIResolver;
-import javax.xml.transform.sax.SAXSource;
-
 import com.xmlcalabash.config.XProcConfigurer;
 import com.xmlcalabash.functions.BaseURI;
 import com.xmlcalabash.functions.Cwd;
@@ -146,6 +122,7 @@ public class XProcRuntime {
     private static String episode = null;
     private Hashtable<String,Vector<XdmNode>> collections = null;
     private URI staticBaseURI = null;
+    private URI baseURI = null;
     private boolean allowGeneralExpressions = true;
     private boolean allowXPointerOnText = true;
     private boolean transparentJSON = false;
@@ -344,6 +321,18 @@ public class XProcRuntime {
 
     public URI getStaticBaseURI() {
         return staticBaseURI;
+    }
+
+    public void setStaticBaseURI(URI staticBaseURI) {
+        this.staticBaseURI = staticBaseURI;
+    }
+
+    public URI getBaseURI() {
+        return baseURI;
+    }
+
+    public void setBaseURI(URI baseURI) {
+        this.baseURI = baseURI;
     }
 
     public String getSendmailHost() {
@@ -589,7 +578,11 @@ public class XProcRuntime {
         configurer.getXMLCalabashConfigurer().configRuntime(this);
         switch (pipelineInput.getKind()) {
             case URI:
-                pipeline = parser.loadPipeline(pipelineInput.getUri());
+                if (baseURI == null) {
+                    pipeline = parser.loadPipeline(pipelineInput.getUri());
+                } else {
+                    pipeline = parser.loadPipeline(pipelineInput.getUri(), baseURI.toASCIIString());
+                }
                 break;
 
             case INPUT_STREAM:

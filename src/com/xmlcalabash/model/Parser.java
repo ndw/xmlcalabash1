@@ -90,6 +90,11 @@ public class Parser {
         return loadPipeline(doc);
     }
 
+    public DeclareStep loadPipeline(String uri, String base) throws SaxonApiException {
+        XdmNode doc = runtime.parse(uri, base);
+        return loadPipeline(doc);
+    }
+
     private DeclareStep loadPipeline(XdmNode doc) throws SaxonApiException {
         XdmNode root = S9apiUtils.getDocumentElement(doc);
 
