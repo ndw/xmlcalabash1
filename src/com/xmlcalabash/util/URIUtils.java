@@ -100,24 +100,4 @@ public class URIUtils {
         URI cwd = cwdAsURI();
         return cwd.resolve(encode(localFn));
     }
-
-    public static File getFile(String uri) {
-        // http://weblogs.java.net/blog/kohsuke/archive/2007/04/how_to_convert.html
-        URL url;
-        File file;
-
-        try {
-            url = new URL(uri);
-        } catch (MalformedURLException mue) {
-            throw new XProcException(mue);
-        }
-
-        try {
-          file = new File(url.toURI());
-        } catch(URISyntaxException e) {
-          file = new File(url.getPath());
-        }
-
-        return file;
-    }
 }

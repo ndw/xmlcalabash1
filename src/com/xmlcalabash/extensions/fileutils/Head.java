@@ -1,24 +1,26 @@
 package com.xmlcalabash.extensions.fileutils;
 
-import com.xmlcalabash.library.DefaultStep;
-import com.xmlcalabash.io.WritablePipe;
-import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.core.XProcConstants;
-import com.xmlcalabash.core.XProcException;
-import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.model.RuntimeValue;
-import com.xmlcalabash.util.TreeWriter;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.URI;
+
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.FileReader;
-import java.io.BufferedReader;
-import java.net.URI;
+import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.io.DataStore;
+import com.xmlcalabash.io.DataStore.DataReader;
+import com.xmlcalabash.io.WritablePipe;
+import com.xmlcalabash.library.DefaultStep;
+import com.xmlcalabash.model.RuntimeValue;
+import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.util.TreeWriter;
 
 /**
  * Created by IntelliJ IDEA.
@@ -58,70 +60,62 @@ public class Head extends DefaultStep {
         }
 
         boolean failOnError = getOption(_fail_on_error, true);
-        int maxCount = getOption(_count, 10);
+        final int maxCount = getOption(_count, 10);
+        final int negMaxCount = -maxCount;
 
         RuntimeValue href = getOption(_href);
-        URI uri = href.getBaseURI().resolve(href.getString());
-        File file;
-        if (!"file".equals(uri.getScheme())) {
-            throw new XProcException(step.getNode(), "Only file: scheme URIs are supported by the copy step.");
-        } else {
-            file = new File(uri.getPath());
-        }
 
-        if (!file.exists()) {
-             throw new XProcException(step.getNode(), "Cannot read: file does not exist: " + file.getAbsolutePath());
-        }
-
-        if (file.isDirectory()) {
-             throw new XProcException(step.getNode(), "Cannot read: file is a directory: " + file.getAbsolutePath());
-        }
-
-        TreeWriter tree = new TreeWriter(runtime);
+        final TreeWriter tree = new TreeWriter(runtime);
         tree.startDocument(step.getNode().getBaseURI());
         tree.addStartElement(XProcConstants.c_result);
         tree.startContent();
 
         try {
-            FileReader rdr = new FileReader(file);
-            BufferedReader brdr = new BufferedReader(rdr);
-            String line = null;
-            int count = 0;
+            DataStore store = runtime.getDataStore();
+            store.readEntry(href.getString(), href.getBaseURI().toASCIIString(), "text/*, */*", new DataReader() {
+                public void load(URI id, String media, InputStream content, long len)
+                        throws IOException {
+                    Reader rdr = new InputStreamReader(content);
+                    BufferedReader brdr = new BufferedReader(rdr);
+                    String line = null;
+                    int count = 0;
 
-            if (maxCount >= 0) {
-                line = brdr.readLine();
-                while (line != null && count < maxCount) {
-                    tree.addStartElement(c_line);
-                    tree.startContent();
-                    tree.addText(line);
-                    tree.addEndElement();
-                    tree.addText("\n");
-                    count++;
-                    line = brdr.readLine();
-                }
-            } else {
-                maxCount = -maxCount;
-                line = "not null";
-                while (line != null && count < maxCount) {
-                    count++;
-                    line = brdr.readLine();
-                }
+                    if (maxCount >= 0) {
+                        line = brdr.readLine();
+                        while (line != null && count < maxCount) {
+                            tree.addStartElement(c_line);
+                            tree.startContent();
+                            tree.addText(line);
+                            tree.addEndElement();
+                            tree.addText("\n");
+                            count++;
+                            line = brdr.readLine();
+                        }
+                    } else {
+                        line = "not null";
+                        while (line != null && count < negMaxCount) {
+                            count++;
+                            line = brdr.readLine();
+                        }
 
-                line = brdr.readLine();
-                while (line != null) {
-                    tree.addStartElement(c_line);
-                    tree.startContent();
-                    tree.addText(line);
-                    tree.addEndElement();
-                    tree.addText("\n");
-                    line = brdr.readLine();
+                        line = brdr.readLine();
+                        while (line != null) {
+                            tree.addStartElement(c_line);
+                            tree.startContent();
+                            tree.addText(line);
+                            tree.addEndElement();
+                            tree.addText("\n");
+                            line = brdr.readLine();
+                        }
+                    }
+                    
+                    brdr.close();
+                    rdr.close();
                 }
-            }
-            
-            brdr.close();
-            rdr.close();
+            });
         } catch (FileNotFoundException fnfe) {
-            throw new XProcException(fnfe);
+            URI uri = href.getBaseURI().resolve(href.getString());
+            throw new XProcException(step.getNode(), "Cannot read: file does not exist: " + uri.toASCIIString());
         } catch (IOException ioe) {
             throw new XProcException(ioe);
         }

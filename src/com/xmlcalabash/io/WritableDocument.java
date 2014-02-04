@@ -19,27 +19,20 @@
 
 package com.xmlcalabash.io;
 
-import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLConnection;
-
-import com.xmlcalabash.util.S9apiUtils;
-import net.sf.saxon.s9api.DocumentBuilder;
-import net.sf.saxon.s9api.Processor;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.Serializer;
-import net.sf.saxon.s9api.XQueryCompiler;
-import net.sf.saxon.s9api.XQueryEvaluator;
-import net.sf.saxon.s9api.XQueryExecutable;
-import net.sf.saxon.s9api.XdmNode;
-import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.core.XProcException;
-import com.xmlcalabash.model.Serialization;
-import com.xmlcalabash.model.Step;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URL;
+import java.net.URI;
+
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.Serializer;
+import net.sf.saxon.s9api.XdmNode;
+
+import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.io.DataStore.DataWriter;
+import com.xmlcalabash.model.Serialization;
+import com.xmlcalabash.model.Step;
+import com.xmlcalabash.util.S9apiUtils;
 
 /**
  *
@@ -111,7 +104,7 @@ public class WritableDocument implements WritablePipe {
         writer = step;
     }
 
-    public void write(XdmNode doc) {
+    public void write(final XdmNode doc) {
         try {
             serializer = new Serializer();
 
@@ -129,8 +122,11 @@ public class WritableDocument implements WritablePipe {
             serializer.setOutputProperty(Serializer.Property.ESCAPE_URI_ATTRIBUTES, serial.getEscapeURIAttributes() ? "yes" : "no");
             serializer.setOutputProperty(Serializer.Property.INCLUDE_CONTENT_TYPE, serial.getIncludeContentType() ? "yes" : "no");
             serializer.setOutputProperty(Serializer.Property.INDENT, serial.getIndent() ? "yes" : "no");
-            if (serial.getMediaType() != null) {
-                serializer.setOutputProperty(Serializer.Property.MEDIA_TYPE, serial.getMediaType());
+            String media = serial.getMediaType();
+            if (media == null) {
+                media = "application/xml";
+            } else {
+                serializer.setOutputProperty(Serializer.Property.MEDIA_TYPE, media);
             }
             if (serial.getMethod() != null) {
                 serializer.setOutputProperty(Serializer.Property.METHOD, serial.getMethod().getLocalName());
@@ -156,35 +152,34 @@ public class WritableDocument implements WritablePipe {
 
             if (ostream != null) {
                 serializer.setOutputStream(ostream);
+                S9apiUtils.serialize(runtime, doc, serializer);
             } else if (uri == null) {
                 serializer.setOutputStream(System.out);
+                S9apiUtils.serialize(runtime, doc, serializer);
             } else {
                 try {
-                    // Attempt to handle both the case where we're writing to a URI scheme that
-                    // supports writing (like FTP?) and the case where we're writing to a file
-                    // (which apparently *isn't* a scheme we can write to, WTF?)
-                    URI ouri = new URI(uri);
-
-                    if ("file".equals(ouri.getScheme())) {
-                        runtime.finest(null, null, "Attempt to write file: " + uri);
-                        File file = new File(decodeUTF8(ouri.toURL().getFile()));
-                        serializer.setOutputFile(file);
-                    } else {
-                        runtime.finest(null, null, "Attempt to write: " + uri);
-                        URL url = new URL(uri);
-                        final URLConnection conn = url.openConnection();
-                        conn.setDoOutput(true);
-                        ostream = conn.getOutputStream();
-                        serializer.setOutputStream(ostream);
-                    }
+                	DataStore store = runtime.getDataStore();
+                	store.writeEntry(uri, uri, media, new DataWriter() {
+						public void store(OutputStream ostream)
+								throws IOException {
+	                        runtime.finest(null, null, "Attempt to write file: " + uri);
+	                        serializer.setOutputStream(ostream);
+	                        try {
+								S9apiUtils.serialize(runtime, doc, serializer);
+							} catch (SaxonApiException e) {
+								throw new IOException(e);
+							}
+						}
+                	});
                 } catch (IOException ex) {
+                	if (ex.getCause() instanceof SaxonApiException) {
+                		throw (SaxonApiException) ex.getCause();
+                	}
                     runtime.error(ex);
-                } catch (URISyntaxException use) {
-                    runtime.error(use);
                 }
+                S9apiUtils.serialize(runtime, doc, serializer);
             }
 
-            S9apiUtils.serialize(runtime, doc, serializer);
 
             if ((((ostream == null) && (uri == null)) || (System.out.equals(ostream))) && runtime.getDebug()) {
                 System.out.println("\n--<document boundary>--------------------------------------------------------------------------");
