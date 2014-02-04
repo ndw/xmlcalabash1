@@ -90,91 +90,94 @@ public class XUntilUnchanged extends XCompoundStep {
         }
 
         runtime.start(this);
-        for (ReadablePipe is_reader : inputs.get(iport)) {
-            XdmNode os_doc = null;
 
-            while (is_reader.moreDocuments()) {
-                XdmNode is_doc = is_reader.read();
-                boolean changed = true;
+        try {
+            for (ReadablePipe is_reader : inputs.get(iport)) {
+                XdmNode os_doc = null;
 
-                while (changed) {
-                    // Setup the current port before we compute variables!
-                    current.resetWriter();
-                    current.write(is_doc);
-                    finest(step.getNode(), "Copy to current");
+                while (is_reader.moreDocuments()) {
+                    XdmNode is_doc = is_reader.read();
+                    boolean changed = true;
 
-                    sequencePosition++;
-                    runtime.getXProcData().setIterationPosition(sequencePosition);
+                    while (changed) {
+                        // Setup the current port before we compute variables!
+                        current.resetWriter();
+                        current.write(is_doc);
+                        finest(step.getNode(), "Copy to current");
 
-                    for (Variable var : step.getVariables()) {
-                        RuntimeValue value = computeValue(var);
-                        inScopeOptions.put(var.getName(), value);
-                    }
+                        sequencePosition++;
+                        runtime.getXProcData().setIterationPosition(sequencePosition);
 
-                    // N.B. At this time, there are no compound steps that accept parameters or options,
-                    // so the order in which we calculate them doesn't matter. That will change if/when
-                    // there are such compound steps.
-
-                    // Calculate all the variables
-                    inScopeOptions = parent.getInScopeOptions();
-                    for (Variable var : step.getVariables()) {
-                        RuntimeValue value = computeValue(var);
-                        inScopeOptions.put(var.getName(), value);
-                    }
-
-                    for (XStep step : subpipeline) {
-                        step.run();
-                    }
-
-                    int docsCopied = 0;
-
-                    for (ReadablePipe reader : inputs.get(iPortName)) {
-                        while (reader.moreDocuments()) {
-                            os_doc = reader.read();
-                            docsCopied++;
+                        for (Variable var : step.getVariables()) {
+                            RuntimeValue value = computeValue(var);
+                            inScopeOptions.put(var.getName(), value);
                         }
-                        reader.resetReader();
+
+                        // N.B. At this time, there are no compound steps that accept parameters or options,
+                        // so the order in which we calculate them doesn't matter. That will change if/when
+                        // there are such compound steps.
+
+                        // Calculate all the variables
+                        inScopeOptions = parent.getInScopeOptions();
+                        for (Variable var : step.getVariables()) {
+                            RuntimeValue value = computeValue(var);
+                            inScopeOptions.put(var.getName(), value);
+                        }
+
+                        for (XStep step : subpipeline) {
+                            step.run();
+                        }
+
+                        int docsCopied = 0;
+
+                        for (ReadablePipe reader : inputs.get(iPortName)) {
+                            while (reader.moreDocuments()) {
+                                os_doc = reader.read();
+                                docsCopied++;
+                            }
+                            reader.resetReader();
+                        }
+
+                        if (docsCopied != 1) {
+                            throw XProcException.dynamicError(6);
+                        }
+
+                        for (XStep step : subpipeline) {
+                            step.reset();
+                        }
+
+                        XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
+                        xcomp.declareVariable(doca);
+                        xcomp.declareVariable(docb);
+
+                        XPathExecutable xexec = xcomp.compile("deep-equal($doca,$docb)");
+                        XPathSelector selector = xexec.load();
+
+                        selector.setVariable(doca, is_doc);
+                        selector.setVariable(docb, os_doc);
+
+                        Iterator<XdmItem> values = selector.iterator();
+                        XdmAtomicValue item = (XdmAtomicValue) values.next();
+                        changed = !item.getBooleanValue();
+
+                        is_doc = os_doc;
                     }
 
-                    if (docsCopied != 1) {
-                        throw XProcException.dynamicError(6);
-                    }
-
-                    for (XStep step : subpipeline) {
-                        step.reset();
-                    }
-
-                    XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
-                    xcomp.declareVariable(doca);
-                    xcomp.declareVariable(docb);
-
-                    XPathExecutable xexec = xcomp.compile("deep-equal($doca,$docb)");
-                    XPathSelector selector = xexec.load();
-
-                    selector.setVariable(doca, is_doc);
-                    selector.setVariable(docb, os_doc);
-
-                    Iterator<XdmItem> values = selector.iterator();
-                    XdmAtomicValue item = (XdmAtomicValue) values.next();
-                    changed = !item.getBooleanValue();
-
-                    is_doc = os_doc;
+                    WritablePipe pipe = outputs.get(oPortName);
+                    pipe.write(os_doc);
                 }
-
-                WritablePipe pipe = outputs.get(oPortName);
-                pipe.write(os_doc);
             }
-        }
-        runtime.finish(this);
 
-        for (String port : inputs.keySet()) {
-            if (port.startsWith("|")) {
-                String wport = port.substring(1);
-                WritablePipe pipe = outputs.get(wport);
-                pipe.close(); // Indicate that we're done
+            for (String port : inputs.keySet()) {
+                if (port.startsWith("|")) {
+                    String wport = port.substring(1);
+                    WritablePipe pipe = outputs.get(wport);
+                    pipe.close(); // Indicate that we're done
+                }
             }
+        } finally {
+            runtime.finish(this);
+            data.closeFrame();
         }
-
-        data.closeFrame();
     }
 }

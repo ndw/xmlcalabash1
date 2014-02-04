@@ -5,7 +5,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -39,6 +42,14 @@ import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.DataStore;
 import com.xmlcalabash.io.DataStore.DataInfo;
 import com.xmlcalabash.io.DataStore.DataReader;
+import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.model.RuntimeValue;
+import com.xmlcalabash.util.Base64;
+import com.xmlcalabash.util.JSONtoXML;
+import com.xmlcalabash.util.TreeWriter;
+import com.xmlcalabash.util.S9apiUtils;
+import com.xmlcalabash.util.RelevantNodes;
+import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.library.DefaultStep;
@@ -46,6 +57,13 @@ import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.util.RelevantNodes;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TreeWriter;
+import com.xmlcalabash.util.XMLtoJSON;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.Axis;
+import net.sf.saxon.s9api.XdmNodeKind;
+import net.sf.saxon.s9api.Serializer;
 
 /**
  *
@@ -70,6 +88,10 @@ public class Zip extends DefaultStep {
     private static final QName _detailed = new QName("detailed");
     private static final QName _status = new QName("status");
     private static final QName _value = new QName("value");
+    private static final QName c_encoding = new QName("c", XProcConstants.NS_XPROC_STEP, "encoding");
+    private static final QName c_body = new QName("c", XProcConstants.NS_XPROC_STEP, "body");
+    private static final QName c_json = new QName("c", XProcConstants.NS_XPROC_STEP, "json");
+    private static final QName _content_type = new QName("content-type");
     private final static int bufsize = 8192;
 
     private final static QName serializerAttrs[] = {
@@ -357,9 +379,7 @@ public class Zip extends DefaultStep {
                     final ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     if (srcManifest.containsKey(uri.toString())) {
                         XdmNode doc = srcManifest.get(href);
-                        Serializer serializer = makeSerializer(file.getOptions());
-                        serializer.setOutputStream(baos);
-                        S9apiUtils.serialize(runtime, doc, serializer);
+                        store(file, doc, baos);
                     } else {
                         DataStore store = runtime.getDataStore();
                         store.readEntry(href, href, "*/*", new DataReader() {
@@ -385,9 +405,7 @@ public class Zip extends DefaultStep {
 
                 if (srcManifest.containsKey(href)) {
                     XdmNode doc = srcManifest.get(href);
-                    Serializer serializer = makeSerializer(file.getOptions());
-                    serializer.setOutputStream(outZip);
-                    S9apiUtils.serialize(runtime, doc, serializer);
+                    store(file, doc, outZip);
                 } else {
                     DataStore store = runtime.getDataStore();
                     store.readEntry(href, href, "*/*", new DataReader() {
@@ -532,6 +550,54 @@ public class Zip extends DefaultStep {
                 return -1;
             }
         }
+    }
+
+    protected void store(FileToZip file, XdmNode doc, OutputStream out) throws SaxonApiException, IOException {
+        XdmNode root = S9apiUtils.getDocumentElement(doc);
+
+        if (((XProcConstants.NS_XPROC_STEP.equals(root.getNodeName().getNamespaceURI())
+                && "base64".equals(root.getAttributeValue(_encoding)))
+                || ("".equals(root.getNodeName().getNamespaceURI())
+                && "base64".equals(root.getAttributeValue(c_encoding))))) {
+            storeBinary(file, doc, out);
+        } else if (XProcConstants.c_result.equals(root.getNodeName())
+                && root.getAttributeValue(_content_type) != null
+                && root.getAttributeValue(_content_type).startsWith("text/")) {
+            storeText(file, doc, out);
+        } else if (runtime.transparentJSON()
+                && (((c_body.equals(root.getNodeName())
+                && ("application/json".equals(root.getAttributeValue(_content_type))
+                || "text/json".equals(root.getAttributeValue(_content_type))))
+                || c_json.equals(root.getNodeName()))
+                || JSONtoXML.JSONX_NS.equals(root.getNodeName().getNamespaceURI())
+                || JSONtoXML.JXML_NS.equals(root.getNodeName().getNamespaceURI())
+                || JSONtoXML.MLJS_NS.equals(root.getNodeName().getNamespaceURI()))) {
+            storeJSON(file, doc, out);
+        } else {
+            storeXML(file, doc, out);
+        }
+    }
+
+    public void storeBinary(FileToZip file, XdmNode doc, OutputStream out) throws IOException {
+        byte[] decoded = Base64.decode(doc.getStringValue());
+        out.write(decoded);
+    }
+
+    public void storeText(FileToZip file, XdmNode doc, OutputStream out) throws IOException {
+        out.write(doc.getStringValue().getBytes());
+    }
+
+    public void storeJSON(FileToZip file, XdmNode doc, OutputStream out) {
+        PrintWriter writer = new PrintWriter(out);
+        String json = XMLtoJSON.convert(doc);
+        writer.print(json);
+        writer.close();
+    }
+
+    public void storeXML(FileToZip file, XdmNode doc, OutputStream out) throws SaxonApiException {
+        Serializer serializer = makeSerializer(file.getOptions());
+        serializer.setOutputStream(out);
+        S9apiUtils.serialize(runtime, doc, serializer);
     }
 
     public Serializer makeSerializer(Hashtable<QName,String> options) {

@@ -183,8 +183,8 @@ public class XProcRuntime {
         if (config.xprocConfigurer != null) {
             try {
                 String className = config.xprocConfigurer;
-                Constructor constructor = Class.forName(className).getConstructor(XProcRuntime.class);
-                configurer = (XProcConfigurer) constructor.newInstance(this);
+                Constructor<? extends XProcConfigurer> constructor = Class.forName(className).asSubclass(XProcConfigurer.class).getConstructor(XProcRuntime.class);
+                configurer = constructor.newInstance(this);
             } catch (Exception e) {
                 throw new XProcException(e);
             }
@@ -218,14 +218,14 @@ public class XProcRuntime {
 
         try {
             if (config.uriResolver != null) {
-                uriResolver.setUnderlyingURIResolver((URIResolver) Class.forName(config.uriResolver).newInstance());
+                uriResolver.setUnderlyingURIResolver(Class.forName(config.uriResolver).asSubclass(URIResolver.class).newInstance());
             }
             if (config.entityResolver != null) {
-                uriResolver.setUnderlyingEntityResolver((EntityResolver) Class.forName(config.entityResolver).newInstance());
+                uriResolver.setUnderlyingEntityResolver(Class.forName(config.entityResolver).asSubclass(EntityResolver.class).newInstance());
             }
 
             if (config.errorListener != null) {
-                msgListener = (XProcMessageListener) Class.forName(config.errorListener).newInstance();
+                msgListener = Class.forName(config.errorListener).asSubclass(XProcMessageListener.class).newInstance();
             } else {
                 msgListener = new DefaultXProcMessageListener();
             }

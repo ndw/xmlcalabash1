@@ -7,12 +7,26 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.xmlcalabash</groupId>
-  <artifactId>xmlcalabash</artifactId>
-  <version>@version@</version>
+  <artifactId>xmlcalabash-saxon95</artifactId>
+  <version>1.0.14-SNAPSHOT</version>
   <name>XML Calabash</name>
   <description>XML Calabash - an implementation of XProc: An XML Pipeline Language</description>
   <url>http://xmlcalabash.com/</url>
   <packaging>jar</packaging>
+
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>7</version>
+  </parent>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <java6.home>${env.JAVA6_HOME}</java6.home>
+    <bootclasspath.java6>${java6.home}/lib/rt.jar;${java6.home}/lib/jce.jar</bootclasspath.java6>
+    <bootclasspath.compile>${bootclasspath.java6}</bootclasspath.compile>
+    <bootclasspath.testCompile>${bootclasspath.java6}</bootclasspath.testCompile>
+  </properties>
 
   <developers>
     <developer>
@@ -32,9 +46,15 @@
     </license>
   </licenses>
 
+  <issueManagement>
+    <system>GitHub Issues</system>
+    <url>https://github.com/ndw/xmlcalabash1/issues</url>
+  </issueManagement>
+
   <scm>
-    <connection>scm:git:git@github.com:ndw/xmlcalabash1.git</connection>
     <url>https://github.com/ndw/xmlcalabash1.git</url>
+    <connection>scm:git:git://github.com/ndw/xmlcalabash1.git</connection>
+    <developerConnection>scm:git:git@github.com:ndw/xmlcalabash1.git</developerConnection>
   </scm>
 
   <dependencies>
@@ -56,7 +76,10 @@
     <dependency>
       <groupId>net.sf.saxon</groupId>
       <artifactId>Saxon-HE</artifactId>
-      <version>@saxon-version@</version>
+      <version>9.5.1-1</version>
+      <!-- Marking this dependency as optional allows users to explicitly include
+           the correct Saxon version in the calling library. -->
+      <optional>true</optional>
     </dependency>
 
     <!-- No need to specify commons-logging or commons-codec - they're transitive dependencies of httpclient -->
@@ -111,18 +134,225 @@
       <optional>true</optional><!-- used in the cxu:compare extension -->
     </dependency>
 
+    <dependency>
+      <groupId>org.apache.ant</groupId>
+      <artifactId>ant</artifactId>
+      <version>1.9.2</version>
+    </dependency>
+
+    <dependency>
+      <groupId>net.java.dev.msv</groupId>
+      <artifactId>msv-core</artifactId>
+      <version>2013.6.1</version>
+    </dependency>
+
+    <!-- Dependencies for optional features are marked as optional -->
+    <dependency>
+      <groupId>com.drewnoakes</groupId>
+      <artifactId>metadata-extractor</artifactId>
+      <version>2.6.2</version>
+      <scope>compile</scope>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.10</version>
+      <scope>compile</scope>
+      <optional>true</optional>
+    </dependency>
+
+<!--    <dependency>-->
+<!--      <groupId>com.marklogic</groupId>-->
+<!--      <artifactId>marklogic-xcc</artifactId>-->
+<!--      <version>6.0.3</version>-->
+<!--      <scope>compile</scope>-->
+<!--      <optional>true</optional>-->
+<!--    </dependency>-->
+
+    <dependency>
+      <groupId>org.apache.xmlgraphics</groupId>
+      <artifactId>fop</artifactId>
+      <version>1.1</version>
+      <scope>compile</scope>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <artifactId>avalon-framework-api</artifactId>
+      <groupId>org.apache.avalon.framework</groupId>
+      <version>4.3.1</version>
+      <scope>compile</scope>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <artifactId>avalon-framework-impl</artifactId>
+      <groupId>org.apache.avalon.framework</groupId>
+      <type>jar</type>
+      <version>4.3.1</version>
+      <scope>compile</scope>
+      <optional>true</optional>
+    </dependency>
   </dependencies>
 
-  <distributionManagement>
-    <snapshotRepository>
-      <id>sonatype-nexus-snapshots</id>
-      <name>Sonatype Nexus Snapshots</name>
-      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-    </snapshotRepository>
-    <repository>
-      <id>sonatype-nexus-staging</id>
-      <name>Nexus Release Repository</name>
-      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-    </repository>
-  </distributionManagement>
+  <profiles>
+    <profile>
+      <id>sonatype-oss-release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>default-compile</id>
+                <configuration>
+                  <compilerArgs>
+                    <arg>-Xlint</arg>
+                    <arg>-Xlint:-serial</arg>
+                    <arg>-bootclasspath</arg>
+                    <arg>${bootclasspath.compile}</arg>
+                  </compilerArgs>
+                </configuration>
+              </execution>
+              <execution>
+                <id>default-testCompile</id>
+                <configuration>
+                  <compilerArgs>
+                    <arg>-Xlint</arg>
+                    <arg>-Xlint:-serial</arg>
+                    <arg>-bootclasspath</arg>
+                    <arg>${bootclasspath.testCompile}</arg>
+                  </compilerArgs>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+  <build>
+    <defaultGoal>install</defaultGoal>
+
+    <sourceDirectory>src</sourceDirectory>
+    <resources>
+      <resource>
+        <directory>resources</directory>
+      </resource>
+    </resources>
+
+    <testSourceDirectory>test</testSourceDirectory>
+    <testResources>
+      <testResource>
+        <directory>test</directory>
+      </testResource>
+    </testResources>
+
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.4</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.1</version>
+
+        <configuration>
+          <showWarnings>true</showWarnings>
+          <showDeprecation>true</showDeprecation>
+          <source>1.6</source>
+          <target>1.6</target>
+          <compilerArgs>
+            <arg>-Xlint</arg>
+            <arg>-Xlint:-serial</arg>
+          </compilerArgs>
+        </configuration>
+
+        <executions>
+          <execution>
+            <id>default-compile</id>
+            <configuration>
+              <excludes>
+                <!-- Requires Delta XML Core (not available through Maven) -->
+                <exclude>com/xmlcalabash/extensions/DeltaXML.java</exclude>
+
+                <!-- Requires RenderX XEP (non-public) -->
+                <exclude>com/xmlcalabash/util/FoXEP.java</exclude>
+
+                <!-- Requires Antenna House Formatter (non-public) -->
+                <exclude>com/xmlcalabash/util/FoAH.java</exclude>
+                <exclude>com/xmlcalabash/util/CssAH.java</exclude>
+
+                <!-- Requires Prince XML (non-public) -->
+                <exclude>com/xmlcalabash/util/CssPrince.java</exclude>
+
+                <!-- Requires MarkLogic XCC (non-public) -->
+                <exclude>com/xmlcalabash/extensions/marklogic/XCCAdhocQuery.java</exclude>
+                <exclude>com/xmlcalabash/extensions/marklogic/XCCInsertDocument.java</exclude>
+                <exclude>com/xmlcalabash/extensions/marklogic/XCCInvokeModule.java</exclude>
+              </excludes>
+            </configuration>
+          </execution>
+
+          <execution>
+            <id>default-testCompile</id>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.16</version>
+      </plugin>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>findbugs-maven-plugin</artifactId>
+        <version>2.5.2</version>
+        <configuration>
+          <findbugsXmlOutput>true</findbugsXmlOutput>
+          <xmlOutput>true</xmlOutput>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <!-- override the version inherited from the parent -->
+        <version>2.2.1</version>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <!-- override the version inherited from the parent -->
+        <version>2.9.1</version>
+        <configuration>
+          <quiet>true</quiet>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <!-- override the version inherited from the parent -->
+        <version>1.4</version>
+      </plugin>
+    </plugins>
+  </build>
 </project>

@@ -12,6 +12,7 @@ import net.sf.saxon.s9api.*;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.trans.XPathException;
 
+import java.net.URI;
 import java.util.Hashtable;
 import java.util.Vector;
 import java.util.Iterator;
@@ -61,6 +62,10 @@ public class DefaultStep implements XProcStep {
 
     public XAtomicStep getStep() {
         return step;
+    }
+
+    public static boolean isAvailable() {
+        return true;
     }
 
     public void setInput(String port, ReadablePipe pipe) {
@@ -262,7 +267,11 @@ public class DefaultStep implements XProcStep {
 
         try {
             XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
-            xcomp.setBaseURI(step.getNode().getBaseURI());
+            URI baseURI = step.getNode().getBaseURI();
+            if (!"".equals(baseURI.toASCIIString())) {
+                xcomp.setBaseURI(baseURI);
+            }
+
             // Extension functions are not available here...
 
             for (QName varname : globals.keySet()) {

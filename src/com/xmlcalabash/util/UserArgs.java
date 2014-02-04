@@ -88,6 +88,8 @@ public class UserArgs {
     private boolean useXslt10 = false;
     private boolean transparentJSON = false;
     private String jsonFlavor = null;
+    private Integer piperackPort = null;
+    private Integer piperackExpires = null;
 
     public void setDebug(boolean debug) {
         this.debug = debug;
@@ -119,6 +121,14 @@ public class UserArgs {
 
     public void setShowVersion(boolean showVersion) {
         this.showVersion = showVersion;
+    }
+
+    public void setPiperackPort(int port) {
+        piperackPort = port;
+    }
+
+    public void setPiperackExpires(int seconds) {
+        piperackExpires = seconds;
     }
 
     public void setSaxonProcessor(String saxonProcessor) {
@@ -541,6 +551,14 @@ public class UserArgs {
             config.jsonFlavor = jsonFlavor;
         }
         config.useXslt10 |= useXslt10;
+
+        if (piperackPort != null) {
+            config.piperackPort = piperackPort;
+        }
+
+        if (piperackExpires != null) {
+            config.piperackDefaultExpires = piperackExpires;
+        }
 
         return config;
     }

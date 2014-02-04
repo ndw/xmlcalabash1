@@ -2,6 +2,7 @@ package com.xmlcalabash.util;
 
 import net.sf.saxon.lib.ModuleURIResolver;
 import net.sf.saxon.lib.StandardModuleURIResolver;
+import net.sf.saxon.lib.StandardUnparsedTextResolver;
 import net.sf.saxon.lib.UnparsedTextURIResolver;
 import net.sf.saxon.trans.XPathException;
 import org.xml.sax.InputSource;
@@ -262,19 +263,12 @@ public class XProcURIResolver implements URIResolver, EntityResolver, ModuleURIR
     }
 
     @Override
-    public Reader resolve(URI uri, String s, Configuration configuration) throws XPathException {
-        if (unparsedTextResolver != null) {
-            return unparsedTextResolver.resolve(uri, s, configuration);
+    public Reader resolve(URI uri, String encoding, Configuration configuration) throws XPathException {
+        if (unparsedTextResolver == null) {
+            // If there's no resolver, let Saxon do it...
+            unparsedTextResolver = new StandardUnparsedTextResolver();
         }
 
-        // Ack. Apparently I have to do this if there isn't a resolver...
-        try {
-            URL url = uri.toURL();
-            URLConnection conn = url.openConnection();
-            InputStream stream = conn.getInputStream();
-            return new InputStreamReader(stream);
-        } catch (Exception e) {
-            throw new XPathException(e);
-        }
+        return unparsedTextResolver.resolve(uri, encoding, configuration);
     }
 }

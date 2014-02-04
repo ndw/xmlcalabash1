@@ -140,7 +140,7 @@ public class SplitSequence extends DefaultStep {
                 // Then evaluate the expression by calling iterate() on the
                 // net.sf.saxon.sxpath.XPathExpression object.
 
-                SequenceIterator results = xexpr.iterate(xdc);
+                SequenceIterator<?> results = xexpr.iterate(xdc);
                 // FIXME: What if the expression returns a sequence?
                 item = results.next();
             } catch (XPathException xe) {

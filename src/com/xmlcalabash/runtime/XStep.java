@@ -111,17 +111,27 @@ public abstract class XStep implements XProcRunnable
         Set<String> ports = getParameterPorts();
         int pportCount = 0;
         String pport = null;
+        String ppport = null;
         for (String port : ports) {
             pport = port;
             pportCount++;
+
+            Input pin = getStep().getInput(port);
+            if (pin.getPrimary()) {
+                ppport = port;
+            }
         }
 
         if (pportCount == 0) {
             throw new XProcException(step.getNode(), "Attempt to set parameter but there's no parameter port.");
         }
 
-        if (pportCount > 1) {
-            throw new XProcException(step.getNode(), "Attempt to set parameter w/o specifying a port (and there's more than one)");
+        if (ppport != null) {
+            pport = ppport;
+        } else {
+            if (pportCount > 1) {
+                throw new XProcException(step.getNode(), "Attempt to set parameter w/o specifying a port (and there's more than one)");
+            }
         }
 
         setParameter(pport, name, value);
@@ -132,6 +142,11 @@ public abstract class XStep implements XProcRunnable
         if (parameters.containsKey(port)) {
             pparams = parameters.get(port);
         } else {
+            XInput xinput = getInput(port); // Make sure there is one
+            Input input = getDeclareStep().getInput(port);
+            if (!input.getParameterInput()) {
+                throw new XProcException(step.getNode(), "Attempt to write parameters to non-parameter input port: " + port);
+            }
             pparams = new Hashtable<QName,RuntimeValue> ();
             parameters.put(port, pparams);
         }
@@ -161,9 +176,11 @@ public abstract class XStep implements XProcRunnable
     }
 
     public void setOption(QName name, RuntimeValue value) {
+        /* this causes an attempt to run the same pipeline twice to fail because the passedInOptions get set twice...
         if (options.containsKey(name)) {
             throw new XProcException(step.getNode(), "Duplicate option: " + name);
         }
+        */
         options.put(name, value);
     }
 

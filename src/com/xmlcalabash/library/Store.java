@@ -124,6 +124,11 @@ public class Store extends DefaultStep {
                  || ("".equals(root.getNodeName().getNamespaceURI())
                      && "base64".equals(root.getAttributeValue(c_encoding))))) {
             contentId = storeBinary(doc, href, base, contentType);
+        } else if (("true".equals(decode) || "1".equals(decode))
+            && XProcConstants.c_result.equals(root.getNodeName())
+                && root.getAttributeValue(_content_type) != null
+                    && root.getAttributeValue(_content_type).startsWith("text/")) {
+            contentId = storeText(doc, href, base, contentType);
         } else if (runtime.transparentJSON()
                    && (((c_body.equals(root.getNodeName())
                         && ("application/json".equals(contentType)
@@ -238,6 +243,51 @@ public class Store extends DefaultStep {
                         }
 
                         outstr.write(decoded);
+                    }
+                });
+            }
+        } catch (FileNotFoundException e) {
+            throw XProcException.stepError(50);
+        } catch (IOException ioe) {
+            throw new XProcException(ioe);
+        }
+    }
+
+    private URI storeText(XdmNode doc, String href, String base,
+            String media) {
+        if (media == null) {
+            media = "text/plain";
+        }
+
+        try {
+            final String text = doc.getStringValue();
+
+            if (href == null) {
+                OutputStream outstr = null;
+                ByteArrayOutputStream baos = null;
+                baos = new ByteArrayOutputStream();
+                outstr = baos;
+
+                if (method == CompressionMethod.GZIP) {
+                    GZIPOutputStream gzout = new GZIPOutputStream(outstr);
+                    outstr = gzout;
+                }
+
+                outstr.write(text.getBytes());
+                outstr.close();
+
+                returnData(baos);
+                return null;
+            } else {
+                DataStore store = runtime.getDataStore();
+                return store.writeEntry(href, base, media, new DataWriter() {
+                    public void store(OutputStream outstr) throws IOException {
+                        if (method == CompressionMethod.GZIP) {
+                            GZIPOutputStream gzout = new GZIPOutputStream(outstr);
+                            outstr = gzout;
+                        }
+
+                        outstr.write(text.getBytes());
                     }
                 });
             }

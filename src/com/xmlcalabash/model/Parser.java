@@ -58,9 +58,9 @@ public class Parser {
     private static QName px_name = new QName(XProcConstants.NS_CALABASH_EX,"name");
     private static QName _name = new QName("name");
     private static QName _href = new QName("href");
-    private static QName _namespace = new QName("namespace");
     private static QName _type = new QName("type");
     private static QName _version = new QName("version");
+    private static QName _namespace = new QName("namespace");
     private static QName err_XS0063 = new QName(XProcConstants.NS_XPROC_ERROR, "XS0063");
     private static QName p_use_when = new QName(XProcConstants.NS_XPROC, "use-when");
     private static QName _use_when = new QName("use-when");
@@ -459,7 +459,7 @@ public class Parser {
         int inputCount = 0;
         Input maybePrimaryInput = null;
         for (Input input : step.inputs()) {
-            if (!input.getParameterInput()) {
+            if (!input.getParameterInput() && !input.getPort().startsWith("|")) {
                 inputCount++;
                 maybePrimaryInput = input;
             }
@@ -472,7 +472,7 @@ public class Parser {
         inputCount = 0;
         maybePrimaryInput = null;
         for (Input input : step.inputs()) {
-            if (input.getParameterInput()) {
+            if (input.getParameterInput() && !input.getPort().startsWith("|")) {
                 inputCount++;
                 maybePrimaryInput = input;
             }
@@ -1895,8 +1895,8 @@ public class Parser {
 
             // We think this will work because we know from the test above that we're not in Saxon HE.
             // It's a bit fragile, but I can't think of a better way.
-            Class pc = Class.forName("com.saxonica.config.ProfessionalConfiguration");
-            Class fc = Class.forName("net.sf.saxon.functions.FunctionLibrary");
+            Class<?> pc = Class.forName("com.saxonica.config.ProfessionalConfiguration");
+            Class<?> fc = Class.forName("net.sf.saxon.functions.FunctionLibrary");
             Method setBinder = pc.getMethod("setExtensionBinder", String.class, fc);
             setBinder.invoke(processor.getUnderlyingConfiguration(), "xmlcalabash" + importCount, fl);
             importCount++;

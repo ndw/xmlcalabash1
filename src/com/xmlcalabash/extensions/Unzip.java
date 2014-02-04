@@ -172,7 +172,11 @@ public class Unzip extends DefaultStep {
             } else {
                 boolean storeText = (contentType != null && contentType.startsWith("text/") && charset != null);
 
-                tree.startDocument(step.getNode().getBaseURI());
+                // There's no point giving the file the URI of the pipeline document.
+                // This formulation is parallel to the jar scheme.
+                URI zipURI = URI.create("zip:" + zipFn + "!" + entry.getName());
+
+                tree.startDocument(zipURI);
                 tree.addStartElement(XProcConstants.c_data);
                 tree.addAttribute(_name,name);
                 tree.addAttribute(_content_type, contentType);
