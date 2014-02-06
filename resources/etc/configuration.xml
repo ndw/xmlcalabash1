@@ -235,6 +235,9 @@
 <implementation type="cx:uncompress cx:gunzip pxp:uncompress pxp:gunzip"
 		class-name="com.xmlcalabash.extensions.Uncompress"/>
 
+<implementation type="pxp:set-base-uri"
+		class-name="com.xmlcalabash.extensions.SetBaseURI"/>
+
 <!-- Fileutils -->
 
 <implementation type="cxf:info pxf:info"
