@@ -447,4 +447,10 @@
   <p:option name="compression-method" cx:type="xsd:string"/>
 </p:declare-step>
 
+<p:declare-step type="pxp:set-base-uri">
+   <p:input port="source"/>
+   <p:output port="result"/>
+  <p:option name="uri" cx:type="xsd:string" required="true"/>
+</p:declare-step>
+
 </p:library>
