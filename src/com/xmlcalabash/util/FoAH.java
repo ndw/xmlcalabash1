@@ -1,6 +1,5 @@
 package com.xmlcalabash.util;
 
-import com.sun.tools.corba.se.idl.StringGen;
 import com.xmlcalabash.config.FoProcessor;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
@@ -13,9 +12,6 @@ import jp.co.antenna.XfoJavaCtl.XfoObj;
 import net.sf.saxon.s9api.XdmNode;
 
 import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Properties;
