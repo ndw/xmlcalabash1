@@ -251,7 +251,8 @@ public class UserArgs {
         if ("-".equals(uri)) {
             outputs.put(port, new Output(uri));
         } else {
-            outputs.put(port, new Output("file://" + fixUpURI(uri)));
+            URI cwd = URIUtils.cwdAsURI();
+            outputs.put(port, new Output(cwd.resolve(uri).toASCIIString()));
         }
     }
 
@@ -306,11 +307,11 @@ public class UserArgs {
     }
 
     public void addInput(String port, String uri, Type type, String contentType) {
-        if ("-".equals(uri) || uri.startsWith("http:") || uri.startsWith("https:") || uri.startsWith("file:")
-                || "p:empty".equals(uri)) {
+        if ("-".equals(uri)  || "p:empty".equals(uri)) {
             curStep.addInput(port, uri, type, contentType);
         } else {
-            curStep.addInput(port, "file://" + fixUpURI(uri), type, contentType);
+            URI cwd = URIUtils.cwdAsURI();
+            curStep.addInput(port, cwd.resolve(uri).toASCIIString(), type, contentType);
         }
     }
 
