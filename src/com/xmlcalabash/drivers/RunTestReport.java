@@ -453,7 +453,7 @@ private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
             // HACK HACK HACK!
             RuntimeValue v;
             if (_path.equals(name)) {
-                v = new RuntimeValue("file:///home/ndw/tests.xproc.org/tests/required/" + options.get(name));
+                v = new RuntimeValue("file:///home/www/tests.xproc.org/tests/required/" + options.get(name));
             } else {
                 v = new RuntimeValue(options.get(name));
             }
