@@ -47,7 +47,6 @@ public class RuntimeValue {
     private Vector<XdmItem> generalValue = null;
     private String value = null;
     private XdmNode node = null;
-    private ComputableValue val = null;
     private boolean initialized = false;
     private Hashtable<String,String> nsBindings = null;
 
@@ -129,7 +128,8 @@ public class RuntimeValue {
 
     public XdmValue getValue() {
         if (generalValue == null) {
-            throw new XProcException(node, "Unexpexted null value in getValue()");
+            // Turn the string value into an XdmValue
+            return new XdmAtomicValue(value);
         }
         if (generalValue.size() == 1) {
             return generalValue.get(0);
