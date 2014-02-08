@@ -24,7 +24,7 @@
   <property name="build.dir" value="out/production/Calabash"/>
 
   <!-- where my Saxon EE license lives -->
-  <property name="license.dir" value="/Users/ndw/java"/>
+  <property name="license.dir" value="/home/ndw/java"/>
 
   <property name="tests.root" value="http://tests.xproc.org"/>
   <property name="test.report" value="test/report.xml"/>
@@ -450,7 +450,7 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
         <path refid="full.classpath"/>
       </classpath>
       <jvmarg value="-Xmx1024m"/>
-      <jvmarg value="-Djava.util.logging.config.file=/Users/ndw/java/logging.properties"/>
+      <jvmarg value="-Djava.util.logging.config.file=/home/ndw/java/logging.properties"/>
       <arg value="-D"/>
       <arg value="-a"/>
       <arg value="http://tests.xproc.org/tests/serialization/version-001.xml"/>
