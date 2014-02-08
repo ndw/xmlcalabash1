@@ -158,34 +158,18 @@ public class TreeWriter {
     }
 
     public void addStartElement(XdmNode node) {
-        NodeInfo inode = node.getUnderlyingNode();
+        addStartElement(node, node.getNodeName(), node.getBaseURI());
+    }
 
-        NamespaceBinding inscopeNS[] = null;
-        if (seenRoot) {
-            inscopeNS = inode.getDeclaredNamespaces(null);
-        } else {
-            int count = 0;
-            Iterator<NamespaceBinding> nsiter = NamespaceIterator.iterateNamespaces(inode);
-            while (nsiter.hasNext()) {
-                count++;
-                nsiter.next();
-            }
-            inscopeNS = new NamespaceBinding[count];
-            nsiter = NamespaceIterator.iterateNamespaces(inode);
-            count = 0;
-            while (nsiter.hasNext()) {
-                inscopeNS[count] = nsiter.next();
-                count++;
-            }
-            seenRoot = true;
-        }
-
-        URI nodeBaseURI = node.getBaseURI();
-        receiver.setSystemId(nodeBaseURI.toASCIIString());
-        addStartElement(new NameOfNode(inode), inode.getSchemaType(), inscopeNS);
+    public void addStartElement(XdmNode node, URI overrideBaseURI) {
+        addStartElement(node, node.getNodeName(), overrideBaseURI);
     }
 
     public void addStartElement(XdmNode node, QName newName) {
+        addStartElement(node, newName, node.getBaseURI());
+    }
+
+    public void addStartElement(XdmNode node, QName newName, URI overrideBaseURI) {
         NodeInfo inode = node.getUnderlyingNode();
 
         NamespaceBinding inscopeNS[] = null;
@@ -231,8 +215,7 @@ public class TreeWriter {
             }
         }
         
-        URI nodeBaseURI = node.getBaseURI();
-        receiver.setSystemId(nodeBaseURI.toASCIIString());
+        receiver.setSystemId(overrideBaseURI.toASCIIString());
         FingerprintedQName newNameOfNode = new FingerprintedQName(newName.getPrefix(),newName.getNamespaceURI(),newName.getLocalName());
         addStartElement(newNameOfNode, inode.getSchemaType(), inscopeNS);
     }

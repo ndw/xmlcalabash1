@@ -26,6 +26,8 @@ public class SetBaseURI extends DefaultStep {
     private XProcRuntime runtime = null;
     private ReadablePipe source = null;
     private WritablePipe result = null;
+    private TreeWriter tree = null;
+    private URI baseURI = null;
 
     /**
      * Creates a new instance of SetBaseURI
@@ -56,18 +58,37 @@ public class SetBaseURI extends DefaultStep {
             throw new XProcException("URI is required");
         }
 
-        URI uri = getOption(_uri).getBaseURI().resolve(uris);
+        baseURI = getOption(_uri).getBaseURI().resolve(uris);
 
         XdmNode doc = source.read();
-        TreeWriter tree = new TreeWriter(runtime);
-        tree.startDocument(uri);
+        tree = new TreeWriter(runtime);
+        tree.startDocument(baseURI);
 
         for (XdmNode node : new RelevantNodes(doc, Axis.CHILD, true)) {
-            tree.addSubtree(node);
+            write(node);
         }
 
         tree.endDocument();
 
         result.write(tree.getResult());
+    }
+
+    private void write(XdmNode node) {
+        switch (node.getNodeKind()) {
+            case ELEMENT:
+                tree.addStartElement(node, baseURI);
+                break;
+            case TEXT:
+                tree.addSubtree(node);
+                break;
+            case COMMENT:
+                tree.addSubtree(node);
+                break;
+            case PROCESSING_INSTRUCTION:
+                tree.addSubtree(node);
+                break;
+            default:
+                throw new XProcException("Unexpected node kind!?");
+        }
     }
 }
