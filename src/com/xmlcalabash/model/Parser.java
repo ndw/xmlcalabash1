@@ -86,7 +86,11 @@ public class Parser {
     }
 
     public DeclareStep loadPipeline(String uri) throws SaxonApiException {
-        XdmNode doc = runtime.parse(uri, URIUtils.cwdAsURI().toASCIIString());
+        return loadPipeline(uri, URIUtils.cwdAsURI().toASCIIString());
+    }
+
+    public DeclareStep loadPipeline(String uri, String base) throws SaxonApiException {
+        XdmNode doc = runtime.parse(uri, base);
         return loadPipeline(doc);
     }
 

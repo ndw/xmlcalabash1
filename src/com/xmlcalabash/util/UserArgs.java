@@ -64,38 +64,38 @@ import static java.util.Collections.unmodifiableSet;
 import static net.sf.saxon.s9api.QName.fromClarkName;
 
 public class UserArgs {
-    private boolean needsCheck = false;
-    private Boolean debug = null;
-    private Output profile = null;
-    private boolean showVersion = false;
-    private String saxonProcessor = null;
-    private Input saxonConfig = null;
-    private boolean schemaAware = false;
-    private Boolean safeMode = null;
-    private Input config = null;
-    private String logStyle = null;
-    private String entityResolverClass = null;
-    private String uriResolverClass = null;
-    private Input pipeline = null;
-    private List<Input> libraries = new ArrayList<Input>();
-    private Map<String, Output> outputs = new HashMap<String, Output>();
-    private Map<String, String> bindings = new HashMap<String, String>();
-    private List<StepArgs> steps = new ArrayList<StepArgs>();
-    private StepArgs curStep = new StepArgs();
-    private StepArgs lastStep = null;
-    private boolean extensionValues = false;
-    private boolean allowXPointerOnText = false;
-    private boolean useXslt10 = false;
-    private boolean transparentJSON = false;
-    private String jsonFlavor = null;
-    private Integer piperackPort = null;
-    private Integer piperackExpires = null;
+    protected boolean needsCheck = false;
+    protected Boolean debug = null;
+    protected Output profile = null;
+    protected boolean showVersion = false;
+    protected String saxonProcessor = null;
+    protected Input saxonConfig = null;
+    protected boolean schemaAware = false;
+    protected Boolean safeMode = null;
+    protected Input config = null;
+    protected String logStyle = null;
+    protected String entityResolverClass = null;
+    protected String uriResolverClass = null;
+    protected Input pipeline = null;
+    protected List<Input> libraries = new ArrayList<Input>();
+    protected Map<String, Output> outputs = new HashMap<String, Output>();
+    protected Map<String, String> bindings = new HashMap<String, String>();
+    protected List<StepArgs> steps = new ArrayList<StepArgs>();
+    protected StepArgs curStep = new StepArgs();
+    protected StepArgs lastStep = null;
+    protected boolean extensionValues = false;
+    protected boolean allowXPointerOnText = false;
+    protected boolean useXslt10 = false;
+    protected boolean transparentJSON = false;
+    protected String jsonFlavor = null;
+    protected Integer piperackPort = null;
+    protected Integer piperackExpires = null;
 
     public void setDebug(boolean debug) {
         this.debug = debug;
     }
 
-    private void setProfile(Output profile) {
+    protected void setProfile(Output profile) {
         needsCheck = true;
         if ((this.profile != null) && (profile != null)) {
             throw new XProcException("Multiple profile are not supported.");
@@ -139,7 +139,7 @@ public class UserArgs {
         }
     }
 
-    private void setSaxonConfig(Input saxonConfig) {
+    protected void setSaxonConfig(Input saxonConfig) {
         needsCheck = true;
         if ((this.saxonConfig != null) && (saxonConfig != null)) {
             throw new XProcException("Multiple saxonConfig are not supported.");
@@ -168,7 +168,7 @@ public class UserArgs {
         this.safeMode = safeMode;
     }
 
-    private void setConfig(Input config) {
+    protected void setConfig(Input config) {
         if ((this.config != null) && (config != null)) {
             throw new XProcException("Multiple config are not supported.");
         }
@@ -208,7 +208,7 @@ public class UserArgs {
         return pipeline;
     }
 
-    private void setPipeline(Input pipeline) {
+    protected void setPipeline(Input pipeline) {
         needsCheck = true;
         if ((this.pipeline != null) && (pipeline != null)) {
             throw new XProcException("Multiple pipelines are not supported.");
