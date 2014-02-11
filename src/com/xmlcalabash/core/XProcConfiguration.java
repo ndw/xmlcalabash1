@@ -154,10 +154,17 @@ public class XProcConfiguration {
         // If we got a schema aware processor, make sure it's reflected in our config
         // FIXME: are there other things that should be reflected this way?
         this.schemaAware = cfgProcessor.isSchemaAware();
-        this.saxonProcessor = Configuration.softwareEdition.toLowerCase();
+        saxonProcessor = Configuration.softwareEdition.toLowerCase();
 
-        if (!(proctype == null || saxonProcessor.equals(proctype)) || schemaAware != this.schemaAware ||
-            (saxoncfg == null && saxonConfig != null)) {
+        if (saxoncfg != null) {
+            // If there was a Saxon configuration, then it wins
+            schemaAware = this.schemaAware;
+            proctype = saxonProcessor;
+        }
+
+        if (!(proctype == null || saxonProcessor.equals(proctype))
+                || schemaAware != this.schemaAware
+                || (saxoncfg == null && saxonConfig != null)) {
             // Drat. We have to restart to get the right configuration.
             nsBindings.clear();
             inputs.clear();
@@ -173,7 +180,7 @@ public class XProcConfiguration {
             // If we got a schema aware processor, make sure it's reflected in our config
             // FIXME: are there other things that should be reflected this way?
             this.schemaAware = cfgProcessor.isSchemaAware();
-            this.saxonProcessor = Configuration.softwareEdition.toLowerCase();
+            saxonProcessor = Configuration.softwareEdition.toLowerCase();
         }
     }
 
