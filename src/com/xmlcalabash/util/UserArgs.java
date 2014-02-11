@@ -769,7 +769,6 @@ public class UserArgs {
             }
 
             tree.addEndElement();
-            tree.endDocument();
         }
 
         tree.addEndElement();
