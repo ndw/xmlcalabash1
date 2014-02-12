@@ -17,6 +17,9 @@
 
   <property name="version" value="${version.major}.${version.minor}.${version.release}"/>
 
+  <!-- pick your favorite java version -->
+  <property name="j.ver" value="1.6"/>
+
   <!-- so I can point to a directory containing commercial jars -->
   <property name="lib.dir" value="lib"/>
 
@@ -168,7 +171,7 @@
 
     <javac destdir="${build.dir}"
 	   classpathref="build.classpath"
-           source="1.6" target="1.6" includeantruntime="false"
+           source="${j.ver}" target="${j.ver}" includeantruntime="false"
 	   debug="${javac.debug}">
       <!--
       <compilerarg value="-Xlint"/>
@@ -196,7 +199,7 @@
   <!-- this target won't work unless you have all the optional/commercial jars -->
   <target name="compile-everything" depends="init,update-output">
     <javac destdir="${build.dir}"
-           source="1.6" target="1.6" includeantruntime="false">
+           source="${j.ver}" target="${j.ver}" includeantruntime="false">
       <classpath>
         <!-- Yes, I know these are explicit. This target is really only for me. -->
         <fileset dir="lib">
@@ -228,7 +231,7 @@
   <target name="compile-XMLUnit" depends="init" if="XMLUnit.present">
     <javac destdir="${build.dir}"
 	   classpathref="build.classpath"
-           source="1.6" target="1.6" includeantruntime="false">
+           source="${j.ver}" target="${j.ver}" includeantruntime="false">
       <src path="src"/>
       <include name="com/xmlcalabash/extensions/xmlunit/Compare.java"/>
     </javac>
@@ -241,7 +244,7 @@
   <target name="compile-XCC" depends="init" if="MarkLogicXCC.present">
     <javac destdir="${build.dir}"
 	   classpathref="build.classpath"
-           source="1.6" target="1.6" includeantruntime="false">
+           source="${j.ver}" target="${j.ver}" includeantruntime="false">
       <src path="src"/>
       <include name="com/xmlcalabash/extensions/marklogic/XCCAdhocQuery.java"/>
       <include name="com/xmlcalabash/extensions/marklogic/XCCInsertDocument.java"/>
@@ -256,7 +259,7 @@
   <target name="compile-MetadataException" depends="init" if="MetadataException.present">
     <javac destdir="${build.dir}"
 	   classpathref="build.classpath"
-           source="1.6" target="1.6" includeantruntime="false">
+           source="${j.ver}" target="${j.ver}" includeantruntime="false">
       <!--
       <compilerarg value="-Xlint"/>
       -->
@@ -272,7 +275,7 @@
   <target name="compile-DeltaXML" depends="init" if="DeltaXML.present">
     <javac destdir="${build.dir}"
 	   classpathref="build.classpath"
-           source="1.6" target="1.6" includeantruntime="false">
+           source="${j.ver}" target="${j.ver}" includeantruntime="false">
       <src path="src"/>
       <include name="com/xmlcalabash/extensions/DeltaXML.java"/>
     </javac>
@@ -285,7 +288,7 @@
   <target name="compile-XEP" depends="init" if="XEP.present">
     <javac destdir="${build.dir}"
 	   classpathref="build.classpath"
-           source="1.6" target="1.6" includeantruntime="false">
+           source="${j.ver}" target="${j.ver}" includeantruntime="false">
       <src path="src"/>
       <include name="com/xmlcalabash/util/FoXEP.java"/>
     </javac>
@@ -298,7 +301,7 @@
   <target name="compile-AH" depends="init" if="AH.present">
     <javac destdir="${build.dir}"
 	   classpathref="build.classpath"
-           source="1.6" target="1.6" includeantruntime="false">
+           source="${j.ver}" target="${j.ver}" includeantruntime="false">
       <src path="src"/>
       <include name="com/xmlcalabash/util/FoAH.java"/>
       <include name="com/xmlcalabash/util/CssAH.java"/>
@@ -312,7 +315,7 @@
   <target name="compile-Prince" depends="init" if="Prince.present">
     <javac destdir="${build.dir}"
 	   classpathref="build.classpath"
-           source="1.6" target="1.6" includeantruntime="false">
+           source="${j.ver}" target="${j.ver}" includeantruntime="false">
       <src path="src"/>
       <include name="com/xmlcalabash/util/CssPrince.java"/>
     </javac>
@@ -325,7 +328,7 @@
   <target name="compile-SendMail" depends="init" if="Mail.present">
     <javac destdir="${build.dir}"
 	   classpathref="build.classpath"
-           source="1.6" target="1.6" includeantruntime="false">
+           source="${j.ver}" target="${j.ver}" includeantruntime="false">
       <src path="src"/>
       <include name="com/xmlcalabash/extensions/SendMail.java"/>
     </javac>
@@ -352,7 +355,7 @@
   <target name="compile-FOP" depends="init" if="FOP.present">
     <javac destdir="${build.dir}"
 	   classpathref="build.classpath"
-           source="1.6" target="1.6" includeantruntime="false">
+           source="${j.ver}" target="${j.ver}" includeantruntime="false">
       <src path="src"/>
       <include name="com/xmlcalabash/util/FoFOP.java"/>
     </javac>
