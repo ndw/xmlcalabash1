@@ -20,6 +20,8 @@
 
 package com.xmlcalabash.io;
 
+import com.xmlcalabash.core.XProcException;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileFilter;
@@ -148,6 +150,11 @@ public class FileDataStore implements DataStore {
 		URI uri = baseURI.resolve(href);
 		if ("file".equalsIgnoreCase(uri.getScheme())) {
 			File file = new File(uri);
+
+            if (!file.canRead()) {
+                throw XProcException.stepError(12);
+            }
+
 			if (file.isDirectory()) {
 				for (File f : listAcceptableFiles(file, accept)) {
 					String type;

@@ -157,7 +157,11 @@ public class DirectoryList extends DefaultStep {
     }
 
     String getName(URI id) {
-        return id.getPath().replaceAll("^.*/", "");
+        String path = id.getPath();
+        if (path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+        }
+        return path.replaceAll("^.*/", "");
 	}
 
 	boolean isFile(URI id) throws IOException {
