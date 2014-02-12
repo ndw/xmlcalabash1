@@ -1,24 +1,23 @@
 package com.xmlcalabash.extensions;
 
-import com.xmlcalabash.core.XProcConstants;
-import com.xmlcalabash.core.XProcException;
-import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.io.ReadablePipe;
-import com.xmlcalabash.io.WritablePipe;
-import com.xmlcalabash.library.DefaultStep;
-import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.util.TreeWriter;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XdmNode;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.Properties;
+
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+
+import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.io.DataStore;
+import com.xmlcalabash.io.DataStore.DataReader;
+import com.xmlcalabash.io.WritablePipe;
+import com.xmlcalabash.library.DefaultStep;
+import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.util.TreeWriter;
 
 /**
  * Created by IntelliJ IDEA.
@@ -29,6 +28,7 @@ import java.util.Properties;
  */
 
 public class JavaProperties extends DefaultStep {
+    private static final String ACCEPT_TEXT = "text/plain, text/*, */*";
     private static final QName c_param_set = new QName("c", XProcConstants.NS_XPROC_STEP, "param-set");
     private static final QName c_param = new QName("c", XProcConstants.NS_XPROC_STEP, "param");
     private static final QName _href = new QName("","href");
@@ -55,7 +55,7 @@ public class JavaProperties extends DefaultStep {
     public void run() throws SaxonApiException {
         super.run();
 
-        Properties properties = new Properties();
+        final Properties properties;
 
         String pFn = null;
         URI pURI = null;
@@ -68,11 +68,16 @@ public class JavaProperties extends DefaultStep {
         if (pURI == null) {
             properties = System.getProperties();
         } else {
+            properties = new Properties();
             try {
-                URL url = pURI.resolve(pFn).toURL();
-                URLConnection connection = url.openConnection();
-                InputStream stream = connection.getInputStream();
-                properties.load(stream);
+                String base = pURI.toASCIIString();
+                DataStore store = runtime.getDataStore();
+                store.readEntry(pFn, base, ACCEPT_TEXT, new DataReader() {
+                    public void load(URI id, String media, InputStream stream,
+                            long len) throws IOException {
+                        properties.load(stream);
+                    }
+                });
             } catch (MalformedURLException mue) {
                 throw new XProcException(XProcException.err_E0001, mue);
             } catch (IOException ioe) {

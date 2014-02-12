@@ -1,18 +1,21 @@
 package com.xmlcalabash.extensions.fileutils;
 
-import com.xmlcalabash.library.DefaultStep;
-import com.xmlcalabash.io.WritablePipe;
-import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.core.XProcConstants;
-import com.xmlcalabash.core.XProcException;
-import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.model.RuntimeValue;
-import com.xmlcalabash.util.TreeWriter;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URI;
+
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 
-import java.io.File;
-import java.net.URI;
+import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.io.DataStore;
+import com.xmlcalabash.io.WritablePipe;
+import com.xmlcalabash.library.DefaultStep;
+import com.xmlcalabash.model.RuntimeValue;
+import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.util.TreeWriter;
 
 /**
  * Created by IntelliJ IDEA.
@@ -49,27 +52,20 @@ public class Mkdir extends DefaultStep {
         }
 
         RuntimeValue href = getOption(_href);
-        URI uri = href.getBaseURI().resolve(href.getString());
-        File file;
-        if (!"file".equals(uri.getScheme())) {
-            throw new XProcException(step.getNode(), "Only file: scheme URIs are supported by the mkdir step.");
-        } else {
-            file = new File(uri.getPath());
-        }
 
         TreeWriter tree = new TreeWriter(runtime);
         tree.startDocument(step.getNode().getBaseURI());
         tree.addStartElement(XProcConstants.c_result);
         tree.startContent();
 
-        tree.addText(file.toURI().toASCIIString());
-
-        if (file.exists() && file.isDirectory()) {
-            // nop
-        } else if (file.exists()) {
-             throw new XProcException(step.getNode(), "Cannot mkdir: file exists: " + file.getAbsolutePath());
-        } else if (!file.mkdirs()) {
-            throw new XProcException(step.getNode(), "Mkdir failed for: " + file.getAbsolutePath());
+        try {
+            DataStore store = runtime.getDataStore();
+            URI uri = store.createList(href.getString(), href.getBaseURI().toASCIIString());
+            tree.addText(uri.toASCIIString());
+        } catch (FileNotFoundException e) {
+            throw new XProcException(step.getNode(), "Cannot mkdir: file exists: " + href.getString());
+        } catch (IOException e) {
+            throw new XProcException(step.getNode(), "Mkdir failed for: " + href.getString());
         }
 
         tree.addEndElement();
