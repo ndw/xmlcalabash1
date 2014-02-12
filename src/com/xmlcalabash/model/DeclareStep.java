@@ -209,7 +209,9 @@ public class DeclareStep extends CompoundStep {
 
         while (log != null && level == null) {
             log = log.getParent();
-            level = log.getLevel();
+            if (log != null) {
+                level = log.getLevel();
+            }
         }
 
         if (level == null) {
