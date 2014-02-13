@@ -71,6 +71,7 @@ public class ProcessMatch extends TreeWriter {
 
     public void match(XdmNode doc, RuntimeValue match) {
         XdmNode node = match.getNode();
+        String expr = match.getString();
 
         try {
             XPathEvaluator xeval = new XPathEvaluator(saxonConfig);
@@ -106,7 +107,7 @@ public class ProcessMatch extends TreeWriter {
             if (e.getMessage() != null && e.getMessage().contains("syntax error")) {
                 throw XProcException.dynamicError(23,node,e,"Syntax error in match pattern: \"" + match.getString() + "\"");
             } else {
-                throw XProcException.dynamicError(23,node,e,"Expression could not be evaluated");
+                throw XProcException.dynamicError(23,node,e,"Expression could not be evaluated: " + expr);
             }
         }
     }
