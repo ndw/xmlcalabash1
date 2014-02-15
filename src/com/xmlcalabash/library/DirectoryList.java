@@ -84,6 +84,10 @@ public class DirectoryList extends DefaultStep {
             path = step.getNode().getBaseURI().resolve(".").toASCIIString();
         }
 
+        if (!path.endsWith("/")) {
+            path = path + "/";
+        }
+
         runtime.finer(null, step.getNode(), "path: " + path);
 
         RuntimeValue value = getOption(_include_filter);
