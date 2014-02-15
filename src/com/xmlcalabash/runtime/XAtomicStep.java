@@ -657,7 +657,14 @@ public class XAtomicStep extends XStep {
                     throw new XProcException(sae);
                 }
             } else if (nsbinding.getNamespaceBindings() != null) {
-                localBindings = nsbinding.getNamespaceBindings();
+                Hashtable<String,String> bindings = nsbinding.getNamespaceBindings();
+                for (String prefix : bindings.keySet()) {
+                    if ("".equals(prefix) || prefix == null) {
+                        // nop; the default namespace never plays a role in XPath expression evaluation
+                    } else {
+                        localBindings.put(prefix,bindings.get(prefix));
+                    }
+                }
             }
 
             // Remove the excluded ones
