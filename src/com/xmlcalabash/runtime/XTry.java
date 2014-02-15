@@ -132,11 +132,13 @@ public class XTry extends XCompoundStep {
                 if (xe instanceof XProcException) {
                     XProcException xxx = (XProcException) xe;
                     QName code = xxx.getErrorCode();
-                    qCode = new StructuredQName(code.getPrefix(), code.getNamespaceURI(), code.getLocalName());
                     message = xxx.getMessage();
                     Throwable underlying = xe.getCause();
                     if (underlying != null) {
                         message = underlying.getMessage();
+                    }
+                    if (code != null) {
+                        qCode = new StructuredQName(code.getPrefix(), code.getNamespaceURI(), code.getLocalName());
                     }
                 }
 
