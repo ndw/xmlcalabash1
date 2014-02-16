@@ -185,6 +185,11 @@
       <exclude name="com/xmlcalabash/extensions/marklogic/XCCAdhocQuery.java"/>
       <exclude name="com/xmlcalabash/extensions/marklogic/XCCInsertDocument.java"/>
       <exclude name="com/xmlcalabash/extensions/marklogic/XCCInvokeModule.java"/>
+      <exclude name="com/xmlcalabash/extensions/Sparql.java"/>
+      <exclude name="com/xmlcalabash/extensions/RDFa.java"/>
+      <exclude name="com/xmlcalabash/extensions/RDFLoad.java"/>
+      <exclude name="com/xmlcalabash/extensions/RDFStep.java"/>
+      <exclude name="com/xmlcalabash/extensions/RDFStore.java"/>
       <exclude name="com/xmlcalabash/util/FoXEP.java"/>
       <exclude name="com/xmlcalabash/util/FoFOP.java"/>
       <exclude name="com/xmlcalabash/util/FoAH.java"/>
@@ -213,9 +218,11 @@
     </javac>
   </target>
 
-  <target name="optional-features" depends="compile-MetadataException,
-                                            compile-XEP,compile-FOP,compile-AH,compile-SendMail,
-                                            compile-DeltaXML,compile-XMLUnit,compile-XCC"/>
+  <target name="optional-features"
+          depends="compile-MetadataException,
+                   compile-XEP,compile-FOP,compile-AH,compile-SendMail,
+                   compile-DeltaXML,compile-XMLUnit,compile-XCC,
+                   compile-RDF"/>
 
   <condition property="XMLUnit.present">
     <and>
@@ -331,6 +338,24 @@
            source="${j.ver}" target="${j.ver}" includeantruntime="false">
       <src path="src"/>
       <include name="com/xmlcalabash/extensions/SendMail.java"/>
+    </javac>
+  </target>
+
+  <available classname="com.hp.hpl.jena.graph.Node"
+             property="RDF.present">
+    <classpath refid="build.classpath"/>
+  </available>
+
+  <target name="compile-RDF" depends="init" if="RDF.present">
+    <javac destdir="${build.dir}"
+	   classpathref="build.classpath"
+           source="${j.ver}" target="${j.ver}" includeantruntime="false">
+      <src path="src"/>
+      <include name="com/xmlcalabash/extensions/RDFStep.java"/>
+      <include name="com/xmlcalabash/extensions/RDFa.java"/>
+      <include name="com/xmlcalabash/extensions/RDFLoad.java"/>
+      <include name="com/xmlcalabash/extensions/RDFStore.java"/>
+      <include name="com/xmlcalabash/extensions/Sparql.java"/>
     </javac>
   </target>
 
