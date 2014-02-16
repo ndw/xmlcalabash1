@@ -133,7 +133,7 @@ public class DirectoryList extends DefaultStep {
                     if (use) {
                         if (!isFile(id)) {
                             tree.addStartElement(c_directory);
-                            tree.addAttribute(_name, filename + "/");
+                            tree.addAttribute(_name, filename);
                             tree.addEndElement();
                             finest(step.getNode(), "Including directory: " + filename);
                         } else {
