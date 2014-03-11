@@ -72,7 +72,7 @@ public class Head extends DefaultStep {
 
         try {
             DataStore store = runtime.getDataStore();
-            store.readEntry(href.getString(), href.getBaseURI().toASCIIString(), "text/*, */*", new DataReader() {
+            store.readEntry(href.getString(), href.getBaseURI().toASCIIString(), "text/*, */*", null, new DataReader() {
                 public void load(URI id, String media, InputStream content, long len)
                         throws IOException {
                     Reader rdr = new InputStreamReader(content);

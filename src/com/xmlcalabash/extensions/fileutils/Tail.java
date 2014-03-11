@@ -69,7 +69,7 @@ public class Tail extends DefaultStep {
 
         try {
             DataStore store = runtime.getDataStore();
-            store.readEntry(href.getString(), href.getBaseURI().toASCIIString(), "text/*, */*", new DataReader() {
+            store.readEntry(href.getString(), href.getBaseURI().toASCIIString(), "text/*, */*", null, new DataReader() {
                 public void load(URI id, String media, InputStream content, long len)
                         throws IOException {
                     TreeWriter tree = new TreeWriter(runtime);

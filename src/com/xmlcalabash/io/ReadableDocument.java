@@ -161,11 +161,11 @@ public class ReadableDocument implements ReadablePipe {
                                     public void list(URI id, String media, long lastModified)
                                             throws IOException {
                                         String entry = id.toASCIIString();
-                                        store.readEntry(entry, entry, accept, handler);
+                                        store.readEntry(entry, entry, accept, null, handler);
                                     }
                                 });
                             } else {
-                                store.readEntry(entry, entry, accept, handler);
+                                store.readEntry(entry, entry, accept, null, handler);
                             }
                         }
                     });
@@ -176,7 +176,7 @@ public class ReadableDocument implements ReadablePipe {
                         if (runtime.transparentJSON()) {
                             try {
                                 DataStore store = runtime.getDataStore();
-                                store.readEntry(uri, base, ACCPET_JSON, new DataReader() {
+                                store.readEntry(uri, base, ACCPET_JSON, null, new DataReader() {
                                     public void load(URI id, String media, InputStream content, long len)
                                             throws IOException {
                                         String cs = HttpUtils.getCharset(media);

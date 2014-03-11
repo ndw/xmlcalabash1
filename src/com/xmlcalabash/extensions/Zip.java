@@ -167,7 +167,7 @@ public class Zip extends DefaultStep {
                 public void store(OutputStream content) throws IOException {
                     final ZipOutputStream outZip = new ZipOutputStream(content);
                     try {
-                        store.readEntry(zipFn, base, "application/zip", new DataStore.DataReader() {
+                        store.readEntry(zipFn, base, "application/zip", null, new DataStore.DataReader() {
                             public void load(URI id, String media, InputStream content, long len)
                                     throws IOException {
                                 ZipInputStream inZip = new ZipInputStream(content);
@@ -192,7 +192,7 @@ public class Zip extends DefaultStep {
         try {
             final DatatypeFactory dfactory = DatatypeFactory.newInstance();
             DataStore store = runtime.getDataStore();
-            store.readEntry(zipFn, zipFn, "application/zip, */*", new DataReader() {
+            store.readEntry(zipFn, zipFn, "application/zip, */*", null, new DataReader() {
                 public void load(URI id, String media, InputStream stream,
                         long len) throws IOException {
                     read(id, stream, dfactory);
@@ -382,7 +382,7 @@ public class Zip extends DefaultStep {
                         store(file, doc, baos);
                     } else {
                         DataStore store = runtime.getDataStore();
-                        store.readEntry(href, href, "*/*", new DataReader() {
+                        store.readEntry(href, href, "*/*", null, new DataReader() {
                             public void load(URI id, String media,
                                     InputStream stream, long len)
                                     throws IOException {
@@ -408,7 +408,7 @@ public class Zip extends DefaultStep {
                     store(file, doc, outZip);
                 } else {
                     DataStore store = runtime.getDataStore();
-                    store.readEntry(href, href, "*/*", new DataReader() {
+                    store.readEntry(href, href, "*/*", null, new DataReader() {
                         public void load(URI id, String media,
                                 InputStream stream, long len)
                                 throws IOException {

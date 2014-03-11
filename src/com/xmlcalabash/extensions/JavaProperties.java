@@ -72,7 +72,7 @@ public class JavaProperties extends DefaultStep {
             try {
                 String base = pURI.toASCIIString();
                 DataStore store = runtime.getDataStore();
-                store.readEntry(pFn, base, ACCEPT_TEXT, new DataReader() {
+                store.readEntry(pFn, base, ACCEPT_TEXT, null, new DataReader() {
                     public void load(URI id, String media, InputStream stream,
                             long len) throws IOException {
                         properties.load(stream);

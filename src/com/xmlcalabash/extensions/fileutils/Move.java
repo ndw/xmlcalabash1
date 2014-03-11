@@ -62,7 +62,7 @@ public class Move extends DefaultStep {
         try {
             final DataStore store = runtime.getDataStore();
             String base = href.getBaseURI().toASCIIString();
-            store.readEntry(href.getString(), base, "*/*", new DataReader() {
+            store.readEntry(href.getString(), base, "*/*", null, new DataReader() {
                 public void load(URI id, String media, final InputStream src, long len)
                         throws IOException {
                     RuntimeValue target = getOption(_target);

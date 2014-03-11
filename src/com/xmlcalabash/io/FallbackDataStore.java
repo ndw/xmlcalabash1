@@ -44,7 +44,7 @@ public class FallbackDataStore implements DataStore {
 	}
 
 	public void readEntry(String href, String base, String accept,
-			DataReader handler) throws MalformedURLException,
+			String overrideContentType, DataReader handler) throws MalformedURLException,
 			FileNotFoundException, IOException {
 		URI baseURI = URI.create(base);
 		URI uri = baseURI.resolve(href);

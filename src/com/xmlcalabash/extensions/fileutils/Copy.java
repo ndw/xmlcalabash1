@@ -64,7 +64,7 @@ public class Copy extends DefaultStep {
 
         try {
             final DataStore store = runtime.getDataStore();
-            store.readEntry(href.getString(), href.getBaseURI().toASCIIString(), "*/*", new DataReader() {
+            store.readEntry(href.getString(), href.getBaseURI().toASCIIString(), "*/*", null, new DataReader() {
                 public void load(URI id, String media, final InputStream src, long len)
                         throws IOException {
                     RuntimeValue target = getOption(_target);

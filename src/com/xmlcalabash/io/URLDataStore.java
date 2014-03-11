@@ -69,7 +69,7 @@ public class URLDataStore implements DataStore {
 	}
 
 	public void readEntry(String href, String base, String accept,
-			DataReader handler) throws MalformedURLException,
+			String overrideContentType, DataReader handler) throws MalformedURLException,
 			FileNotFoundException, IOException {
 		URI baseURI = URI.create(base);
 		URL url = baseURI.resolve(href).toURL();
@@ -78,6 +78,9 @@ public class URLDataStore implements DataStore {
 		final InputStream stream = connection.getInputStream();
 		try {
 			String type = connection.getContentType();
+            if (overrideContentType != null) {
+                type = overrideContentType;
+            }
 			URI id = URI.create(connection.getURL().toExternalForm());
             long len = 0;
 

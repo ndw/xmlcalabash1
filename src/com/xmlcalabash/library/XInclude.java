@@ -279,7 +279,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
 
         DataStore store = runtime.getDataStore();
         try {
-            store.readEntry(href, base, "text/plain, text/*, */*", new DataReader() {
+            store.readEntry(href, base, "text/plain, text/*, */*", null, new DataReader() {
                 public void load(URI id, String media, InputStream content,
                         long len) throws IOException {
                     String text = readText(node, xpointer, media, content, len);

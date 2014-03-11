@@ -105,7 +105,7 @@ public class ReadableData implements ReadablePipe {
 					accept = userContentType + ", */*";
 				}
 				DataStore store = runtime.getDataStore();
-				store.readEntry(uri, uri, accept, new DataReader() {
+				store.readEntry(uri, uri, accept, null, new DataReader() {
 					public void load(URI dataURI, String serverContentType,
 							InputStream stream, long len) throws IOException {
 						read(userContentType, dataURI, stream,

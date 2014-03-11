@@ -141,7 +141,7 @@ public interface DataStore {
 	 * @throws IOException
 	 *             if the document could not be read
 	 */
-	void readEntry(String href, String base, String accept, DataReader handler)
+	void readEntry(String href, String base, String accept, String overrideContentType, DataReader handler)
 			throws MalformedURLException, FileNotFoundException, IOException;
 
 	/**

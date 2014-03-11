@@ -34,6 +34,7 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.Properties;
 
 /**
@@ -47,6 +48,7 @@ import java.util.Properties;
 public class FileDataStore implements DataStore {
 	private final DataStore fallback;
 	private final Properties contentTypes;
+    private Hashtable<String,String> cachedMapping = null;
 
 	public FileDataStore(DataStore fallback) {
 		super();
@@ -54,7 +56,7 @@ public class FileDataStore implements DataStore {
 		contentTypes = new Properties();
 		loadDefaultContentTypes(contentTypes);
 		loadContentTypes(contentTypes);
-	}
+    }
 
 	public URI writeEntry(String href, String base, String media,
 			DataWriter handler) throws MalformedURLException,
@@ -104,13 +106,16 @@ public class FileDataStore implements DataStore {
 	}
 
 	public void readEntry(String href, String base, String accept,
-			DataReader handler) throws MalformedURLException,
+			String overrideContentType, DataReader handler) throws MalformedURLException,
 			FileNotFoundException, IOException {
 		URI baseURI = URI.create(base);
 		URI uri = baseURI.resolve(href);
 		if ("file".equalsIgnoreCase(uri.getScheme())) {
 			File file = new File(uri);
 			String type = getContentTypeFromName(file.getName());
+            if (overrideContentType != null) {
+                type = overrideContentType;
+            }
 			InputStream in = new FileInputStream(file);
 			try {
 				handler.load(file.toURI(), type, in, file.length());
@@ -118,7 +123,7 @@ public class FileDataStore implements DataStore {
 				in.close();
 			}
 		} else {
-			fallback.readEntry(href, base, accept, handler);
+			fallback.readEntry(href, base, accept, overrideContentType, handler);
 		}
 	}
 
@@ -247,14 +252,32 @@ public class FileDataStore implements DataStore {
 		if (ext == null) {
 			return "application/octet-stream";
 		}
-		Enumeration<?> types = contentTypes.propertyNames();
-		while (types.hasMoreElements()) {
-			String type = (String) types.nextElement();
-			String attrs = contentTypes.getProperty(type);
-			if (attrs.contains(ext)) {
-				return type;
-			}
-		}
+
+        if (cachedMapping == null) {
+            // Let's do this only once...
+            cachedMapping = new Hashtable<String,String> ();
+            Enumeration<?> types = contentTypes.propertyNames();
+            while (types.hasMoreElements()) {
+                String type = (String) types.nextElement();
+                String attrs = contentTypes.getProperty(type);
+
+                String[] tokens = attrs.split(";");
+                for (String tok : tokens) {
+                    if (tok.startsWith("file_extensions=")) {
+                        String extList = tok.substring(16);
+                        String[] exts = extList.split(",");
+                        for (String e : exts) {
+                            cachedMapping.put(e, type);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (cachedMapping.containsKey(ext)) {
+            return cachedMapping.get(ext);
+        }
+
 		return "application/octet-stream";
 	}
 
@@ -310,7 +333,9 @@ public class FileDataStore implements DataStore {
 	 * Load some basic types in case the system doesn't have them.
 	 */
 	private void loadDefaultContentTypes(Properties contentTypes) {
-		contentTypes.put("application/json", "file_extensions=.json");
+        contentTypes.put("application/json", "file_extensions=.json");
+        contentTypes.put("application/javascript", "file_extensions=.js");
+        contentTypes.put("text/css", "file_extensions=.css");
 		contentTypes.put("application/xml", "file_extensions=.xml");
 		contentTypes.put("application/zip", "file_extensions=.zip");
 		contentTypes.put("text/plain", "file_extensions=.txt");

@@ -93,7 +93,7 @@ public class Unzip extends DefaultStep {
             final DatatypeFactory dfactory = DatatypeFactory.newInstance();
             DataStore store = runtime.getDataStore();
             String base = zipURI.toASCIIString();
-            store.readEntry(zipFn, base, ACCEPT_ZIP, new DataReader() {
+            store.readEntry(zipFn, base, ACCEPT_ZIP, null, new DataReader() {
                 public void load(URI id, String media, InputStream content,
                         long len) throws IOException {
                     unzip(dfactory, id.toASCIIString(), content);

@@ -146,15 +146,15 @@ public class HttpClientDataStore implements DataStore {
 	}
 
 	public void readEntry(String href, String base, String accept,
-			DataReader handler) throws MalformedURLException,
+			String overrideContentType, DataReader handler) throws MalformedURLException,
 			FileNotFoundException, IOException {
 		URI baseURI = URI.create(base);
 		URI uri = baseURI.resolve(href);
 		String sch = uri.getScheme();
 		if ("http".equalsIgnoreCase(sch) || "https".equalsIgnoreCase(sch)) {
-			readHttpEntity(uri, accept, handler);
+			readHttpEntity(uri, accept, overrideContentType, handler);
 		} else {
-			fallback.readEntry(href, base, accept, handler);
+			fallback.readEntry(href, base, accept, overrideContentType, handler);
 		}
 	}
 
@@ -234,7 +234,7 @@ public class HttpClientDataStore implements DataStore {
 	}
 
 	private void readHttpEntity(final URI uri, final String accept,
-			final DataReader handler) throws IOException,
+			final String overrideContentType, final DataReader handler) throws IOException,
 			ClientProtocolException, Error {
 		final HttpContext localContext = new BasicHttpContext();
 		HttpGet get = new HttpGet(uri);
@@ -249,6 +249,9 @@ public class HttpClientDataStore implements DataStore {
 				if (hd != null) {
 					type = hd.getValue();
 				}
+                if (overrideContentType != null) {
+                    type = overrideContentType;
+                }
 				handler.load(contentId, type, entity.getContent(),
 						entity.getContentLength());
 				return null;

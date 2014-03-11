@@ -1106,16 +1106,9 @@ public class HttpRequest extends DefaultStep {
     }
 
     private void doFile(String href, String base) {
-        // Find the content type
-        String contentType = overrideContentType;
-
-        if (contentType == null) {
-            contentType = "application/octet-stream";
-        }
-
         try {
             DataStore store = runtime.getDataStore();
-            store.readEntry(href, base, "application/xml, text/xml, */*", new DataReader() {
+            store.readEntry(href, base, "application/xml, text/xml, */*", overrideContentType, new DataReader() {
                 public void load(URI id, String contentType, InputStream bodyStream, long len)
                         throws IOException {
                     // FIXME: Is ISO-8859-1 the right default?
