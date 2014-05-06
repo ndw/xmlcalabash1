@@ -151,6 +151,10 @@ public class ValidateWithSCH extends DefaultStep {
         compiler.setSchemaAware(schemaAware);
         exec = compiler.compile(compiledSchema.asSource());
         transformer = exec.load();
+	    for (QName name : params.keySet()) {
+             RuntimeValue v = params.get(name);
+             transformer.setParameter(name, new XdmAtomicValue(v.getString()));
+        }        
         transformer.setInitialContextNode(sourceXML);
         result = new XdmDestination();
         transformer.setDestination(result);
