@@ -51,7 +51,7 @@ public class Input extends BaseResource {
                 doc = runtime.parse(new InputSource(entity.getStream()));
             } else {
                 ReadablePipe pipe = null;
-                pipe = new ReadableData(runtime, XProcConstants.c_data, entity.getStream(), variant.getMediaType().toString());
+                pipe = new ReadableData(runtime, XProcConstants.c_data, entity.getStream(), entity.getMediaType().toString());
                 doc = pipe.read();
             }
             xpipeline.writeTo(port, doc);
