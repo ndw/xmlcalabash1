@@ -49,7 +49,7 @@ public class Parameter extends BaseResource {
                 XdmNode doc = runtime.parse(new InputSource(entity.getStream()));
                 pipe = new ReadableDocument(runtime, doc, null, null, null);
             } else {
-                pipe = new ReadableData(runtime, XProcConstants.c_data, entity.getStream(), variant.getMediaType().toString());
+                pipe = new ReadableData(runtime, XProcConstants.c_data, entity.getStream(), entity.getMediaType().toString());
             }
 
             while (pipe.moreDocuments()) {
