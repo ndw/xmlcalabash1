@@ -27,6 +27,7 @@ import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.Destination;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SAXDestination;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.Serializer;
 import net.sf.saxon.s9api.XPathCompiler;
@@ -51,12 +52,19 @@ import com.xmlcalabash.core.XProcRuntime;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.io.Writer;
 import java.util.Iterator;
 import java.util.Vector;
 import java.util.HashSet;
 import java.net.URI;
 
 import net.sf.saxon.tree.util.NamespaceIterator;
+import nu.validator.htmlparser.sax.HtmlSerializer;
+import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
 
 /**
@@ -163,7 +171,35 @@ public class S9apiUtils {
 
         XQueryExecutable xqexec = xqcomp.compile(".");
         XQueryEvaluator xqeval = xqexec.load();
-        xqeval.setDestination(serializer);
+        if (xproc.getHtmlSerializer() && "html".equals(serializer.getOutputProperty(Serializer.Property.METHOD))) {
+            ContentHandler ch = null;
+            Object outputDest = serializer.getOutputDestination();
+
+            if (outputDest == null) {
+                //???
+                xqeval.setDestination(serializer);
+            } else if (outputDest instanceof OutputStream) {
+                ch = new HtmlSerializer((OutputStream) outputDest);
+                xqeval.setDestination(new SAXDestination(ch));
+            } else if (outputDest instanceof Writer) {
+                ch = new HtmlSerializer((Writer) outputDest);
+                xqeval.setDestination(new SAXDestination(ch));
+            } else if (outputDest instanceof File) {
+                try {
+                    FileOutputStream fos = new FileOutputStream((File) outputDest);
+                    ch = new HtmlSerializer(fos);
+                    xqeval.setDestination(new SAXDestination(ch));
+                } catch (FileNotFoundException fnfe) {
+                    xqeval.setDestination(serializer);
+                }
+            } else {
+                //???
+                xqeval.setDestination(serializer);
+            }
+        } else {
+            xqeval.setDestination(serializer);
+        }
+
         for (XdmNode node : nodes) {
             xqeval.setContextItem(node);
             xqeval.run();

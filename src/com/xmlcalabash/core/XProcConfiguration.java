@@ -105,6 +105,7 @@ public class XProcConfiguration {
     public boolean transparentJSON = false;
     public String jsonFlavor = JSONtoXML.MARKLOGIC;
     public boolean useXslt10 = false;
+    public boolean htmlSerializer = false;
 
     public int piperackPort = 8088;
     public int piperackDefaultExpires = 300;
@@ -317,6 +318,7 @@ public class XProcConfiguration {
         safeMode = "true".equals(System.getProperty("com.xmlcalabash.safe-mode", ""+safeMode));
         jsonFlavor = System.getProperty("com.xmlcalabash.json-flavor", jsonFlavor);
         useXslt10 = "true".equals(System.getProperty("com.xmlcalabash.use-xslt-10", ""+useXslt10));
+        htmlSerializer = "true".equals(System.getProperty("com.xmlcalabash.html-serializer", ""+htmlSerializer));
         entityResolver = System.getProperty("com.xmlcalabash.entity-resolver", entityResolver);
         uriResolver = System.getProperty("com.xmlcalabash.uri-resolver", uriResolver);
         errorListener = System.getProperty("com.xmlcalabash.error-listener", errorListener);
@@ -649,6 +651,8 @@ public class XProcConfiguration {
             }
         } else if ("use-xslt-1.0".equals(name) || "use-xslt-10".equals(name)) {
             useXslt10 = "true".equals(value);
+        } else if ("html-serializer".equals(name)) {
+            htmlSerializer = "true".equals(value);
         } else {
             throw new XProcException("Unrecognized extension in configuration: " + name);
         }

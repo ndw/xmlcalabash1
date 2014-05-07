@@ -151,6 +151,8 @@ public class ParseArgs {
                     userArgs.setAllowXPointerOnText(true);
                 } else if ("use-xslt-1.0".equals(ext) || "use-xslt-10".equals(ext)) {
                     userArgs.setUseXslt10(true);
+                } else if ("html-serializer".equals(ext)) {
+                    userArgs.setHtmlSerializer(true);
                 } else if ("transparent-json".equals(ext)) {
                     userArgs.setTransparentJSON(true);
                 } else if (ext.startsWith("json-flavor=")) {

@@ -86,6 +86,7 @@ public class UserArgs {
     protected boolean extensionValues = false;
     protected boolean allowXPointerOnText = false;
     protected boolean useXslt10 = false;
+    protected boolean htmlSerializer = false;
     protected boolean transparentJSON = false;
     protected String jsonFlavor = null;
     protected Integer piperackPort = null;
@@ -407,6 +408,10 @@ public class UserArgs {
         this.useXslt10 = useXslt10;
     }
 
+    public void setHtmlSerializer(boolean htmlSerializer) {
+        this.htmlSerializer = htmlSerializer;
+    }
+
     public void setTransparentJSON(boolean transparentJSON) {
         this.transparentJSON = transparentJSON;
     }
@@ -552,6 +557,7 @@ public class UserArgs {
             config.jsonFlavor = jsonFlavor;
         }
         config.useXslt10 |= useXslt10;
+        config.htmlSerializer |= htmlSerializer;
 
         if (piperackPort != null) {
             config.piperackPort = piperackPort;

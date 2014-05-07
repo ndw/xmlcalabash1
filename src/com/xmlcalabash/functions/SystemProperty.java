@@ -131,6 +131,8 @@ public class SystemProperty extends XProcExtensionFunctionDefinition {
                      value = runtime.getAllowXPointerOnText() ? "true" : "false";
                  } else if ("use-xslt-1.0".equals(local) || "use-xslt-10".equals(local)) {
                      value = runtime.getUseXslt10Processor() ? "true" : "false";
+                 } else if ("html-serializer".equals(local)) {
+                     value = runtime.getHtmlSerializer() ? "true" : "false";
                  } else if ("saxon-version".equals(local)) {
                      value = runtime.getConfiguration().getProcessor().getSaxonProductVersion();
                  } else if ("saxon-edition".equals(local)) {

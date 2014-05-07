@@ -133,6 +133,7 @@ public class XProcRuntime {
     private boolean transparentJSON = false;
     private String jsonFlavor = JSONtoXML.MARKLOGIC;
     private boolean useXslt10 = false;
+    private boolean htmlSerializer = false;
     private XProcData xprocData = null;
     private Logger log = null;
     private XProcMessageListener msgListener = null;
@@ -220,6 +221,7 @@ public class XProcRuntime {
         transparentJSON = config.transparentJSON;
         jsonFlavor = config.jsonFlavor;
         useXslt10 = config.useXslt10;
+        htmlSerializer = config.htmlSerializer;
 
         if (config.profile != null) {
             profile = config.profile;
@@ -260,6 +262,7 @@ public class XProcRuntime {
         config = runtime.config;
         staticBaseURI = runtime.staticBaseURI;
         useXslt10 = runtime.useXslt10;
+        htmlSerializer = runtime.htmlSerializer;
         log = runtime.log;
         msgListener = runtime.msgListener;
         standardLibrary = runtime.standardLibrary;
@@ -435,6 +438,10 @@ public class XProcRuntime {
 
     public boolean getUseXslt10Processor() {
         return useXslt10;
+    }
+
+    public boolean getHtmlSerializer() {
+        return htmlSerializer;
     }
 
     public void cache(XdmNode doc, URI baseURI) {
