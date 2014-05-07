@@ -1,6 +1,7 @@
 package com.xmlcalabash.functions;
 
 import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.util.RuntimeRegistry;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
 import net.sf.saxon.om.StructuredQName;
@@ -14,13 +15,9 @@ import net.sf.saxon.value.SequenceType;
  * To change this template use File | Settings | File Templates.
  */
 public abstract class XProcExtensionFunctionDefinition extends ExtensionFunctionDefinition {
-    protected ThreadLocal<XProcRuntime> tl_runtime = new ThreadLocal<XProcRuntime>() {
-        protected synchronized XProcRuntime initialValue() {
-            return null;
-        }
-    };
+    protected RuntimeRegistry registry = RuntimeRegistry.getInstance();
 
     public void close() {
-        tl_runtime.remove();
+        registry.unregisterRuntime(this);
     }
 }

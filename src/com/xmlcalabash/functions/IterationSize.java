@@ -5,14 +5,11 @@ import com.xmlcalabash.runtime.XCompoundStep;
 import com.xmlcalabash.runtime.XStep;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
-import net.sf.saxon.lib.ExtensionFunctionDefinition;
 import net.sf.saxon.om.Sequence;
 import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.tree.iter.SingletonIterator;
 import net.sf.saxon.value.SequenceType;
 import net.sf.saxon.value.Int64Value;
 import net.sf.saxon.om.StructuredQName;
-import net.sf.saxon.om.SequenceIterator;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcConstants;
 
@@ -46,7 +43,7 @@ public class IterationSize extends XProcExtensionFunctionDefinition {
     }
 
     public IterationSize(XProcRuntime runtime) {
-        tl_runtime.set(runtime);
+        registry.registerRuntime(this, runtime);
     }
 
     public StructuredQName getFunctionQName() {
@@ -70,12 +67,18 @@ public class IterationSize extends XProcExtensionFunctionDefinition {
     }
 
     public ExtensionFunctionCall makeCallExpression() {
-        return new IterationPositionCall();
+        return new IterationSizeCall(this);
     }
 
-    private class IterationPositionCall extends ExtensionFunctionCall {
+    private class IterationSizeCall extends ExtensionFunctionCall {
+        private XProcExtensionFunctionDefinition xdef = null;
+
+        public IterationSizeCall(XProcExtensionFunctionDefinition def) {
+            xdef = def;
+        }
+
         public Sequence call(XPathContext xPathContext, Sequence[] sequences) throws XPathException {
-            XProcRuntime runtime = tl_runtime.get();
+            XProcRuntime runtime = registry.getRuntime(xdef);
             XStep step = runtime.getXProcData().getStep();
             // FIXME: this can't be the best way to do this...
             // step == null in use-when

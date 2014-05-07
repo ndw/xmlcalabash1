@@ -47,7 +47,7 @@ public class IterationPosition extends XProcExtensionFunctionDefinition {
     }
 
     public IterationPosition(XProcRuntime runtime) {
-        tl_runtime.set(runtime);
+        registry.registerRuntime(this, runtime);
     }
 
     public StructuredQName getFunctionQName() {
@@ -71,12 +71,18 @@ public class IterationPosition extends XProcExtensionFunctionDefinition {
     }
 
     public ExtensionFunctionCall makeCallExpression() {
-        return new IterationPositionCall();
+        return new IterationPositionCall(this);
     }
 
     private class IterationPositionCall extends ExtensionFunctionCall {
+        private XProcExtensionFunctionDefinition xdef = null;
+
+        public IterationPositionCall(XProcExtensionFunctionDefinition def) {
+            xdef = def;
+        }
+
         public Sequence call(XPathContext xPathContext, Sequence[] sequences) throws XPathException {
-            XProcRuntime runtime = tl_runtime.get();
+            XProcRuntime runtime = registry.getRuntime(xdef);
             XProcData data = runtime.getXProcData();
             XStep step = data.getStep();
             // FIXME: this can't be the best way to do this...

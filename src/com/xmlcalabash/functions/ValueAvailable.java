@@ -52,7 +52,7 @@ public class ValueAvailable extends XProcExtensionFunctionDefinition {
     }
 
     public ValueAvailable(XProcRuntime runtime) {
-        tl_runtime.set(runtime);
+        registry.registerRuntime(this, runtime);
     }
 
     public StructuredQName getFunctionQName() {
@@ -76,11 +76,17 @@ public class ValueAvailable extends XProcExtensionFunctionDefinition {
     }
 
     public ExtensionFunctionCall makeCallExpression() {
-        return new ValueAvailableCall();
+        return new ValueAvailableCall(this);
     }
 
     private class ValueAvailableCall extends ExtensionFunctionCall {
         private StaticContext staticContext = null;
+        private XProcExtensionFunctionDefinition xdef = null;
+
+        public ValueAvailableCall(XProcExtensionFunctionDefinition def) {
+            xdef = def;
+        }
+
 
         public void supplyStaticContext(StaticContext context, int locationId, Expression[] arguments) throws XPathException {
             staticContext = context;
@@ -89,7 +95,7 @@ public class ValueAvailable extends XProcExtensionFunctionDefinition {
         public Sequence call(XPathContext xPathContext, Sequence[] sequences) throws XPathException {
             StructuredQName sVarName = null;
 
-            XProcRuntime runtime = tl_runtime.get();
+            XProcRuntime runtime = registry.getRuntime(xdef);
             XStep step = runtime.getXProcData().getStep();
             // FIXME: this can't be the best way to do this...
             // step == null in use-when

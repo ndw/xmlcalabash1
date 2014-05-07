@@ -47,7 +47,7 @@ public class Cwd extends XProcExtensionFunctionDefinition {
     }
 
     public Cwd(XProcRuntime runtime) {
-        tl_runtime.set(runtime);
+        registry.registerRuntime(this, runtime);
     }
 
     public StructuredQName getFunctionQName() {
@@ -71,12 +71,18 @@ public class Cwd extends XProcExtensionFunctionDefinition {
     }
 
     public ExtensionFunctionCall makeCallExpression() {
-        return new CwdCall();
+        return new CwdCall(this);
     }
 
     private class CwdCall extends ExtensionFunctionCall {
+        private XProcExtensionFunctionDefinition xdef = null;
+
+        public CwdCall(XProcExtensionFunctionDefinition def) {
+            xdef = def;
+        }
+
         public Sequence call(XPathContext xPathContext, Sequence[] sequences) throws XPathException {
-            XProcRuntime runtime = tl_runtime.get();
+            XProcRuntime runtime = registry.getRuntime(xdef);
             XStep step = runtime.getXProcData().getStep();
             // FIXME: this can't be the best way to do this...
             // step == null in use-when

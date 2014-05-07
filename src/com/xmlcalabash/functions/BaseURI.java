@@ -47,7 +47,7 @@ public class BaseURI extends XProcExtensionFunctionDefinition {
     }
 
     public BaseURI(XProcRuntime runtime) {
-        tl_runtime.set(runtime);
+        registry.registerRuntime(this, runtime);
     }
 
     public StructuredQName getFunctionQName() {
@@ -75,14 +75,20 @@ public class BaseURI extends XProcExtensionFunctionDefinition {
     }
 
     public ExtensionFunctionCall makeCallExpression() {
-        return new BaseURICall();
+        return new BaseURICall(this);
     }
 
     private class BaseURICall extends ExtensionFunctionCall {
+        private XProcExtensionFunctionDefinition xdef = null;
+
+        public BaseURICall(XProcExtensionFunctionDefinition def) {
+            xdef = def;
+        }
+
         public Sequence call(XPathContext xPathContext, Sequence[] sequences) throws XPathException {
             String baseURI = null;
 
-            XProcRuntime runtime = tl_runtime.get();
+            XProcRuntime runtime = registry.getRuntime(xdef);
             XStep step = runtime.getXProcData().getStep();
             // FIXME: this can't be the best way to do this...
             // step == null in use-when

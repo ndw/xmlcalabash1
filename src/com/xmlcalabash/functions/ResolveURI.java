@@ -51,7 +51,7 @@ public class ResolveURI extends XProcExtensionFunctionDefinition {
     }
 
     public ResolveURI(XProcRuntime runtime) {
-        tl_runtime.set(runtime);
+        registry.registerRuntime(this, runtime);
     }
 
     public StructuredQName getFunctionQName() {
@@ -79,14 +79,20 @@ public class ResolveURI extends XProcExtensionFunctionDefinition {
     }
 
     public ExtensionFunctionCall makeCallExpression() {
-        return new ResolveURICall();
+        return new ResolveURICall(this);
     }
 
     private class ResolveURICall extends ExtensionFunctionCall {
+        private XProcExtensionFunctionDefinition xdef = null;
+
+        public ResolveURICall(XProcExtensionFunctionDefinition def) {
+            xdef = def;
+        }
+
         public Sequence call(XPathContext xPathContext, Sequence[] sequences) throws XPathException {
             String relativeURI = sequences[0].head().getStringValue();
 
-            XProcRuntime runtime = tl_runtime.get();
+            XProcRuntime runtime = registry.getRuntime(xdef);
             XStep step = runtime.getXProcData().getStep();
             // FIXME: this can't be the best way to do this...
             // step == null in use-when
