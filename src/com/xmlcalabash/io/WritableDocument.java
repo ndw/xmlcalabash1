@@ -177,7 +177,6 @@ public class WritableDocument implements WritablePipe {
                 	}
                     runtime.error(ex);
                 }
-                S9apiUtils.serialize(runtime, doc, serializer);
             }
 
 
