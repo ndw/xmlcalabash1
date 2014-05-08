@@ -25,6 +25,7 @@
 
   <property name="dist.dir" value="dist"/>
   <property name="build.dir" value="out/production/Calabash"/>
+  <property name="docs.repo.dir" value="../docs-calabash"/>
 
   <!-- where my Saxon EE license lives -->
   <property name="license.dir" value="/home/ndw/java"/>
@@ -110,6 +111,7 @@
     <mkdir dir="${build.dir}"/>
     <property name="dist-version" value="${version}-${saxon-version-short}"/>
     <property name="install.dir" value="${dist.dir}/calabash-${dist-version}"/>
+    <property name="docs.install.dir" value="${dist.dir}/calabash-${version}"/>
   </target>
 
   <target name="saxon95" if="saxon95">
@@ -386,10 +388,33 @@
     </javac>
   </target>
 
-  <available property="docs.present" file="${dist.dir}/calabash-${version}/README"/>
+  <available property="docs.present"
+             file="${docs.repo.dir}/build/index.html"/>
 
   <target name="docs.missing" unless="docs.present">
-    <echo>You must run the 'dist' target on the 'docs' branch first.</echo>
+    <echo>You must run the 'dist' target on the 'docs-calabash1' repo first.</echo>
+  </target>
+
+  <target name="docs-dist" depends="init,docs.missing" if="dist.ready">
+    <mkdir dir="${docs.install.dir}"/>
+    <mkdir dir="${docs.install.dir}/docs"/>
+    <mkdir dir="${docs.install.dir}/docs/notices"/>
+    <mkdir dir="${docs.install.dir}/docs/reference"/>
+    <mkdir dir="${docs.install.dir}/docs/reference/css"/>
+    <mkdir dir="${docs.install.dir}/docs/reference/js"/>
+    <mkdir dir="${docs.install.dir}/docs/reference/img"/>
+    <copy todir="${docs.install.dir}/docs/reference">
+      <fileset dir="${docs.repo.dir}/build"/>
+    </copy>
+
+    <copy todir="${docs.install.dir}/docs/notices">
+      <fileset file="resources/notices/**"/>
+    </copy>
+    <copy todir="${docs.install.dir}">
+      <fileset file="resources/README"/>
+    </copy>
+
+    <delete dir="docs/build"/>
   </target>
 
   <condition property="dist.ready">
@@ -400,7 +425,7 @@
   </condition>
 
   <target name="dist"
-          depends="init,izpacktool,izpackmissing,docs.missing"
+          depends="init,izpacktool,izpackmissing,docs-dist"
           if="dist.ready">
     <ant target="distrib"/>
     <delete file="${dist.dir}/install.xml"/>
