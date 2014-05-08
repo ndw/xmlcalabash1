@@ -43,12 +43,28 @@ import net.sf.saxon.type.SimpleType;
 
 import java.net.URI;
 import java.util.Iterator;
-import java.util.Vector;
 
 /**
  *
  * @author ndw
  */
+
+/* N.B. There's a fundamental problem in here somewhere. In order to preserve base URIs correctly
+   when, for example, @xml:base attributes have been deleted. The tree walker has to reset the
+   systemIdentifier in the receiver several times. This must have something to do with getting
+   the right base URIs on the constructed nodes.
+
+   Conversely, in the case where, for example, the file is coming from a p:http-request, the URI
+   of the document entity received over the net is supposed to be the base URI of the document.
+   But this "resetting" that takes place undoes the value set on the document node. I'm not sure
+   how.
+
+   So there's a hacked compromise in here: if the "overrideBaseURI" is the empty string, we ignore
+   it. That seems to cover both cases.
+
+   But I am not very confident.
+ */
+
 public class TreeWriter {
     protected static final String logger = "com.xmlcalabash.util";
     protected Controller controller = null;
@@ -114,6 +130,7 @@ public class TreeWriter {
 
     public void endDocument() {
         try {
+            receiver.setSystemId("http://norman-was-here.com/");
             receiver.endDocument();
             receiver.close();
         } catch (XPathException e) {
@@ -214,8 +231,12 @@ public class TreeWriter {
                 inscopeNS = newCodes;
             }
         }
-        
-        receiver.setSystemId(overrideBaseURI.toASCIIString());
+
+        // Hack. See comment at top of file
+        if (!"".equals(overrideBaseURI.toASCIIString())) {
+            receiver.setSystemId(overrideBaseURI.toASCIIString());
+        }
+
         FingerprintedQName newNameOfNode = new FingerprintedQName(newName.getPrefix(),newName.getNamespaceURI(),newName.getLocalName());
         addStartElement(newNameOfNode, inode.getSchemaType(), inscopeNS);
     }
