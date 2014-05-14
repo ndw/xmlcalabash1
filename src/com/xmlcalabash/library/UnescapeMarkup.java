@@ -21,6 +21,7 @@ package com.xmlcalabash.library;
 
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
+import java.util.Iterator;
 
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
@@ -31,6 +32,7 @@ import com.xmlcalabash.util.Base64;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
+import net.sf.saxon.om.*;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.QName;
@@ -38,15 +40,13 @@ import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
-import net.sf.saxon.tree.iter.NamespaceIterator;
+import net.sf.saxon.tree.util.NamespaceIterator;
 import nu.validator.htmlparser.common.XmlViolationPolicy;
 import nu.validator.htmlparser.dom.HtmlDocumentBuilder;
 import org.json.JSONTokener;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.ccil.cowan.tagsoup.Parser;
-import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.om.NamePool;
 
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.sax.SAXSource;
@@ -187,23 +187,24 @@ public class UnescapeMarkup extends DefaultStep {
     private void remapDefaultNamespace(TreeWriter tree, XdmNode unescnode) {
         if (unescnode.getNodeKind() == XdmNodeKind.ELEMENT) {
             NodeInfo inode = unescnode.getUnderlyingNode();
-            NamePool pool = inode.getNamePool();
-            int inscopeNS[] = NamespaceIterator.getInScopeNamespaceCodes(inode);
-
+            int nscount = 0;
+            Iterator<NamespaceBinding> nsiter = NamespaceIterator.iterateNamespaces(inode);
+            while (nsiter.hasNext()) {
+                nscount++;
+                nsiter.next();
+            }
+            
             boolean replaced = false;
-            int newNS[] = null;
-            if (inscopeNS.length > 0) {
-                newNS = new int[inscopeNS.length+1];
+            NamespaceBinding newNS[] = null;
+            if (nscount > 0) {
+                NamespaceBinding inscopeNS[] = new NamespaceBinding[nscount];
+                newNS = new NamespaceBinding[nscount+1];
                 for (int pos = 0; pos < inscopeNS.length; pos++) {
-                    int ns = inscopeNS[pos];
-                    String pfx = pool.getPrefixFromNamespaceCode(ns);
-                    //String uri = pool.getURIFromNamespaceCode(ns);
+                    NamespaceBinding ns = inscopeNS[pos];
+                    String pfx = ns.getPrefix();
 
                     if ("".equals(pfx)) {
-                        int newns = pool.getNamespaceCode(pfx,namespace);
-                        if (newns < 0) {
-                            newns = pool.allocateNamespaceCode(pfx,namespace);
-                        }
+                        NamespaceBinding newns = new NamespaceBinding(pfx, namespace);
                         newNS[pos] = newns;
                         replaced = true;
                     } else {
@@ -211,16 +212,14 @@ public class UnescapeMarkup extends DefaultStep {
                     }
                 }
                 if (!replaced) {
-                    int newns = pool.getNamespaceCode("",namespace);
-                    if (newns < 0) {
-                        newns = pool.allocateNamespaceCode("",namespace);
-                    }
+                    NamespaceBinding newns = new NamespaceBinding("",namespace);
                     newNS[newNS.length-1] = newns;
                 }
             }
 
             // Careful, we're messing with the namespace bindings
             // Make sure the nameCode is right...
+            /* Not sure what to do here in 9.4. Nothing?
             int nameCode = inode.getNameCode();
             int typeCode = inode.getTypeAnnotation() & NamePool.FP_MASK;
             String pfx = pool.getPrefix(nameCode);
@@ -229,8 +228,10 @@ public class UnescapeMarkup extends DefaultStep {
             if ("".equals(pfx) && !namespace.equals(uri)) {
                 nameCode = pool.allocate(pfx,namespace,unescnode.getNodeName().getLocalName());
             }
+            */
 
-            tree.addStartElement(nameCode, typeCode, newNS);
+            FingerprintedQName newName = new FingerprintedQName("", namespace, inode.getLocalPart());
+            tree.addStartElement(newName, inode.getSchemaType(), newNS);
 
             XdmSequenceIterator iter = unescnode.axisIterator(Axis.ATTRIBUTE);
             while (iter.hasNext()) {

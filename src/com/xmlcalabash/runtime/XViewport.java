@@ -13,8 +13,6 @@ import com.xmlcalabash.model.*;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 
-import java.util.Hashtable;
-
 /**
  * Created by IntelliJ IDEA.
  * User: ndw
@@ -86,7 +84,9 @@ public class XViewport extends XCompoundStep implements ProcessMatchingNodes {
 
         runtime.getXProcData().setIterationSize(sequenceLength);
 
+        runtime.start(this);
         matcher.match(doc, match);
+        runtime.finish(this);
 
         for (String port : inputs.keySet()) {
             if (port.startsWith("|")) {

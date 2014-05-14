@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="calabash" default="default" basedir=".">
-  <description>Builds the distribution jar because IntelliJ sucks at it</description>
+<project name="calabash" default="default" basedir="."
+         xmlns:artifact="antlib:org.apache.maven.artifact.ant">
+  <description>
+    Ant build script for XML Calabash.
+
+    Useful targets:
+
+    compile - compiles :-)
+    jar     - makes the jar
+    dist    - makes a distribution jar/zip (requires IzPack)
+    report  - run the test suite and produce the report
+  </description>
 
   <property file="resources/etc/vendor.properties"/>
   <property file="resources/etc/version.properties"/>
@@ -41,6 +51,24 @@
   <target name="izpackmissing" unless="izpack.present">
     <echo>Cannot find IzPack; request to build dist ignored.</echo>
   </target>
+
+  <!-- define Maven coordinates -->
+  <property name="groupId" value="com.xmlcalabash" />
+  <property name="artifactId" value="xmlcalabash" />
+
+  <!-- define artifact names, which follow the convention of Maven -->
+  <property name="maven.dir" value="${dist.dir}/maven" />
+  <property name="maven-jar" value="${maven.dir}/${artifactId}-${version}.jar" />
+  <property name="maven-javadoc-jar" value="${maven.dir}/${artifactId}-${version}-javadoc.jar" />
+  <property name="maven-sources-jar" value="${maven.dir}/${artifactId}-${version}-sources.jar" />
+
+  <!-- define maven snapshots and staging repository id and url -->
+  <property name="maven-snapshots-repository-id" value="sonatype-nexus-snapshots" />
+  <property name="maven-snapshots-repository-url"
+            value="https://oss.sonatype.org/content/repositories/snapshots/" />
+  <property name="maven-staging-repository-id" value="sonatype-nexus-staging" />
+  <property name="maven-staging-repository-url"
+            value="https://oss.sonatype.org/service/local/staging/deploy/maven2/" />
 
   <path id="build.classpath">
     <fileset dir="${lib.dir}">
@@ -95,8 +123,11 @@
   </target>
 
   <target name="jar" depends="compile">
-    <taskdef resource="aQute/bnd/ant/taskdef.properties"
-      classpath="osgi/bnd.jar"/>
+    <taskdef resource="aQute/bnd/ant/taskdef.properties">
+      <classpath>
+        <fileset dir="osgi" includes="bnd-*.jar"/>
+      </classpath>
+    </taskdef>
     <bnd
       classpath="${build.dir}"
       eclipse="false"
@@ -466,4 +497,74 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
     </java>
   </target>
 
+  <target name="javadoc" depends="init,compile-everything"
+          description="Compile JavaDoc">
+    <javadoc sourcepath="src" destdir="${build.dir}/javadoc"
+             classpathref="build.classpath"/>
+  </target>
+
+  <target name="maven-dist" depends="init,compile-everything,jar,javadoc"
+          description="generate Maven jars">
+    <!-- copy the main artifact -->
+    <copy file="calabash.jar" toFile="${maven-jar}"/>
+
+    <!-- build the sources artifact -->
+    <jar jarfile="${maven-sources-jar}">
+      <fileset dir="src" />
+    </jar>
+
+    <!-- build the javadoc artifact -->
+    <jar jarfile="${maven-javadoc-jar}">
+      <fileset dir="${build.dir}/javadoc" />
+    </jar>
+
+    <!-- Update the version in the POM -->
+    <copy file="pom.xml" toFile="${maven.dir}/pom.xml">
+      <filterset>
+        <filter token="version" value="${version}"/>
+      </filterset>
+    </copy>
+  </target>
+
+  <target name="maven-stage" depends="maven-dist"
+          description="deploy release version to Maven staging repository">
+    <!-- sign and deploy the main artifact -->
+    <input message="Please enter your GPG passphrase:" addproperty="passphrase">
+      <handler type="secure"/>
+    </input>
+
+    <artifact:mvn>
+      <arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
+      <arg value="-Durl=${maven-staging-repository-url}" />
+      <arg value="-DrepositoryId=${maven-staging-repository-id}" />
+      <arg value="-DpomFile=${maven.dir}/pom.xml" />
+      <arg value="-Dfile=${maven-jar}" />
+      <arg value="-Dgpg.passphrase=${passphrase}"/>
+      <arg value="-Pgpg" />
+    </artifact:mvn>
+
+    <!-- sign and deploy the sources artifact -->
+    <artifact:mvn>
+      <arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
+      <arg value="-Durl=${maven-staging-repository-url}" />
+      <arg value="-DrepositoryId=${maven-staging-repository-id}" />
+      <arg value="-DpomFile=${maven.dir}/pom.xml" />
+      <arg value="-Dfile=${maven-sources-jar}" />
+      <arg value="-Dclassifier=sources" />
+      <arg value="-Dgpg.passphrase=${passphrase}"/>
+      <arg value="-Pgpg" />
+    </artifact:mvn>
+
+    <!-- sign and deploy the javadoc artifact -->
+    <artifact:mvn>
+      <arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
+      <arg value="-Durl=${maven-staging-repository-url}" />
+      <arg value="-DrepositoryId=${maven-staging-repository-id}" />
+      <arg value="-DpomFile=${maven.dir}/pom.xml" />
+      <arg value="-Dfile=${maven-javadoc-jar}" />
+      <arg value="-Dclassifier=javadoc" />
+      <arg value="-Dgpg.passphrase=${passphrase}"/>
+      <arg value="-Pgpg" />
+    </artifact:mvn>
+  </target>
 </project>

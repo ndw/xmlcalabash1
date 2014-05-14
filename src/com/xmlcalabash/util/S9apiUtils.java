@@ -20,9 +20,9 @@
 
 package com.xmlcalabash.util;
 
-import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.om.Item;
-import net.sf.saxon.om.NamePool;
+import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.core.XProcException;
+import net.sf.saxon.om.*;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.Destination;
 import net.sf.saxon.s9api.Processor;
@@ -49,14 +49,14 @@ import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.Configuration;
 import com.xmlcalabash.core.XProcRuntime;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.Iterator;
 import java.util.Vector;
 import java.util.HashSet;
 import java.net.URI;
-import java.io.StringWriter;
-import java.io.StringReader;
 
-import net.sf.saxon.tree.iter.NamespaceIterator;
+import net.sf.saxon.tree.util.NamespaceIterator;
 import org.xml.sax.InputSource;
 
 /**
@@ -194,17 +194,60 @@ public class S9apiUtils {
 
     // FIXME: THIS METHOD IS A GROTESQUE HACK!
     public static InputSource xdmToInputSource(XProcRuntime runtime, XdmNode node) throws SaxonApiException {
-        StringWriter sw = new StringWriter();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
         Serializer serializer = new Serializer();
-        serializer.setOutputWriter(sw);
+        serializer.setOutputStream(out);
         serialize(runtime, node, serializer);
-
-        String serxml = sw.toString();
-
-        StringReader sr = new StringReader(serxml);
-        InputSource isource = new InputSource(sr);
-        isource.setSystemId(node.getBaseURI().toASCIIString());
+        InputSource isource = new InputSource(new ByteArrayInputStream(out.toByteArray()));
+        if (node.getBaseURI() != null) {
+            isource.setSystemId(node.getBaseURI().toASCIIString());
+        }
         return isource;
+    }
+
+    public static HashSet<String> excludeInlinePrefixes(XdmNode node, String prefixList) {
+        HashSet<String> excludeURIs = new HashSet<String> ();
+        excludeURIs.add(XProcConstants.NS_XPROC);
+
+        if (prefixList != null) {
+            NodeInfo inode = node.getUnderlyingNode();
+            InscopeNamespaceResolver inscopeNS = new InscopeNamespaceResolver(inode);
+            boolean all = false;
+
+            for (String pfx : prefixList.split("\\s+")) {
+                boolean found = false;
+
+                if ("#all".equals(pfx)) {
+                    found = true;
+                    all = true;
+                } else if ("#default".equals(pfx)) {
+                    found = (inscopeNS.getURIForPrefix("", true) != null);
+                    if (found) {
+                        excludeURIs.add(inscopeNS.getURIForPrefix("", true));
+                    }
+                } else {
+                    found = (inscopeNS.getURIForPrefix(pfx, false) != null);
+                    if (found) {
+                        excludeURIs.add(inscopeNS.getURIForPrefix(pfx, false));
+                    }
+                }
+
+                if (!found) {
+                    throw new XProcException(XProcConstants.staticError(57), node, "No binding for '" + pfx + ":'");
+                }
+            }
+
+            if (all) {
+                Iterator<String> pfxiter = inscopeNS.iteratePrefixes();
+                while (pfxiter.hasNext()) {
+                    String pfx = pfxiter.next();
+                    boolean def = ("".equals(pfx));
+                    excludeURIs.add(inscopeNS.getURIForPrefix(pfx,def));
+                }
+            }
+        }
+
+        return excludeURIs;
     }
 
     public static XdmNode removeNamespaces(XProcRuntime runtime, XdmNode node, HashSet<String> excludeNS, boolean preserveUsed) {
@@ -231,19 +274,24 @@ public class S9apiUtils {
                                      && !"".equals(node.getNodeName().getNamespaceURI()));
 
             NodeInfo inode = node.getUnderlyingNode();
-            NamePool pool = inode.getNamePool();
-            int inscopeNS[] = NamespaceIterator.getInScopeNamespaceCodes(inode);
+            int nscount = 0;
+            Iterator<NamespaceBinding> nsiter = NamespaceIterator.iterateNamespaces(inode);
+            while (nsiter.hasNext()) {
+                nscount++;
+                nsiter.next();
+            }
 
             boolean excludeDefault = false;
             boolean changed = false;
-            int newNS[] = null;
-            if (inscopeNS.length > 0) {
-                newNS = new int[inscopeNS.length];
+            NamespaceBinding newNS[] = null;
+            if (nscount > 0) {
+                newNS = new NamespaceBinding[nscount];
                 int newpos = 0;
-                for (int pos = 0; pos < inscopeNS.length; pos++) {
-                    int ns = inscopeNS[pos];
-                    String pfx = pool.getPrefixFromNamespaceCode(ns);
-                    String uri = pool.getURIFromNamespaceCode(ns);
+                nsiter = NamespaceIterator.iterateNamespaces(inode);
+                while (nsiter.hasNext()) {
+                    NamespaceBinding ns = nsiter.next();
+                    String pfx = ns.getPrefix();
+                    String uri = ns.getURI();
 
                     boolean delete = excludeNS.contains(uri);
                     excludeDefault = excludeDefault || ("".equals(pfx) && delete);
@@ -259,31 +307,22 @@ public class S9apiUtils {
                         newNS[newpos++] = ns;
                     }
                 }
-                int onlyNewNS[] = new int[newpos];
+                NamespaceBinding onlyNewNS[] = new NamespaceBinding[newpos];
                 for (int pos = 0; pos < newpos; pos++) {
                     onlyNewNS[pos] = newNS[pos];
                 }
                 newNS = onlyNewNS;
             }
 
-            // Careful, we're messing with the namespace bindings
-            // Make sure the nameCode is right...
-            int nameCode = inode.getNameCode();
-            int typeCode = inode.getTypeAnnotation() & NamePool.FP_MASK;
-            String pfx = pool.getPrefix(nameCode);
-            String uri = pool.getURI(nameCode);
-
-            if (preserveUsed) {
-                if (excludeDefault && "".equals(pfx) && !usesDefaultNS) {
-                    nameCode = pool.allocate("", "", pool.getLocalName(nameCode));
-                }
-            } else {
-                if (excludeNS.contains(uri)) {
-                    nameCode = pool.allocate("", "", pool.getLocalName(nameCode));
+            NodeName newName = new NameOfNode(inode);
+            if (!preserveUsed) {
+                NamespaceBinding binding = newName.getNamespaceBinding();
+                if (excludeNS.contains(binding.getURI())) {
+                    newName = new FingerprintedQName("", "", newName.getLocalPart());
                 }
             }
 
-            tree.addStartElement(nameCode, typeCode, newNS);
+            tree.addStartElement(newName, inode.getSchemaType(), newNS);
 
             if (!preserveUsed) {
                 // In this case, we may need to change some attributes too

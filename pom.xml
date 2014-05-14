@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.xmlcalabash</groupId>
+  <artifactId>xmlcalabash</artifactId>
+  <version>@version@</version>
+  <name>XML Calabash</name>
+  <description>XML Calabash - an implementation of XProc: An XML Pipeline Language</description>
+  <url>http://xmlcalabash.com/</url>
+  <packaging>jar</packaging>
+
+  <developers>
+    <developer>
+      <name>Norman Walsh</name>
+      <url>http://nwalsh.com/</url>
+    </developer>
+  </developers>
+
+  <licenses>
+    <license>
+      <name>Common Development and Distribution License (CDDL) version 1.0</name>
+      <url>http://www.opensource.org/licenses/cddl1.txt</url>
+    </license>
+    <license>
+      <name>GNU General Public License version 2+</name>
+      <url>http://www.gnu.org/licenses/gpl-2.0.txt</url>
+    </license>
+  </licenses>
+
+  <scm>
+    <connection>scm:git:git@github.com:ndw/xmlcalabash1.git</connection>
+    <url>https://github.com/ndw/xmlcalabash1.git</url>
+  </scm>
+
+  <dependencies>
+    <!--
+        Files in the Calabash lib directory, and current status in the dependency list below:
+
+        htmlparser-1.3.1.jar        - LATEST NOT IN MAVEN - used for the unescape markup step
+        saxon9he.jar                - DONE
+        jing.jar                    - DONE
+        isorelax.jar                - TRANSIENT (from jing)
+        commons-httpclient-3.1.jar  - DONE
+        commons-codec-1.6.jar       - TRANSIENT (from httpclient)
+        commons-logging-1.1.1.jar   - TRANSIENT (from httpclient)
+        tagsoup-1.2.jar             - DONE
+        xmlresolver.jar             - NOT NEEDED - not used currently - and from Norm, so could be added to Maven
+        msv.jar                     - NOT NEEDED - used by ValidateWithRNG, which is unused (ValidateJing preferred)
+    -->
+
+    <dependency>
+      <groupId>net.sf.saxon</groupId>
+      <artifactId>Saxon-HE</artifactId>
+      <version>9.4.0.7</version>
+    </dependency>
+
+    <!-- No need to specify commons-logging or commons-codec - they're transitive dependencies of commons-httpclient -->
+    <dependency>
+      <groupId>commons-httpclient</groupId>
+      <artifactId>commons-httpclient</artifactId>
+      <version>3.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.thaiopensource</groupId>
+      <artifactId>jing</artifactId>
+      <version>20091111</version>
+      <optional>true</optional><!-- used in the p:validate-with-rng step and NVDL extension -->
+      <exclusions>
+        <exclusion>
+          <groupId>net.sf.saxon</groupId>
+          <artifactId>saxon</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>xml-apis</groupId>
+          <artifactId>xml-apis</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>javax.mail</groupId>
+      <artifactId>javax.mail-api</artifactId>
+      <version>1.4.5</version>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <groupId>org.ccil.cowan.tagsoup</groupId>
+      <artifactId>tagsoup</artifactId>
+      <version>1.2.1</version>
+      <optional>true</optional><!-- used in p:unescapte-markup optional TagSoup HTML parser implementation -->
+    </dependency>
+
+    <dependency>
+      <groupId>nu.validator.htmlparser</groupId>
+      <artifactId>htmlparser</artifactId>
+      <version>1.4</version>
+      <optional>true</optional><!-- used in the p:unescapte-markup Validator.nu default HTML parser implementation -->
+    </dependency>
+
+    <dependency>
+      <groupId>xmlunit</groupId>
+      <artifactId>xmlunit</artifactId>
+      <version>1.3</version>
+      <optional>true</optional><!-- used in the cxu:compare extension -->
+    </dependency>
+
+  </dependencies>
+
+  <distributionManagement>
+    <snapshotRepository>
+      <id>sonatype-nexus-snapshots</id>
+      <name>Sonatype Nexus Snapshots</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+    </snapshotRepository>
+    <repository>
+      <id>sonatype-nexus-staging</id>
+      <name>Nexus Release Repository</name>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+  </distributionManagement>
+</project>

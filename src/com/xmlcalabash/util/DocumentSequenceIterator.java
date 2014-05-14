@@ -29,10 +29,6 @@ public class DocumentSequenceIterator implements SequenceIterator, LastPositionF
         this.last = last;
     }
 
-    public int getLastPosition() throws XPathException {
-        return last;
-    }
-
     public Item next() throws XPathException {
         throw new UnsupportedOperationException("Don't know what to do for next() on DocumentSequenceIterator");
     }
@@ -55,5 +51,10 @@ public class DocumentSequenceIterator implements SequenceIterator, LastPositionF
 
     public int getProperties() {
         return SequenceIterator.LAST_POSITION_FINDER;
+    }
+
+    @Override
+    public int getLength() throws XPathException {
+        return last;
     }
 }

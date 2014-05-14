@@ -21,7 +21,17 @@
 package com.xmlcalabash.core;
 
 import com.xmlcalabash.config.XProcConfigurer;
-import com.xmlcalabash.functions.*;
+import com.xmlcalabash.functions.BaseURI;
+import com.xmlcalabash.functions.Cwd;
+import com.xmlcalabash.functions.IterationPosition;
+import com.xmlcalabash.functions.IterationSize;
+import com.xmlcalabash.functions.ResolveURI;
+import com.xmlcalabash.functions.StepAvailable;
+import com.xmlcalabash.functions.SystemProperty;
+import com.xmlcalabash.functions.ValueAvailable;
+import com.xmlcalabash.functions.VersionAvailable;
+import com.xmlcalabash.functions.XPathVersionAvailable;
+import com.xmlcalabash.functions.XProcExtensionFunctionDefinition;
 import com.xmlcalabash.io.ReadableData;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.runtime.XLibrary;
@@ -31,11 +41,16 @@ import com.xmlcalabash.runtime.XStep;
 import com.xmlcalabash.util.DefaultXProcConfigurer;
 import com.xmlcalabash.util.DefaultXProcMessageListener;
 import com.xmlcalabash.util.JSONtoXML;
+import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.StepErrorListener;
+import com.xmlcalabash.util.TreeWriter;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
+import net.sf.saxon.s9api.ExtensionFunction;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.Serializer;
+import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.SaxonApiException;
 import com.xmlcalabash.model.Parser;
@@ -44,7 +59,16 @@ import com.xmlcalabash.model.PipelineLibrary;
 import com.xmlcalabash.util.XProcURIResolver;
 import com.xmlcalabash.util.URIUtils;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Constructor;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.logging.Logger;
 import java.util.Hashtable;
 import java.util.Vector;
@@ -57,7 +81,11 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import javax.xml.transform.URIResolver;
+import javax.xml.transform.sax.SAXSource;
 
+import net.sf.saxon.s9api.XsltCompiler;
+import net.sf.saxon.s9api.XsltExecutable;
+import net.sf.saxon.s9api.XsltTransformer;
 import org.apache.commons.httpclient.Cookie;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
@@ -72,7 +100,6 @@ public class XProcRuntime {
     private Parser parser = null;
     private XProcURIResolver uriResolver = null;
     private XProcConfiguration config = null;
-    private Vector<XStep> reported = new Vector<XStep> ();
     private QName errorCode = null;
     private XdmNode errorNode = null;
     private String errorMessage = null;
@@ -97,6 +124,14 @@ public class XProcRuntime {
     private XProcConfigurer configurer = null;
     private String htmlParser = null;
     private Vector<XProcExtensionFunctionDefinition> exFuncs = new Vector<XProcExtensionFunctionDefinition>();
+
+    private String profileFile = null;
+    private Hashtable<XStep,Calendar> profileHash = null;
+    private TreeWriter profileWriter = null;
+    private QName profileProfile = new QName("http://xmlcalabash.com/ns/profile", "profile");
+    private QName profileType = new QName("", "type");
+    private QName profileName = new QName("", "name");
+    private QName profileTime = new QName("http://xmlcalabash.com/ns/profile", "time");
 
     public XProcRuntime(XProcConfiguration config) {
         this.config = config;
@@ -166,11 +201,27 @@ public class XProcRuntime {
         jsonFlavor = config.jsonFlavor;
         useXslt10 = config.useXslt10;
 
+        if (config.profileFile != null) {
+            profileFile = config.profileFile;
+            profileHash = new Hashtable<XStep, Calendar> ();
+            profileWriter = new TreeWriter(this);
+            try {
+                profileWriter.startDocument(new URI("http://xmlcalabash.com/output/profile.xml"));
+            } catch (URISyntaxException use) {
+                // nop;
+            }
+        }
+
         for (String className : config.extensionFunctions) {
             try {
-                ExtensionFunctionDefinition def = (ExtensionFunctionDefinition) Class.forName(className).newInstance();
+                Object def = Class.forName(className).newInstance();
                 finer(null, null, "Instantiated: " + className);
-                processor.registerExtensionFunction(def);
+                if (def instanceof ExtensionFunctionDefinition)
+                    processor.registerExtensionFunction((ExtensionFunctionDefinition) def);
+                else if (def instanceof ExtensionFunction)
+                    processor.registerExtensionFunction((ExtensionFunction) def);
+                else
+                    finer(null, null, "Failed to instantiate extension function " + className + " because that class implements neither ExtensionFunction nor ExtensionFunctionDefinition.");
             } catch (NoClassDefFoundError ncdfe) {
                 finer(null, null, "Failed to instantiate extension function: " + className);
             } catch (Exception e) {
@@ -199,7 +250,26 @@ public class XProcRuntime {
         allowXPointerOnText = runtime.allowXPointerOnText;
         transparentJSON = runtime.transparentJSON;
         jsonFlavor = runtime.jsonFlavor;
+        profileFile = runtime.profileFile;
+
+        exFuncs.add(new Cwd(this));
+        exFuncs.add(new BaseURI(this));
+        exFuncs.add(new ResolveURI(this));
+        exFuncs.add(new SystemProperty(this));
+        exFuncs.add(new StepAvailable(this));
+        exFuncs.add(new IterationSize(this));
+        exFuncs.add(new IterationPosition(this));
+        exFuncs.add(new ValueAvailable(this));
+        exFuncs.add(new VersionAvailable(this));
+        exFuncs.add(new XPathVersionAvailable(this));
+
         reset();
+    }
+
+    public void resetExtensionFunctions() {
+        for (XProcExtensionFunctionDefinition xf : exFuncs) {
+            processor.registerExtensionFunction(xf);
+        }
     }
 
     public void close() {
@@ -222,6 +292,13 @@ public class XProcRuntime {
 
     public boolean getDebug() {
         return config.debug;
+    }
+
+    public String getProfileFile() {
+        return profileFile;
+    }
+    public void setProfileFile(String fn) {
+        profileFile = fn;
     }
 
     public URI getStaticBaseURI() {
@@ -388,7 +465,6 @@ public class XProcRuntime {
     }
 
     private void reset() {
-        reported = new Vector<XStep> ();
         errorCode = null;
         errorMessage = null;
         declaredSteps = new Hashtable<QName,DeclareStep> ();
@@ -415,6 +491,16 @@ public class XProcRuntime {
             throw new XProcException(XProcConstants.dynamicError(9), ex);
         } catch (SaxonApiException ex) {
             throw new XProcException(XProcConstants.dynamicError(9), ex);
+        }
+
+        if (profileFile != null) {
+            profileHash = new Hashtable<XStep, Calendar>();
+            profileWriter = new TreeWriter(this);
+            try {
+                profileWriter.startDocument(new URI("http://xmlcalabash.com/output/profile.xml"));
+            } catch (URISyntaxException use) {
+                // nop;
+            }
         }
     }
 
@@ -716,13 +802,98 @@ public class XProcRuntime {
 
     // ===========================================================
 
-    public void reportStep(XStep step) {
-        reported.add(step);
+    public void start(XStep step) {
+        if (profileFile == null) {
+            return;
+        }
+
+        boolean first = profileHash.isEmpty();
+
+        Calendar start = GregorianCalendar.getInstance();
+        profileHash.put(step, start);
+        profileWriter.addStartElement(profileProfile);
+
+        if (first) {
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+            profileWriter.addAttribute(new QName("", "timestamp"), df.format(new Date()));
+            profileWriter.addAttribute(new QName("", "episode"), getEpisode());
+            profileWriter.addAttribute(new QName("", "language"), getLanguage());
+            profileWriter.addAttribute(new QName("", "product-name"), getProductName());
+            profileWriter.addAttribute(new QName("", "product-version"), getProductVersion());
+            profileWriter.addAttribute(new QName("", "product-vendor"), getVendor());
+            profileWriter.addAttribute(new QName("", "product-vendor-uri"), getVendorURI());
+            profileWriter.addAttribute(new QName("", "xproc-version"), getXProcVersion());
+            profileWriter.addAttribute(new QName("", "xpath-version"), getXPathVersion());
+            profileWriter.addAttribute(new QName("", "psvi-supported"), ""+getPSVISupported());
+        }
+
+        String name = step.getType().getClarkName();
+        profileWriter.addAttribute(profileType, name);
+        profileWriter.addAttribute(profileName, step.getStep().getName());
+        profileWriter.startContent();
     }
 
-    public void start(XPipeline pipe) {
-    }
+    public void finish(XStep step) {
+        if (profileFile == null) {
+            return;
+        }
 
-    public void finish(XPipeline pipe) {
+        Calendar start = profileHash.get(step);
+        long time = GregorianCalendar.getInstance().getTimeInMillis() - start.getTimeInMillis();
+        profileHash.remove(step);
+
+        profileWriter.addStartElement(profileTime);
+        profileWriter.startContent();
+        profileWriter.addText("" + time);
+        profileWriter.addEndElement();
+        profileWriter.addEndElement();
+
+        if (profileHash.isEmpty()) {
+            profileWriter.endDocument();
+            XdmNode profile = profileWriter.getResult();
+
+            InputStream xsl = getClass().getResourceAsStream("/etc/patch-profile.xsl");
+            if (xsl == null) {
+                throw new UnsupportedOperationException("Failed to load profile_patch.xsl from JAR file.");
+            }
+
+            try {
+                XsltCompiler compiler = getProcessor().newXsltCompiler();
+                compiler.setSchemaAware(false);
+                XsltExecutable exec = compiler.compile(new SAXSource(new InputSource(xsl)));
+                XsltTransformer transformer = exec.load();
+                transformer.setInitialContextNode(profile);
+                XdmDestination result = new XdmDestination();
+                transformer.setDestination(result);
+                transformer.transform();
+
+                Serializer serializer = new Serializer();
+                serializer.setOutputProperty(Serializer.Property.INDENT, "yes");
+
+                OutputStream outstr = null;
+                if ("-".equals(profileFile)) {
+                    outstr = System.out;
+                } else {
+                    outstr = new FileOutputStream(new File(profileFile));
+                }
+
+                serializer.setOutputStream(outstr);
+                S9apiUtils.serialize(this, result.getXdmNode(), serializer);
+                outstr.close();
+
+                profileWriter = new TreeWriter(this);
+                try {
+                    profileWriter.startDocument(new URI("http://xmlcalabash.com/output/profile.xml"));
+                } catch (URISyntaxException use) {
+                    // nop;
+                }
+            } catch (SaxonApiException sae) {
+                throw new XProcException(sae);
+            } catch (FileNotFoundException fnfe) {
+                throw new XProcException(fnfe);
+            } catch (IOException ioe) {
+                throw new XProcException(ioe);
+            }
+        }
     }
 }

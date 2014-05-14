@@ -109,7 +109,7 @@ public class StepAvailable extends XProcExtensionFunctionDefinition {
             }
 
             boolean value = false;
-            QName stepType = new QName("x", stepName.getNamespaceURI(), stepName.getLocalName());
+            QName stepType = new QName("x", stepName.getURI(), stepName.getLocalPart());
 
             // FIXME: This doesn't seem terribly efficient...
             while (! (step instanceof XPipeline)) {

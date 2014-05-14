@@ -132,7 +132,7 @@ public class XProcConstants {
     }
 
     private static String initializeVersion() {
-        String sver = "(for Saxon 9.3.x)";
+        String sver = "(for Saxon 9.4.x)";
         Properties config = new Properties();
         InputStream stream = null;
         try {

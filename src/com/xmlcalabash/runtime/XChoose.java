@@ -8,7 +8,6 @@ import com.xmlcalabash.io.Pipe;
 import com.xmlcalabash.model.*;
 
 import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XdmNode;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcData;
@@ -98,6 +97,8 @@ public class XChoose extends XCompoundStep {
             inScopeOptions.put(var.getName(), value);
         }
 
+        runtime.start(this);
+
         XCompoundStep xstep = null;
         for (XStep step : subpipeline) {
             if (step instanceof XWhen) {
@@ -130,6 +131,8 @@ public class XChoose extends XCompoundStep {
         }
 
         xstep.run();
+
+        runtime.finish(this);
 
         data.closeFrame();
     }

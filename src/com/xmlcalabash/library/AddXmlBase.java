@@ -44,7 +44,7 @@ import com.xmlcalabash.runtime.XAtomicStep;
  * @author ndw
  */
 public class AddXmlBase extends DefaultStep implements ProcessMatchingNodes {
-    private static final QName xml_base = new QName(XMLConstants.XML_NS_URI, "base");
+    private static final QName xml_base = new QName("xml",XMLConstants.XML_NS_URI, "base");
     private static final QName _all = new QName("", "all");
     private static final QName _relative = new QName("", "relative");
     private ProcessMatch matcher = null;
@@ -85,7 +85,8 @@ public class AddXmlBase extends DefaultStep implements ProcessMatchingNodes {
         matcher = new ProcessMatch(runtime, this);
         matcher.match(source.read(), new RuntimeValue("*", step.getNode()));
 
-        result.write(matcher.getResult());
+        XdmNode doc = matcher.getResult();
+        result.write(doc);
     }
 
     public boolean processStartDocument(XdmNode node) {

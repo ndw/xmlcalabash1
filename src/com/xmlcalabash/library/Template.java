@@ -28,6 +28,7 @@ import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.util.ProcessMatch;
 import com.xmlcalabash.util.ProcessMatchingNodes;
+import net.sf.saxon.om.InscopeNamespaceResolver;
 import net.sf.saxon.om.NamePool;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.s9api.Axis;
@@ -38,11 +39,9 @@ import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
-import net.sf.saxon.tree.iter.NamespaceIterator;
-
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Vector;
-import java.util.logging.Level;
 
 /**
  *
@@ -186,21 +185,22 @@ public class Template extends DefaultStep implements ProcessMatchingNodes {
         Hashtable<String,String> nsbindings = new Hashtable<String,String> ();
 
         // FIXME: Surely there's a better way to do this?
-        XdmNode parent = node.getParent();
+        XdmNode parent = node;
         while (parent != null
                 && parent.getNodeKind() != XdmNodeKind.ELEMENT
                 && parent.getNodeKind() != XdmNodeKind.DOCUMENT) {
             parent = parent.getParent();
         }
 
-        NodeInfo inode = parent.getUnderlyingNode();
-        NamePool pool = inode.getNamePool();
-        int inscopeNS[] = NamespaceIterator.getInScopeNamespaceCodes(inode);
-        for (int nspos = 0; nspos < inscopeNS.length; nspos++) {
-            int ns = inscopeNS[nspos];
-            String nspfx = pool.getPrefixFromNamespaceCode(ns);
-            String nsuri = pool.getURIFromNamespaceCode(ns);
-            nsbindings.put(nspfx,nsuri);
+        if (parent.getNodeKind() == XdmNodeKind.ELEMENT) {
+            NodeInfo inode = parent.getUnderlyingNode();
+            InscopeNamespaceResolver inscopeNS = new InscopeNamespaceResolver(inode);
+            Iterator<String> prefixes = inscopeNS.iteratePrefixes();
+            while (prefixes.hasNext()) {
+                String nspfx = prefixes.next();
+                String nsuri = inscopeNS.getURIForPrefix(nspfx, true);
+                nsbindings.put(nspfx,nsuri);
+            }
         }
 
         String peek = "";

@@ -89,6 +89,7 @@ public class XUntilUnchanged extends XCompoundStep {
             }
         }
 
+        runtime.start(this);
         for (ReadablePipe is_reader : inputs.get(iport)) {
             XdmNode os_doc = null;
 
@@ -164,6 +165,7 @@ public class XUntilUnchanged extends XCompoundStep {
                 pipe.write(os_doc);
             }
         }
+        runtime.finish(this);
 
         for (String port : inputs.keySet()) {
             if (port.startsWith("|")) {
