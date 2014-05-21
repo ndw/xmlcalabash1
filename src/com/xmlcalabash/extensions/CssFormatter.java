@@ -92,7 +92,7 @@ public class CssFormatter extends DefaultStep {
         if (getOption(_content_type) != null) {
             contentType = getOption(_content_type).getString();
         } else {
-            contentType = "application/xml";
+            contentType = "application/pdf";
         }
 
         String href = getOption(_href).getString();
