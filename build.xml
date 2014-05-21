@@ -139,6 +139,9 @@
         <exclude name="install-proto.xsl"/>
       </fileset>
     </copy>
+    <copy todir="${build.dir}/com">
+      <fileset dir="resources/com"/>
+    </copy>
   </target>
 
   <target name="jar" depends="compile">
