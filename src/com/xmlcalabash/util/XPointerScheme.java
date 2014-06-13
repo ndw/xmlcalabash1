@@ -131,68 +131,68 @@ public class XPointerScheme {
         BufferedReader rd = null;
 
         rd = new BufferedReader(stream);
-
-        String parts[] = select.split("\\s*;\\s*");
-        for (int pos = 1; pos < parts.length; pos++) {
-            // start at 1 because we want to skip the scheme
-            String check = parts[pos];
-            Matcher matcher = lengthRE.matcher(check);
-            if (contentLength >= 0 && matcher.matches()) {
-                int checklen = Integer.parseInt(matcher.group(1));
-                if (checklen != contentLength) {
-                    throw new IllegalArgumentException("Integrity check failed: " + checklen + " != " + contentLength);
+        try {
+            String parts[] = select.split("\\s*;\\s*");
+            for (int pos = 1; pos < parts.length; pos++) {
+                // start at 1 because we want to skip the scheme
+                String check = parts[pos];
+                Matcher matcher = lengthRE.matcher(check);
+                if (contentLength >= 0 && matcher.matches()) {
+                    int checklen = Integer.parseInt(matcher.group(1));
+                    if (checklen != contentLength) {
+                        throw new IllegalArgumentException("Integrity check failed: " + checklen + " != " + contentLength);
+                    }
                 }
             }
-        }
-        select = parts[0];
+            select = parts[0];
 
-        select = select.trim();
+            select = select.trim();
 
-        sp = -1;
-        ep = Long.MAX_VALUE;
-        cp = 0;
-        lp = 0;
+            sp = -1;
+            ep = Long.MAX_VALUE;
+            cp = 0;
+            lp = 0;
 
-        // FIXME: Isn't there a better way to do this?
-        Matcher matcher = rangeRE.matcher(select);
-        if (matcher.matches()) {
-            String r = matcher.group(1);
-            if (r != null && !"".equals(r)) {
-                sp = Integer.parseInt(r);
-            }
-            r = matcher.group(3);
-            if (r != null && !"".equals(r)) {
-                ep = Integer.parseInt(r);
-            }
-        }
-
-        if (select.startsWith("char=")) {
-            chars = true;
-        } else if (select.startsWith("line=")) {
-            chars = false;
-        } else {
-            throw new XProcException("Unparseable XPointer: " + schemeName + "(" + schemeData + ")");
-        }
-
-        try {
-            String line;
-            while ((line = rd.readLine()) != null) {
-                if (chars) {
-                    data += selectChars(line);
-                } else {
-                    data += selectLines(line);
+            // FIXME: Isn't there a better way to do this?
+            Matcher matcher = rangeRE.matcher(select);
+            if (matcher.matches()) {
+                String r = matcher.group(1);
+                if (r != null && !"".equals(r)) {
+                    sp = Integer.parseInt(r);
+                }
+                r = matcher.group(3);
+                if (r != null && !"".equals(r)) {
+                    ep = Integer.parseInt(r);
                 }
             }
-        } catch (IOException ioe) {
-            throw new XProcException(ioe);
-        }
 
-        try {
-            rd.close();
-        } catch (IOException ioe) {
-            throw new XProcException(ioe);
-        }
+            if (select.startsWith("char=")) {
+                chars = true;
+            } else if (select.startsWith("line=")) {
+                chars = false;
+            } else {
+                throw new XProcException("Unparseable XPointer: " + schemeName + "(" + schemeData + ")");
+            }
 
+            try {
+                String line;
+                while ((line = rd.readLine()) != null) {
+                    if (chars) {
+                        data += selectChars(line);
+                    } else {
+                        data += selectLines(line);
+                    }
+                }
+            } catch (IOException ioe) {
+                throw new XProcException(ioe);
+            }
+        } finally {
+            try {
+                rd.close();
+            } catch (IOException ioe) {
+                throw new XProcException(ioe);
+            }
+        }
         return data;
     }
 

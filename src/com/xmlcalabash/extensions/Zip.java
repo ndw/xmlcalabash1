@@ -243,38 +243,41 @@ public class Zip extends DefaultStep {
     
         ZipInputStream zipStream = new ZipInputStream(stream);
     
-        GregorianCalendar cal = new GregorianCalendar();
-    
-        ZipEntry entry = zipStream.getNextEntry();
-        while (entry != null) {
-            cal.setTimeInMillis(entry.getTime());
-            XMLGregorianCalendar xmlCal = dfactory.newXMLGregorianCalendar(cal);
-    
-            if (entry.isDirectory()) {
-                tree.addStartElement(c_directory);
-            } else {
-                tree.addStartElement(c_file);
-    
-                tree.addAttribute(_compressed_size, ""+entry.getCompressedSize());
-                tree.addAttribute(_size, ""+entry.getSize());
+        try {
+            GregorianCalendar cal = new GregorianCalendar();
+
+            ZipEntry entry = zipStream.getNextEntry();
+            while (entry != null) {
+                cal.setTimeInMillis(entry.getTime());
+                XMLGregorianCalendar xmlCal = dfactory.newXMLGregorianCalendar(cal);
+
+                if (entry.isDirectory()) {
+                    tree.addStartElement(c_directory);
+                } else {
+                    tree.addStartElement(c_file);
+
+                    tree.addAttribute(_compressed_size, ""+entry.getCompressedSize());
+                    tree.addAttribute(_size, ""+entry.getSize());
+                }
+
+                if (entry.getComment() != null) {
+                    tree.addAttribute(_comment, entry.getComment());
+                }
+
+                tree.addAttribute(_name, ""+entry.getName());
+                tree.addAttribute(_date, xmlCal.toXMLFormat());
+                tree.startContent();
+                tree.addEndElement();
+                entry = zipStream.getNextEntry();
             }
-    
-            if (entry.getComment() != null) {
-                tree.addAttribute(_comment, entry.getComment());
-            }
-    
-            tree.addAttribute(_name, ""+entry.getName());
-            tree.addAttribute(_date, xmlCal.toXMLFormat());
-            tree.startContent();
+
             tree.addEndElement();
-            entry = zipStream.getNextEntry();
+            tree.endDocument();
+            result.write(tree.getResult());
+
+        } finally {
+            zipStream.close();
         }
-    
-        zipStream.close();
-    
-        tree.addEndElement();
-        tree.endDocument();
-        result.write(tree.getResult());
     }
 
     private void parseManifest(XdmNode man) {
@@ -589,9 +592,12 @@ public class Zip extends DefaultStep {
 
     public void storeJSON(FileToZip file, XdmNode doc, OutputStream out) {
         PrintWriter writer = new PrintWriter(out);
-        String json = XMLtoJSON.convert(doc);
-        writer.print(json);
-        writer.close();
+        try {
+            String json = XMLtoJSON.convert(doc);
+            writer.print(json);
+        } finally { 
+            writer.close();
+        }
     }
 
     public void storeXML(FileToZip file, XdmNode doc, OutputStream out) throws SaxonApiException {

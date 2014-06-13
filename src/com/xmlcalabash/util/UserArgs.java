@@ -593,13 +593,17 @@ public class UserArgs {
                 Input library = libraries.get(0);
                 if (library.getKind() == INPUT_STREAM) {
                     InputStream libraryInputStream = library.getInputStream();
-                    File tempLibrary = createTempFile("calabashLibrary", null);
-                    tempLibrary.deleteOnExit();
-                    FileOutputStream fileOutputStream = new FileOutputStream(tempLibrary);
-                    fileOutputStream.getChannel().transferFrom(newChannel(libraryInputStream), 0, MAX_VALUE);
-                    fileOutputStream.close();
-                    libraryInputStream.close();
-                    libraries.set(0, new Input(tempLibrary.toURI().toASCIIString()));
+                    FileOutputStream fileOutputStream = null;
+                    try {
+                        File tempLibrary = createTempFile("calabashLibrary", null);
+                        tempLibrary.deleteOnExit();
+                        fileOutputStream = new FileOutputStream(tempLibrary);
+                        fileOutputStream.getChannel().transferFrom(newChannel(libraryInputStream), 0, MAX_VALUE);
+                        libraries.set(0, new Input(tempLibrary.toURI().toASCIIString()));
+                    } finally {
+                        Closer.close(fileOutputStream);
+                        libraryInputStream.close();
+                    }
                 }
 
                 XLibrary xLibrary = runtime.loadLibrary(libraries.get(0));
@@ -662,17 +666,21 @@ public class UserArgs {
 
                 case INPUT_STREAM:
                     InputStream libraryInputStream = library.getInputStream();
-                    File tempLibrary = createTempFile("calabashLibrary", null);
-                    tempLibrary.deleteOnExit();
-                    FileOutputStream fileOutputStream = new FileOutputStream(tempLibrary);
-                    fileOutputStream.getChannel().transferFrom(newChannel(libraryInputStream), 0, MAX_VALUE);
-                    fileOutputStream.close();
-                    libraryInputStream.close();
+                    FileOutputStream fileOutputStream = null;
+                    try {
+                        File tempLibrary = createTempFile("calabashLibrary", null);
+                        tempLibrary.deleteOnExit();
+                        fileOutputStream = new FileOutputStream(tempLibrary);
+                        fileOutputStream.getChannel().transferFrom(newChannel(libraryInputStream), 0, MAX_VALUE);
 
-                    tree.addStartElement(p_import);
-                    tree.addAttribute(new QName("href"), tempLibrary.toURI().toASCIIString());
-                    tree.startContent();
-                    tree.addEndElement();
+                        tree.addStartElement(p_import);
+                        tree.addAttribute(new QName("href"), tempLibrary.toURI().toASCIIString());
+                        tree.startContent();
+                        tree.addEndElement();
+                    } finally {
+                        Closer.close(fileOutputStream);
+                        libraryInputStream.close();
+                    }
                     break;
 
                 default:
@@ -730,20 +738,24 @@ public class UserArgs {
                                 tree.startContent();
                                 tree.addEndElement();
                             } else {
-                                File tempInput = createTempFile("calabashInput", null);
-                                tempInput.deleteOnExit();
-                                FileOutputStream fileOutputStream = new FileOutputStream(tempInput);
-                                fileOutputStream.getChannel().transferFrom(newChannel(inputStream), 0, MAX_VALUE);
-                                fileOutputStream.close();
-                                inputStream.close();
+                                FileOutputStream fileOutputStream = null;
+                                try {
+                                    File tempInput = createTempFile("calabashInput", null);
+                                    tempInput.deleteOnExit();
+                                    fileOutputStream = new FileOutputStream(tempInput);
+                                    fileOutputStream.getChannel().transferFrom(newChannel(inputStream), 0, MAX_VALUE);
 
-                                tree.addStartElement(qname);
-                                tree.addAttribute(new QName("href"), tempInput.toURI().toASCIIString());
-                                if (input.getType() == DATA) {
-                                    tree.addAttribute(new QName("content-type"), input.getContentType());
+                                    tree.addStartElement(qname);
+                                    tree.addAttribute(new QName("href"), tempInput.toURI().toASCIIString());
+                                    if (input.getType() == DATA) {
+                                        tree.addAttribute(new QName("content-type"), input.getContentType());
+                                    }
+                                    tree.startContent();
+                                    tree.addEndElement();
+                                } finally {
+                                    Closer.close(fileOutputStream);
+                                    inputStream.close();
                                 }
-                                tree.startContent();
-                                tree.addEndElement();
                             }
                             break;
 

@@ -401,11 +401,13 @@ public class XAtomicStep extends XStep {
                 throw XProcException.dynamicError(19);
             }
 
+            
+        } finally {
             for (String port : outputs.keySet()) {
                 WritablePipe wpipe = outputs.get(port);
                 wpipe.close(); // Indicate we're done
             }
-        } finally {
+            
             runtime.finish(this);
             data.closeFrame();
         }

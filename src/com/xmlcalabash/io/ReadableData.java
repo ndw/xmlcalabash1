@@ -95,10 +95,17 @@ public class ReadableData implements ReadablePipe {
 		try {
 			final String userContentType = parseContentType(contentType);
 			if (uri == null) {
-				read(userContentType, null, inputStream, getContentType());
+			    try {
+			        read(userContentType, null, inputStream, getContentType());
+			    } finally {
+			        // This is the only case where the inputStream should be 
+			        // closed.
+			        inputStream.close();
+			    }
 			} else if ("-".equals(uri)) {
 				read(userContentType, getDataUri("-"), System.in,
 						getContentType());
+				// No need to close the input stream here, since it's System.in.
 			} else {
 				String accept = "application/json, text/json, text/*, */*";
 				if (userContentType != null) {
@@ -112,129 +119,132 @@ public class ReadableData implements ReadablePipe {
 								serverContentType);
 					}
 				});
+				// Also no need to close the input stream here, since  
+				// DataStore implementations close the input stream when
+				// necessary.
 			}
 		} catch (IOException ioe) {
             throw new XProcException(XProcConstants.dynamicError(29), ioe);
-        	
+		
         }
         return documents;
     }
 
+    
+    // This method does NOT close the InputStream; it relies on the caller to close
+    // the InputStream, as appropriate.
 	private void read(String userContentType, URI dataURI,
 			InputStream stream, String serverContentType)
 			throws IOException {
-		this.serverContentType = serverContentType;
+	    this.serverContentType = serverContentType;
 
-        String userCharset = parseCharset(contentType);
-        TreeWriter tree = new TreeWriter(runtime);
-        tree.startDocument(dataURI);
-		if (contentType != null && "content/unknown".equals(serverContentType)) {
-		    // pretend...
-		    serverContentType = contentType;
-		}
+	    String userCharset = parseCharset(contentType);
+	    TreeWriter tree = new TreeWriter(runtime);
+	    tree.startDocument(dataURI);
+	    if (contentType != null && "content/unknown".equals(serverContentType)) {
+	        // pretend...
+	        serverContentType = contentType;
+	    }
 
-		String serverBaseContentType = parseContentType(serverContentType);
-		String serverCharset = parseCharset(serverContentType);
+	    String serverBaseContentType = parseContentType(serverContentType);
+	    String serverCharset = parseCharset(serverContentType);
 
-		if (serverCharset != null) {
-		    // HACK! Make the content type here consistent with the content type returned
-		    // from the http-request tests, just to make the test suite results more
-		    // consistent.
-		    serverContentType = serverBaseContentType + "; charset=\"" + serverCharset + "\"";
-		}
+	    if (serverCharset != null) {
+	        // HACK! Make the content type here consistent with the content type returned
+	        // from the http-request tests, just to make the test suite results more
+	        // consistent.
+	        serverContentType = serverBaseContentType + "; charset=\"" + serverCharset + "\"";
+	    }
 
-		// If the user specified a charset and the server did not and it's a file: URI,
-		// assume the user knows best.
-		// FIXME: provide some way to override this!!!
+	    // If the user specified a charset and the server did not and it's a file: URI,
+	    // assume the user knows best.
+	    // FIXME: provide some way to override this!!!
 
-		String charset = serverCharset;
-		if ((uri != null) && ("-".equals(uri) || "file".equals(dataURI.getScheme()))
-		        && serverCharset == null
-		        && serverBaseContentType.equals(userContentType)) {
-		    charset = userCharset;
-		}
+	    String charset = serverCharset;
+	    if ((uri != null) && ("-".equals(uri) || "file".equals(dataURI.getScheme()))
+	            && serverCharset == null
+	            && serverBaseContentType.equals(userContentType)) {
+	        charset = userCharset;
+	    }
 
-		if (runtime.transparentJSON() && HttpUtils.jsonContentType(contentType)) {
-		    if (charset == null) {
-		        // FIXME: Is this right? I think it is...
-		        charset = "UTF-8";
-		    }
-		    InputStreamReader reader = new InputStreamReader(stream, charset);
-		    JSONTokener jt = new JSONTokener(reader);
-		    XdmNode jsonDoc = JSONtoXML.convert(runtime.getProcessor(), jt, runtime.jsonFlavor());
-		    tree.addSubtree(jsonDoc);
-		} else {
-		    tree.addStartElement(wrapper);
-		    if (XProcConstants.c_data.equals(wrapper)) {
-		        if ("content/unknown".equals(serverContentType)) {
-		            tree.addAttribute(_contentType, "application/octet-stream");
-		        } else {
-		            tree.addAttribute(_contentType, serverContentType);
-		        }
-		        if (!isText(serverContentType, charset)) {
-		            tree.addAttribute(_encoding, "base64");
-		        }
-		    } else {
-		        if ("content/unknown".equals(serverContentType)) {
-		            tree.addAttribute(c_contentType, "application/octet-stream");
-		        } else {
-		            tree.addAttribute(c_contentType, serverContentType);
-		        }
-		        if (!isText(serverContentType, charset)) {
-		            tree.addAttribute(c_encoding, "base64");
-		        }
-		    }
-		    tree.startContent();
+	    if (runtime.transparentJSON() && HttpUtils.jsonContentType(contentType)) {
+	        if (charset == null) {
+	            // FIXME: Is this right? I think it is...
+	            charset = "UTF-8";
+	        }
+	        InputStreamReader reader = new InputStreamReader(stream, charset);
+	        JSONTokener jt = new JSONTokener(reader);
+	        XdmNode jsonDoc = JSONtoXML.convert(runtime.getProcessor(), jt, runtime.jsonFlavor());
+	        tree.addSubtree(jsonDoc);
+	    } else {
+	        tree.addStartElement(wrapper);
+	        if (XProcConstants.c_data.equals(wrapper)) {
+	            if ("content/unknown".equals(serverContentType)) {
+	                tree.addAttribute(_contentType, "application/octet-stream");
+	            } else {
+	                tree.addAttribute(_contentType, serverContentType);
+	            }
+	            if (!isText(serverContentType, charset)) {
+	                tree.addAttribute(_encoding, "base64");
+	            }
+	        } else {
+	            if ("content/unknown".equals(serverContentType)) {
+	                tree.addAttribute(c_contentType, "application/octet-stream");
+	            } else {
+	                tree.addAttribute(c_contentType, serverContentType);
+	            }
+	            if (!isText(serverContentType, charset)) {
+	                tree.addAttribute(c_encoding, "base64");
+	            }
+	        }
+	        tree.startContent();
 
-		    if (isText(serverContentType, charset)) {
-		        BufferedReader bufread;
-		        if (charset == null) {
-		            // FIXME: Is this right? I think it is...
-		            charset = "UTF-8";
-		        }
-		        BufferedReader bufreader = new BufferedReader(new InputStreamReader(stream, charset));
-		        int maxlen = 4096 * 3;
-		        char[] chars = new char[maxlen];
-		        int read = bufreader.read(chars, 0, maxlen);
-		        while (read >= 0) {
-		            if (read > 0) {
-		                String data = new String(chars, 0, read);
-		                tree.addText(data);
-		            }
-		            read = bufreader.read(chars, 0, maxlen);
-		        }
-		        bufreader.close();
-		    } else {
-		        // Fill the buffer each time so that we get an even number of base64 lines
-		        int maxlen = 4096 * 3;
-		        byte[] bytes = new byte[maxlen];
-		        int pos = 0;
-		        int readlen = maxlen;
-		        boolean done = false;
-		        while (!done) {
-		            int read = stream.read(bytes, pos, readlen);
-		            if (read >= 0) {
-		                pos += read;
-		                readlen -= read;
-		            } else {
-		                done = true;
-		            }
+	        if (isText(serverContentType, charset)) {
+	            if (charset == null) {
+	                // FIXME: Is this right? I think it is...
+	                charset = "UTF-8";
+	            }
+	            BufferedReader bufreader = new BufferedReader(new InputStreamReader(stream, charset));
+	            int maxlen = 4096 * 3;
+	            char[] chars = new char[maxlen];
+	            int read = bufreader.read(chars, 0, maxlen);
+	            while (read >= 0) {
+	                if (read > 0) {
+	                    String data = new String(chars, 0, read);
+	                    tree.addText(data);
+	                }
+	                read = bufreader.read(chars, 0, maxlen);
+	            }
+	        } else {
+	            // Fill the buffer each time so that we get an even number of base64 lines
+	            int maxlen = 4096 * 3;
+	            byte[] bytes = new byte[maxlen];
+	            int pos = 0;
+	            int readlen = maxlen;
+	            boolean done = false;
+	            while (!done) {
+	                int read = stream.read(bytes, pos, readlen);
+	                if (read >= 0) {
+	                    pos += read;
+	                    readlen -= read;
+	                } else {
+	                    done = true;
+	                }
 
-		            if ((readlen == 0) || done) {
-		                String base64 = Base64.encodeBytes(bytes, 0, pos);
-		                tree.addText(base64 + "\n");
-		                pos = 0;
-		                readlen = maxlen;
-		            }
-		        }
-		        stream.close();
-		    }
-		    tree.addEndElement();
-		}
+	                if ((readlen == 0) || done) {
+	                    String base64 = Base64.encodeBytes(bytes, 0, pos);
+	                    tree.addText(base64 + "\n");
+	                    pos = 0;
+	                    readlen = maxlen;
+	                }
+	            }
+	        }
+	        tree.addEndElement();
+	    }
 
-        tree.endDocument();
+	    tree.endDocument();
 
-        documents.add(tree.getResult());
+	    documents.add(tree.getResult());
 	}
 
     public void canReadSequence(boolean sequence) {

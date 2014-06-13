@@ -321,11 +321,14 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
             data = xpointer.selectText(stream, (int) len);
         } else {
             rd = new BufferedReader(stream);
-            String line;
-            while ((line = rd.readLine()) != null) {
-                data += line + "\n";
+            try {
+                String line;
+                while ((line = rd.readLine()) != null) {
+                    data += line + "\n";
+                }
+            } finally {
+                rd.close();
             }
-            rd.close();
         }
 
         return data;

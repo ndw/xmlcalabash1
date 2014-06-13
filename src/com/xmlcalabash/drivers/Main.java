@@ -43,6 +43,7 @@ import com.xmlcalabash.io.WritableDocument;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.model.Serialization;
 import com.xmlcalabash.runtime.XPipeline;
+import com.xmlcalabash.util.Closer;
 import com.xmlcalabash.util.Input;
 import com.xmlcalabash.util.Output;
 import com.xmlcalabash.util.Output.Kind;
@@ -98,8 +99,6 @@ public class Main {
                 System.out.println();
             }
 
-            // Here all memory should be freed by the next gc, right?
-            runtime.close();
         } catch (UnsupportedOperationException uoe) {
             usage();
         } catch (XProcException err) {
@@ -132,6 +131,9 @@ public class Main {
             if (debug) {
                 err.printStackTrace();
             }
+        } finally {
+            // Here all memory should be freed by the next gc, right?
+            runtime.close();
         }
     }
 
@@ -229,8 +231,11 @@ public class Main {
 
                                 case INPUT_STREAM:
                                     InputStream inputStream = input.getInputStream();
-                                    doc = runtime.parse(new InputSource(inputStream));
-                                    inputStream.close();
+                                    try {
+                                        doc = runtime.parse(new InputSource(inputStream));
+                                    } finally {
+                                        Closer.close(inputStream);
+                                    }
                                     break;
 
                                 default:
@@ -248,9 +253,12 @@ public class Main {
 
                                 case INPUT_STREAM:
                                     InputStream inputStream = input.getInputStream();
-                                    rd = new ReadableData(runtime, c_data, inputStream, input.getContentType());
-                                    doc = rd.read();
-                                    inputStream.close();
+                                    try {
+                                        rd = new ReadableData(runtime, c_data, inputStream, input.getContentType());
+                                        doc = rd.read();
+                                    } finally {
+                                        Closer.close(inputStream);
+                                    }
                                     break;
 
                                 default:
@@ -404,13 +412,15 @@ public class Main {
                 }
             }
 
-            ReadablePipe rpipe = pipeline.readFrom(port);
-            while (rpipe.moreDocuments()) {
-                wd.write(rpipe.read());
-            }
-
-            if (output != null) {
-                wd.close();
+            try {
+                ReadablePipe rpipe = pipeline.readFrom(port);
+                while (rpipe.moreDocuments()) {
+                    wd.write(rpipe.read());
+                }
+            } finally {
+                if (output != null) {
+                    wd.close();
+                }
             }
         }
 
@@ -439,12 +449,17 @@ public class Main {
         }
 
         BufferedReader br = new BufferedReader(new InputStreamReader(instream));
-        String line = null;
-        while ((line = br.readLine()) != null) {
-            System.err.println(line);
+        try {
+            String line = null;
+            while ((line = br.readLine()) != null) {
+                System.err.println(line);
+            }
+        } finally {
+            // BufferedReader.close also closes the underlying stream, so only 
+            // one close() call is necessary.
+            // instream.close();
+            br.close();
         }
-        instream.close();
-        br.close();
         System.exit(1);
     }
 

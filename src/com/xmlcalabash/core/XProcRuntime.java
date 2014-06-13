@@ -1033,7 +1033,8 @@ public class XProcRuntime {
                 serializer.setOutputProperty(Serializer.Property.INDENT, "yes");
 
                 OutputStream outstr = null;
-                switch (this.profile.getKind()) {
+                try {
+                    switch (this.profile.getKind()) {
                     case URI:
                         URI furi = URI.create(this.profile.getUri());
                         outstr = new FileOutputStream(new File(furi));
@@ -1045,12 +1046,14 @@ public class XProcRuntime {
 
                     default:
                         throw new UnsupportedOperationException(format("Unsupported profile kind '%s'", this.profile.getKind()));
-                }
+                    }
 
-                serializer.setOutputStream(outstr);
-                S9apiUtils.serialize(this, result.getXdmNode(), serializer);
-                if (!System.out.equals(outstr) && !System.err.equals(outstr)) {
-                    outstr.close();
+                    serializer.setOutputStream(outstr);
+                    S9apiUtils.serialize(this, result.getXdmNode(), serializer);
+                } finally {
+                    if (!System.out.equals(outstr) && !System.err.equals(outstr)) {
+                        outstr.close();
+                    }
                 }
 
                 profileWriter = new TreeWriter(this);
