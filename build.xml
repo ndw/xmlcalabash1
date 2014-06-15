@@ -107,16 +107,43 @@
 
   <target name="default" depends="jar"/>
 
-  <target name="init" depends="saxon-version">
+  <target name="init" depends="saxon-version,ant-version">
     <mkdir dir="${build.dir}"/>
     <property name="dist-version" value="${version}-${saxon-version-short}"/>
     <property name="install.dir" value="${dist.dir}/calabash-${dist-version}"/>
     <property name="docs.install.dir" value="${dist.dir}/calabash-${version}"/>
   </target>
 
+  <target name="ant-version">
+    <fail message="Please upgrade to Ant 1.7.0 or higher.">
+      <condition>
+        <not>
+          <antversion atleast="1.7.0"/>
+        </not>
+      </condition>
+    </fail>
+  </target>
+
   <target name="saxon95" if="saxon95">
     <property name="saxon-version-short" value="95"/>
-    <property name="saxon-version" value="9.5.1.1"/>
+    <!-- <property name="saxon-version" value="9.5.1.5"/> -->
+    <tempfile property="saxon-version-tmp-file"
+              destdir="${java.io.tmpdir}"
+              prefix="saxon.version"
+              suffix=".tmp"
+              deleteonexit="true"/>
+    <java classname="net.sf.saxon.Version"
+          classpathref="build.classpath"
+          output="${saxon-version-tmp-file}"/>
+    <loadfile property="saxon-version"
+              srcFile="${saxon-version-tmp-file}">
+      <filterchain>
+        <tokenfilter>
+          <stringtokenizer suppressdelims="true"/>
+          <containsregex pattern="\d+\.\d+\.\d+(\.\d+)?"/>
+        </tokenfilter>
+      </filterchain>
+    </loadfile>
   </target>
 
   <target name="saxon94" if="saxon94" unless="saxon95">
@@ -130,7 +157,9 @@
   </target>
 
   <target name="saxon-version" depends="saxon93,saxon94,saxon95">
+
     <echo>Currently using saxon ${saxon-version}</echo>
+    <echo>Currently using java ${java.version}</echo>
   </target>
 
   <target name="update-output">
