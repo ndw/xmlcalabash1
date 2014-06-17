@@ -234,7 +234,7 @@ public class PipeLogger {
                 } catch (SaxonApiException sae) {
                     System.err.println("Logging failed: " + sae);
                 } finally {
-                    if (stream != null && !System.out.equals(stream) && !System.err.equals(stream)) {
+                    if (!System.err.equals(stream)) {
                         stream.close();
                     }
                 }
