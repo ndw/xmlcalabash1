@@ -74,6 +74,7 @@ public class ValidateWithXSD extends DefaultStep {
     private static final QName _try_namespaces = new QName("", "try-namespaces");
     private static final QName _line = new QName("line");
     private static final QName _column = new QName("column");
+    private static final QName cx_version = new QName(XProcConstants.NS_CALABASH_EX, "version");
 
     private static final Class<?>[] paramTypes = new Class<?>[] {};
     private ReadablePipe source = null;
@@ -119,6 +120,11 @@ public class ValidateWithXSD extends DefaultStep {
 
     public void validateWithSaxonSA(SchemaManager manager) throws SaxonApiException {
         fine(step.getNode(), "Validating with Saxon");
+
+        String xsdVersion = step.getExtensionAttribute(cx_version);
+        if (xsdVersion != null) {
+            manager.setXsdVersion(xsdVersion);
+        }
 
         Configuration config = runtime.getProcessor().getUnderlyingConfiguration();
 
