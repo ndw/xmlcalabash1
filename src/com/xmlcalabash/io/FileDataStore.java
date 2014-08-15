@@ -171,8 +171,7 @@ public class FileDataStore implements DataStore {
 					handler.list(f.toURI(), type, f.lastModified());
 				}
 			} else {
-				throw new FileNotFoundException(file.getAbsolutePath()
-						+ " is not a directory");
+                // There's nothing to do...
 			}
 		} else {
 			fallback.listEachEntry(href, base, accept, handler);
@@ -193,7 +192,7 @@ public class FileDataStore implements DataStore {
 				if (file.mkdirs()) {
 					return file.toURI();
 				} else {
-					throw new IOException("Could not create diretory: "
+					throw new IOException("Could not create directory: "
 							+ file.getAbsolutePath());
 				}
 			}
