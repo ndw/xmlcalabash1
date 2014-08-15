@@ -137,7 +137,7 @@ public class WWWFormURLEncode extends DefaultStep implements ProcessMatchingNode
 
     private String encode(String src) {
         String genDelims = ":/?#[]@";
-        String subDelims = "!$'()*+,;="; // N.B. NO &!
+        String subDelims = "!$'()*,;="; // N.B. NO & and no + !
         String unreserved = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-._~";
         String okChars = genDelims + subDelims + unreserved;
 
@@ -149,7 +149,11 @@ public class WWWFormURLEncode extends DefaultStep implements ProcessMatchingNode
                 if (okChars.indexOf(bytes[pos]) >= 0) {
                     encoded += (char) bytes[pos];
                 } else {
-                    encoded += String.format("%%%02X", bytes[pos]);
+                    if (bytes[pos] == ' ') {
+                        encoded += "+";
+                    } else {
+                        encoded += String.format("%%%02X", bytes[pos]);
+                    }
                 }
             }
         } catch (UnsupportedEncodingException uee) {
