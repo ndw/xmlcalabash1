@@ -227,11 +227,7 @@ public class XProcRuntime {
             profile = config.profile;
             profileHash = new Hashtable<XStep, Calendar> ();
             profileWriter = new TreeWriter(this);
-            try {
-                profileWriter.startDocument(new URI("http://xmlcalabash.com/output/profile.xml"));
-            } catch (URISyntaxException use) {
-                // nop;
-            }
+            profileWriter.startDocument(URI.create("http://xmlcalabash.com/output/profile.xml"));
         }
 
         for (String className : config.extensionFunctions) {
@@ -555,11 +551,7 @@ public class XProcRuntime {
         if (profile != null) {
             profileHash = new Hashtable<XStep, Calendar>();
             profileWriter = new TreeWriter(this);
-            try {
-                profileWriter.startDocument(new URI("http://xmlcalabash.com/output/profile.xml"));
-            } catch (URISyntaxException use) {
-                // nop;
-            }
+            profileWriter.startDocument(URI.create("http://xmlcalabash.com/output/profile.xml"));
         }
     }
 
