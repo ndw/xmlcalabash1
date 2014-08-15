@@ -243,11 +243,11 @@ public class XProcRuntime {
                 else if (def instanceof ExtensionFunction)
                     processor.registerExtensionFunction((ExtensionFunction) def);
                 else
-                    finer(null, null, "Failed to instantiate extension function " + className + " because that class implements neither ExtensionFunction nor ExtensionFunctionDefinition.");
+                    info(null, null, "Failed to instantiate extension function " + className + " because that class implements neither ExtensionFunction nor ExtensionFunctionDefinition.");
             } catch (NoClassDefFoundError ncdfe) {
-                finer(null, null, "Failed to instantiate extension function: " + className);
+                info(null, null, "Failed to instantiate extension function: " + className);
             } catch (Exception e) {
-                finer(null, null, "Failed to instantiate extension function: " + className);
+                info(null, null, "Failed to instantiate extension function: " + className);
             }
         }
 
