@@ -125,7 +125,18 @@ public class ReadableData implements ReadablePipe {
 			throws IOException {
 		this.serverContentType = serverContentType;
 
-        String userCharset = parseCharset(contentType);
+        contentType = serverContentType;
+
+        // If the input is - or a file: URI, assume the user provided content type
+        // and charset are correct.
+        if ((uri != null) && ("-".equals(uri) || "file".equals(dataURI.getScheme()))) {
+            if (userContentType != null) {
+                contentType = userContentType;
+            }
+        }
+
+        String charset = parseCharset(contentType);
+
         TreeWriter tree = new TreeWriter(runtime);
         tree.startDocument(dataURI);
 		if (contentType != null && "content/unknown".equals(serverContentType)) {
@@ -143,17 +154,6 @@ public class ReadableData implements ReadablePipe {
 		    serverContentType = serverBaseContentType + "; charset=\"" + serverCharset + "\"";
 		}
 
-		// If the user specified a charset and the server did not and it's a file: URI,
-		// assume the user knows best.
-		// FIXME: provide some way to override this!!!
-
-		String charset = serverCharset;
-		if ((uri != null) && ("-".equals(uri) || "file".equals(dataURI.getScheme()))
-		        && serverCharset == null
-		        && serverBaseContentType.equals(userContentType)) {
-		    charset = userCharset;
-		}
-
 		if (runtime.transparentJSON() && HttpUtils.jsonContentType(contentType)) {
 		    if (charset == null) {
 		        // FIXME: Is this right? I think it is...
@@ -166,27 +166,27 @@ public class ReadableData implements ReadablePipe {
 		} else {
 		    tree.addStartElement(wrapper);
 		    if (XProcConstants.c_data.equals(wrapper)) {
-		        if ("content/unknown".equals(serverContentType)) {
+		        if ("content/unknown".equals(contentType)) {
 		            tree.addAttribute(_contentType, "application/octet-stream");
 		        } else {
-		            tree.addAttribute(_contentType, serverContentType);
+		            tree.addAttribute(_contentType, contentType);
 		        }
-		        if (!isText(serverContentType, charset)) {
+		        if (!isText(contentType, charset)) {
 		            tree.addAttribute(_encoding, "base64");
 		        }
 		    } else {
-		        if ("content/unknown".equals(serverContentType)) {
+		        if ("content/unknown".equals(contentType)) {
 		            tree.addAttribute(c_contentType, "application/octet-stream");
 		        } else {
-		            tree.addAttribute(c_contentType, serverContentType);
+		            tree.addAttribute(c_contentType, contentType);
 		        }
-		        if (!isText(serverContentType, charset)) {
+		        if (!isText(contentType, charset)) {
 		            tree.addAttribute(c_encoding, "base64");
 		        }
 		    }
 		    tree.startContent();
 
-		    if (isText(serverContentType, charset)) {
+		    if (isText(contentType, charset)) {
 		        BufferedReader bufread;
 		        if (charset == null) {
 		            // FIXME: Is this right? I think it is...
