@@ -111,6 +111,8 @@ public class XSLFormatter extends DefaultStep {
                         processor.format(source.read(),out,contentType);
                     } catch (SaxonApiException e) {
                         throw new XProcException(step.getNode(), "Failed to process FO document", e);
+                    } finally {
+                        out.close();
                     }
                 }
             });
