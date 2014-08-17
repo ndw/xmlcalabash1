@@ -34,6 +34,8 @@
   <property name="test.report" value="test/report.xml"/>
   <property name="test.errors" value="test/errors.txt"/>
   <property name="test.format" value="test/report.html"/>
+  <property name="test.adoc" value="test/report.adoc"/>
+  <property name="test.fail.adoc" value="test/report-fail.adoc"/>
   <property name="submit.username" value="calabash"/>
   <property name="submit.password" value=""/>
 
@@ -544,6 +546,24 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
       <arg value="-xsl:resources/format-report.xsl"/>
     </java>
     <echo>Report is in ${test.format}</echo>
+
+    <java fork="true" classname="net.sf.saxon.Transform">
+      <classpath refid="full.classpath"/>
+      <arg value="-o:${test.adoc}"/>
+      <arg value="-s:${test.report}"/>
+      <arg value="-xsl:resources/asciidoc-report.xsl"/>
+    </java>
+    <echo>AsciiDoc report is in ${test.adoc}</echo>
+
+    <java fork="true" classname="net.sf.saxon.Transform">
+      <classpath refid="full.classpath"/>
+      <arg value="-o:${test.fail.adoc}"/>
+      <arg value="-s:${test.report}"/>
+      <arg value="-xsl:resources/asciidoc-report.xsl"/>
+      <arg value="show-pass=0"/>
+      <arg value="show-partial=0"/>
+    </java>
+    <echo>AsciiDoc fail report is in ${test.fail.adoc}</echo>
   </target>
 
   <target name="publish-report" depends="test-suite">
