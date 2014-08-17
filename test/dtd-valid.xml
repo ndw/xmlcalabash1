@@ -1,6 +1,0 @@
-<!DOCTYPE doc SYSTEM "dtd-schema.dtd">
-<doc foo="foo">
-  <p bar="bar">
-    <em/>
-  </p>
-</doc>
