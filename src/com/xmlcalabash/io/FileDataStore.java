@@ -171,7 +171,7 @@ public class FileDataStore implements DataStore {
 					handler.list(f.toURI(), type, f.lastModified());
 				}
 			} else {
-                // There's nothing to do...
+                throw new FileNotFoundException(file.getAbsolutePath() + " is not a directory");
 			}
 		} else {
 			fallback.listEachEntry(href, base, accept, handler);
