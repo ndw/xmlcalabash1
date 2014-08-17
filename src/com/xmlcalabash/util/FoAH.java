@@ -11,9 +11,7 @@ import jp.co.antenna.XfoJavaCtl.XfoFormatPageListener;
 import jp.co.antenna.XfoJavaCtl.XfoObj;
 import net.sf.saxon.s9api.XdmNode;
 
-import java.io.ByteArrayInputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.util.Properties;
 
 /**
@@ -121,7 +119,7 @@ public class FoAH implements FoProcessor {
         } else if ("application/vnd.mif".equals(contentType)) {
             outputFormat = "@MIF";
         } else if ("text/plain".equals(contentType)) {
-            outputFormat = "@TXT";
+            outputFormat = "@TEXT";
         } else {
             throw new XProcException(step.getNode(), "Unsupported content-type on p:xsl-formatter: " + contentType);
         }
