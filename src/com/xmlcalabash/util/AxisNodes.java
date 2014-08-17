@@ -19,81 +19,85 @@
  */
 package com.xmlcalabash.util;
 
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.Axis;
-import net.sf.saxon.s9api.XdmSequenceIterator;
-import net.sf.saxon.s9api.XdmNodeKind;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.XdmItem;
-import net.sf.saxon.s9api.XPathCompiler;
-import net.sf.saxon.s9api.XPathExecutable;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XPathSelector;
-import net.sf.saxon.s9api.XdmValue;
-import net.sf.saxon.s9api.SaxonApiUncheckedException;
-import net.sf.saxon.trans.XPathException;
-
-import java.util.Iterator;
-import java.util.Vector;
-import java.util.Hashtable;
-
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.model.RuntimeValue;
+import net.sf.saxon.s9api.*;
+import net.sf.saxon.trans.XPathException;
+
+import java.util.Iterator;
+import java.util.logging.Logger;
 
 /**
  * Created by IntelliJ IDEA.
  * User: ndw
  * Date: Apr 23, 2008
  * Time: 12:39:28 PM
+ *
+ * All this really does is make XdmSequenceIterator Iterable.
+ *
  * To change this template use File | Settings | File Templates.
  */
-public class RelevantNodes implements Iterable<XdmNode> {
+public class AxisNodes implements Iterable<XdmNode> {
+    public static final int NO_PIS = 0x01;
+    public static final int NO_COMMENTS = 0x02;
+    public static final int NO_WHITESPACE = 0x04;
+    public static final int NO_DOC = 0x08;
+    public static final int USE_WHEN = 0x10;
+
+    public static final int ALL = 0;
+    public static final int SIGNIFICANT = NO_PIS | NO_COMMENTS | NO_WHITESPACE;
+    public static final int PIPELINE = SIGNIFICANT | NO_DOC | USE_WHEN;
+    private static final int VALID_BITS = PIPELINE;
+
+    protected Logger logger = Logger.getLogger("com.xmlcalabash.util.RelevantNodes");
     private static QName use_when = new QName("", "use-when");
     private static QName p_use_when = new QName(XProcConstants.NS_XPROC, "use-when");
-    private RelevantNodesIter iter = null;
+    private AxisNodesIter iter = null;
     private XProcRuntime runtime = null;
+    private int filter = ALL;
 
-    public RelevantNodes(XProcRuntime runtime, XdmNode start, Axis axis) {
+    public AxisNodes(XdmNode start, Axis axis) {
+        iter = new AxisNodesIter(start, axis);
+    }
+
+    public AxisNodes(XdmNode start, Axis axis, int filter) {
+        if ((filter | VALID_BITS) != VALID_BITS) {
+            throw new XProcException("Invalid filter passed to AxisNodes");
+        }
+        if ((filter & USE_WHEN) == USE_WHEN) {
+            throw new XProcException("Pointless use of USE_WHEN filter in AxisNodes");
+        }
+        this.filter = filter;
+        iter = new AxisNodesIter(start, axis);
+    }
+
+    public AxisNodes(XProcRuntime runtime, XdmNode start, Axis axis, int filter) {
+        if ((filter | VALID_BITS) != VALID_BITS) {
+            throw new XProcException("Invalid filter passed to AxisNodes");
+        }
         this.runtime = runtime;
-        iter = new RelevantNodesIter(start, axis);
-    }
-
-    public RelevantNodes(XdmNode start, Axis axis, boolean ignore) {
-        iter = new RelevantNodesIter(start, axis, ignore);
-    }
-
-    public RelevantNodes(XdmNode start, QName name) {
-        iter = new RelevantNodesIter(start, Axis.CHILD, name);
+        this.filter = filter;
+        iter = new AxisNodesIter(start, axis);
     }
 
     public Iterator<XdmNode> iterator() {
         return iter;
     }
 
-    private class RelevantNodesIter implements Iterator<XdmNode> {
+    private class AxisNodesIter implements Iterator<XdmNode> {
         private XdmSequenceIterator iter = null;
         private XdmNode next = null;
         private boolean finished = false;
-        private QName onlyMatch = null;
-        private boolean ignoreInfo = true;
+        private boolean hasNext = false;
 
-        public RelevantNodesIter(XdmNode start, Axis axis) {
+        public AxisNodesIter(XdmNode start, Axis axis) {
             iter = start.axisIterator(axis);
-        }
-
-        public RelevantNodesIter(XdmNode start, Axis axis, boolean ignore) {
-            ignoreInfo = ignore;
-            iter = start.axisIterator(axis);
-        }
-
-        public RelevantNodesIter(XdmNode start, Axis axis, QName name) {
-            iter = start.axisIterator(axis);
-            onlyMatch = name;
         }
 
         public boolean hasNext() {
+            hasNext = true;
+
             // This code is funky because XdmSequenceIterator.hasNext() consumes an item
             if (next == null) {
                 boolean hasNext = iter.hasNext();
@@ -119,6 +123,10 @@ public class RelevantNodes implements Iterable<XdmNode> {
         }
 
         public XdmNode next() {
+            if (!hasNext) {
+                hasNext();
+                hasNext = false;
+            }
             XdmNode r = next;
             next = null;
             return r;
@@ -129,41 +137,55 @@ public class RelevantNodes implements Iterable<XdmNode> {
         }
 
         private boolean ok(XdmNode node) {
-            if (node == null
-                || (ignoreInfo && (XProcConstants.p_documentation.equals(node.getNodeName())
-                                   || XProcConstants.p_pipeinfo.equals(node.getNodeName())))) {
+            if (node == null) {
                 return false;
             }
 
-            if (node.getNodeKind() == XdmNodeKind.COMMENT
-                || node.getNodeKind() == XdmNodeKind.PROCESSING_INSTRUCTION) {
+            if (((filter & NO_DOC) == NO_DOC)
+                && (node.getNodeKind() == XdmNodeKind.ELEMENT)
+                && (XProcConstants.p_documentation.equals(node.getNodeName())
+                    || XProcConstants.p_pipeinfo.equals(node.getNodeName()))) {
+                return false;
+            }
+
+            if (((filter & NO_COMMENTS) == NO_COMMENTS)
+                    && node.getNodeKind() == XdmNodeKind.COMMENT) {
+                return false;
+            }
+
+            if (((filter & NO_PIS) == NO_PIS)
+                    && node.getNodeKind() == XdmNodeKind.PROCESSING_INSTRUCTION) {
                 return false;
             }
 
             if (node.getNodeKind() == XdmNodeKind.TEXT) {
-                return !"".equals(node.toString().trim());
-            }
-
-            if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
-                if ((XProcConstants.NS_XPROC.equals(node.getNodeName().getNamespaceURI())
-                     && node.getAttributeValue(use_when) != null)
-                    || (!XProcConstants.NS_XPROC.equals(node.getNodeName().getNamespaceURI())
-                        && node.getAttributeValue(p_use_when) != null)) {
-                    String expr = node.getAttributeValue(use_when);
-                    if (!XProcConstants.NS_XPROC.equals(node.getNodeName().getNamespaceURI())) {
-                        expr = node.getAttributeValue(p_use_when);
-                    }
-                    return useWhen(node, expr);
+                if ((filter & NO_WHITESPACE) == NO_WHITESPACE) {
+                    return !"".equals(node.toString().trim());
                 } else {
-                    return onlyMatch == null || onlyMatch.equals(node.getNodeName());
+                    return true;
                 }
             }
 
-            if (node.getNodeKind() == XdmNodeKind.ATTRIBUTE) {
-                return onlyMatch == null || onlyMatch.equals(node.getNodeName());
+            if (((filter & USE_WHEN) == USE_WHEN)
+                    && node.getNodeKind() == XdmNodeKind.ELEMENT) {
+                String expr = null;
+
+                if (XProcConstants.NS_XPROC.equals(node.getNodeName().getNamespaceURI())) {
+                    expr = node.getAttributeValue(use_when);
+                }
+
+                if (!XProcConstants.NS_XPROC.equals(node.getNodeName().getNamespaceURI())) {
+                    expr = node.getAttributeValue(p_use_when);
+                }
+
+                if (expr != null) {
+                    return useWhen(node, expr);
+                } else {
+                    return true;
+                }
             }
 
-            return false; // What can this be anyway?
+            return true;
         }
 
         private boolean useWhen(XdmNode element, String xpath) {
@@ -171,6 +193,7 @@ public class RelevantNodes implements Iterable<XdmNode> {
 
             // FIXME: I don't think this is a good idea, but XProcConfiguration calls relevant nodes w/o a runtime...
             if (runtime == null) {
+                logger.info("The use-when attribute has no effect on pipelines in a configuration file.");
                 return true;
             }
 

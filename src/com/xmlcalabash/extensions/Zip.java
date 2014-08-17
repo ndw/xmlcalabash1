@@ -5,8 +5,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
@@ -29,6 +27,7 @@ import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import com.xmlcalabash.util.*;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -42,28 +41,12 @@ import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.DataStore;
 import com.xmlcalabash.io.DataStore.DataInfo;
 import com.xmlcalabash.io.DataStore.DataReader;
-import com.xmlcalabash.core.XProcConstants;
-import com.xmlcalabash.model.RuntimeValue;
-import com.xmlcalabash.util.Base64;
-import com.xmlcalabash.util.JSONtoXML;
-import com.xmlcalabash.util.TreeWriter;
-import com.xmlcalabash.util.S9apiUtils;
-import com.xmlcalabash.util.RelevantNodes;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.io.ReadablePipe;
-import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.library.DefaultStep;
 import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.util.RelevantNodes;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TreeWriter;
-import com.xmlcalabash.util.XMLtoJSON;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.Axis;
-import net.sf.saxon.s9api.XdmNodeKind;
-import net.sf.saxon.s9api.Serializer;
 
 /**
  *
@@ -278,7 +261,7 @@ public class Zip extends DefaultStep {
     }
 
     private void parseManifest(XdmNode man) {
-        for (XdmNode child : new RelevantNodes(runtime, man, Axis.CHILD)) {
+        for (XdmNode child : new AxisNodes(man, Axis.CHILD, AxisNodes.SIGNIFICANT)) {
             if (XdmNodeKind.ELEMENT == child.getNodeKind()) {
                 if (c_entry.equals(child.getNodeName())) {
                     String name = child.getAttributeValue(_name);

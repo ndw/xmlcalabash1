@@ -33,8 +33,8 @@ import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcConfiguration;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.io.ReadablePipe;
+import com.xmlcalabash.util.AxisNodes;
 import com.xmlcalabash.util.S9apiUtils;
-import com.xmlcalabash.util.RelevantNodes;
 import org.xml.sax.InputSource;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -50,10 +50,6 @@ import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmAtomicValue;
 import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.XdmValue;
-import net.sf.saxon.s9api.Processor;
-import net.sf.saxon.s9api.XQueryCompiler;
-import net.sf.saxon.s9api.XQueryExecutable;
-import net.sf.saxon.s9api.XQueryEvaluator;
 import net.sf.saxon.s9api.Serializer;
 
 import javax.xml.transform.sax.SAXSource;
@@ -680,7 +676,7 @@ private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
         }
 
         private void scan(XdmNode pipeline) throws SaxonApiException {
-            for (XdmNode node : new RelevantNodes(runtime, pipeline,Axis.CHILD)) {
+            for (XdmNode node : new AxisNodes(runtime, pipeline,Axis.CHILD, AxisNodes.PIPELINE)) {
                 if (t_title.equals(node.getNodeName())) {
                     title = node;
                     continue;
@@ -725,7 +721,7 @@ private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
             if (href != null) {
                 add(input, port, href);
             } else {
-                for (XdmNode node : new RelevantNodes(input,Axis.CHILD,false)) {
+                for (XdmNode node : new AxisNodes(input, Axis.CHILD, AxisNodes.ALL)) {
                     if (node.getNodeKind() != XdmNodeKind.ELEMENT) {
                         continue;
                     }
@@ -764,7 +760,7 @@ private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
                 add(input, null, baseURI.resolve(href).toASCIIString());
             } else {
                 XdmNode docroot = null;
-                for (XdmNode node : new RelevantNodes(input,Axis.CHILD,true)) {
+                for (XdmNode node : new AxisNodes(runtime, input, Axis.CHILD, AxisNodes.PIPELINE)) {
                     if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
                         docroot = node;
                     }
@@ -808,7 +804,7 @@ private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
                 }
             }
 
-            for (XdmNode node : new RelevantNodes(runtime, input,Axis.CHILD)) {
+            for (XdmNode node : new AxisNodes(runtime, input, Axis.CHILD, AxisNodes.PIPELINE)) {
                 throw new IllegalArgumentException("Options and parameters must be empty.");
             }
         }
@@ -858,7 +854,7 @@ private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
         public XProcPipeline (XdmNode root) {
             pipeline = root;
 
-            for (XdmNode node : new RelevantNodes(runtime, root,Axis.CHILD)) {
+            for (XdmNode node : new AxisNodes(runtime, root, Axis.CHILD, AxisNodes.PIPELINE)) {
                 if (XProcConstants.p_input.equals(node.getNodeName())) {
                     inputPorts.add(node.getAttributeValue(_port));
                 }

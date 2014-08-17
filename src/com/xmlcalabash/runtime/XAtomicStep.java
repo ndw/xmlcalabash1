@@ -1,6 +1,6 @@
 package com.xmlcalabash.runtime;
 
-import com.xmlcalabash.util.RelevantNodes;
+import com.xmlcalabash.util.AxisNodes;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TypeUtils;
 import com.xmlcalabash.core.XProcConstants;
@@ -46,8 +46,6 @@ import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.SaxonApiUncheckedException;
 
-import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.Vector;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -242,7 +240,7 @@ public class XAtomicStep extends XStep {
 
                             if (XProcConstants.c_param_set.equals(docelem.getNodeName())) {
                                 // Check the attributes...
-                                for (XdmNode attr : new RelevantNodes(runtime, docelem, Axis.ATTRIBUTE)) {
+                                for (XdmNode attr : new AxisNodes(docelem, Axis.ATTRIBUTE)) {
                                     QName aname = attr.getNodeName();
                                     if ("".equals(aname.getNamespaceURI())
                                         || XProcConstants.NS_XPROC.equals(aname.getNamespaceURI())) {
@@ -250,7 +248,7 @@ public class XAtomicStep extends XStep {
                                     }
                                 }
 
-                                for (XdmNode child : new RelevantNodes(runtime, docelem, Axis.CHILD)) {
+                                for (XdmNode child : new AxisNodes(runtime, docelem, Axis.CHILD, AxisNodes.SIGNIFICANT)) {
                                     if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
                                         if (!child.getNodeName().equals(XProcConstants.c_param)) {
                                             throw XProcException.dynamicError(18, step.getNode(), "Element not allowed: " + child.getNodeName());
@@ -451,7 +449,7 @@ public class XAtomicStep extends XStep {
 
         p.setName(pname);
 
-        for (XdmNode attr : new RelevantNodes(runtime, pnode, Axis.ATTRIBUTE)) {
+        for (XdmNode attr : new AxisNodes(pnode, Axis.ATTRIBUTE)) {
             QName aname = attr.getNodeName();
             if ("".equals(aname.getNamespaceURI())) {
                 if (!aname.equals(_name) && !aname.equals(_namespace) && !aname.equals(_value)) {
@@ -492,7 +490,7 @@ public class XAtomicStep extends XStep {
 
         p.setName(pname);
 
-        for (XdmNode attr : new RelevantNodes(runtime, pnode, Axis.ATTRIBUTE)) {
+        for (XdmNode attr : new AxisNodes(pnode, Axis.ATTRIBUTE)) {
             QName aname = attr.getNodeName();
             if ("".equals(aname.getNamespaceURI())) {
                 if (!aname.equals(_name) && !aname.equals(_namespace)) {
@@ -503,7 +501,7 @@ public class XAtomicStep extends XStep {
 
         String stringValue = "";
         Vector<XdmItem> items = new Vector<XdmItem> ();
-        for (XdmNode child : new RelevantNodes(runtime, pnode, Axis.CHILD)) {
+        for (XdmNode child : new AxisNodes(runtime, pnode, Axis.CHILD, AxisNodes.PIPELINE)) {
             if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
                if (!child.getNodeName().equals(cx_item)) {
                     throw XProcException.dynamicError(18, step.getNode(), "Element not allowed: " + child.getNodeName());

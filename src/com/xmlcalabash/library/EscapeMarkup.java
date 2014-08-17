@@ -20,7 +20,7 @@
 package com.xmlcalabash.library;
 
 import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.util.RelevantNodes;
+import com.xmlcalabash.util.AxisNodes;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.io.ReadablePipe;
@@ -30,14 +30,7 @@ import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.XdmNodeKind;
-import net.sf.saxon.s9api.Processor;
-import net.sf.saxon.s9api.DocumentBuilder;
-import net.sf.saxon.s9api.XQueryCompiler;
-import net.sf.saxon.s9api.XQueryExecutable;
-import net.sf.saxon.s9api.XQueryEvaluator;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.io.ByteArrayOutputStream;
 
 import com.xmlcalabash.runtime.XAtomicStep;
@@ -77,7 +70,7 @@ public class EscapeMarkup extends DefaultStep {
 
         TreeWriter tree = new TreeWriter(runtime);
         tree.startDocument(doc.getBaseURI());
-        for (XdmNode child : new RelevantNodes(runtime, doc, Axis.CHILD)) {
+        for (XdmNode child : new AxisNodes(doc, Axis.CHILD)) {
             if (child.getNodeKind() == XdmNodeKind.COMMENT) {
                 tree.addComment(child.getStringValue());
             } else if (child.getNodeKind() == XdmNodeKind.PROCESSING_INSTRUCTION) {

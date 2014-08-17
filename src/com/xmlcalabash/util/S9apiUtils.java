@@ -141,7 +141,7 @@ public class S9apiUtils {
 
     public static XdmNode getDocumentElement(XdmNode doc) {
         if (doc.getNodeKind() == XdmNodeKind.DOCUMENT) {
-            for (XdmNode node : new RelevantNodes(doc, Axis.CHILD,true)) {
+            for (XdmNode node : new AxisNodes(doc, Axis.CHILD, AxisNodes.SIGNIFICANT)) {
                 if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
                     return node; // There can be only one, this is an XML document
                 }

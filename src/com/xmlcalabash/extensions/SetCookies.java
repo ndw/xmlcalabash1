@@ -5,6 +5,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import com.xmlcalabash.util.AxisNodes;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -20,7 +21,6 @@ import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.library.DefaultStep;
 import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.util.RelevantNodes;
 import com.xmlcalabash.util.S9apiUtils;
 
 /**
@@ -72,7 +72,7 @@ public class SetCookies extends DefaultStep {
             throw new XProcException(step.getNode(), "The input to cx:set-cookies must be a c:cookies document.");
         }
         
-        for (XdmNode node : new RelevantNodes(null, root, Axis.CHILD)) {
+        for (XdmNode node : new AxisNodes(root, Axis.CHILD, AxisNodes.SIGNIFICANT)) {
             if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
                 if (!c_cookie.equals(node.getNodeName())) {
                     throw new XProcException(step.getNode(), "A c:cookies document must contain only c:cookie elements.");
@@ -114,11 +114,8 @@ public class SetCookies extends DefaultStep {
                 runtime.getCookieStore(cookieKey).addCookie(cookie);
 
             } else if (node.getNodeKind() == XdmNodeKind.TEXT) {
-                if ("".equals(node.getStringValue().trim())) {
-                    // nop
-                } else {
-                    throw new XProcException(step.getNode(), "A c:cookies document must not contain non-whitespace text nodes.");
-                }
+                // AxisNodes will filter out empty whitespace nodes for us
+                throw new XProcException(step.getNode(), "A c:cookies document must not contain non-whitespace text nodes.");
             }
         }
     }

@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.regex.Pattern;
 
+import com.xmlcalabash.util.*;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -46,12 +47,6 @@ import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.util.HttpUtils;
-import com.xmlcalabash.util.ProcessMatch;
-import com.xmlcalabash.util.ProcessMatchingNodes;
-import com.xmlcalabash.util.RelevantNodes;
-import com.xmlcalabash.util.TreeWriter;
-import com.xmlcalabash.util.XPointer;
 
 /**
  *
@@ -348,7 +343,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
         finest(node, "fallback: " + node.getNodeName());
         boolean valid = true;
         XdmNode fallback = null;
-        for (XdmNode child : new RelevantNodes(runtime, node, Axis.CHILD)) {
+        for (XdmNode child : new AxisNodes(node, Axis.CHILD, AxisNodes.SIGNIFICANT)) {
             if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
                 valid = valid && xi_fallback.equals(child.getNodeName()) && (fallback == null);
                 fallback = child;

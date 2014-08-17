@@ -34,6 +34,7 @@ import java.util.Vector;
 
 import javax.xml.XMLConstants;
 
+import com.xmlcalabash.util.*;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -90,14 +91,6 @@ import com.xmlcalabash.io.DataStore.DataReader;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.util.Base64;
-import com.xmlcalabash.util.HttpUtils;
-import com.xmlcalabash.util.JSONtoXML;
-import com.xmlcalabash.util.MIMEReader;
-import com.xmlcalabash.util.RelevantNodes;
-import com.xmlcalabash.util.S9apiUtils;
-import com.xmlcalabash.util.TreeWriter;
-import com.xmlcalabash.util.XMLtoJSON;
 
 public class HttpRequest extends DefaultStep {
     private static final QName c_request = new QName("c", XProcConstants.NS_XPROC_STEP, "request");
@@ -679,7 +672,7 @@ public class HttpRequest extends DefaultStep {
         MessageBytes byteContent = new MessageBytes();
         byteContent.append("This is a multipart message.\r\n");
         //String postContent = "This is a multipart message.\r\n";
-        for (XdmNode body : new RelevantNodes(runtime, multipart, Axis.CHILD)) {
+        for (XdmNode body : new AxisNodes(multipart, Axis.CHILD, AxisNodes.SIGNIFICANT)) {
             if (!XProcConstants.c_body.equals(body.getNodeName())) {
                 throw new XProcException(step.getNode(), "A c:multipart may only contain c:body elements.");
             }

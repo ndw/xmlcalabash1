@@ -17,7 +17,7 @@ import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.library.DefaultStep;
 import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.util.RelevantNodes;
+import com.xmlcalabash.util.AxisNodes;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TreeWriter;
 import net.sf.saxon.s9api.Axis;
@@ -25,22 +25,10 @@ import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.RiotReader;
-import org.apache.jena.riot.lang.LangRIOT;
 import org.apache.jena.riot.system.ErrorHandler;
-import org.apache.jena.riot.system.ParserProfile;
-import org.apache.jena.riot.system.RiotLib;
-import org.apache.jena.riot.system.StreamRDF;
-import org.apache.jena.riot.system.StreamRDFLib;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Random;
 import java.util.regex.Pattern;
 
@@ -346,7 +334,7 @@ public class RDFStep extends DefaultStep {
 
         XdmNode root = S9apiUtils.getDocumentElement(doc);
         if (root.getNodeName().equals(sem_triples)) {
-            for (XdmNode node : new RelevantNodes(null, root, Axis.CHILD)) {
+            for (XdmNode node : new AxisNodes(root, Axis.CHILD, AxisNodes.SIGNIFICANT)) {
                 if (node.getNodeName().equals(cx_graph_name)) {
                     graphName = node.getStringValue();
                     model = dataset.getNamedModel(graphName);
@@ -356,7 +344,7 @@ public class RDFStep extends DefaultStep {
                     XdmNode pred = null;
                     XdmNode obj = null;
 
-                    for (XdmNode child : new RelevantNodes(null, node, Axis.CHILD)) {
+                    for (XdmNode child : new AxisNodes(node, Axis.CHILD)) {
                         if (child.getNodeName().equals(sem_subject)) {
                             subj = child;
                         } else if (child.getNodeName().equals(sem_predicate)) {

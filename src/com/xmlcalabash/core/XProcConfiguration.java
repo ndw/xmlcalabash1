@@ -1,9 +1,7 @@
 package com.xmlcalabash.core;
 
 import com.xmlcalabash.piperack.PipelineSource;
-import com.xmlcalabash.util.Input;
-import com.xmlcalabash.util.JSONtoXML;
-import com.xmlcalabash.util.Output;
+import com.xmlcalabash.util.*;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.DocumentBuilder;
@@ -33,10 +31,6 @@ import java.io.File;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.DocumentSequence;
 import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.util.URIUtils;
-import com.xmlcalabash.util.S9apiUtils;
-import com.xmlcalabash.util.RelevantNodes;
-import com.xmlcalabash.util.LogOptions;
 import com.xmlcalabash.model.Step;
 
 import javax.xml.transform.sax.SAXSource;
@@ -409,7 +403,7 @@ public class XProcConfiguration {
             doc = S9apiUtils.getDocumentElement(doc);
         }
 
-        for (XdmNode node : new RelevantNodes(null, doc, Axis.CHILD)) {
+        for (XdmNode node : new AxisNodes(null, doc, Axis.CHILD, AxisNodes.PIPELINE)) {
             String uri = node.getNodeName().getNamespaceURI();
             String localName = node.getNodeName().getLocalName();
 
@@ -779,7 +773,8 @@ public class XProcConfiguration {
         Vector<XdmValue> docnodes = new Vector<XdmValue> ();
         boolean sawElement = false;
 
-        for (XdmNode child : new RelevantNodes(null, node, Axis.CHILD)) {
+        // FIXME: shouldn't this test for a "document" that doesn't have any document element?
+        for (XdmNode child : new AxisNodes(null, node, Axis.CHILD, AxisNodes.ALL)) {
             if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
                 if (sawElement) {
                     throw new XProcException(node, "Invalid configuration value for input '" + port + "': content is not a valid XML document.");
@@ -817,7 +812,7 @@ public class XProcConfiguration {
         Vector<XdmValue> docnodes = new Vector<XdmValue> ();
         boolean sawElement = false;
 
-        for (XdmNode child : new RelevantNodes(null, node, Axis.CHILD)) {
+        for (XdmNode child : new AxisNodes(null, node, Axis.CHILD, AxisNodes.PIPELINE)) {
             if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
                 if (sawElement) {
                     throw new XProcException(node, "Content of pipeline is not a valid XML document.");
@@ -842,7 +837,7 @@ public class XProcConfiguration {
         String port = node.getAttributeValue(_port);
         String href = node.getAttributeValue(_href);
 
-        for (XdmNode child : new RelevantNodes(null, node, Axis.CHILD)) {
+        for (XdmNode child : new AxisNodes(null, node, Axis.CHILD, AxisNodes.PIPELINE)) {
             if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
                 throw new XProcException(node, "Output must be empty.");
             }
@@ -981,7 +976,7 @@ public class XProcConfiguration {
                 serializationOptions.put(name, value);
             }
 
-            for (XdmNode snode : new RelevantNodes(null, node, Axis.CHILD)) {
+            for (XdmNode snode : new AxisNodes(null, node, Axis.CHILD, AxisNodes.PIPELINE)) {
                 throw new XProcException(node, "Configuration error: serialization must be empty");
             }
         }
@@ -997,7 +992,7 @@ public class XProcConfiguration {
         }
         HashSet<String> options = null;
 
-        for (XdmNode attr : new RelevantNodes(null, node, Axis.ATTRIBUTE)) {
+        for (XdmNode attr : new AxisNodes(node, Axis.ATTRIBUTE)) {
             QName aname = attr.getNodeName();
             if ("".equals(aname.getNamespaceURI())) {
                 if (hash.contains(aname.getLocalName())) {

@@ -22,10 +22,7 @@ import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.extensions.UntilUnchanged;
-import com.xmlcalabash.util.RelevantNodes;
-import com.xmlcalabash.util.S9apiUtils;
-import com.xmlcalabash.util.TypeUtils;
-import com.xmlcalabash.util.URIUtils;
+import com.xmlcalabash.util.*;
 import net.sf.saxon.PreparedStylesheet;
 import net.sf.saxon.functions.FunctionLibrary;
 import net.sf.saxon.query.QueryModule;
@@ -216,7 +213,7 @@ public class Parser {
             library.setVersion(inheritedVersion(node));
 
             // Read all the steps and make them available
-            for (XdmNode snode : new RelevantNodes(runtime, node, Axis.CHILD)) {
+            for (XdmNode snode : new AxisNodes(runtime, node, Axis.CHILD, AxisNodes.PIPELINE)) {
                 if (snode.getNodeName().equals(XProcConstants.p_import)) {
                     // skip it
                 } else {
@@ -230,7 +227,7 @@ public class Parser {
                 }
             }
 
-            for (XdmNode snode : new RelevantNodes(runtime, node, Axis.CHILD)) {
+            for (XdmNode snode : new AxisNodes(runtime, node, Axis.CHILD, AxisNodes.PIPELINE)) {
                 if (snode.getNodeName().equals(XProcConstants.p_import)) {
                     Step substep = readStep(library, snode);
                     Import importElem = (Import) substep;
@@ -329,7 +326,7 @@ public class Parser {
 
         int pos = 1;
         boolean done = false;
-        for (XdmNode node : new RelevantNodes(runtime, step.getNode(), Axis.CHILD)) {
+        for (XdmNode node : new AxisNodes(runtime, step.getNode(), Axis.CHILD, AxisNodes.PIPELINE)) {
             if (done) {
                 if (node.getNodeKind() == XdmNodeKind.TEXT) {
                     throw XProcException.staticError(37, node, "Unexpected text: " + node.getStringValue());
@@ -622,7 +619,7 @@ public class Parser {
             input.setSelect(select);
         }
 
-        for (XdmNode snode : new RelevantNodes(runtime, node, Axis.CHILD)) {
+        for (XdmNode snode : new AxisNodes(runtime, node, Axis.CHILD, AxisNodes.PIPELINE)) {
             Binding binding = readBinding(parent, snode);
             if (binding != null) {
                 input.addBinding(binding);
@@ -651,7 +648,7 @@ public class Parser {
         output.setSequence(sequence);
         output.setPrimary(primary);
 
-        for (XdmNode snode : new RelevantNodes(runtime, node, Axis.CHILD)) {
+        for (XdmNode snode : new AxisNodes(runtime, node, Axis.CHILD, AxisNodes.PIPELINE)) {
             Binding binding = readBinding(parent, snode);
             if (binding != null) {
                 output.addBinding(binding);
@@ -705,10 +702,7 @@ public class Parser {
         pipe.setStep(step);
         pipe.setPort(port);
 
-        RelevantNodes rnodes = new RelevantNodes(runtime, node, Axis.CHILD);
-        Iterator<XdmNode> iter = rnodes.iterator();
-        while (iter.hasNext()) {
-            XdmNode snode = iter.next();
+        for (XdmNode snode : new AxisNodes(runtime, node, Axis.CHILD, AxisNodes.PIPELINE)) {
             throw new IllegalArgumentException("Unexpected in pipe: " + snode.getNodeName());
         }
 
@@ -725,7 +719,7 @@ public class Parser {
         DocumentBinding doc = new DocumentBinding(runtime, node);
         doc.setHref(href);
 
-        for (XdmNode snode : new RelevantNodes(runtime, node, Axis.CHILD)) {
+        for (XdmNode snode : new AxisNodes(runtime, node, Axis.CHILD, AxisNodes.PIPELINE)) {
             throw new IllegalArgumentException("Unexpected in document: " + snode.getNodeName());
         }
 
@@ -776,7 +770,7 @@ public class Parser {
             doc.setContentType(contentType);
         }
 
-        for (XdmNode snode : new RelevantNodes(runtime, node, Axis.CHILD)) {
+        for (XdmNode snode : new AxisNodes(runtime, node, Axis.CHILD, AxisNodes.PIPELINE)) {
             throw new IllegalArgumentException("Unexpected in document: " + snode.getNodeName());
         }
 
@@ -790,7 +784,7 @@ public class Parser {
 
         EmptyBinding empty = new EmptyBinding(runtime, node);
 
-        for (XdmNode snode : new RelevantNodes(runtime, node, Axis.CHILD)) {
+        for (XdmNode snode : new AxisNodes(runtime, node, Axis.CHILD, AxisNodes.PIPELINE)) {
             throw new IllegalArgumentException("Unexpected in empty: " + snode.getNodeName());
         }
 
@@ -940,7 +934,7 @@ public class Parser {
 
     private void readNamespaceBindings(Step parent, EndPoint endpoint, XdmNode node, String select) {
         boolean hadNamespaceBinding = false;
-        for (XdmNode snode : new RelevantNodes(runtime, node, Axis.CHILD)) {
+        for (XdmNode snode : new AxisNodes(runtime, node, Axis.CHILD, AxisNodes.PIPELINE)) {
             QName nodeName = snode.getNodeName();
 
             if (XProcConstants.p_namespaces.equals(nodeName)) {
@@ -975,7 +969,7 @@ public class Parser {
                 // FIXME: ? HACK!
                 ((ComputableValue) endpoint).addNamespaceBinding(nsbinding);
 
-                for (XdmNode tnode : new RelevantNodes(runtime, snode, Axis.CHILD)) {
+                for (XdmNode tnode : new AxisNodes(runtime, snode, Axis.CHILD, AxisNodes.PIPELINE)) {
                     throw XProcException.staticError(44, snode, "p:namespaces must be empty");
                 }
             } else {
@@ -1092,7 +1086,7 @@ public class Parser {
         value = node.getAttributeValue(new QName("version"));
         serial.setVersion(value);
 
-        for (XdmNode snode : new RelevantNodes(runtime, node, Axis.CHILD)) {
+        for (XdmNode snode : new AxisNodes(runtime, node, Axis.CHILD, AxisNodes.PIPELINE)) {
             throw XProcException.staticError(44, node, "p:serialization must be empty.");
         }
 
@@ -1123,7 +1117,7 @@ public class Parser {
 
         checkExtensionAttributes(node, log);
 
-        for (XdmNode snode : new RelevantNodes(runtime, node, Axis.CHILD)) {
+        for (XdmNode snode : new AxisNodes(runtime, node, Axis.CHILD, AxisNodes.PIPELINE)) {
             throw XProcException.staticError(44, node, "p:log must be empty");
         }
 
@@ -1195,7 +1189,7 @@ public class Parser {
         boolean pStep = XProcConstants.NS_XPROC.equals(node.getNodeName().getNamespaceURI());
 
         // Store extension attributes and convert any option shortcut attributes into options
-        for (XdmNode attr : new RelevantNodes(runtime, node, Axis.ATTRIBUTE)) {
+        for (XdmNode attr : new AxisNodes(node, Axis.ATTRIBUTE)) {
             QName aname = attr.getNodeName();
 
             if ((pStep && aname.equals(_use_when))
@@ -1279,7 +1273,7 @@ public class Parser {
         }
 
         // Store extension attributes and convert any option shortcut attributes into options
-        for (XdmNode attr : new RelevantNodes(runtime, node, Axis.ATTRIBUTE)) {
+        for (XdmNode attr : new AxisNodes(node, Axis.ATTRIBUTE)) {
             QName aname = attr.getNodeName();
             if (XMLConstants.NULL_NS_URI.equals(aname.getNamespaceURI())) {
                 if (!"type".equals(aname.getLocalName()) && !"name".equals(aname.getLocalName())
@@ -1460,12 +1454,7 @@ public class Parser {
         String href = node.getAttributeValue(_href);
         URI importURI = node.getBaseURI().resolve(href);
 
-        XdmNode child = null;
-        for (XdmNode cnode : new RelevantNodes(runtime, node, Axis.CHILD)) {
-            child = cnode;
-        }
-
-        if (child != null) {
+        for (XdmNode child : new AxisNodes(runtime, node, Axis.CHILD, AxisNodes.PIPELINE)) {
             throw new UnsupportedOperationException("p:import must be empty.");
         }
 
@@ -1790,7 +1779,7 @@ public class Parser {
 
         Double version = inheritedVersion(node);
 
-        for (XdmNode attr : new RelevantNodes(runtime, node, Axis.ATTRIBUTE)) {
+        for (XdmNode attr : new AxisNodes(node, Axis.ATTRIBUTE)) {
             QName aname = attr.getNodeName();
 
             // The use-when attribute is always ok
@@ -1826,7 +1815,7 @@ public class Parser {
 
     // Can't be used for steps because it doesn't handle option shortcut attributes
     private void checkExtensionAttributes(XdmNode node, SourceArtifact src) {
-        for (XdmNode attr : new RelevantNodes(runtime, node, Axis.ATTRIBUTE)) {
+        for (XdmNode attr : new AxisNodes(node, Axis.ATTRIBUTE)) {
             QName aname = attr.getNodeName();
             if ("".equals(aname.getNamespaceURI())) {
                 // nop

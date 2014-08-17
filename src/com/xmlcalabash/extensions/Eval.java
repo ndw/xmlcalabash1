@@ -13,9 +13,9 @@ import com.xmlcalabash.runtime.XLibrary;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.model.Input;
 import com.xmlcalabash.model.DeclareStep;
+import com.xmlcalabash.util.AxisNodes;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TreeWriter;
-import com.xmlcalabash.util.RelevantNodes;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -219,7 +219,7 @@ public class Eval extends DefaultStep {
                 }
 
                 
-                for (XdmNode opt : new RelevantNodes(runtime, root, Axis.CHILD)) {
+                for (XdmNode opt : new AxisNodes(runtime, root, Axis.CHILD, AxisNodes.SIGNIFICANT)) {
                     if (opt.getNodeKind() != XdmNodeKind.ELEMENT || !cx_option.equals(opt.getNodeName())) {
                         throw new XProcException(step.getNode(), "A cx:options document must only contain cx:option elements");
                     }

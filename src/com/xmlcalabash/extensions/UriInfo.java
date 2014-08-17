@@ -8,9 +8,9 @@ import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.model.RuntimeValue;
+import com.xmlcalabash.util.AxisNodes;
 import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.util.S9apiUtils;
-import com.xmlcalabash.util.RelevantNodes;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -177,7 +177,7 @@ public class UriInfo extends DefaultStep {
             tree.addAttribute(_exists, status >= 400 && status < 500 ? "false" : "true");
             tree.addAttribute(_uri, uri.toASCIIString());
 
-            for (XdmNode node : new RelevantNodes(runtime, result, Axis.CHILD)) {
+            for (XdmNode node : new AxisNodes(result, Axis.CHILD, AxisNodes.SIGNIFICANT)) {
                 if ("Last-Modified".equals(node.getAttributeValue(_name))) {
                     String months[] = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN",
                                        "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
@@ -214,7 +214,7 @@ public class UriInfo extends DefaultStep {
 
             tree.startContent();
 
-            for (XdmNode node : new RelevantNodes(runtime, result, Axis.CHILD)) {
+            for (XdmNode node : new AxisNodes(result, Axis.CHILD, AxisNodes.SIGNIFICANT)) {
                 tree.addSubtree(node);
             }
 
