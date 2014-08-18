@@ -7,7 +7,7 @@
 		exclude-result-prefixes="err tr xs"
                 version="2.0">
 <xsl:output method="text" encoding="utf-8" indent="no"/>
-<xsl:preserve-space elements="*"/>
+<xsl:strip-space elements="*"/>
 
 <xsl:param name="show-pass" select="'1'"/>
 <xsl:param name="show-partial" select="'1'"/>
@@ -103,7 +103,7 @@
 
 <xsl:template match="tr:processor">
   <xsl:sequence select="f:attr(('cols','&lt;h,&lt;,&lt;h,&lt;'))"/>
-  <xsl:text>|==================================================&#10;</xsl:text>
+  <xsl:text>|=============================================&#10;</xsl:text>
   <xsl:text>4+&lt;h|Processor information&#10;</xsl:text>
   <xsl:text>|Name|</xsl:text>
   <xsl:value-of select="tr:name"/>
@@ -128,7 +128,7 @@
   <xsl:text>|PSVI Supported|</xsl:text>
   <xsl:value-of select="tr:psvi-supported"/>
   <xsl:text>&#10;</xsl:text>
-  <xsl:text>|==================================================&#10;</xsl:text>
+  <xsl:text>|=============================================&#10;&#10;</xsl:text>
 </xsl:template>
 
 <!-- ============================================================ -->
@@ -156,6 +156,7 @@
     <xsl:text>%)</xsl:text>
   </xsl:if>
   <xsl:text>.</xsl:text>
+  <xsl:text>&#10;&#10;</xsl:text>
 
   <xsl:apply-templates/>
 </xsl:template>
@@ -211,9 +212,12 @@
       <xsl:text>|Expected result:|Actual result:&#10;</xsl:text>
       <xsl:text>l|</xsl:text>
       <xsl:value-of select="tr:expected"/>
+      <xsl:sequence select="f:nl()"/>
       <xsl:text>l|</xsl:text>
       <xsl:value-of select="tr:actual"/>
+      <xsl:sequence select="f:nl()"/>
       <xsl:sequence select="f:line('|====================')"/>
+      <xsl:sequence select="f:nl()"/>
     </xsl:if>
 
     <xsl:call-template name="messages"/>
@@ -233,7 +237,14 @@
     </xsl:otherwise>
   </xsl:choose>
 
-  <xsl:text>=== </xsl:text>
+  <xsl:choose>
+    <xsl:when test="ancestor::tr:test-suite">
+      <xsl:text>=== </xsl:text>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:text>== </xsl:text>
+    </xsl:otherwise>
+  </xsl:choose>
 
   <xsl:choose>
     <xsl:when test="parent::tr:pass/tr:error">PASS </xsl:when>
@@ -253,13 +264,22 @@
 
 <xsl:template name="messages">
   <xsl:if test="tr:message">
-    <xsl:sequence select="f:h4(concat('Error message',
-      if (count(tr:message) &gt; 1) then 's' else ''))"/>
+    <xsl:choose>
+      <xsl:when test="ancestor::tr:test-suite">
+        <xsl:sequence select="f:h4(concat('Error message',
+             if (count(tr:message) &gt; 1) then 's' else ''))"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:sequence select="f:h3(concat('Error message',
+             if (count(tr:message) &gt; 1) then 's' else ''))"/>
+      </xsl:otherwise>
+    </xsl:choose>
     <xsl:sequence select="f:nl()"/>
     <xsl:for-each select="tr:message">
       <xsl:text>* </xsl:text>
       <xsl:sequence select="f:line(normalize-space(.))"/>
     </xsl:for-each>
+    <xsl:sequence select="f:nl()"/>
   </xsl:if>
 </xsl:template>
 
