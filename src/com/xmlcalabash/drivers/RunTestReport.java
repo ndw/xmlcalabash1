@@ -93,6 +93,18 @@ public class RunTestReport {
     public RunTestReport() {
     }
 
+    public void setDebug(boolean dbg) {
+        debug = dbg;
+    }
+
+    public void setSchemaAware(boolean aware) {
+        schemaAware = aware;
+    }
+
+    public void setDefaultLog(String deflog) {
+        defaultLog = deflog;
+    }
+
     public static void main(String[] args) throws SaxonApiException, IOException, URISyntaxException {
         String usage = "RunTests [-D] [-d directory] [-a] test.xml";
         Vector<String> tests = new Vector<String> ();
@@ -151,14 +163,14 @@ public class RunTestReport {
         startReport();
 
         for (String testfile : tests) {
-            run(testfile);
+            reportRun(testfile);
         }
 
         endReport();
     }
 
-    public void run(String testfile) {
-        Vector<TestResult> results = new Vector<TestResult> ();
+    public TestSuiteResults run(String testfile) {
+        Vector<TestSuiteResult> results = new Vector<TestSuiteResult> ();
 
         XProcConfiguration config = new XProcConfiguration("ee", schemaAware);
         runtime = new XProcRuntime(config);
@@ -186,17 +198,16 @@ public class RunTestReport {
             doc = builder.build(source);
             root = S9apiUtils.getDocumentElement(doc);
         } catch (Exception sae) {
-            TestResult result = new TestResult(testfile);
+            TestSuiteResult result = new TestSuiteResult(testfile);
             result.catchException(sae);
             results.add(result);
-            makeReport(results);
-            return;
+            return new TestSuiteResults(results);
         }
 
         if (t_test.equals(root.getNodeName())) {
-            TestResult result = runTest(root);
+            TestSuiteResult result = runTest(root);
             results.add(result);
-            makeReport(results);
+            return new TestSuiteResults(results);
         } else {
             String title = "";
             XdmSequenceIterator iter = root.axisIterator(Axis.CHILD, t_title);
@@ -208,21 +219,25 @@ public class RunTestReport {
             iter = root.axisIterator(Axis.CHILD, t_test);
             while (iter.hasNext()) {
                 XdmNode test = (XdmNode) iter.next();
-                TestResult result = runTest(test);
+                TestSuiteResult result = runTest(test);
                 results.add(result);
             }
 
-            System.out.println("<test-suite>");
             if (!"".equals(title)) {
-                System.out.println("<title>" + title + "</title>");
+                return new TestSuiteResults(title, results);
+            } else {
+                return new TestSuiteResults(results);
             }
-            makeReport(results);
-            System.out.println("</test-suite>");
         }
     }
 
-    public TestResult runTest(XdmNode testNode) {
-        TestResult result;
+    public void reportRun(String testfile) {
+        TestSuiteResults results = run(testfile);
+        results.reportResults();
+    }
+
+    public TestSuiteResult runTest(XdmNode testNode) {
+        TestSuiteResult result;
 
         if (testNode.getAttributeValue(_href) != null) {
             URI turi = testNode.getBaseURI().resolve(testNode.getAttributeValue(_href));
@@ -238,13 +253,13 @@ public class RunTestReport {
                 XdmNode root = S9apiUtils.getDocumentElement(doc);
                 result = runTest(root);
             } catch (Exception sae) {
-                result = new TestResult(turi.toASCIIString());
+                result = new TestSuiteResult(turi.toASCIIString());
                 result.catchException(sae);
             }
 
             return result;
         } else {
-            result = new TestResult(testNode.getBaseURI().toASCIIString());
+            result = new TestSuiteResult(testNode.getBaseURI().toASCIIString());
         }
 
         System.err.println("Running test: " + testNode.getBaseURI());
@@ -417,62 +432,62 @@ public class RunTestReport {
         return result;
     }
 
-private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
-                                               Hashtable<String, Vector<XdmNode>> inputs,
-                                               Hashtable<String, Vector<XdmNode>> outputs,
-                                               Hashtable<QName, String> parameters,
-                                               Hashtable<QName, String> options) throws SaxonApiException {
+    private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
+                                                   Hashtable<String, Vector<XdmNode>> inputs,
+                                                   Hashtable<String, Vector<XdmNode>> outputs,
+                                                   Hashtable<QName, String> parameters,
+                                                   Hashtable<QName, String> options) throws SaxonApiException {
 
-    XPipeline xpipeline = runtime.use(pipeline);
+        XPipeline xpipeline = runtime.use(pipeline);
 
-    if (inputs != null) {
-        for (String port : inputs.keySet()) {
-            if (!xpipeline.getInputs().contains(port)) {
-                throw new UnsupportedOperationException("Error: Test sets input port that doesn't exist: " + port);
+        if (inputs != null) {
+            for (String port : inputs.keySet()) {
+                if (!xpipeline.getInputs().contains(port)) {
+                    throw new UnsupportedOperationException("Error: Test sets input port that doesn't exist: " + port);
+                }
+                xpipeline.clearInputs(port);
+                for (XdmNode node : inputs.get(port)) {
+                    xpipeline.writeTo(port, node);
+                }
             }
-            xpipeline.clearInputs(port);
-            for (XdmNode node : inputs.get(port)) {
-                xpipeline.writeTo(port, node);
+        }
+
+        if (parameters != null) {
+            for (QName name : parameters.keySet()) {
+                xpipeline.setParameter(name, new RuntimeValue(parameters.get(name)));
             }
         }
-    }
 
-    if (parameters != null) {
-        for (QName name : parameters.keySet()) {
-            xpipeline.setParameter(name, new RuntimeValue(parameters.get(name)));
-        }
-    }
+        if (options != null) {
+            for (QName name : options.keySet()) {
 
-    if (options != null) {
-        for (QName name : options.keySet()) {
+                // HACK HACK HACK!
+                RuntimeValue v;
+                if (_path.equals(name)) {
+                    v = new RuntimeValue("file:///home/www/tests.xproc.org/tests/required/" + options.get(name));
+                } else {
+                    v = new RuntimeValue(options.get(name));
+                }
 
-            // HACK HACK HACK!
-            RuntimeValue v;
-            if (_path.equals(name)) {
-                v = new RuntimeValue("file:///home/www/tests.xproc.org/tests/required/" + options.get(name));
-            } else {
-                v = new RuntimeValue(options.get(name));
+                xpipeline.passOption(name, v);
             }
-
-            xpipeline.passOption(name, v);
         }
-    }
 
-    try {
-        xpipeline.run();
-    } catch (XProcException e) {
-        if (debug) {
-            e.printStackTrace();
+        try {
+            xpipeline.run();
+        } catch (XProcException e) {
+            if (debug) {
+                e.printStackTrace();
+            }
+            throw e;
+        } catch (Throwable e) {
+            if (debug) {
+                e.printStackTrace();
+            }
+            throw new XProcException(e);
         }
-        throw e;
-    } catch (Throwable e) {
-        if (debug) {
-            e.printStackTrace();
-        }
-        throw new XProcException(e);
-    }
 
-    Hashtable<String, ReadablePipe> pipeoutputs = new Hashtable<String, ReadablePipe> ();
+        Hashtable<String, ReadablePipe> pipeoutputs = new Hashtable<String, ReadablePipe> ();
     /* WTF?
     Set<String> pipeouts = xpipeline.getOutputs();
     for (String port : outputs.keySet()) {
@@ -484,20 +499,20 @@ private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
     }
     */
 
-    Set<String> pipeouts = xpipeline.getOutputs();
-    for (String port : pipeouts) {
-        if (!port.startsWith("!")) {
-            ReadablePipe rpipe = xpipeline.readFrom(port);
-            rpipe.canReadSequence(true);
-            pipeoutputs.put(port, rpipe);
+        Set<String> pipeouts = xpipeline.getOutputs();
+        for (String port : pipeouts) {
+            if (!port.startsWith("!")) {
+                ReadablePipe rpipe = xpipeline.readFrom(port);
+                rpipe.canReadSequence(true);
+                pipeoutputs.put(port, rpipe);
+            }
         }
+
+        return pipeoutputs;
     }
 
-    return pipeoutputs;
-}
-
-    private void makeReport(Vector<TestResult> results) {
-        for (TestResult result : results) {
+    private void makeReport(Vector<TestSuiteResult> results) {
+        for (TestSuiteResult result : results) {
             result.report();
         }
     }
@@ -865,7 +880,39 @@ private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
         }
     }
 
-    private class TestResult {
+    public class TestSuiteResults {
+        String title = null;
+        Vector<TestSuiteResult> results = null;
+
+        public TestSuiteResults(String title, Vector<TestSuiteResult> results) {
+            this.title = title;
+            this.results = results;
+        }
+
+        public TestSuiteResults(Vector<TestSuiteResult> results) {
+            this.results = results;
+        }
+
+        public String getTitle() {
+            return title;
+        }
+
+        public Vector<TestSuiteResult> getResults() {
+            return results;
+        }
+
+        public void reportResults() {
+            if (title == null) {
+                makeReport(results);
+            } else {
+                System.out.println("<test-suite>");
+                makeReport(results);
+                System.out.println("</test-suite>");
+            }
+        }
+    }
+
+    public class TestSuiteResult {
         public String testfile = null;
         public String title = "";
         public Vector<XdmNode> description = null;
@@ -876,7 +923,7 @@ private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
         public XdmNode expected = null;
         public XdmNode actual = null;
 
-        public TestResult(String testfile) {
+        public TestSuiteResult(String testfile) {
             this.testfile = testfile;
         }
 
@@ -909,6 +956,10 @@ private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
                     description.add(node);
                 }
             }
+        }
+
+        public boolean passed() {
+            return passed;
         }
 
         public void success() {
