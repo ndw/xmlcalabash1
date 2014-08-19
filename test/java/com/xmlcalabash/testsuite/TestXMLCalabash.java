@@ -11,7 +11,7 @@ import org.junit.Test;
 /**
  * Created by ndw on 8/19/14.
  */
-public class TesXMLCalabash {
+public class TestXMLCalabash {
     protected static SuiteRunner suiteRunner = null;
     protected static String TESTROOT = "http://xmlcalabash.com/tests/";
 

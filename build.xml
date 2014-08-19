@@ -99,7 +99,8 @@
     <fileset dir="${lib.dir}">
       <include name="*.jar"/>
     </fileset>
-    <pathelement path="${test.dir}/com/xmlcalabash/testsuite"/>
+    <pathelement path="${test.dir}"/>
+    <pathelement path="${build.dir}"/>
   </path>
 
   <available property="saxon94"
@@ -179,7 +180,9 @@
     <delete dir="${dist.dir}"/>
   </target>
 
-  <target name="compile" depends="init,optional-features,update-output">
+  <target name="compile" depends="init,compile-code,compile-tests"/>
+
+  <target name="compile-code" depends="init,optional-features,update-output">
     <!-- debugging
     <property name="theclasspath" refid="build.classpath"/>
     <echo>Classpath: ${theclasspath}</echo>
@@ -214,6 +217,20 @@
 
       <!-- Only for debugging -->
       <exclude name="com/xmlcalabash/drivers/SaxonProblem.java"/>
+    </javac>
+  </target>
+
+  <target name="compile-tests" depends="init,compile-code">
+    <!-- debugging
+    <property name="theclasspath" refid="build.classpath"/>
+    <echo>Classpath: ${theclasspath}</echo>
+    -->
+
+    <javac destdir="${test.dir}"
+	   classpathref="test.classpath"
+           source="${j.ver}" target="${j.ver}" includeantruntime="false"
+	   debug="${javac.debug}">
+      <src path="test/java"/>
     </javac>
   </target>
 
@@ -510,6 +527,10 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
   </target>
 
   <target name="test" depends="jar">
+    <!--
+    <property name="myclasspath" refid="test.classpath"/>
+    <echo message="CLASSPATH=${myclasspath}"/>
+    -->
     <echo>Running test...</echo>
     <junit printsummary="yes" haltonfailure="no">
       <classpath refid="test.classpath"/>
