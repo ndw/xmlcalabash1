@@ -126,13 +126,6 @@ public class XViewport extends XCompoundStep implements ProcessMatchingNodes {
         inScopeOptions = parent.getInScopeOptions();
         for (Variable var : step.getVariables()) {
             RuntimeValue value = computeValue(var);
-
-            if ("p3".equals(var.getName().getLocalName())) {
-                System.err.println("DEBUG ME1: " + value.getString());
-            }
-
-
-
             inScopeOptions.put(var.getName(), value);
         }
 
