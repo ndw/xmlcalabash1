@@ -25,6 +25,7 @@
 
   <property name="dist.dir" value="dist"/>
   <property name="build.dir" value="out/production/Calabash"/>
+  <property name="test.dir" value="out/test/Calabash"/>
   <property name="docs.repo.dir" value="../docs-calabash"/>
 
   <!-- where my Saxon EE license lives -->
@@ -91,6 +92,14 @@
     <fileset dir="${lib.dir}">
       <include name="*.jar"/>
     </fileset>
+  </path>
+
+  <path id="test.classpath">
+    <pathelement location="${license.dir}"/>
+    <fileset dir="${lib.dir}">
+      <include name="*.jar"/>
+    </fileset>
+    <pathelement path="${test.dir}/com/xmlcalabash/testsuite"/>
   </path>
 
   <available property="saxon94"
@@ -502,17 +511,16 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
 
   <target name="test" depends="jar">
     <echo>Running test...</echo>
-    <java fork="true" classname="com.xmlcalabash.drivers.RunTestReport">
-      <classpath>
-        <pathelement location="calabash.jar"/>
-        <path refid="full.classpath"/>
-      </classpath>
+    <junit printsummary="yes" haltonfailure="no">
+      <classpath refid="test.classpath"/>
       <jvmarg value="-Xmx1024m"/>
-      <jvmarg value="-Djava.util.logging.config.file=/home/ndw/java/logging.properties"/>
-      <arg value="-D"/>
-      <arg value="-a"/>
-      <arg value="http://tests.xproc.org/tests/serialization/version-001.xml"/>
-    </java>
+      <formatter type="plain" usefile="false"/>
+      <test name="com.xmlcalabash.testsuite.TestRequired"/>
+      <test name="com.xmlcalabash.testsuite.TestOptional"/>
+      <test name="com.xmlcalabash.testsuite.TestSerialization"/>
+      <test name="com.xmlcalabash.testsuite.TestExtension"/>
+      <test name="com.xmlcalabash.testsuite.TestXMLCalabash"/>
+    </junit>
   </target>
 
   <target name="test-suite" depends="jar">
