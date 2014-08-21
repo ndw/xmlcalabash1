@@ -65,7 +65,11 @@ public class Error extends DefaultStep {
         super.run();
 
         XdmNode doc = source.read();
-        finest(null, "Error step " + "???" + " read " + doc.getDocumentURI());
+        if (doc == null) {
+            finest(null, "Error step read empty");
+        } else {
+            finest(null, "Error step read " + doc.getDocumentURI());
+        }
 
         RuntimeValue codeNameValue = getOption(_code);
         String codeNameStr = codeNameValue.getString();
@@ -103,13 +107,19 @@ public class Error extends DefaultStep {
         treeWriter.addAttribute(_type, "p:error");
         treeWriter.addAttribute(_code, errorCode.toString());
         treeWriter.startContent();
-        treeWriter.addSubtree(doc);
+        if (doc != null) {
+            treeWriter.addSubtree(doc);
+        }
         treeWriter.addEndElement();
         treeWriter.endDocument();
 
         step.reportError(treeWriter.getResult());
 
-        throw new XProcException(errorCode, doc, doc.getStringValue());
+        if (doc == null) {
+            throw new XProcException(errorCode);
+        } else {
+            throw new XProcException(errorCode, doc, doc.getStringValue());
+        }
     }
 }
 
