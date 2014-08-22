@@ -82,6 +82,9 @@ public class SetBaseURI extends DefaultStep {
                 } else {
                     tree.addStartElement(node, baseURI);
                 }
+                for (XdmNode child : new AxisNodes(node, Axis.ATTRIBUTE)) {
+                    tree.addAttribute(child);
+                }
                 for (XdmNode child : new AxisNodes(node, Axis.CHILD)) {
                     write(child,underXmlBase);
                 }
