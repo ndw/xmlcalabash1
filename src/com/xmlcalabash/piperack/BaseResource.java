@@ -279,7 +279,7 @@ public class BaseResource extends ServerResource {
         XProcConfiguration config = getConfiguration();
         XPipeline pipeline = pipeconfig.pipeline;
         XProcRuntime runtime = pipeconfig.runtime;
-        Serialization serial = pipeline.getSerialization(pipeconfig.defoutput);
+        Serialization serial = pipeline.getSerialization(port);
 
         if (serial == null) {
             // Use the configuration options
