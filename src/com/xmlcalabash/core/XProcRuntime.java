@@ -606,7 +606,7 @@ public class XProcRuntime {
                 break;
 
             case INPUT_STREAM:
-                pipeline = parser.loadPipeline(pipelineInput.getInputStream());
+                pipeline = parser.loadPipeline(pipelineInput.getInputStream(), pipelineInput.getInputStreamUri());
                 break;
 
             default:

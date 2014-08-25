@@ -76,8 +76,17 @@ public class Parser {
         declStack = new Stack<DeclareStep> ();
     }
 
+    @Deprecated
     public DeclareStep loadPipeline(InputStream inputStream) throws SaxonApiException, IOException {
-        XdmNode doc = runtime.parse(new InputSource(inputStream));
+        return loadPipeline(inputStream, null);
+    }
+
+    public DeclareStep loadPipeline(InputStream inputStream, String base) throws SaxonApiException, IOException {
+        InputSource is = new InputSource(inputStream);
+        if (base != null) {
+            is.setSystemId(base);
+        }
+        XdmNode doc = runtime.parse(is);
         inputStream.close();
         return loadPipeline(doc);
     }
