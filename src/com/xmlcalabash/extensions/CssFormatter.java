@@ -2,6 +2,7 @@ package com.xmlcalabash.extensions;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URI;
 import java.util.Properties;
 
 import net.sf.saxon.s9api.QName;
@@ -100,7 +101,7 @@ public class CssFormatter extends DefaultStep {
 
         try {
             DataStore store = runtime.getDataStore();
-            store.writeEntry(href, base, contentType, new DataWriter() {
+            URI id = store.writeEntry(href, base, contentType, new DataWriter() {
                 public void store(OutputStream out) throws IOException {
                     try {
                         provider.format(source.read(),out,contentType);
@@ -109,6 +110,15 @@ public class CssFormatter extends DefaultStep {
                     }
                 }
             });
+
+            TreeWriter tree = new TreeWriter(runtime);
+            tree.startDocument(step.getNode().getBaseURI());
+            tree.addStartElement(XProcConstants.c_result);
+            tree.startContent();
+            tree.addText(id.toASCIIString());
+            tree.addEndElement();
+            tree.endDocument();
+            result.write(tree.getResult());
         } catch (XProcException e) {
             throw e;
         } catch (Exception e) {
@@ -117,14 +127,5 @@ public class CssFormatter extends DefaultStep {
             }
             throw new XProcException(step.getNode(), "Failed to style with CSS document", e);
         }
-
-        TreeWriter tree = new TreeWriter(runtime);
-        tree.startDocument(step.getNode().getBaseURI());
-        tree.addStartElement(XProcConstants.c_result);
-        tree.startContent();
-        tree.addText(href);
-        tree.addEndElement();
-        tree.endDocument();
-        result.write(tree.getResult());
     }
 }
