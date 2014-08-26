@@ -95,10 +95,17 @@ public class ReadableData implements ReadablePipe {
 		try {
 			final String userContentType = parseContentType(contentType);
 			if (uri == null) {
-				read(userContentType, null, inputStream, getContentType());
+			    try {
+			        read(userContentType, null, inputStream, getContentType());
+			    } finally {
+			        // This is the only case where the inputStream should be 
+			        // closed.
+			        inputStream.close();
+			    }
 			} else if ("-".equals(uri)) {
 				read(userContentType, getDataUri("-"), System.in,
 						getContentType());
+				// No need to close the input stream here, since it's System.in.
 			} else {
 				String accept = "application/json, text/json, text/*, */*";
 				if (userContentType != null) {
@@ -112,14 +119,19 @@ public class ReadableData implements ReadablePipe {
 								serverContentType);
 					}
 				});
+				// Also no need to close the input stream here, since  
+				// DataStore implementations close the input stream when
+				// necessary.
 			}
 		} catch (IOException ioe) {
             throw new XProcException(XProcConstants.dynamicError(29), ioe);
-        	
         }
         return documents;
     }
 
+    
+    // This method does NOT close the InputStream; it relies on the caller to close
+    // the InputStream, as appropriate.
 	private void read(String userContentType, URI dataURI,
 			InputStream stream, String serverContentType)
 			throws IOException {

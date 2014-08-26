@@ -168,16 +168,17 @@ public class Store extends DefaultStep {
                 ByteArrayOutputStream baos;
                 baos = new ByteArrayOutputStream();
                 outstr = baos;
+                try {
+                    if (method == CompressionMethod.GZIP) {
+                        GZIPOutputStream gzout = new GZIPOutputStream(outstr);
+                        outstr = gzout;
+                    }
 
-                if (method == CompressionMethod.GZIP) {
-                    GZIPOutputStream gzout = new GZIPOutputStream(outstr);
-                    outstr = gzout;
+                    serializer.setOutputStream(outstr);
+                    S9apiUtils.serialize(runtime, doc, serializer);
+                } finally {
+                    outstr.close();
                 }
-
-                serializer.setOutputStream(outstr);
-                S9apiUtils.serialize(runtime, doc, serializer);
-                outstr.close();
-
                 returnData(baos);
                 return null;
             } else {
@@ -222,15 +223,16 @@ public class Store extends DefaultStep {
                 ByteArrayOutputStream baos = null;
                 baos = new ByteArrayOutputStream();
                 outstr = baos;
+                try {
+                    if (method == CompressionMethod.GZIP) {
+                        GZIPOutputStream gzout = new GZIPOutputStream(outstr);
+                        outstr = gzout;
+                    }
 
-                if (method == CompressionMethod.GZIP) {
-                    GZIPOutputStream gzout = new GZIPOutputStream(outstr);
-                    outstr = gzout;
+                    outstr.write(decoded);
+                } finally {
+                    outstr.close();
                 }
-
-                outstr.write(decoded);
-                outstr.close();
-
                 returnData(baos);
                 return null;
             } else {
@@ -267,15 +269,16 @@ public class Store extends DefaultStep {
                 ByteArrayOutputStream baos = null;
                 baos = new ByteArrayOutputStream();
                 outstr = baos;
+                try{
+                    if (method == CompressionMethod.GZIP) {
+                        GZIPOutputStream gzout = new GZIPOutputStream(outstr);
+                        outstr = gzout;
+                    }
 
-                if (method == CompressionMethod.GZIP) {
-                    GZIPOutputStream gzout = new GZIPOutputStream(outstr);
-                    outstr = gzout;
+                    outstr.write(text.getBytes());
+                } finally {
+                    outstr.close();
                 }
-
-                outstr.write(text.getBytes());
-                outstr.close();
-
                 returnData(baos);
                 return null;
             } else {
@@ -311,18 +314,20 @@ public class Store extends DefaultStep {
 
                 baos = new ByteArrayOutputStream();
                 outstr = baos;
+                try {
+                    if (method == CompressionMethod.GZIP) {
+                        GZIPOutputStream gzout = new GZIPOutputStream(outstr);
+                        outstr = gzout;
+                    }
 
-                if (method == CompressionMethod.GZIP) {
-                    GZIPOutputStream gzout = new GZIPOutputStream(outstr);
-                    outstr = gzout;
+                    PrintWriter writer = new PrintWriter(outstr);
+                    String json = XMLtoJSON.convert(doc);
+                    writer.print(json);
+                } finally {
+                    // no need to close both 
+                    // writer.close();
+                    outstr.close();
                 }
-
-                PrintWriter writer = new PrintWriter(outstr);
-                String json = XMLtoJSON.convert(doc);
-                writer.print(json);
-                writer.close();
-                outstr.close();
-
                 returnData(baos);
                 return null;
             } else {
@@ -337,7 +342,9 @@ public class Store extends DefaultStep {
                         PrintWriter writer = new PrintWriter(outstr);
                         String json = XMLtoJSON.convert(doc);
                         writer.print(json);
-                        writer.close();
+                        // No need to close writer here - the underlying 
+                        // outstr gets closed by the DataStore implementation 
+                        // writer.close();
                     }
                 });
             }

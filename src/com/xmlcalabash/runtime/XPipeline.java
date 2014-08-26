@@ -239,20 +239,23 @@ public class XPipeline extends XCompoundStep {
             if (port.startsWith("|")) {
                 String wport = port.substring(1);
                 WritablePipe pipe = outputs.get(wport);
-                for (ReadablePipe reader : inputs.get(port)) {
-                    // Check for the case where there are no documents, but a sequence is not allowed
-                    if (!reader.moreDocuments() && !pipe.writeSequence()) {
-                        throw XProcException.dynamicError(7);
-                    }
+                try {
+                    for (ReadablePipe reader : inputs.get(port)) {
+                        // Check for the case where there are no documents, but a sequence is not allowed
+                        if (!reader.moreDocuments() && !pipe.writeSequence()) {
+                            throw XProcException.dynamicError(7);
+                        }
 
 
-                    while (reader.moreDocuments()) {
-                        XdmNode doc = reader.read();
-                        pipe.write(doc);
-                        finest(step.getNode(), "Pipeline output copy from " + reader + " to " + pipe);
+                        while (reader.moreDocuments()) {
+                            XdmNode doc = reader.read();
+                            pipe.write(doc);
+                            finest(step.getNode(), "Pipeline output copy from " + reader + " to " + pipe);
+                        }
                     }
+                } finally {
+                    pipe.close(); // Indicate that we're done writing to it
                 }
-                pipe.close(); // Indicate that we're done writing to it
             }
         }
     }

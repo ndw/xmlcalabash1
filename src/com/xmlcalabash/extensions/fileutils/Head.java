@@ -77,40 +77,44 @@ public class Head extends DefaultStep {
                         throws IOException {
                     Reader rdr = new InputStreamReader(content);
                     BufferedReader brdr = new BufferedReader(rdr);
-                    String line = null;
-                    int count = 0;
+                    try {
+                        String line = null;
+                        int count = 0;
 
-                    if (maxCount >= 0) {
-                        line = brdr.readLine();
-                        while (line != null && count < maxCount) {
-                            tree.addStartElement(c_line);
-                            tree.startContent();
-                            tree.addText(line);
-                            tree.addEndElement();
-                            tree.addText("\n");
-                            count++;
+                        if (maxCount >= 0) {
                             line = brdr.readLine();
-                        }
-                    } else {
-                        line = "not null";
-                        while (line != null && count < negMaxCount) {
-                            count++;
-                            line = brdr.readLine();
-                        }
+                            while (line != null && count < maxCount) {
+                                tree.addStartElement(c_line);
+                                tree.startContent();
+                                tree.addText(line);
+                                tree.addEndElement();
+                                tree.addText("\n");
+                                count++;
+                                line = brdr.readLine();
+                            }
+                        } else {
+                            line = "not null";
+                            while (line != null && count < negMaxCount) {
+                                count++;
+                                line = brdr.readLine();
+                            }
 
-                        line = brdr.readLine();
-                        while (line != null) {
-                            tree.addStartElement(c_line);
-                            tree.startContent();
-                            tree.addText(line);
-                            tree.addEndElement();
-                            tree.addText("\n");
                             line = brdr.readLine();
+                            while (line != null) {
+                                tree.addStartElement(c_line);
+                                tree.startContent();
+                                tree.addText(line);
+                                tree.addEndElement();
+                                tree.addText("\n");
+                                line = brdr.readLine();
+                            }
                         }
+                    } finally {
+                        brdr.close();
+                        // BufferedReader.close() also closes the underlying 
+                        // reader, so this second call is unnecessary.
+                        // rdr.close();
                     }
-                    
-                    brdr.close();
-                    rdr.close();
                 }
             });
         } catch (FileNotFoundException fnfe) {

@@ -200,30 +200,32 @@ public class Exec extends DefaultStep {
 
                 OutputStream os = process.getOutputStream();
 
-                Serializer serializer = makeSerializer();
+                try {
+                    Serializer serializer = makeSerializer();
 
-                // FIXME: there must be a better way to print text descendants
-                String queryexpr = null;
-                if (sourceIsXML) {
-                    queryexpr = ".";
-                } else {
-                    queryexpr = "//text()";
-                    serializer.setOutputProperty(Serializer.Property.METHOD, "text");
-                    serializer.setOutputProperty(Serializer.Property.OMIT_XML_DECLARATION, "yes");
+                    // FIXME: there must be a better way to print text descendants
+                    String queryexpr = null;
+                    if (sourceIsXML) {
+                        queryexpr = ".";
+                    } else {
+                        queryexpr = "//text()";
+                        serializer.setOutputProperty(Serializer.Property.METHOD, "text");
+                        serializer.setOutputProperty(Serializer.Property.OMIT_XML_DECLARATION, "yes");
+                    }
+
+                    Processor qtproc = runtime.getProcessor();
+                    XQueryCompiler xqcomp = qtproc.newXQueryCompiler();
+                    xqcomp.setModuleURIResolver(runtime.getResolver());
+                    XQueryExecutable xqexec = xqcomp.compile(queryexpr);
+                    XQueryEvaluator xqeval = xqexec.load();
+                    xqeval.setContextItem(srcDoc);
+
+                    serializer.setOutputStream(os);
+                    xqeval.setDestination(serializer);
+                    xqeval.run();
+                } finally {
+                    os.close();
                 }
-
-                Processor qtproc = runtime.getProcessor();
-                XQueryCompiler xqcomp = qtproc.newXQueryCompiler();
-                xqcomp.setModuleURIResolver(runtime.getResolver());
-                XQueryExecutable xqexec = xqcomp.compile(queryexpr);
-                XQueryEvaluator xqeval = xqexec.load();
-                xqeval.setContextItem(srcDoc);
-
-                serializer.setOutputStream(os);
-                xqeval.setDestination(serializer);
-                xqeval.run();
-
-                os.close();
             } else {
                 OutputStream os = process.getOutputStream();
                 os.close();
