@@ -86,9 +86,12 @@ public class Parser {
         if (base != null) {
             is.setSystemId(base);
         }
-        XdmNode doc = runtime.parse(is);
-        inputStream.close();
-        return loadPipeline(doc);
+        try {
+            XdmNode doc = runtime.parse(is);
+            return loadPipeline(doc);
+        } finally {
+            inputStream.close();
+        }
     }
 
     public DeclareStep loadPipeline(String uri) throws SaxonApiException {
@@ -165,10 +168,13 @@ public class Parser {
     }
 
     public PipelineLibrary loadLibrary(InputStream libraryInputStream) throws SaxonApiException, IOException {
-        XdmNode doc = runtime.parse(new InputSource(libraryInputStream));
-        libraryInputStream.close();
-        XdmNode root = S9apiUtils.getDocumentElement(doc);
-        return useLibrary(root);
+        try {
+            XdmNode doc = runtime.parse(new InputSource(libraryInputStream));
+            XdmNode root = S9apiUtils.getDocumentElement(doc);
+            return useLibrary(root);
+        } finally {
+            libraryInputStream.close();
+        }
     }
 
     public PipelineLibrary loadLibrary(String libraryURI) throws SaxonApiException {

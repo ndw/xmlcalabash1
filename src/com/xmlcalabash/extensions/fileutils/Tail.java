@@ -80,26 +80,29 @@ public class Tail extends DefaultStep {
                     Reader rdr = new InputStreamReader(content);
                     BufferedReader brdr = new BufferedReader(rdr);
                     Vector<String> lines = new Vector<String> ();
-                    int count = 0;
-                    String line = brdr.readLine();
-                    while (line != null) {
-                        count++;
-                        lines.add(line);
+                    try {
+                        int count = 0;
+                        String line = brdr.readLine();
+                        while (line != null) {
+                            count++;
+                            lines.add(line);
 
-                        if (count > maxCount) {
-                            line = lines.remove(0);
-                            if (!tail) {
-                                tree.addStartElement(c_line);
-                                tree.startContent();
-                                tree.addText(line);
-                                tree.addEndElement();
-                                tree.addText("\n");
+                            if (count > maxCount) {
+                                line = lines.remove(0);
+                                if (!tail) {
+                                    tree.addStartElement(c_line);
+                                    tree.startContent();
+                                    tree.addText(line);
+                                    tree.addEndElement();
+                                    tree.addText("\n");
+                                }
                             }
-                        }
 
-                        line = brdr.readLine();
+                            line = brdr.readLine();
+                        }
+                    } finally {
+                        brdr.close();
                     }
-                    brdr.close();
 
                     if (tail) {
                         for (String lline : lines) {

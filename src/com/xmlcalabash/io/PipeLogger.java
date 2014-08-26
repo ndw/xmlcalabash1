@@ -224,17 +224,20 @@ public class PipeLogger {
                     System.err.println("Failed to create log: " + log.getHref());
                     stream = System.err;
                 }
-
-                serializer.setOutputStream(stream);
-
-                stream.println("<!-- Start of Calabash output " + log + " on " + dateTime() + " -->");
-
+                
                 try {
+                    serializer.setOutputStream(stream);
+
+                    stream.println("<!-- Start of Calabash output " + log + " on " + dateTime() + " -->");
+
                     S9apiUtils.serialize(runtime, node, serializer);
                 } catch (SaxonApiException sae) {
                     System.err.println("Logging failed: " + sae);
+                } finally {
+                    if (!System.err.equals(stream)) {
+                        stream.close();
+                    }
                 }
-                stream.close();
                 break;
             default:
                 break;

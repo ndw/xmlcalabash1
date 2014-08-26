@@ -149,6 +149,7 @@ public class XForEach extends XCompoundStep {
                 }
             }
 
+        } finally {
             for (String port : inputs.keySet()) {
                 if (port.startsWith("|")) {
                     String wport = port.substring(1);
@@ -156,7 +157,6 @@ public class XForEach extends XCompoundStep {
                     pipe.close(); // Indicate that we're done
                 }
             }
-        } finally {
             runtime.finish(this);
             data.closeFrame();
         }
