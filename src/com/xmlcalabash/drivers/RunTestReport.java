@@ -488,16 +488,6 @@ public class RunTestReport {
         }
 
         Hashtable<String, ReadablePipe> pipeoutputs = new Hashtable<String, ReadablePipe> ();
-    /* WTF?
-    Set<String> pipeouts = xpipeline.getOutputs();
-    for (String port : outputs.keySet()) {
-        if (pipeouts.contains(port)) {
-            ReadablePipe rpipe = xpipeline.readFrom(port);
-            rpipe.canReadSequence(true);
-            pipeoutputs.put(port, rpipe);
-        }
-    }
-    */
 
         Set<String> pipeouts = xpipeline.getOutputs();
         for (String port : pipeouts) {

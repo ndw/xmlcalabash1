@@ -69,7 +69,7 @@ public class RDFLoad extends RDFStep {
             parser.setProfile(prof);
             try {
                 parser.parse();
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 System.err.println("Parse error in RDFLoad document; processing partial document");
                 e.printStackTrace();
             }
