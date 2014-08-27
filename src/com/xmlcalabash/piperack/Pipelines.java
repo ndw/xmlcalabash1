@@ -101,7 +101,11 @@ public class Pipelines extends BaseResource {
         XProcRuntime runtime = new XProcRuntime(getConfiguration());
 
         try {
-            XdmNode doc = runtime.parse(new InputSource(entity.getStream()));
+            InputSource is = new InputSource(entity.getStream());
+            String base = getHostRef().toString();
+            is.setSystemId(base + "/" + name);
+
+            XdmNode doc = runtime.parse(is);
             XPipeline pipeline = runtime.use(doc);
             getPipelines().put(id, new PipelineConfiguration(runtime, pipeline, expires));
         } catch (Exception e) {
