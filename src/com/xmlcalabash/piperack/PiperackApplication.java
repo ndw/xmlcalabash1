@@ -62,6 +62,7 @@ public class PiperackApplication extends Application {
             loadPipeline(src.uri, name, src.expires);
         }
 
+        setStatusService(new BaseStatus(globalRuntime));
     }
 
     @Override
