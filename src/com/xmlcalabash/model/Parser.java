@@ -167,9 +167,19 @@ public class Parser {
         return doc;
     }
 
+    @Deprecated
     public PipelineLibrary loadLibrary(InputStream libraryInputStream) throws SaxonApiException, IOException {
+        return loadLibrary(libraryInputStream, null);
+    }
+
+    public PipelineLibrary loadLibrary(InputStream libraryInputStream, String base) throws SaxonApiException, IOException {
+        InputSource is = new InputSource(libraryInputStream);
+        if (base != null) {
+            is.setSystemId(base);
+        }
+
         try {
-            XdmNode doc = runtime.parse(new InputSource(libraryInputStream));
+            XdmNode doc = runtime.parse(is);
             XdmNode root = S9apiUtils.getDocumentElement(doc);
             return useLibrary(root);
         } finally {

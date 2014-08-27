@@ -718,7 +718,7 @@ public class XProcRuntime {
                 break;
 
             case INPUT_STREAM:
-                plibrary = parser.loadLibrary(library.getInputStream());
+                plibrary = parser.loadLibrary(library.getInputStream(), library.getInputStreamUri());
                 break;
 
             default:
