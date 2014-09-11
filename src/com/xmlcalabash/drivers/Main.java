@@ -133,7 +133,9 @@ public class Main {
             }
         } finally {
             // Here all memory should be freed by the next gc, right?
-            runtime.close();
+            if (runtime != null) {
+                runtime.close();
+            }
         }
     }
 
