@@ -29,11 +29,11 @@ import java.util.Vector;
 import java.util.Hashtable;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
 
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
+import org.slf4j.LoggerFactory;
 
 public class DeclareStep extends CompoundStep {
     protected boolean psviRequired = false;
@@ -199,29 +199,6 @@ public class DeclareStep extends CompoundStep {
         }
     }
 
-    private int logLevel(Logger logger) {
-        Logger log = logger;
-        Level level = null;
-
-        if (log != null) {
-            level = log.getLevel();
-        }
-
-        while (log != null && level == null) {
-            log = log.getParent();
-            if (log != null) {
-                level = log.getLevel();
-            }
-        }
-
-        if (level == null) {
-            // WTF!?
-            return Level.SEVERE.intValue();
-        } else {
-            return level.intValue();
-        }
-    }
-
     public void setup() {
         XProcRuntime runtime = this.runtime;
         DeclareStep decl = this;
@@ -230,10 +207,10 @@ public class DeclareStep extends CompoundStep {
         if (decl.psviRequired && !runtime.getPSVISupported()) {
             throw XProcException.dynamicError(22);
         }
-        
-        if (debug && logLevel(logger) <= Level.FINEST.intValue()) {
-            System.err.println("=====================================================================================");
-            System.err.println("Before augment:");
+
+        if (debug) {
+            logger.trace("=====================================================================================");
+            logger.trace("Before augment:");
             decl.dump();
         }
 
@@ -266,8 +243,8 @@ public class DeclareStep extends CompoundStep {
             }
         }
 
-        if (debug && logLevel(logger) <= Level.FINEST.intValue()) {
-            System.err.println("After binding pipeline inputs and outputs:");
+        if (debug) {
+            logger.trace("After binding pipeline inputs and outputs:");
             decl.dump();
         }
 
@@ -278,34 +255,34 @@ public class DeclareStep extends CompoundStep {
 
         decl.augment();
 
-        if (debug && logLevel(logger) <= Level.FINEST.intValue()) {
-            System.err.println("After augment:");
+        if (debug) {
+            logger.trace("After augment:");
             decl.dump();
         }
 
         decl.setupEnvironment();
 
         if (!decl.valid()) {
-            if (logLevel(logger) <= Level.INFO.intValue()) {
+            if (debug) {
                 decl.dump();
             }
             return;
         }
 
-        if (debug && logLevel(logger) <= Level.FINEST.intValue()) {
-            System.err.println("After valid:");
+        if (debug) {
+            logger.trace("After valid:");
             decl.dump();
         }
 
         if (!decl.orderSteps()) {
-            if (logLevel(logger) <= Level.INFO.intValue()) {
+            if (debug) {
                 decl.dump();
             }
             return;
         }
 
-        if (debug && logLevel(logger) <= Level.FINEST.intValue()) {
-            System.err.println("After ordering:");
+        if (debug) {
+            logger.trace("After ordering:");
             decl.dump();
         }
 
@@ -314,7 +291,7 @@ public class DeclareStep extends CompoundStep {
 
         // Are all the primary outputs bound?
         if (!checkOutputBindings()) {
-            if (logLevel(logger) <= Level.INFO.intValue()) {
+            if (debug) {
                 decl.dump();
             }
             return;

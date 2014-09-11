@@ -26,7 +26,8 @@ import net.sf.saxon.s9api.*;
 import net.sf.saxon.trans.XPathException;
 
 import java.util.Iterator;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by IntelliJ IDEA.
@@ -50,7 +51,7 @@ public class AxisNodes implements Iterable<XdmNode> {
     public static final int PIPELINE = SIGNIFICANT | NO_DOC | USE_WHEN;
     private static final int VALID_BITS = PIPELINE;
 
-    protected Logger logger = Logger.getLogger("com.xmlcalabash.util.RelevantNodes");
+    protected Logger logger = LoggerFactory.getLogger(AxisNodes.class);
     private static QName use_when = new QName("", "use-when");
     private static QName p_use_when = new QName(XProcConstants.NS_XPROC, "use-when");
     private AxisNodesIter iter = null;

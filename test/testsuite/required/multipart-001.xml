@@ -1,0 +1,60 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error">
+
+<t:title>Test http-request multipart #001</t:title>
+
+<t:pipeline>
+<p:declare-step version='1.0' name="main">
+  <p:output port="result"/>
+  <p:http-request>
+    <p:input port="source">
+      <p:inline>
+	<c:request method="post"
+                   href="http://tests.xproc.org/service/check-multipart">
+          <c:multipart boundary="aaaabbbbccccddddeeefffggghhhiiijjjkkkllmmmnop" content-type="multipart/mixed">
+            <c:body content-type="text/plain"
+                    description="Some descriptive text">Hello World</c:body>
+            <c:body content-type="text/plain"
+                    description="Some descriptive text">Goodbye!</c:body>
+            <c:body content-type="application/xml"
+                    description="Some descriptive text">
+              <doc/>
+            </c:body>
+          </c:multipart>
+        </c:request>
+      </p:inline>
+    </p:input>
+  </p:http-request>
+</p:declare-step>
+</t:pipeline>
+
+<t:output port='result'>
+<check-multipart boundary="aaaabbbbccccddddeeefffggghhhiiijjjkkkllmmmnop"
+           content-type='multipart/mixed'>
+   <part>
+      <header name="Content-Description">Some descriptive text</header>
+      <header name="Content-Type">text/plain; charset=utf-8</header>
+      <body>Hello World
+</body>
+   </part>
+   <part>
+      <header name="Content-Description">Some descriptive text</header>
+      <header name="Content-Type">text/plain; charset=utf-8</header>
+      <body>Goodbye!
+</body>
+   </part>
+   <part>
+      <header name="Content-Description">Some descriptive text</header>
+      <header name="Content-Type">application/xml; charset=utf-8</header>
+      <body>
+         <doc/>
+      </body>
+   </part>
+</check-multipart>
+</t:output>
+
+</t:test>
+

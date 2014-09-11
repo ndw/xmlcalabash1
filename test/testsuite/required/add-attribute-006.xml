@@ -1,0 +1,55 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error">
+
+  <t:title>Test p:add-attribute #006</t:title>
+
+  <t:description xmlns="http://www.w3.org/1999/xhtml">                                                              
+    <p>Tests attribute-namespace and attribute-prefix.</p>
+  </t:description>     
+
+  <t:input port='source'>
+    <document><element/></document>
+  </t:input>
+
+  <t:pipeline>
+    <p:pipeline version='1.0' name="pipeline">
+      <p:add-attribute match="element"
+                       attribute-name="foo"
+                       attribute-value="bar"
+                       attribute-namespace="http://baz.com"
+                       attribute-prefix="baz"/>
+
+      <p:escape-markup/>
+
+      <p:choose>
+        <p:when test="contains(/document, 'baz:foo=') and contains(/document, 'xmlns:baz=&quot;http://baz.com&quot;')">
+          <p:identity>
+            <p:input port="source">
+              <p:inline>
+                <success/>
+              </p:inline>
+            </p:input>
+          </p:identity>
+        </p:when>
+        <p:otherwise>
+          <p:identity>
+            <p:input port="source">
+              <p:inline>
+                <failure/>
+              </p:inline>
+            </p:input>
+          </p:identity>
+        </p:otherwise>
+      </p:choose>
+    </p:pipeline>
+  </t:pipeline>
+
+  <t:output port="result">
+    <success/>
+  </t:output>
+
+</t:test>
+

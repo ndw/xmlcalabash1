@@ -1,0 +1,40 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error">
+  <t:title>Test base-uri #003</t:title>
+  
+  <t:description xmlns="http://www.w3.org/1999/xhtml">
+    <p>Tests that the base URI of the inline document is
+    the base URI of the <code>p:inline</code> element.</p>
+  </t:description>
+
+  <t:pipeline>
+    <p:declare-step version="1.0">
+      <p:output port="result"/>
+
+      <p:identity xml:base="http://example.org/doc.xml">
+	<p:input port="source">
+          <p:inline>
+            <doc/>
+          </p:inline>
+        </p:input>
+      </p:identity>
+
+      <p:string-replace match="result/text()">
+	<p:with-option name="replace"
+		       select="concat('&quot;',p:base-uri(),'&quot;')"/>
+        <p:input port="source">
+          <p:inline>
+            <result>base URI</result>
+          </p:inline>
+        </p:input>
+      </p:string-replace>
+    </p:declare-step>
+  </t:pipeline>
+  
+  <t:output port="result">
+    <result>http://example.org/doc.xml</result>
+  </t:output>
+</t:test>

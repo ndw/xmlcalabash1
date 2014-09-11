@@ -24,6 +24,8 @@ import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmNode;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -121,14 +123,14 @@ public class Option extends EndPoint implements ComputableValue {
         }
 
         if (select != null) {
-            System.err.println(indent + "option " + getName() + " select=" + select);
+            logger.trace(indent + "option " + getName() + " select=" + select);
         } else {
-            System.err.println(indent + "option " + getName());
+            logger.trace(indent + "option " + getName());
             if (getBinding().size() == 0) {
                 if (XProcConstants.p_option.equals(node.getNodeName())) {
                     // System.err.println(indent + "  no binding allowed");
                 } else {
-                    System.err.println(indent + "  no binding");
+                    logger.trace(indent + "  no binding");
                 }
             }
         }

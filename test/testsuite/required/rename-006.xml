@@ -1,0 +1,56 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step">
+
+  <t:title>Test rename-006</t:title>
+
+  <t:description xmlns="http://www.w3.org/1999/xhtml">
+    <p>Tests new-namespace and new-prefix</p>
+  </t:description>
+
+  <t:input port="source">
+    <document>
+      <element/>
+    </document>
+  </t:input>
+  
+  <t:pipeline>
+    <p:pipeline version='1.0'>
+
+      <p:rename match="element" new-name="foo"
+                new-namespace="http://baz.com" new-prefix="baz"/>
+
+      <p:escape-markup/>
+
+      <p:choose>
+        <p:when test="contains(/document, '&lt;baz:foo') and contains(/document, 'xmlns:baz=&quot;http://baz.com&quot;')">
+          <p:identity>
+            <p:input port="source">
+              <p:inline>
+                <success/>
+              </p:inline>
+            </p:input>
+          </p:identity>
+        </p:when>
+        <p:otherwise>
+          <p:identity>
+            <p:input port="source">
+              <p:inline>
+                <failure/>
+              </p:inline>
+            </p:input>
+          </p:identity>
+        </p:otherwise>
+      </p:choose>
+
+
+    </p:pipeline>
+  </t:pipeline>
+
+  <t:output port="result">
+    <success/>
+  </t:output>
+
+</t:test>
+

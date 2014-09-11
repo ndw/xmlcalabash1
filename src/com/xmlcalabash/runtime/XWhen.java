@@ -6,6 +6,7 @@ import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.*;
+import com.xmlcalabash.util.MessageFormatter;
 import net.sf.saxon.s9api.*;
 import net.sf.saxon.trans.XPathException;
 
@@ -58,7 +59,8 @@ public class XWhen extends XCompoundStep {
                     while (reader.moreDocuments()) {
                         XdmNode doc = reader.read();
                         pipe.write(doc);
-                        finest(step.getNode(), "Compound input copy from " + reader + " to " + pipe);
+                        logger.trace(MessageFormatter.nodeMessage(step.getNode(),
+                                "Compound input copy from " + reader + " to " + pipe));
                     }
                 }
             }

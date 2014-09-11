@@ -1,0 +1,4 @@
+<t:test-suite xmlns:t='http://xproc.org/ns/testsuite'>
+<t:title>Extension tests</t:title>
+<t:test href='unimpl-001.xml'/>
+</t:test-suite>

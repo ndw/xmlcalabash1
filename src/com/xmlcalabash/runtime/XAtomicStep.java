@@ -1,6 +1,7 @@
 package com.xmlcalabash.runtime;
 
 import com.xmlcalabash.util.AxisNodes;
+import com.xmlcalabash.util.MessageFormatter;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TypeUtils;
 import com.xmlcalabash.core.XProcConstants;
@@ -154,12 +155,14 @@ public class XAtomicStep extends XStep {
                     pipe.canReadSequence(input.getSequence());
 
                     if (input.getSelect() != null) {
-                        finest(step.getNode(), step.getName() + " selects from " + pipe + " for " + port);
+                        logger.trace(MessageFormatter.nodeMessage(step.getNode(),
+                                step.getName() + " selects from " + pipe + " for " + port));
                         pipe = new XSelect(runtime, this, pipe, input.getSelect(), input.getNode());
                     }
 
                     readers.add(pipe);
-                    finest(step.getNode(), step.getName() + " reads from " + pipe + " for " + port);
+                    logger.trace(MessageFormatter.nodeMessage(step.getNode(),
+                            step.getName() + " reads from " + pipe + " for " + port));
                 }
 
                 XInput xinput = new XInput(runtime, input);
@@ -179,7 +182,7 @@ public class XAtomicStep extends XStep {
             WritablePipe wpipe = xoutput.getWriter();
             wpipe.canWriteSequence(output.getSequence());
             outputs.put(port, wpipe);
-            finest(step.getNode(), step.getName() + " writes to " + wpipe + " for " + port);
+            logger.trace(MessageFormatter.nodeMessage(step.getNode(), step.getName() + " writes to " + wpipe + " for " + port));
         }
 
         parent.addStep(this);

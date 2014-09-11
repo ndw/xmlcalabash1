@@ -1,0 +1,44 @@
+<?xml-stylesheet type="text/xsl" href="http://tests.xproc.org/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite">
+
+<t:title>Test cxf:head</t:title>
+
+<t:pipeline>
+<p:declare-step version='1.0' name="main"
+                xmlns:cxf="http://xmlcalabash.com/ns/extensions/fileutils"
+                xmlns:p="http://www.w3.org/ns/xproc"
+                xmlns:c="http://www.w3.org/ns/xproc-step"
+                xmlns:cx="http://xmlcalabash.com/ns/extensions"
+                xmlns:err="http://www.w3.org/ns/xproc-error">
+<p:output port="result"/>
+
+<p:import href="../library/fileutils.xpl"/>
+
+<p:store href="file:/tmp/textfile.txt"
+         method="text">
+  <p:input port="source">
+    <p:inline><doc>line one
+line two
+line three
+line four
+line five
+</doc>
+    </p:inline>
+  </p:input>
+</p:store>
+
+<cxf:head href="file:/tmp/textfile.txt" count="3"/>
+
+</p:declare-step>
+</t:pipeline>
+
+<t:output port='result'>
+<c:result xmlns:c="http://www.w3.org/ns/xproc-step">
+<c:line>line one</c:line>
+<c:line>line two</c:line>
+<c:line>line three</c:line>
+</c:result>
+</t:output>
+
+</t:test>
+

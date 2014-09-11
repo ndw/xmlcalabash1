@@ -10,6 +10,7 @@ import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.runtime.XStep;
 import net.sf.saxon.s9api.XdmNode;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 import javax.xml.transform.sax.SAXSource;
 import java.io.OutputStream;
@@ -23,6 +24,7 @@ import java.util.Properties;
  * To change this template use File | Settings | File Templates.
  */
 public class FoXEP implements FoProcessor {
+    private org.slf4j.Logger logger = LoggerFactory.getLogger(FoXEP.class);
     XProcRuntime runtime = null;
     FormatterImpl xep = null;
     XStep step = null;
@@ -63,23 +65,24 @@ public class FoXEP implements FoProcessor {
     private class FoLogger implements Logger {
 
         public void openDocument() {
-            step.fine(step.getNode(), "p:xsl-formatter document processing starts");
+            step.info(step.getNode(), "p:xsl-formatter document processing starts");
         }
 
         public void closeDocument() {
-            step.fine(step.getNode(), "p:xsl-formatter document processing ends");
+            step.info(step.getNode(), "p:xsl-formatter document processing ends");
         }
 
         public void event(String name, String message) {
-            step.finer(step.getNode(), "p:xsl-formatter processing " + name + ": " + message);
+            logger.trace(MessageFormatter.nodeMessage(step.getNode(),
+                    "p:xsl-formatter processing " + name + ": " + message));
         }
 
         public void openState(String state) {
-            step.finest(step.getNode(), "p:xsl-formatter process start: " + state);
+            logger.trace(MessageFormatter.nodeMessage(step.getNode(), "p:xsl-formatter process start: " + state));
         }
 
         public void closeState(String state) {
-            step.finest(step.getNode(), "p:xsl-formatter process end: " + state);
+            logger.trace(MessageFormatter.nodeMessage(step.getNode(), "p:xsl-formatter process end: " + state));
         }
 
         public void info(String message) {

@@ -21,6 +21,8 @@ package com.xmlcalabash.model;
 
 import net.sf.saxon.s9api.XdmNode;
 import com.xmlcalabash.core.XProcRuntime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -61,7 +63,7 @@ public class PipeBinding extends Binding {
             indent += " ";
         }
 
-        System.err.println(indent + this + " from " + output + " to " + input);
+        logger.trace(indent + this + " from " + output + " to " + input);
     }
     
     public String toString() {

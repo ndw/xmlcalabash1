@@ -4,6 +4,7 @@ import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.DocumentSequence;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.util.MessageFormatter;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.model.NamespaceBinding;
 import com.xmlcalabash.model.Step;
@@ -11,10 +12,11 @@ import com.xmlcalabash.model.RuntimeValue;
 
 import java.util.Iterator;
 import java.util.Hashtable;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
 
 import net.sf.saxon.s9api.*;
 import net.sf.saxon.sxpath.IndependentContext;
+import org.slf4j.LoggerFactory;
 
 /**
  * Select.java
@@ -45,7 +47,7 @@ import net.sf.saxon.sxpath.IndependentContext;
  * To change this template use File | Settings | File Templates.
  */
 public class XSelect implements ReadablePipe {
-    private Logger logger = Logger.getLogger(this.getClass().getName());
+    protected Logger logger = LoggerFactory.getLogger(XSelect.class);
     private ReadablePipe source = null;
     private String select = null;
     private XdmNode context = null;
@@ -130,7 +132,7 @@ public class XSelect implements ReadablePipe {
                 XdmNode doc = source.read();
 
                 if (reader != null) {
-                    runtime.finest(null, reader.getNode(), reader.getName() + " select read '" + (doc == null ? "null" : doc.getBaseURI()) + "' from " + source);
+                    logger.trace(MessageFormatter.nodeMessage(reader.getNode(), reader.getName() + " select read '" + (doc == null ? "null" : doc.getBaseURI()) + "' from " + source));
                 }
 
                 selector.setContextItem(doc);
@@ -154,7 +156,7 @@ public class XSelect implements ReadablePipe {
                     XdmNode sdoc = dest.getXdmNode();
 
                     if (reader != null) {
-                        runtime.finest(null, reader.getNode(), reader.getName() + " select wrote '" + (sdoc == null ? "null" : sdoc.getBaseURI()) + "' to " + documents);
+                        logger.trace(MessageFormatter.nodeMessage(reader.getNode(), reader.getName() + " select wrote '" + (sdoc == null ? "null" : sdoc.getBaseURI()) + "' to " + documents));
                     }
                     
                     documents.add(sdoc);
@@ -209,7 +211,7 @@ public class XSelect implements ReadablePipe {
         }
 
         if (reader != null) {
-            runtime.finest(null, reader.getNode(), reader.getName() + " read '" + (doc == null ? "null" : doc.getBaseURI()) + "' from " + this);
+            logger.trace(MessageFormatter.nodeMessage(reader.getNode(), reader.getName() + " read '" + (doc == null ? "null" : doc.getBaseURI()) + "' from " + this));
         }
 
         return doc;

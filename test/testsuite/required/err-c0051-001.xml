@@ -1,0 +1,30 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error"
+        error="err:XC0051">
+  
+  <t:title>Test err:XC0051 #001</t:title>
+
+  <t:description xmlns="http://www.w3.org/1999/xhtml">
+    <p>p:unescape-markup: It is a dynamic error if the content-type
+    specified is not supported by the implementation.</p>
+  </t:description>
+
+  <t:input port="source">
+    <t:document>
+      <doc>...---...</doc>
+    </t:document>
+  </t:input>
+  
+  <t:pipeline>
+    <p:declare-step version='1.0'>
+      <p:input port="source"/>
+      <p:output port="result"/>
+      <p:unescape-markup content-type="application/unsupported"/>
+    </p:declare-step>
+  </t:pipeline>
+  
+</t:test>
+

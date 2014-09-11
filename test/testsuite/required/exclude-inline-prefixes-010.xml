@@ -1,0 +1,29 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error">
+
+<t:title>Test <t:code>exclude-inline-prefixes</t:code>-010</t:title>
+
+<t:pipeline>
+  <p:declare-step version='1.0'
+                  xmlns:ex="http://example.com/steps">
+    
+    <p:output port="result"/>
+    
+    <p:import href="../lib/exclude-inline-prefixes.xpl"/>
+    
+    <ex:foo/>
+    
+    <p:wrap-sequence wrapper="wrapper"/>
+    
+    <p:escape-markup/>
+  </p:declare-step>
+</t:pipeline>
+
+<t:output port="result">
+  <wrapper>&lt;doc xmlns:ex2="http://example.com/steps2"/&gt;</wrapper>
+</t:output>
+
+</t:test>

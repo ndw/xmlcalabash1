@@ -1,0 +1,38 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error"
+        error="err:XS0001">
+
+<t:title>Test versioning #002</t:title>
+
+<t:description xmlns="http://www.w3.org/1999/xhtml">
+  <p>Forwards-compatible mode: Unknown input ports
+  with a binding participate in the construction
+  of the dependency graph. In this case, the presence
+  of unknown input/output ports causes a loop in the
+  connections between steps.</p>
+</t:description>
+
+<t:pipeline>
+<p:declare-step version="2.0">
+  <p:output port="result"/>
+ 
+  <p:identity name="id1">
+    <p:input port="source">
+      <p:inline>
+        <doc1/>
+      </p:inline>
+    </p:input>
+    <p:input port="new-input-port">
+      <p:pipe step="id2" port="new-output-port"/>
+    </p:input>
+  </p:identity>
+
+  <p:identity name="id2"/>
+
+</p:declare-step>
+</t:pipeline>
+
+</t:test>

@@ -1,0 +1,33 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error"
+        error="err:XC0010">
+
+  <t:title>Test for err:XC0010 #001</t:title>
+  
+  <t:description xmlns="http://www.w3.org/1999/xhtml">
+    <p>It is a dynamic error if an encoding of "base64"
+    is specified and a character set is not, or if the
+    specified character set is not supported by the
+    implementation.</p>
+  </t:description>
+
+  <t:input port="source">
+    <t:document>
+      <!-- base64 encoded ISO-8859-2 character data -->
+      <doc>PHBhcmE+uWVk6SBteblpPC9wYXJhPg0K</doc>
+    </t:document>
+  </t:input>
+  
+  <t:pipeline>
+    <p:declare-step version='1.0'>
+      <p:input port="source"/>
+      <p:output port="result"/>
+      <p:unescape-markup encoding="base64"/>
+    </p:declare-step>
+  </t:pipeline>
+
+</t:test>
+

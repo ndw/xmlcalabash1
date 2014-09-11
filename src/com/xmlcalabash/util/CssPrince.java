@@ -9,6 +9,8 @@ import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.runtime.XStep;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -28,6 +30,7 @@ import java.util.Vector;
  * To change this template use File | Settings | File Templates.
  */
 public class CssPrince implements CssProcessor {
+    private Logger logger = LoggerFactory.getLogger(CssPrince.class);
     private static final QName _content_type = new QName("content-type");
     private static final QName _encoding = new QName("", "encoding");
 
@@ -220,9 +223,7 @@ public class CssPrince implements CssProcessor {
             ByteArrayInputStream bis = new ByteArrayInputStream(doc.toString().getBytes("UTF-8"));
             prince.convert(bis, out);
         } catch (IOException e) {
-            if (runtime.getDebug()) {
-                e.printStackTrace();
-            }
+            logger.debug(e.getMessage(), e);
             throw new XProcException(e);
         }
     }

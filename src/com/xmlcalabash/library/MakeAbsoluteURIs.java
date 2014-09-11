@@ -24,6 +24,7 @@ import java.util.Map;
 
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.util.MessageFormatter;
 import com.xmlcalabash.util.ProcessMatchingNodes;
 import com.xmlcalabash.util.ProcessMatch;
 import com.xmlcalabash.util.URIUtils;
@@ -74,7 +75,7 @@ public class MakeAbsoluteURIs extends DefaultStep implements ProcessMatchingNode
             setBaseURI = base.getBaseURI().resolve(base.getString());
         }
 
-        finest(doc, "Making URIs absolute against: " + setBaseURI);
+        logger.trace(MessageFormatter.nodeMessage(doc, "Making URIs absolute against: " + setBaseURI));
 
         matcher = new ProcessMatch(runtime, this);
         matcher.match(doc, getOption(_match));

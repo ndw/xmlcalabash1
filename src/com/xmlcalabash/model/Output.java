@@ -21,6 +21,8 @@ package com.xmlcalabash.model;
 
 import net.sf.saxon.s9api.XdmNode;
 import com.xmlcalabash.core.XProcRuntime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -57,7 +59,7 @@ public class Output extends Port {
             indent += " ";
         }
 
-        System.err.println(indent + "output " + getPort());
+        logger.trace(indent + "output " + getPort());
         for (Binding binding : getBinding()) {
             binding.dump(depth+2);
         }

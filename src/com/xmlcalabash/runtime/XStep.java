@@ -5,7 +5,7 @@ import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 
-import java.util.logging.Logger;
+import org.slf4j.Logger;
 import java.util.Hashtable;
 import java.util.Set;
 import java.util.HashSet;
@@ -17,6 +17,7 @@ import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.model.Step;
 import com.xmlcalabash.model.Input;
 import com.xmlcalabash.model.DeclareStep;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by IntelliJ IDEA.
@@ -25,8 +26,8 @@ import com.xmlcalabash.model.DeclareStep;
  * Time: 8:02:28 AM
  * To change this template use File | Settings | File Templates.
  */
-public abstract class XStep implements XProcRunnable 
-{
+public abstract class XStep implements XProcRunnable {
+    protected Logger logger = null;
     protected XProcRuntime runtime = null;
     protected Step step = null;
     protected String name = null;
@@ -35,7 +36,6 @@ public abstract class XStep implements XProcRunnable
     private Hashtable<QName, RuntimeValue> options = new Hashtable<QName, RuntimeValue> ();
     private Hashtable<String, Hashtable<QName, RuntimeValue>> parameters = new Hashtable<String, Hashtable<QName, RuntimeValue>> ();
     protected XCompoundStep parent = null;
-    protected Logger logger = Logger.getLogger(this.getClass().getName());
     protected Hashtable<QName,RuntimeValue> inScopeOptions = new Hashtable<QName,RuntimeValue> ();
 
     public XStep(XProcRuntime runtime, Step step) {
@@ -44,6 +44,7 @@ public abstract class XStep implements XProcRunnable
         if (step != null) {
             name = step.getName();
         }
+        logger = LoggerFactory.getLogger(this.getClass());
     }
 
     public Step getStep() {
@@ -264,7 +265,7 @@ public abstract class XStep implements XProcRunnable
             return true;
         }
 
-        return getParent() == null ? false : getParent().hasInScopeVariableBinding(name);
+        return getParent() != null && getParent().hasInScopeVariableBinding(name);
     }
 
     public boolean hasInScopeVariableValue(QName name) {
@@ -273,7 +274,7 @@ public abstract class XStep implements XProcRunnable
             return v.initialized();
         }
 
-        return getParent() == null ? false : getParent().hasInScopeVariableBinding(name);
+        return getParent() != null && getParent().hasInScopeVariableBinding(name);
     }
 
     public Hashtable<QName,RuntimeValue> getInScopeOptions() {
@@ -302,17 +303,5 @@ public abstract class XStep implements XProcRunnable
 
     public void info(XdmNode node, String message) {
         runtime.info(this, node, message);
-    }
-
-    public void fine(XdmNode node, String message) {
-        runtime.fine(this, node, message);
-    }
-
-    public void finer(XdmNode node, String message) {
-        runtime.finer(this, node, message);
-    }
-
-    public void finest(XdmNode node, String message) {
-        runtime.finest(this, node, message);
     }
 }

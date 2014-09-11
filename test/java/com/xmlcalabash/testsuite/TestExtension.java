@@ -13,7 +13,7 @@ import org.junit.Test;
  */
 public class TestExtension {
     protected static SuiteRunner suiteRunner = null;
-    protected static String TESTROOT = "http://tests.xproc.org/tests/extension/";
+    protected static String TESTROOT = "test/testsuite/extension/";
 
     @BeforeClass
     public static void setupClass() {

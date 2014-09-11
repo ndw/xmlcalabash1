@@ -26,6 +26,7 @@ import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.util.MessageFormatter;
 import com.xmlcalabash.util.ProcessMatch;
 import com.xmlcalabash.util.ProcessMatchingNodes;
 import com.xmlcalabash.util.S9apiUtils;
@@ -40,6 +41,9 @@ import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Vector;
@@ -93,9 +97,9 @@ public class Template extends DefaultStep implements ProcessMatchingNodes {
 
     public void run() throws SaxonApiException {
         if (step.getNode().getNodeName().equals(XProcConstants.p_document_template)) {
-            runtime.finer(this, step.getNode(), "The template step should be named p:template, the name p:document-template is deprecated.");
+            logger.trace(MessageFormatter.nodeMessage(step.getNode(),
+                    "The template step should be named p:template, the name p:document-template is deprecated."));
         }
-
         super.run();
 
         if (source.documentCount() > 1) {

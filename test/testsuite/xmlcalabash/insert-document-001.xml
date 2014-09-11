@@ -1,0 +1,72 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+	xmlns:cx="http://xmlcalabash.com/ns/extensions"
+        xmlns:err="http://www.w3.org/ns/xproc-error">
+
+<t:title>Test ml:insert-document-001</t:title>
+
+<t:pipeline>
+<p:declare-step xmlns:p="http://www.w3.org/ns/xproc"
+		xmlns:c="http://www.w3.org/ns/xproc-step"
+		xmlns:ml="http://xmlcalabash.com/ns/extensions/marklogic"
+		exclude-inline-prefixes="c ml"
+		name="main" version="1.0">
+<p:output port="result"/>
+
+<p:import href="http://xmlcalabash.com/extension/steps/library-1.0.xpl"/>
+
+<p:try>
+  <p:group>
+    <ml:adhoc-query user="xmlcalabash" password="password" host="localhost" port="8022">
+      <p:input port="parameters">
+	<p:empty/>
+      </p:input>
+      <p:input port="source">
+	<p:inline>
+	  <c:query>xdmp:document-delete("/test/document.xml")</c:query>
+	</p:inline>
+      </p:input>
+    </ml:adhoc-query>
+  </p:group>
+  <p:catch>
+    <p:identity>
+      <p:input port="source">
+	<p:inline>
+	  <doc>Ignore failures to delete the document.</doc>
+	</p:inline>
+      </p:input>
+    </p:identity>
+  </p:catch>
+</p:try>
+
+<p:sink/>
+
+<ml:insert-document user="xmlcalabash" password="password" host="localhost" port="8022"
+		    uri="/test/document.xml">
+  <p:input port="source">
+    <p:inline>
+      <doc>This is a test document.</doc>
+    </p:inline>
+  </p:input>
+</ml:insert-document>
+
+<ml:adhoc-query user="xmlcalabash" password="password" host="localhost" port="8022">
+  <p:input port="parameters">
+    <p:empty/>
+  </p:input>
+  <p:input port="source">
+    <p:inline>
+      <c:query>doc("/test/document.xml")</c:query>
+    </p:inline>
+  </p:input>
+</ml:adhoc-query>
+</p:declare-step>
+</t:pipeline>
+
+<t:output port='result'>
+<doc>This is a test document.</doc>
+</t:output>
+
+</t:test>

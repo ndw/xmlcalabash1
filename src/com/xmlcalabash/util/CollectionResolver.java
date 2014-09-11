@@ -9,12 +9,13 @@ import net.sf.saxon.om.Item;
 import net.sf.saxon.s9api.XdmNode;
 
 import java.util.Vector;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
 import java.net.URI;
 import java.net.URISyntaxException;
 
 import com.xmlcalabash.core.XProcRuntime;
 import net.sf.saxon.tree.iter.ArrayIterator;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by IntelliJ IDEA.
@@ -24,10 +25,11 @@ import net.sf.saxon.tree.iter.ArrayIterator;
  * To change this template use File | Settings | File Templates.
  */
 public class CollectionResolver implements CollectionURIResolver {
+    protected Logger logger = LoggerFactory.getLogger(CollectionResolver.class);
+
     XProcRuntime runtime = null;
     Vector<XdmNode> docs = null;
     CollectionURIResolver chainedResolver = null;
-    protected Logger logger = Logger.getLogger(this.getClass().getName());
 
     public CollectionResolver(XProcRuntime runtime, Vector<XdmNode> docs, CollectionURIResolver chainedResolver) {
         this.runtime = runtime;
@@ -36,7 +38,7 @@ public class CollectionResolver implements CollectionURIResolver {
     }
 
     public SequenceIterator<?> resolve(String href, String base, XPathContext context) throws XPathException {
-        runtime.finest(null, null, "Collection: " + href + " (" + base + ")");
+        logger.trace("Collection: " + href + " (" + base + ")");
         if (href == null) {
             Item[] array = new Item[docs.size()];
             for (int pos = 0; pos < docs.size(); pos++) {
@@ -61,7 +63,7 @@ public class CollectionResolver implements CollectionURIResolver {
                     return new ArrayIterator<Item>(items);
                 }
             } catch (URISyntaxException use) {
-                runtime.finest(null, null, "URI Syntax exception resolving collection URI: " + href + " (" + base + ")");
+                logger.trace("URI Syntax exception resolving collection URI: " + href + " (" + base + ")");
             }
 
             return chainedResolver.resolve(href,base,context);

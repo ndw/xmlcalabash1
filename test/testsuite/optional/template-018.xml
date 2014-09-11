@@ -1,0 +1,44 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error">
+
+<t:title>Test p:template-018</t:title>
+
+<t:pipeline>
+  <p:declare-step xmlns:p="http://www.w3.org/ns/xproc"
+                  xmlns:c="http://www.w3.org/ns/xproc-step"
+                  version="1.0">
+    <p:output port="result"/>
+    <p:template>
+      <p:input port="template">
+        <p:inline>
+          <!-- {$val} -->
+          <?a {$val} ?>
+          <c:data>before '{ $val }' after</c:data>
+          <!-- {$val} -->
+          <?a {$val} ?>
+        </p:inline>
+      </p:input>
+      <p:input port="source">
+        <p:empty/>
+      </p:input>
+      <p:with-param name="val" select="'xyz'"/>
+    </p:template>
+  </p:declare-step>
+
+</t:pipeline>
+
+<t:output port="result">
+        <t:document>
+          <!-- xyz -->
+          <?a xyz ?>
+          <c:data>before 'xyz' after</c:data>
+          <!-- xyz -->
+          <?a xyz ?>
+        </t:document>
+</t:output>
+
+</t:test>
+

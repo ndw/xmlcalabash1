@@ -1,0 +1,26 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error"
+        error="err:XC0053">
+
+<t:title>Test validxsd-011</t:title>
+
+<t:pipeline>
+<p:declare-step version='1.0' name="pipeline">
+<p:output port="result"/>
+
+<p:validate-with-xml-schema use-location-hints="false">
+  <p:input port="source">
+    <p:document href="http://tests.xproc.org/tests/doc/document2.xml"/>
+  </p:input>
+  <p:input port="schema">
+    <p:empty/>
+  </p:input>
+</p:validate-with-xml-schema>
+
+</p:declare-step>
+</t:pipeline>
+
+</t:test>

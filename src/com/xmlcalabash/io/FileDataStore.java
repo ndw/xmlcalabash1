@@ -21,6 +21,8 @@
 package com.xmlcalabash.io;
 
 import com.xmlcalabash.core.XProcException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -46,6 +48,7 @@ import java.util.Properties;
  * @author James Leigh <james@3roundstones.com>
  */
 public class FileDataStore implements DataStore {
+    private Logger logger = LoggerFactory.getLogger(FileDataStore.class);
 	private final DataStore fallback;
 	private final Properties contentTypes;
     private Hashtable<String,String> cachedMapping = null;
@@ -361,7 +364,8 @@ public class FileDataStore implements DataStore {
 				is.close();
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+            logger.warn("Failed to load content types: " + file.getAbsolutePath());
+            logger.debug(e.getMessage(), e);
 		}
 	}
 

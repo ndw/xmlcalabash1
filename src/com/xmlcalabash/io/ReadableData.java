@@ -26,8 +26,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.logging.Logger;
 
+import com.xmlcalabash.util.*;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -39,22 +39,20 @@ import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.DataStore.DataReader;
 import com.xmlcalabash.model.Step;
-import com.xmlcalabash.util.Base64;
-import com.xmlcalabash.util.HttpUtils;
-import com.xmlcalabash.util.JSONtoXML;
-import com.xmlcalabash.util.TreeWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author ndw
  */
 public class ReadableData implements ReadablePipe {
-    protected String contentType = null;
-    private Logger logger = Logger.getLogger(this.getClass().getName());
     public static final QName _contentType = new QName("","content-type");
     public static final QName c_contentType = new QName("c",XProcConstants.NS_XPROC_STEP, "content-type");
     public static final QName _encoding = new QName("","encoding");
     public static final QName c_encoding = new QName("c",XProcConstants.NS_XPROC_STEP, "encoding");
+    private String contentType = null;
+    private Logger logger = LoggerFactory.getLogger(ReadablePipe.class);
     private int pos = 0;
     private QName wrapper = null;
     private String uri = null;
@@ -287,7 +285,8 @@ public class ReadableData implements ReadablePipe {
         DocumentSequence docs = ensureDocuments();
         XdmNode doc = docs.get(pos++);
         if (reader != null) {
-            runtime.finest(null, reader.getNode(), reader.getName() + " read '" + (doc == null ? "null" : doc.getBaseURI()) + "' from " + this);
+            logger.trace(MessageFormatter.nodeMessage(reader.getNode(),
+                    reader.getName() + " read '" + (doc == null ? "null" : doc.getBaseURI()) + "' from " + this));
         }
         return doc;
     }

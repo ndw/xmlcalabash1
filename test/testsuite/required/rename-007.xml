@@ -1,0 +1,36 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step">
+
+  <t:title>Test rename-007</t:title>
+
+  <t:description xmlns="http://www.w3.org/1999/xhtml">
+    <p>Tests new-namespace and new-prefix. If you attempt
+    to duplicate a prefix, make sure the namespace bindings don't
+    get mangled!</p>
+  </t:description>
+
+  <t:input port="source">
+    <document>
+      <element bar:baz="baz" xmlns:bar="http://bar.com/" attr="value"/>
+    </document>
+  </t:input>
+  
+  <t:pipeline>
+    <p:pipeline version='1.0'>
+
+      <p:rename match="element/@attr" new-name="attr"
+                new-namespace="http://bar2.com/" new-prefix="bar"/>
+
+    </p:pipeline>
+  </t:pipeline>
+
+  <t:output port="result">
+    <document>
+      <element bar:baz="baz" xmlns:bar="http://bar.com/" bar2:attr="value" xmlns:bar2="http://bar2.com/"/>
+    </document>
+  </t:output>
+
+</t:test>
+

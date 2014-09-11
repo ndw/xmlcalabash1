@@ -38,6 +38,7 @@ import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
+import com.xmlcalabash.util.MessageFormatter;
 import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.util.CollectionResolver;
 import com.xmlcalabash.util.S9apiUtils;
@@ -313,7 +314,7 @@ public class XSLT extends DefaultStep {
                 throw new XProcException(use);
             }
 
-            finest(step.getNode(), "XSLT secondary result document: " + baseURI);
+            logger.trace(MessageFormatter.nodeMessage(step.getNode(), "XSLT secondary result document: " + baseURI));
 
             try {
                 XdmDestination xdmResult = new XdmDestination();

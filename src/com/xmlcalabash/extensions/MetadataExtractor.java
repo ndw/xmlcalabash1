@@ -14,6 +14,8 @@ import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.util.TreeWriter;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.awt.image.ImageObserver;
@@ -134,9 +136,7 @@ public class MetadataExtractor extends DefaultStep {
             throw new XProcException(ioe);
         } catch (JpegProcessingException e) {
             // Not a JPEG? Let's try to do at least the intrinsics...
-            if (runtime.getDebug()) {
-                e.printStackTrace();
-            }
+            logger.debug(e.getMessage(), e);
             runIntrinsics(href);
         }
     }

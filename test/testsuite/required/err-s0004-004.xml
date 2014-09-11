@@ -1,0 +1,28 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+      xmlns:p="http://www.w3.org/ns/xproc"
+      xmlns:px="http://xproc.dev.java.net/ns/extensions"
+      xmlns:c="http://www.w3.org/ns/xproc-step"
+      xmlns:err="http://www.w3.org/ns/xproc-error"
+      error="err:XS0004">
+<t:title>Test for err:XS0004 #004</t:title>
+
+<t:description xmlns="http://www.w3.org/1999/xhtml">
+  <p>Tests that variable and option names cannot shadow each other.</p>
+</t:description>
+
+<t:pipeline>
+  <p:declare-step version="1.0">
+    <p:option name="foo" select="'bar'"/>
+    <p:variable name="foo" select="'duplicate'"/>
+
+    <p:sink>
+      <p:input port="source">
+        <p:empty/>
+      </p:input>
+    </p:sink>
+  </p:declare-step>
+</t:pipeline>
+
+</t:test>
+

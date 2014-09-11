@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 
+import com.xmlcalabash.util.MessageFormatter;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.Serializer;
 import net.sf.saxon.s9api.XdmNode;
@@ -33,12 +34,15 @@ import com.xmlcalabash.io.DataStore.DataWriter;
 import com.xmlcalabash.model.Serialization;
 import com.xmlcalabash.model.Step;
 import com.xmlcalabash.util.S9apiUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author ndw
  */
 public class WritableDocument implements WritablePipe {
+    private Logger logger = LoggerFactory.getLogger(WritableDocument.class);
     private Serializer serializer = null;
     private int writeCount = 0;
     private String uri = null;
@@ -162,7 +166,7 @@ public class WritableDocument implements WritablePipe {
                 	store.writeEntry(uri, uri, media, new DataWriter() {
 						public void store(OutputStream ostream)
 								throws IOException {
-	                        runtime.finest(null, null, "Attempt to write file: " + uri);
+	                        logger.trace("Attempt to write file: " + uri);
 	                        serializer.setOutputStream(ostream);
 	                        try {
 								S9apiUtils.serialize(runtime, doc, serializer);
@@ -184,14 +188,13 @@ public class WritableDocument implements WritablePipe {
                 System.out.println("\n--<document boundary>--------------------------------------------------------------------------");
             }
         } catch (SaxonApiException sae) {
-            if (runtime.getDebug()) {
-                sae.printStackTrace();
-            }
+            logger.debug(sae.getMessage(), sae);
             throw new XProcException(sae);
         }
 
         if (writer != null) {
-            runtime.finest(null, writer.getNode(), writer.getName() + " wrote '" + (doc == null ? "null" : doc.getBaseURI()));
+            logger.trace(MessageFormatter.nodeMessage(writer.getNode(),
+                    writer.getName() + " wrote '" + (doc == null ? "null" : doc.getBaseURI())));
         }
     }
 

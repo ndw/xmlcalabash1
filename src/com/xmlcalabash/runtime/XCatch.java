@@ -4,6 +4,7 @@ import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.*;
 import com.xmlcalabash.model.Step;
 import com.xmlcalabash.model.Binding;
+import com.xmlcalabash.util.MessageFormatter;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.SaxonApiException;
 
@@ -51,7 +52,7 @@ public class XCatch extends XCompoundStep {
                     while (reader.moreDocuments()) {
                         XdmNode doc = reader.read();
                         pipe.write(doc);
-                        finest(step.getNode(), "Compound input copy from " + reader + " to " + pipe);
+                        logger.trace(MessageFormatter.nodeMessage(step.getNode(), "Compound input copy from " + reader + " to " + pipe));
                     }
                 }
             }

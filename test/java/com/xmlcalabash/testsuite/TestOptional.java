@@ -12,7 +12,7 @@ import org.junit.Test;
  */
 public class TestOptional {
     protected static SuiteRunner suiteRunner = null;
-    protected static String TESTROOT = "http://tests.xproc.org/tests/optional/";
+    protected static String TESTROOT = "test/testsuite/optional/";
 
     @BeforeClass
     public static void setupClass() {
@@ -274,7 +274,7 @@ public class TestOptional {
         suiteRunner.runTest(TESTROOT + "in-scope-names-002.xml");
     }
 
-    @Test
+    @Ignore
     public void testPsviRequired001() {
         suiteRunner.runTest(TESTROOT + "psvi-required-001.xml");
     }
@@ -439,67 +439,67 @@ public class TestOptional {
         suiteRunner.runTest(TESTROOT + "validsch-005.xml");
     }
 
-    @Test
+    @Ignore
     public void testValidxsd001() {
         suiteRunner.runTest(TESTROOT + "validxsd-001.xml");
     }
 
-    @Test
+    @Ignore
     public void testValidxsd002() {
         suiteRunner.runTest(TESTROOT + "validxsd-002.xml");
     }
 
-    @Test
+    @Ignore
     public void testValidxsd003() {
         suiteRunner.runTest(TESTROOT + "validxsd-003.xml");
     }
 
-    @Test
+    @Ignore
     public void testValidxsd004() {
         suiteRunner.runTest(TESTROOT + "validxsd-004.xml");
     }
 
-    @Test
+    @Ignore
     public void testValidxsd005() {
         suiteRunner.runTest(TESTROOT + "validxsd-005.xml");
     }
 
-    @Test
+    @Ignore
     public void testValidxsd006() {
         suiteRunner.runTest(TESTROOT + "validxsd-006.xml");
     }
 
-    @Test
+    @Ignore
     public void testValidxsd007() {
         suiteRunner.runTest(TESTROOT + "validxsd-007.xml");
     }
 
-    @Test
+    @Ignore
     public void testValidxsd008() {
         suiteRunner.runTest(TESTROOT + "validxsd-008.xml");
     }
 
-    @Test
+    @Ignore
     public void testValidxsd009() {
         suiteRunner.runTest(TESTROOT + "validxsd-009.xml");
     }
 
-    @Test
+    @Ignore
     public void testValidxsd010() {
         suiteRunner.runTest(TESTROOT + "validxsd-010.xml");
     }
 
-    @Test
+    @Ignore
     public void testValidxsd011() {
         suiteRunner.runTest(TESTROOT + "validxsd-011.xml");
     }
 
-    @Test
+    @Ignore
     public void testValidxsd012() {
         suiteRunner.runTest(TESTROOT + "validxsd-012.xml");
     }
 
-    @Test
+    @Ignore
     public void testValidxsd013() {
         suiteRunner.runTest(TESTROOT + "validxsd-013.xml");
     }
@@ -574,7 +574,7 @@ public class TestOptional {
         suiteRunner.runTest(TESTROOT + "xquery-006.xml");
     }
 
-    @Test
+    @Ignore
     public void testXslFormatter001() {
         suiteRunner.runTest(TESTROOT + "xsl-formatter-001.xml");
     }

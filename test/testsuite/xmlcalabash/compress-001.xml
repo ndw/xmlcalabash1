@@ -1,0 +1,67 @@
+<?xml-stylesheet type="text/xsl" href="http://tests.xproc.org/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite">
+
+<t:title>Test pxp:compress</t:title>
+
+<t:pipeline>
+<p:declare-step version='1.0' name="main"
+                xmlns:cxf="http://xmlcalabash.com/ns/extensions/fileutils"
+                xmlns:pxp="http://exproc.org/proposed/steps"
+                xmlns:p="http://www.w3.org/ns/xproc"
+                xmlns:c="http://www.w3.org/ns/xproc-step"
+                xmlns:cx="http://xmlcalabash.com/ns/extensions"
+                xmlns:err="http://www.w3.org/ns/xproc-error">
+<p:input port="source"/>
+<p:output port="result"/>
+
+<p:import href="../library/fileutils.xpl"/>
+
+<p:declare-step type="pxp:compress">
+  <p:input port="source"/>
+  <p:output port="result"/>
+  <p:option name="href"/>
+  <p:option name="compression-method"/>
+  <p:option name="byte-order-mark"/>
+  <p:option name="cdata-section-elements" select="''"/>
+  <p:option name="doctype-public"/>
+  <p:option name="doctype-system"/>
+  <p:option name="encoding"/>
+  <p:option name="escape-uri-attributes" select="'false'"/>
+  <p:option name="include-content-type" select="'true'"/>
+  <p:option name="indent" select="'false'"/>
+  <p:option name="media-type"/>
+  <p:option name="method" select="'xml'"/>
+  <p:option name="normalization-form" select="'none'"/>
+  <p:option name="omit-xml-declaration" select="'true'"/>
+  <p:option name="standalone" select="'omit'"/>
+  <p:option name="undeclare-prefixes"/>
+  <p:option name="version" select="'1.0'"/>
+</p:declare-step>
+
+<cxf:delete name="delete" href="file:/tmp/compress-001.xml.gz" fail-on-error="false"/>
+
+<pxp:compress name="compress"
+              href="file:/tmp/compress-001.xml.gz" cx:depends-on="delete">
+  <p:input port="source">
+    <p:document href="compress-001.xml"/>
+  </p:input>
+</pxp:compress>
+
+<p:sink/>
+
+<cxf:info href="file:/tmp/compress-001.xml.gz" cx:depends-on="compress"/>
+
+<p:delete match="@size"/>
+<p:delete match="@last-modified"/>
+
+</p:declare-step>
+</t:pipeline>
+
+<t:output port='result'>
+<c:file xmlns:c="http://www.w3.org/ns/xproc-step"
+        href="file:/tmp/compress-001.xml.gz"
+        readable="true"
+        writable="true"/>
+</t:output>
+
+</t:test>

@@ -128,7 +128,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
     }
 
     private XdmNode expandXIncludes(XdmNode doc) {
-        finest(doc, "Starting expandXIncludes");
+        logger.trace(MessageFormatter.nodeMessage(doc, "Starting expandXIncludes"));
         ProcessMatch matcher = new ProcessMatch(runtime, this);
         matcherStack.push(matcher);
         matcher.match(doc, new RuntimeValue("/|*", step.getNode()));
@@ -186,7 +186,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                 String iuri = null;
 
                 if (subdoc == null) {
-                    finest(node, "XInclude parse failed: " + href);
+                    logger.trace(MessageFormatter.nodeMessage(node, "XInclude parse failed: " + href));
                     fallback(node, href);
                     return false;
                 } else {
@@ -199,7 +199,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                         throw XProcException.stepError(29,"XInclude document includes itself: " + href);
                     }
 
-                    finest(node, "XInclude parse: " + href);
+                    logger.trace(MessageFormatter.nodeMessage(node, "XInclude parse: " + href));
                 }
 
                 Vector<XdmNode> nodes = null;
@@ -270,7 +270,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
 
     private void readText(final String href, final XdmNode node,
             String base, final XPointer xpointer, final TreeWriter matcher) {
-        finest(null, "XInclude read text: " + href + " (" + base + ")");
+        logger.trace("XInclude read text: " + href + " (" + base + ")");
 
         DataStore store = runtime.getDataStore();
         try {
@@ -279,16 +279,16 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                         long len) throws IOException {
                     String text = readText(node, xpointer, media, content, len);
                     if (text == null) {
-                        finest(node, "XInclude text parse failed: " + href);
+                        logger.trace(MessageFormatter.nodeMessage(node, "XInclude text parse failed: " + href));
                         fallback(node, href);
                     } else {
-                        finest(node, "XInclude text parse: " + href);
+                        logger.trace(MessageFormatter.nodeMessage(node, "XInclude text parse: " + href));
                         matcher.addText(text);
                     }
                 }
             });
         } catch (Exception e) {
-            finest(null, "XInclude read text failed");
+            logger.debug("XInclude read text failed");
             mostRecentException = e;
             fallback(node, href);
         }
@@ -330,20 +330,20 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
     }
 
     public XdmNode readXML(String href, String base) {
-        finest(null, "XInclude read XML: " + href + " (" + base + ")");
+        logger.trace("XInclude read XML: " + href + " (" + base + ")");
 
         try {
             XdmNode doc = runtime.parse(href, base);
             return doc;
         } catch (Exception e) {
-            finest(null, "XInclude read XML failed");
+            logger.debug("XInclude read XML failed");
             mostRecentException = e;
             return null;
         }
     }
 
     public void fallback(XdmNode node, String href) {
-        finest(node, "fallback: " + node.getNodeName());
+        logger.trace(MessageFormatter.nodeMessage(node, "fallback: " + node.getNodeName()));
         boolean valid = true;
         XdmNode fallback = null;
         for (XdmNode child : new AxisNodes(node, Axis.CHILD, AxisNodes.SIGNIFICANT)) {

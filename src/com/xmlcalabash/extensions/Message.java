@@ -4,11 +4,14 @@ import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.core.XProcRuntime;
 
+import com.xmlcalabash.util.MessageFormatter;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.QName;
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.library.DefaultStep;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by IntelliJ IDEA.
@@ -51,7 +54,8 @@ public class Message extends DefaultStep {
 
         while (source.moreDocuments()) {
             XdmNode doc = source.read();
-            runtime.finest(this, step.getNode(), "Message step " + step.getName() + " read " + doc.getDocumentURI());
+            logger.trace(MessageFormatter.nodeMessage(step.getNode(),
+                    "Message step " + step.getName() + " read " + doc.getDocumentURI()));
             result.write(doc);
         }
     }

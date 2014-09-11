@@ -1,0 +1,32 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error"
+        xmlns:test="http://xproc.org/ns/testsuite/test">
+
+  <t:title>Test p:import #009</t:title>
+  <t:description xmlns="http://www.w3.org/1999/xhtml">
+    <p>Importing two libraries, both of which import the same third library.</p>
+  </t:description>
+  
+  <t:input port="source">
+    <doc xmlns=""/>
+  </t:input>
+
+  <t:pipeline>
+   <p:pipeline version='1.0'>
+
+    <p:import href="../lib/l2.xpl"/>
+    <p:import href="../lib/l5.xpl"/>
+
+    <test:step/>
+    <test:step2/>
+    <test:step5/>
+
+   </p:pipeline>
+  </t:pipeline>
+
+  <t:output port="result"><c:result>1</c:result></t:output>
+
+</t:test>

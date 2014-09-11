@@ -21,6 +21,8 @@ import com.xmlcalabash.library.DefaultStep;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.util.TreeWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by IntelliJ IDEA.
@@ -78,9 +80,7 @@ public class CssFormatter extends DefaultStep {
             provider = (CssProcessor) Class.forName(cssClass).newInstance();
             provider.initialize(runtime,step,options);
         } catch (Exception e) {
-            if (runtime.getDebug()) {
-                e.printStackTrace();
-            }
+            logger.debug(e.getMessage(), e);
             throw new XProcException(step.getNode(), "Failed to instantiate CSS provider");
         }
 

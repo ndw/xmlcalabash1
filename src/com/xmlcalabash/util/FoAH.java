@@ -10,6 +10,8 @@ import jp.co.antenna.XfoJavaCtl.XfoException;
 import jp.co.antenna.XfoJavaCtl.XfoFormatPageListener;
 import jp.co.antenna.XfoJavaCtl.XfoObj;
 import net.sf.saxon.s9api.XdmNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.Properties;
@@ -22,6 +24,7 @@ import java.util.Properties;
  * To change this template use File | Settings | File Templates.
  */
 public class FoAH implements FoProcessor {
+    private Logger logger = LoggerFactory.getLogger(FoAH.class);
     XProcRuntime runtime = null;
     Properties options = null;
     XStep step = null;
@@ -130,10 +133,7 @@ public class FoAH implements FoProcessor {
             ah.render(bis, out, outputFormat);
             ah.releaseObjectEx();
         } catch (XfoException e) {
-            if (runtime.getDebug()) {
-                System.out.println("ErrorLevel = " + e.getErrorLevel() + "\nErrorCode = " + e.getErrorCode() + "\n" + e.getErrorMessage());
-                e.printStackTrace();
-            }
+            logger.debug(e.getMessage(), e);
             throw new XProcException(e);
         } catch (UnsupportedEncodingException e) {
             // won't happen
@@ -182,7 +182,7 @@ public class FoAH implements FoProcessor {
 	    }
 
         public void onFormatPage(int pageNo) {
-            step.finest(step.getNode(), "Formatted PDF page " + pageNo);
+            logger.trace(MessageFormatter.nodeMessage(step.getNode(), "Formatted PDF page " + pageNo));
         }
     }
 }

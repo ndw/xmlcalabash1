@@ -9,6 +9,7 @@ import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.util.AxisNodes;
+import com.xmlcalabash.util.MessageFormatter;
 import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.util.S9apiUtils;
 import net.sf.saxon.s9api.QName;
@@ -79,7 +80,7 @@ public class UriInfo extends DefaultStep {
         RuntimeValue href = getOption(_href);
         URI uri = href.getBaseURI().resolve(href.getString());
 
-        finest(step.getNode(), "Checking uri-info for " + uri);
+        logger.trace(MessageFormatter.nodeMessage(step.getNode(), "Checking uri-info for " + uri));
 
         TreeWriter tree = new TreeWriter(runtime);
         tree.startDocument(step.getNode().getBaseURI());

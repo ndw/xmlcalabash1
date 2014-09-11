@@ -1,0 +1,4 @@
+<doc xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="input-en.xml" xpointer="element(para-en)"/>
+  <xi:include href="input-cs.xml" xpointer="element(para-cs)"/>
+</doc>

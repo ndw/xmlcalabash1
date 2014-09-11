@@ -1,0 +1,50 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error"
+	ignore-whitespace-differences="true">
+
+<t:title>Test wrap-008</t:title>
+
+<t:input port="source">
+<doc>
+  <!-- foo -->
+  text
+  <!-- foo -->
+  text
+  <!-- foo -->
+  text2
+  <!-- foo -->
+  text
+  <!-- foo -->
+  text
+  <!-- foo -->
+</doc>
+</t:input>
+
+<t:pipeline>
+  <p:pipeline version='1.0'>
+    <p:wrap match="text()"
+            group-adjacent="." wrapper="test:wrapper"
+            xmlns:test="http://www.example.com/test"/>
+  </p:pipeline>
+</t:pipeline>
+
+<t:output port="result">
+<doc><test:wrapper xmlns:test="http://www.example.com/test">
+  </test:wrapper><!-- foo --><test:wrapper xmlns:test="http://www.example.com/test">
+  text
+  <!-- foo -->
+  text
+  </test:wrapper><!-- foo --><test:wrapper xmlns:test="http://www.example.com/test">
+  text2
+  </test:wrapper><!-- foo --><test:wrapper xmlns:test="http://www.example.com/test">
+  text
+  <!-- foo -->
+  text
+  </test:wrapper><!-- foo --><test:wrapper xmlns:test="http://www.example.com/test">
+</test:wrapper></doc>
+</t:output>
+</t:test>
+

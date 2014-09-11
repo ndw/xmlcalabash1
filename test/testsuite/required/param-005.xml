@@ -1,0 +1,43 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error">
+
+<t:title>Test param-005</t:title>
+
+<t:description xmlns="http://www.w3.org/1999/xhtml">                                                              
+  <p>Tests that the default namespace does not apply
+  to parameter names in <code>p:with-param/@name</code>.</p>
+</t:description>     
+
+<t:pipeline>
+  <p:declare-step xmlns:p="http://www.w3.org/ns/xproc" version="1.0" xmlns="http://example.net/">
+    <p:output port="result"/>
+    <p:xslt>
+      <p:input port="source">
+        <p:inline>
+          <doc/>
+        </p:inline>
+      </p:input>
+      <p:with-param name="param" select="'foo'"/>
+      <p:input port="stylesheet">
+        <p:inline>
+          <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+            <xsl:param name="param"/>
+            <xsl:template match="/*">
+              <doc value="{$param}"/>
+            </xsl:template>
+          </xsl:stylesheet>
+        </p:inline>
+      </p:input>
+    </p:xslt>
+  </p:declare-step>
+</t:pipeline>
+
+<t:output port="result">
+  <doc value="foo" xmlns="http://example.net/"/>
+</t:output>
+
+</t:test>
+

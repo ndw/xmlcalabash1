@@ -7,6 +7,7 @@ import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.io.ReadableEmpty;
 import com.xmlcalabash.model.*;
+import com.xmlcalabash.util.MessageFormatter;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -91,7 +92,7 @@ public class XCompoundStep extends XAtomicStep {
     }
 
     public void instantiate(Step step) {
-        finest(step.getNode(), "--> instantiate " + step);
+        logger.trace(MessageFormatter.nodeMessage(step.getNode(), "--> instantiate " + step));
         
         instantiateReaders(step);
         parent.addStep(this);
@@ -162,7 +163,8 @@ public class XCompoundStep extends XAtomicStep {
                     pipe.canReadSequence(input.getSequence());
                     pipe.setReader(step);
                     readers.add(pipe);
-                    finest(step.getNode(), step.getName() + " reads from " + pipe + " for " + port);
+                    logger.trace(MessageFormatter.nodeMessage(step.getNode(),
+                            step.getName() + " reads from " + pipe + " for " + port));
                     
                     /* Attempted fix by ndw on 7 Dec...seems to work
                     if (binding.getBindingType() == Binding.PIPE_NAME_BINDING) {
@@ -192,7 +194,7 @@ public class XCompoundStep extends XAtomicStep {
                 wpipe.setWriter(step);
                 wpipe.canWriteSequence(true); // Let the other half work it out
                 outputs.put(port, wpipe);
-                finest(step.getNode(), step.getName() + " writes to " + wpipe + " for " + port);
+                logger.trace(MessageFormatter.nodeMessage(step.getNode(), step.getName() + " writes to " + wpipe + " for " + port));
             } else {
                 XOutput xoutput = new XOutput(runtime, output);
                 xoutput.setLogger(step.getLog(port));
@@ -201,7 +203,7 @@ public class XCompoundStep extends XAtomicStep {
                 wpipe.setWriter(step);
                 wpipe.canWriteSequence(output.getSequence());
                 outputs.put(port, wpipe);
-                finest(step.getNode(), step.getName() + " writes to " + wpipe + " for " + port);
+                logger.trace(MessageFormatter.nodeMessage(step.getNode(), step.getName() + " writes to " + wpipe + " for " + port));
             }
         }
     }
@@ -215,7 +217,7 @@ public class XCompoundStep extends XAtomicStep {
                     while (reader.moreDocuments()) {
                         XdmNode doc = reader.read();
                         pipe.write(doc);
-                        finest(step.getNode(), "Compound input copy from " + reader + " to " + pipe);
+                        logger.trace(MessageFormatter.nodeMessage(step.getNode(), "Compound input copy from " + reader + " to " + pipe));
                     }
                 }
             }
@@ -268,7 +270,7 @@ public class XCompoundStep extends XAtomicStep {
                         while (reader.moreDocuments()) {
                             XdmNode doc = reader.read();
                             pipe.write(doc);
-                            finest(step.getNode(), "Compound output copy from " + reader + " to " + pipe);
+                            logger.trace(MessageFormatter.nodeMessage(step.getNode(), "Compound output copy from " + reader + " to " + pipe));
                         }
                     }
                 }

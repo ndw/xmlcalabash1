@@ -1,0 +1,41 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<test xmlns="http://xproc.org/ns/testsuite"
+      xmlns:p="http://www.w3.org/ns/xproc"
+      xmlns:px="http://xproc.dev.java.net/ns/extensions"
+      xmlns:c="http://www.w3.org/ns/xproc-step"
+      xmlns:err="http://www.w3.org/ns/xproc-error">
+
+<title>Test choose #007</title>
+
+<t:description xmlns:t="http://xproc.org/ns/testsuite" xmlns="http://www.w3.org/1999/xhtml">
+  <p>Tests p:choose with multiple output ports where some
+  are declared as producing sequences and some not.</p>
+</t:description>
+
+<input port="source">
+  <doc xmlns=""/>
+</input>
+
+<pipeline>
+  <p:pipeline name="pipeline" version='1.0'>
+    
+    <p:choose>
+      <p:when test="1 = 1">
+        <p:output port="result"/>
+        <p:identity/>
+      </p:when>
+      <p:otherwise>
+        <p:output port="result" sequence="true"/>
+        <p:identity/>
+      </p:otherwise>
+    </p:choose>    
+  </p:pipeline>
+</pipeline>
+
+<output port='result'>
+  <doc xmlns=""/>
+</output>
+
+
+</test>
+

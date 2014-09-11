@@ -1,0 +1,33 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+	xmlns:cx="http://xmlcalabash.com/ns/extensions"
+        xmlns:err="http://www.w3.org/ns/xproc-error">
+
+<t:title>Test ml:invoke-module-001</t:title>
+
+<t:pipeline>
+<p:declare-step xmlns:p="http://www.w3.org/ns/xproc"
+		xmlns:c="http://www.w3.org/ns/xproc-step"
+		xmlns:ml="http://xmlcalabash.com/ns/extensions/marklogic"
+		exclude-inline-prefixes="c ml"
+		name="main" version="1.0">
+<p:output port="result"/>
+
+<p:import href="http://xmlcalabash.com/extension/steps/library-1.0.xpl"/>
+
+<ml:invoke-module user="xmlcalabash" password="password" host="localhost" port="8022"
+		  module="test-module.xqy">
+  <p:input port="parameters">
+    <p:empty/>
+  </p:input>
+</ml:invoke-module>
+</p:declare-step>
+</t:pipeline>
+
+<t:output port='result'>
+<doc>Test module ran successfully.</doc>
+</t:output>
+
+</t:test>

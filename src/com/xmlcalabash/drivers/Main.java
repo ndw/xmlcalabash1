@@ -31,7 +31,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import com.xmlcalabash.core.XProcConfiguration;
 import com.xmlcalabash.core.XProcConstants;
@@ -56,6 +55,8 @@ import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.Serializer;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmSequenceIterator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 
 import static com.xmlcalabash.core.XProcConstants.c_data;
@@ -70,7 +71,7 @@ public class Main {
     private static QName _code = new QName("code");
     private static int exitStatus = 0;
     private XProcRuntime runtime = null;
-    private Logger logger = Logger.getLogger(this.getClass().getName());
+    private Logger logger = LoggerFactory.getLogger(Main.class);
     private boolean debug = false;
 
     /**
@@ -104,9 +105,9 @@ public class Main {
         } catch (XProcException err) {
             exitStatus = 1;
             if (err.getErrorCode() != null) {
-                error(logger, null, errorMessage(err.getErrorCode()), err.getErrorCode());
+                logger.error(errorMessage(err.getErrorCode()));
             } else {
-                error(logger, null, err.toString(), null);
+                logger.error(err.getMessage());
             }
 
             Throwable cause = err.getCause();
@@ -115,22 +116,18 @@ public class Main {
             }
 
             if (cause != null) {
-                error(logger, null, "Underlying exception: " + cause, null);
+                logger.error("Underlying exception: " + cause.getMessage());
             }
 
-            if (debug) {
-                err.printStackTrace();
-            }
+            logger.debug(err.getMessage(), err);
         } catch (Exception err) {
             exitStatus = 1;
-            error(logger, null, "Pipeline failed: " + err.toString(), null);
+            logger.error("Pipeline failed: " + err.getMessage());
             if (err.getCause() != null) {
                 Throwable cause = err.getCause();
-                error(logger, null, "Underlying exception: " + cause, null);
+                logger.error("Underlying exception: " + cause.getMessage());
             }
-            if (debug) {
-                err.printStackTrace();
-            }
+            logger.debug(err.getMessage(), err);
         } finally {
             // Here all memory should be freed by the next gc, right?
             if (runtime != null) {
@@ -345,16 +342,16 @@ public class Main {
             }
 
             if ((output == null) || ((output.getKind() == OUTPUT_STREAM) && System.out.equals(output.getOutputStream()))) {
-                finest(logger, null, "Copy output from " + port + " to stdout");
+                logger.trace("Copy output from " + port + " to stdout");
             } else {
                 switch (output.getKind()) {
                     case URI:
-                        finest(logger, null, "Copy output from " + port + " to " + output.getUri());
+                        logger.trace("Copy output from " + port + " to " + output.getUri());
                         break;
 
                     case OUTPUT_STREAM:
                         String outputStreamClassName = output.getOutputStream().getClass().getName();
-                        finest(logger, null, "Copy output from " + port + " to " + outputStreamClassName + " stream");
+                        logger.trace("Copy output from " + port + " to " + outputStreamClassName + " stream");
                         break;
 
                     default:
@@ -479,49 +476,4 @@ public class Main {
         }
         return "Unknown error";
     }
-
-    // ===========================================================
-    // Logging methods repeated here so that they don't rely
-    // on the XProcRuntime constructor succeeding.
-
-    private String message(XdmNode node, String message) {
-        String baseURI = "(unknown URI)";
-        int lineNumber = -1;
-
-        if (node != null) {
-            baseURI = node.getBaseURI().toASCIIString();
-            lineNumber = node.getLineNumber();
-            return baseURI + ":" + lineNumber + ": " + message;
-        } else {
-            return message;
-        }
-
-    }
-
-    public void error(Logger logger, XdmNode node, String message, QName code) {
-        logger.severe(message(node, message));
-    }
-
-    public void warning(Logger logger, XdmNode node, String message) {
-        logger.warning(message(node, message));
-    }
-
-    public void info(Logger logger, XdmNode node, String message) {
-        logger.info(message(node, message));
-    }
-
-    public void fine(Logger logger, XdmNode node, String message) {
-        logger.fine(message(node, message));
-    }
-
-    public void finer(Logger logger, XdmNode node, String message) {
-        logger.finer(message(node, message));
-    }
-
-    public void finest(Logger logger, XdmNode node, String message) {
-        logger.finest(message(node, message));
-    }
-
-    // ===========================================================
-
 }

@@ -1,0 +1,66 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:cx="http://xmlcalabash.com/ns/extensions"
+        xmlns:sem="http://marklogic.com/semantics"
+        xmlns:err="http://www.w3.org/ns/xproc-error">
+
+<t:title>Test cx:sparql #001</t:title>
+
+<t:pipeline>
+<p:declare-step version='1.0' name="pipeline">
+<p:output port="result"/>
+
+<p:declare-step type="cx:rdf-load">
+  <p:input port="source" sequence="true"/>
+  <p:output port="result" sequence="true"/>
+  <p:option name="href" required="true"/>
+  <p:option name="language"/>
+  <p:option name="graph"/>
+  <p:option name="max-triples-per-document" select="100"/>
+</p:declare-step>
+
+<p:declare-step type="cx:sparql">
+  <p:input port="source" sequence="true" primary="true"/>
+  <p:input port="query"/>
+  <p:output port="result" sequence="true"/>
+</p:declare-step>
+
+<cx:rdf-load href="data/nwn.rdf">
+  <p:input port="source">
+    <p:empty/>
+  </p:input>
+</cx:rdf-load>
+
+<cx:sparql>
+  <p:input port="query">
+    <p:inline>
+      <c:data><![CDATA[
+      prefix dc: <http://purl.org/dc/elements/1.1/>
+      select * where { ?essay dc:format "application/docbook+xml" }
+      ]]></c:data>
+    </p:inline>
+  </p:input>
+</cx:sparql>
+
+</p:declare-step>
+</t:pipeline>
+
+<t:output port='result'>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+   <head>
+      <variable name="essay"/>
+   </head>
+   <results>
+      <result>
+         <binding name="essay">
+            <uri>http://norman.walsh.name/2013/10/12/xprocRDF.xml</uri>
+         </binding>
+      </result>
+   </results>
+</sparql>
+</t:output>
+
+</t:test>
+

@@ -11,6 +11,8 @@ import jp.co.antenna.XfoJavaCtl.XfoFormatPageListener;
 import jp.co.antenna.XfoJavaCtl.XfoObj;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -30,6 +32,7 @@ import java.util.Vector;
  * To change this template use File | Settings | File Templates.
  */
 public class CssAH implements CssProcessor {
+    private Logger logger = LoggerFactory.getLogger(CssAH.class);
     private static final QName _content_type = new QName("content-type");
     private static final QName _encoding = new QName("", "encoding");
 
@@ -203,10 +206,7 @@ public class CssAH implements CssProcessor {
             ah.render(bis, out, outputFormat);
             ah.releaseObjectEx();
         } catch (XfoException e) {
-            if (runtime.getDebug()) {
-                System.out.println("ErrorLevel = " + e.getErrorLevel() + "\nErrorCode = " + e.getErrorCode() + "\n" + e.getErrorMessage());
-                e.printStackTrace();
-            }
+            logger.debug(e.getMessage(), e);
             throw new XProcException(e);
         } catch (UnsupportedEncodingException e) {
             // won't happen
@@ -255,7 +255,7 @@ public class CssAH implements CssProcessor {
 	    }
 
         public void onFormatPage(int pageNo) {
-            step.finest(step.getNode(), "Formatted PDF page " + pageNo);
+            logger.trace(MessageFormatter.nodeMessage(step.getNode(), "Formatted PDF page " + pageNo));
         }
     }
 }

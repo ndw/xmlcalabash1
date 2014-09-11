@@ -1,0 +1,28 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error">
+
+<t:title>Test count 004</t:title>
+
+<t:description xmlns="http://www.w3.org/1999/xhtml">
+      <p>Test variation on for-each-004.xml, testing <code>p:count</code> with an empty <code>p:iteration-source</code></p>
+</t:description>
+
+<t:pipeline>
+  <p:declare-step version='1.0'>
+    <p:input port="source" sequence="true">
+        <p:empty/>
+    </p:input>
+    <p:output port="result"/>
+    <p:count/>
+  </p:declare-step>
+</t:pipeline>
+
+<t:output port='result'>
+<c:result>0</c:result>
+</t:output>
+
+</t:test>
+

@@ -25,23 +25,24 @@ import com.xmlcalabash.core.XProcRuntime;
 
 import java.util.Hashtable;
 import java.util.Set;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author ndw
  */
 public abstract class SourceArtifact {
+    protected Logger logger = null;
     protected XdmNode node = null;
     protected XProcRuntime runtime = null;
     protected Hashtable<QName,String> extnAttrs = null;
-    protected Logger logger = null;
 
     /** Creates a new instance of SourceArtifact */
     public SourceArtifact(XProcRuntime runtime, XdmNode node) {
+        logger = LoggerFactory.getLogger(this.getClass());
         this.runtime = runtime;
         this.node = node;
-        logger = Logger.getLogger(this.getClass().getName());
     }
 
     public XProcRuntime getXProc() {
@@ -69,20 +70,6 @@ public abstract class SourceArtifact {
             return node.getLineNumber();
         }
     }
-
-/*
-    public String getLocation() {
-        if (node == null) {
-            return "";
-        } else {
-            if (node.getLineNumber() > 0) {
-                return node.getDocumentURI() + ":" + node.getLineNumber();
-            } else {
-                return node.getDocumentURI().toASCIIString();
-            }
-        }
-    }
-*/
 
     public void addExtensionAttribute(XdmNode attr) {
         if (extnAttrs == null) {

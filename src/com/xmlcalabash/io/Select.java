@@ -19,16 +19,18 @@
 
 package com.xmlcalabash.io;
 
+import com.xmlcalabash.util.MessageFormatter;
 import net.sf.saxon.s9api.*;
 
 import java.util.Iterator;
-import java.util.logging.Logger;
 
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.model.NamespaceBinding;
 import com.xmlcalabash.model.Step;
 import com.xmlcalabash.util.S9apiUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -48,9 +50,10 @@ public class Select implements ReadablePipe {
     private boolean initialized = false;
     private int docindex = 0;
     private Step reader = null;
-    private Logger logger = Logger.getLogger(this.getClass().getName());
+    private Logger logger = LoggerFactory.getLogger(Select.class);
 
-    /** Creates a new instance of Select */
+            /** Creates a new instance of Select */
+
     public Select(XProcRuntime runtime, ReadablePipe readFrom, String xpathExpr, XdmNode xpathContext) {
         source = readFrom;
         select = xpathExpr;
@@ -90,7 +93,8 @@ public class Select implements ReadablePipe {
                 XdmNode doc = source.read();
 
                 if (reader != null) {
-                    runtime.finest(null, reader.getNode(), reader.getName() + " select read '" + (doc == null ? "null" : doc.getBaseURI()) + "' from " + source);
+                    logger.trace(MessageFormatter.nodeMessage(reader.getNode(),
+                            reader.getName() + " select read '" + (doc == null ? "null" : doc.getBaseURI()) + "' from " + source));
                 }
 
                 selector.setContextItem(doc);
@@ -110,7 +114,8 @@ public class Select implements ReadablePipe {
                     XdmNode sdoc = dest.getXdmNode();
 
                     if (reader != null) {
-                        runtime.finest(null, reader.getNode(), reader.getName() + " select wrote '" + (sdoc == null ? "null" : sdoc.getBaseURI()) + "' to " + documents);
+                        logger.trace(MessageFormatter.nodeMessage(reader.getNode(),
+                                reader.getName() + " select wrote '" + (sdoc == null ? "null" : sdoc.getBaseURI()) + "' to " + documents));
                     }
 
                     documents.add(sdoc);
@@ -162,7 +167,8 @@ public class Select implements ReadablePipe {
         }
 
         if (reader != null) {
-            runtime.finest(null, reader.getNode(), reader.getName() + " read '" + (doc == null ? "null" : doc.getBaseURI()) + "' from " + this);
+            logger.trace(MessageFormatter.nodeMessage(reader.getNode(),
+                    reader.getName() + " read '" + (doc == null ? "null" : doc.getBaseURI()) + "' from " + this));
         }
 
         return doc;

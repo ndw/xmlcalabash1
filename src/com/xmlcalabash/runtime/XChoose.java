@@ -7,6 +7,7 @@ import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.Pipe;
 import com.xmlcalabash.model.*;
 
+import com.xmlcalabash.util.MessageFormatter;
 import net.sf.saxon.s9api.SaxonApiException;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
@@ -51,13 +52,13 @@ public class XChoose extends XCompoundStep {
                 XInput xinput = getInput(rport);
                 WritablePipe wpipe = xinput.getWriter();
                 outputs.put(port, wpipe);
-                finest(step.getNode(), " writes to " + wpipe + " for " + port);
+                logger.trace(MessageFormatter.nodeMessage(step.getNode(), " writes to " + wpipe + " for " + port));
             } else {
                 XOutput xoutput = new XOutput(runtime, output);
                 addOutput(xoutput);
                 WritablePipe wpipe = xoutput.getWriter();
                 outputs.put(port, wpipe);
-                finest(step.getNode(), " writes to " + wpipe + " for " + port);
+                logger.trace(MessageFormatter.nodeMessage(step.getNode(), " writes to " + wpipe + " for " + port));
             }
         }
     }

@@ -1,0 +1,6 @@
+This document is uses the "windows-1252" encoding.
+Euro symbol: €
+Percent-mille: ‰
+Bullet: •
+Copyright: ©
+EOF

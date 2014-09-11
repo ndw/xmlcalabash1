@@ -10,6 +10,7 @@ import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.util.AxisNodes;
+import com.xmlcalabash.util.MessageFormatter;
 import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.util.S9apiUtils;
 import net.sf.saxon.s9api.QName;
@@ -83,7 +84,7 @@ public class Info extends DefaultStep {
 
         boolean failOnError = getOption(_fail_on_error, true);
 
-        finest(step.getNode(), "Checking info for " + uri);
+        logger.trace(MessageFormatter.nodeMessage(step.getNode(), "Checking info for " + uri));
 
         TreeWriter tree = new TreeWriter(runtime);
         tree.startDocument(step.getNode().getBaseURI());

@@ -1,13 +1,19 @@
 package com.xmlcalabash.testsuite;
 
+import com.xmlcalabash.core.XProcConfiguration;
+import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.drivers.RunTestReport;
-import org.junit.Test;
+import com.xmlcalabash.util.DefaultTestReporter;
+import com.xmlcalabash.util.SilentTestReporter;
 
 /**
  * Created by ndw on 8/19/14.
  */
 public class SuiteRunner {
-    protected RunTestReport reporter = new RunTestReport();
+    XProcConfiguration config = new XProcConfiguration("he", true);
+    XProcRuntime runtime = new XProcRuntime(config);
+
+    protected RunTestReport reporter = new RunTestReport(runtime, new DefaultTestReporter(runtime));
 
     public void runTest(String test) {
         RunTestReport.TestSuiteResults results = reporter.run(test);
@@ -23,14 +29,16 @@ public class SuiteRunner {
         }
 
         if (pass == 1 && fail == 0) {
+            System.err.println("PASS " + test);
             return;
         }
 
-        System.out.println(pass + " passed, " + fail + " failed");
         if (fail > 0) {
             if (pass == 0 && fail == 1) {
+                System.err.println("FAIL " + test);
                 throw new RuntimeException("Test failed");
             } else {
+                System.err.println("FAIL " + fail + "/" + (pass+fail) + " " + test);
                 throw new RuntimeException("Some tests failed");
             }
         }

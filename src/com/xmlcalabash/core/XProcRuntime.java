@@ -42,7 +42,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Stack;
 import java.util.Vector;
-import java.util.logging.Logger;
 
 import javax.xml.transform.URIResolver;
 import javax.xml.transform.sax.SAXSource;
@@ -68,6 +67,8 @@ import org.apache.http.client.utils.HttpClientUtils;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.impl.client.SystemDefaultHttpClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 
@@ -113,7 +114,7 @@ import static java.lang.String.format;
  * @author ndw
  */
 public class XProcRuntime {
-    protected Logger logger = Logger.getLogger("com.xmlcalabash");
+    protected Logger logger = LoggerFactory.getLogger(XProcRuntime.class);
     private Processor processor = null;
     private Parser parser = null;
     private XProcURIResolver uriResolver = null;
@@ -135,7 +136,6 @@ public class XProcRuntime {
     private boolean useXslt10 = false;
     private boolean htmlSerializer = false;
     private XProcData xprocData = null;
-    private Logger log = null;
     private XProcMessageListener msgListener = null;
     private PipelineLibrary standardLibrary = null;
     private XLibrary xStandardLibrary = null;
@@ -187,8 +187,6 @@ public class XProcRuntime {
             processor.registerExtensionFunction(xf);
         }
 
-        log = Logger.getLogger(this.getClass().getName());
-
         Configuration saxonConfig = processor.getUnderlyingConfiguration();
         uriResolver = new XProcURIResolver(this);
         saxonConfig.setURIResolver(uriResolver);
@@ -233,17 +231,17 @@ public class XProcRuntime {
         for (String className : config.extensionFunctions) {
             try {
                 Object def = Class.forName(className).newInstance();
-                finer(null, null, "Instantiated: " + className);
+                logger.trace("Instantiated: " + className);
                 if (def instanceof ExtensionFunctionDefinition)
                     processor.registerExtensionFunction((ExtensionFunctionDefinition) def);
                 else if (def instanceof ExtensionFunction)
                     processor.registerExtensionFunction((ExtensionFunction) def);
                 else
-                    info(null, null, "Failed to instantiate extension function " + className + " because that class implements neither ExtensionFunction nor ExtensionFunctionDefinition.");
+                    logger.info("Failed to instantiate extension function " + className + " because that class implements neither ExtensionFunction nor ExtensionFunctionDefinition.");
             } catch (NoClassDefFoundError ncdfe) {
-                info(null, null, "Failed to instantiate extension function: " + className);
+                logger.info("Failed to instantiate extension function: " + className);
             } catch (Exception e) {
-                info(null, null, "Failed to instantiate extension function: " + className);
+                logger.info("Failed to instantiate extension function: " + className);
             }
         }
 
@@ -259,7 +257,6 @@ public class XProcRuntime {
         staticBaseURI = runtime.staticBaseURI;
         useXslt10 = runtime.useXslt10;
         htmlSerializer = runtime.htmlSerializer;
-        log = runtime.log;
         msgListener = runtime.msgListener;
         standardLibrary = runtime.standardLibrary;
         xStandardLibrary = runtime.xStandardLibrary;
@@ -930,18 +927,6 @@ public class XProcRuntime {
 
     public void info(XProcRunnable step, XdmNode node, String message) {
         msgListener.info(step, node, message);
-    }
-
-    public void fine(XProcRunnable step, XdmNode node, String message) {
-        msgListener.fine(step, node, message);
-    }
-
-    public void finer(XProcRunnable step, XdmNode node, String message) {
-        msgListener.finer(step, node, message);
-    }
-
-    public void finest(XProcRunnable step, XdmNode node, String message) {
-        msgListener.finest(step, node, message);
     }
 
     // ===========================================================

@@ -1,0 +1,41 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error">
+
+<t:title>Test p:template-001</t:title>
+
+<t:input port='source'>
+<doc>
+<p>A para.</p>
+</doc>
+</t:input>
+
+<t:pipeline>
+<p:pipeline version='1.0' name="main">
+
+<p:template>
+  <p:input port="template">
+    <p:inline>
+      <template attr="{'simple atomic expression'}" attr2="{3+4}">
+        <body>{/doc/p}</body>
+      </template>
+    </p:inline>
+  </p:input>
+  <p:input port="source">
+    <p:pipe step="main" port="source"/>
+  </p:input>
+</p:template>
+
+</p:pipeline>
+</t:pipeline>
+
+<t:output port='result'>
+<template attr="simple atomic expression" attr2="7">
+<body><p>A para.</p></body>
+</template>
+</t:output>
+
+</t:test>
+

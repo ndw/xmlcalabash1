@@ -1,0 +1,7 @@
+<?xml version="1.1" encoding="UTF-8"?><doc xmlns="http://example.org/ns/1">
+<h:p xmlns:h="http://www.w3.org/1999/xhtml">
+Some text in a para.
+<data xmlns="">In an element in no namespace.</data>
+</h:p>
+<aሰb>Only in 1.1!</aሰb>
+</doc>

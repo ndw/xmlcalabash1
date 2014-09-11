@@ -1,0 +1,42 @@
+<?xml-stylesheet type="text/xsl" href="http://tests.xproc.org/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:c="http://www.w3.org/ns/xproc-step">
+
+<t:title>Test pxp:set-base-uri</t:title>
+
+<t:pipeline>
+<p:declare-step version='1.0' name="main"
+                xmlns:pxp="http://exproc.org/proposed/steps"
+                xmlns:p="http://www.w3.org/ns/xproc"
+                xmlns:c="http://www.w3.org/ns/xproc-step">
+
+<p:output port="result"/>
+
+<p:declare-step type="pxp:set-base-uri">
+   <p:input port="source"/>
+   <p:output port="result"/>
+  <p:option name="uri" required="true"/>
+</p:declare-step>
+
+<p:load href=""/>
+
+<pxp:set-base-uri uri="http://example.com/"/>
+
+<p:template>
+  <p:input port="template">
+    <p:inline><c:base-uri>{base-uri(/)}</c:base-uri></p:inline>
+  </p:input>
+  <p:input port="parameters">
+    <p:empty/>
+  </p:input>
+</p:template>
+
+</p:declare-step>
+</t:pipeline>
+
+<t:output port='result'>
+<c:base-uri>http://example.com/</c:base-uri>
+</t:output>
+
+</t:test>
+

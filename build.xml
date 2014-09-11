@@ -84,7 +84,7 @@
     <fileset dir="${lib.dir}">
       <include name="*.jar"/>
     </fileset>
-    <pathelement location="${ant.library.dir}/ant.jar"/>
+    <pathelement location="${lib.dir}"/>
   </path>
 
   <path id="full.classpath">
@@ -179,10 +179,14 @@
     <copy todir="${build.dir}/etc">
       <fileset dir="resources/etc">
         <exclude name="install-proto.xsl"/>
+        <exclude name="log4j2.xml"/>
       </fileset>
     </copy>
     <copy todir="${build.dir}/com">
       <fileset dir="resources/com"/>
+    </copy>
+    <copy todir="${build.dir}">
+      <fileset file="resources/etc/log4j2.xml"/>
     </copy>
   </target>
 
@@ -535,6 +539,9 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
     <copy todir="${install.dir}/lib">
       <fileset file="lib/commons*.jar"/>
       <fileset file="lib/http*.jar"/>
+      <fileset file="lib/log4j*.jar"/>
+      <fileset file="lib/slf4j*.jar"/>
+      <fileset file="lib/jcl-over-slf4j*.jar"/>
       <fileset file="lib/xmlresolver.jar"/>
       <fileset file="lib/saxon9he.jar"/>
     </copy>
@@ -562,7 +569,7 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
     <echo message="CLASSPATH=${myclasspath}"/>
     -->
     <echo>Running test...</echo>
-    <junit printsummary="yes" haltonfailure="no">
+    <junit printsummary="yes" haltonfailure="yes" fork="yes">
       <classpath refid="test.classpath"/>
       <jvmarg value="-Xmx1024m"/>
       <formatter type="plain" usefile="false"/>

@@ -1,0 +1,31 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error"
+        error="err:XC0013">
+
+  <t:title>Test for err:XC0013 #001</t:title>
+  
+  <t:description xmlns="http://www.w3.org/1999/xhtml">
+    <p>p:rename: it is a dynamic error if the pattern matches
+    a processing instruction and the new name has a non-null
+    namespace.</p>
+  </t:description>
+
+  <t:input port="source">
+    <doc>
+      <?apple pi?>
+    </doc>
+  </t:input>
+  
+  <t:pipeline>
+    <p:pipeline version='1.0'>
+      <p:rename match="processing-instruction()" new-name="test:foo"
+                xmlns:test="http://www.example.com"/>
+
+    </p:pipeline>
+  </t:pipeline>
+
+</t:test>
+

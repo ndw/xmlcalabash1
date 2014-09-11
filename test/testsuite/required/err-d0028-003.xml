@@ -1,0 +1,22 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error"
+        error="err:XD0028">
+  
+  <t:title>Test err:XC0028 #003</t:title>
+  
+  <t:description xmlns="http://www.w3.org/1999/xhtml">
+    <p>It is a dynamic error if any attribute value does
+    not satisfy the type required for that attribute.</p>
+  </t:description>
+
+  <t:pipeline>
+    <p:declare-step version='1.0'>
+      <p:input port="!source" sequence="true"/>
+      <p:sink/>
+    </p:declare-step>
+  </t:pipeline>
+  
+</t:test>

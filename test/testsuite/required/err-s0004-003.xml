@@ -1,0 +1,27 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+      xmlns:p="http://www.w3.org/ns/xproc"
+      xmlns:px="http://xproc.dev.java.net/ns/extensions"
+      xmlns:c="http://www.w3.org/ns/xproc-step"
+      xmlns:err="http://www.w3.org/ns/xproc-error"
+      error="err:XS0004">
+<t:title>Test for err:XS0004 #003</t:title>
+
+<t:description xmlns="http://www.w3.org/1999/xhtml">
+  <p>Tests that variable names cannot shadow each other.</p>
+</t:description>
+
+<t:input port="source">
+  <doc xmlns=""/>
+</t:input>
+
+<t:pipeline>
+  <p:pipeline xmlns:ix="http://www.innovimax.fr/xproc/ns" version='1.0'>
+    <p:variable name="varName" select="0"/>
+    <p:variable name="varName" select="'duplicate'"/>
+    <p:identity/>
+  </p:pipeline>
+</t:pipeline>
+
+</t:test>
+

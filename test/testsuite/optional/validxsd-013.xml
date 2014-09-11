@@ -1,0 +1,99 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error"
+	ignore-whitespace-differences="true">
+
+<t:title>Test validxsd-013</t:title>
+
+<t:description xmlns="http://www.w3.org/1999/xhtml">
+  <p>This test runs two separate validation episodes with different schemas
+defined for the same namespace. This will generate an error in schema validation
+if the validate-with-xsd component caches schemas across multiple
+evaluations.</p>
+</t:description>
+
+<t:pipeline>
+<p:declare-step version='1.0' name="pipeline">
+<p:output port="result"/>
+
+<p:validate-with-xml-schema>
+  <p:input port="source">
+    <p:document href="http://tests.xproc.org/tests/doc/document2.xml"/>
+  </p:input>
+  <p:input port="schema">
+    <p:inline><xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	   elementFormDefault="qualified">
+  <xs:element name="doc">
+    <xs:complexType>
+      <xs:sequence>
+	<xs:element minOccurs="0" ref="title"/>
+	<xs:element minOccurs="1" maxOccurs="unbounded" ref="p"/>
+	<xs:element minOccurs="0" maxOccurs="unbounded" ref="div"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="title" type="xs:string"/>
+  <xs:element name="div">
+    <xs:complexType>
+      <xs:sequence>
+	<xs:element minOccurs="0" ref="title"/>
+	<xs:element minOccurs="0" maxOccurs="unbounded" ref="p"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="p">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+	<xs:element ref="a"/>
+	<xs:element ref="img"/>
+	<xs:element ref="uri"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="a">
+    <xs:complexType>
+      <xs:simpleContent>
+	<xs:extension base="xs:string">
+	  <xs:attribute name="href" type="xs:anyURI"/>
+	</xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="img">
+    <xs:complexType>
+      <xs:complexContent>
+	<xs:restriction base="xs:anyType">
+	  <xs:attribute name="src" type="xs:anyURI"/>
+	</xs:restriction>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="uri" type="xs:anyURI"/>
+</xs:schema></p:inline>
+  </p:input>
+</p:validate-with-xml-schema>
+
+<p:sink/>
+
+<p:validate-with-xml-schema>
+  <p:input port="source">
+    <p:document href="http://tests.xproc.org/tests/doc/document2.xml"/>
+  </p:input>
+  <p:input port="schema">
+    <p:document href="http://tests.xproc.org/tests/doc/document.xsd"/>
+  </p:input>
+</p:validate-with-xml-schema>
+
+</p:declare-step>
+</t:pipeline>
+
+<t:output port='result'>
+<doc xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:noNamespaceSchemaLocation="document.xsd">
+  <p>This is a test document</p>
+</doc></t:output>
+
+</t:test>
+

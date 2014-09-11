@@ -1,0 +1,33 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:err="http://www.w3.org/ns/xproc-error"
+        error="err:XD0018">
+  <t:title>Test for err:XD0018 #001</t:title>
+  
+  <t:description xmlns="http://www.w3.org/1999/xhtml">
+    <p>It is a dynamic error if the parameter list contains
+    any elements other than c:param.</p>
+  </t:description>
+
+  <t:input port="source">
+    <c:param-set>
+      <c:param name="param1" value="value1"/>
+      <foo/>
+    </c:param-set>
+  </t:input>
+
+  <t:pipeline>
+    <p:declare-step version='1.0' name="main">
+      <p:input port="source"/>
+      
+      <p:parameters name="params">
+        <p:input port="parameters">
+          <p:pipe step="main" port="source"/>
+        </p:input>
+      </p:parameters>
+    </p:declare-step>
+  </t:pipeline>
+  
+</t:test>

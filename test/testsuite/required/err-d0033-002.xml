@@ -1,0 +1,27 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error"
+        error="err:XD0033">
+  <t:title>Test err:XD0033 #002</t:title>
+  
+  <t:description xmlns="http://www.w3.org/1999/xhtml">
+    <p><code>p:value-available()</code> - it is a dynamic error
+    if the name specified is not the name of an in-scope option
+    or variable.</p>
+  </t:description>
+  
+  <t:pipeline>
+    <p:declare-step version='1.0'>
+      <p:sink>
+        <p:input port="source" select="p:value-available('not-available', true())">
+          <p:inline>
+            <doc/>
+          </p:inline>
+        </p:input>
+      </p:sink>
+    </p:declare-step>
+  </t:pipeline>
+
+</t:test>

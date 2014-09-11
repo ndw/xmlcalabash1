@@ -7,8 +7,6 @@ import com.xmlcalabash.core.XProcRuntime;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 import com.xmlcalabash.runtime.XAtomicStep;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
 
 /**
  * Created by IntelliJ IDEA.
@@ -47,7 +45,7 @@ public class Identity extends DefaultStep {
 
         while (source.moreDocuments()) {
             XdmNode doc = source.read();
-            finest(null, "Identity step " + step.getName() + " read " + doc.getDocumentURI());
+            logger.trace("Identity step " + step.getName() + " read " + doc.getDocumentURI());
             result.write(doc);
         }
     }

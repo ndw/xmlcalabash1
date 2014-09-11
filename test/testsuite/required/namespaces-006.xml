@@ -1,0 +1,58 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error">
+
+<t:title>Test p:namespaces #006</t:title>
+
+<t:description xmlns="http://www.w3.org/1999/xhtml">                                                              
+  <p>Tests <code>p:namespaces</code> on <code>p:variable</code>
+  plus the following rule from the section 5.7.5 of the XProc
+  specification: "If the select attribute was used to specify
+  the value and it consisted of a single VariableReference,
+  then the namespace bindings from the referenced option or
+  variable are used."</p>
+</t:description>     
+
+
+<t:input port='source'>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Some title</title>
+  </head>
+  <body>
+    <h1>Some title</h1>
+    <p>Some <del>deleted</del>text.</p>
+  </body>
+</html>
+</t:input>
+
+<t:pipeline>
+<p:pipeline version='1.0' name="pipeline">
+
+<p:variable name="match-var" select="'h:del'">
+  <p:namespaces xmlns:h="http://www.w3.org/1999/xhtml"/>
+</p:variable>
+
+<p:delete>
+  <p:with-option name="match" select="$match-var"/>
+</p:delete>
+
+</p:pipeline>
+</t:pipeline>
+
+<t:output port='result'>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Some title</title>
+  </head>
+  <body>
+    <h1>Some title</h1>
+    <p>Some text.</p>
+  </body>
+</html>
+</t:output>
+
+</t:test>
+

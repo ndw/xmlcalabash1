@@ -1,0 +1,23 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error"
+        error="err:XD0026">
+  <t:title>Test err:XD0026 #003</t:title>
+  
+  <t:description xmlns="http://www.w3.org/1999/xhtml">
+    <p>It is a dynamic error (<code>err:XD0026</code>code>) if 
+    an select expression makes reference to the context node,
+    size, or position when the context item is undefined.</p>
+  </t:description>
+  
+  <t:pipeline>
+    <p:declare-step version='1.0'>
+      <p:parameters>
+        <p:with-param port="parameters" name="param" select="/foo"/>
+      </p:parameters>
+    </p:declare-step>
+  </t:pipeline>
+
+</t:test>

@@ -1,0 +1,8 @@
+<doc>
+  <p>First p</p>
+  <p>Second p</p>
+  <p>Third p</p>
+  <p>Parenthetical (in content, I mean) p</p>
+  <p>x^2 + y^2 = z^2</p>
+  <ex:p xmlns:ex="http://example.org/ns">Last p</ex:p>
+</doc>

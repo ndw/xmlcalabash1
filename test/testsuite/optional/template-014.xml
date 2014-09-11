@@ -1,0 +1,33 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error"
+        error="err:XC0026">
+
+<t:title>Test p:template-014</t:title>
+
+
+<t:pipeline>
+<p:declare-step version='1.0' name="main">
+<p:output port="result"/>
+
+<p:template>
+  <p:input port="template">
+    <p:inline>
+      <template attr="{/doc/p}"/>
+    </p:inline>
+  </p:input>
+  <p:input port="source">
+    <p:empty/>
+  </p:input>
+  <p:input port="parameters">
+    <p:empty/>
+  </p:input>
+</p:template>
+
+</p:declare-step>
+</t:pipeline>
+
+</t:test>
+

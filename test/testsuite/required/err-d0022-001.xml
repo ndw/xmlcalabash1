@@ -1,0 +1,45 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:err="http://www.w3.org/ns/xproc-error"
+        error="err:XD0022">
+  <t:title>Test for err:XD0022 #001</t:title>
+
+  <t:description xmlns="http://www.w3.org/1999/xhtml">
+    <p>It is a dynamic error if a processor that does
+    not support PSVI annotations attempts to invoke
+    a step which asserts that they are required.</p>
+  </t:description>
+
+  <t:input port="source">
+    <doc/>
+  </t:input>
+
+  <t:pipeline>
+    <p:pipeline version='1.0'  xmlns:ex="http://www.example.com">
+      <p:declare-step type="ex:test"
+                      psvi-required="true">
+        <p:input port="source"/>
+        <p:output port="result" sequence="true"/>
+        <p:identity/>
+      </p:declare-step>
+
+      <p:choose>
+        <p:when test="p:system-property('p:psvi-supported') = 'true'">
+          <!-- simulate err:XD0022 for processors that
+               support PSVI annotations -->
+          <p:error code="err:XD0022">
+            <p:input port="source">
+              <p:empty/>
+            </p:input>
+          </p:error>
+        </p:when>
+        <p:otherwise>
+          <ex:test/>
+        </p:otherwise>
+      </p:choose>
+    </p:pipeline>
+  </t:pipeline>
+
+</t:test>

@@ -34,7 +34,11 @@ import com.xmlcalabash.core.XProcConfiguration;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.util.AxisNodes;
+import com.xmlcalabash.util.DefaultTestReporter;
 import com.xmlcalabash.util.S9apiUtils;
+import com.xmlcalabash.util.TestReporter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -88,9 +92,14 @@ public class RunTestReport {
     private static String defaultLog = null;
 
     private XProcRuntime runtime = null;
+    private TestReporter reporter = null;
+    protected Logger logger = LoggerFactory.getLogger(RunTestReport.class);
+
 
     /** Creates a new instance of RunTest */
-    public RunTestReport() {
+    public RunTestReport(XProcRuntime runtime, TestReporter reporter) {
+        this.runtime = runtime;
+        this.reporter = reporter;
     }
 
     public void setDebug(boolean dbg) {
@@ -151,15 +160,14 @@ public class RunTestReport {
             System.exit(1);
         }
 
-        RunTestReport test = new RunTestReport();
+        XProcConfiguration config = new XProcConfiguration("ee", schemaAware);
+        XProcRuntime runtime = new XProcRuntime(config);
+
+        RunTestReport test = new RunTestReport(runtime, new DefaultTestReporter(runtime));
         test.runTests(tests);
     }
 
     public void runTests(Vector<String> tests) {
-        // We create this runtime for startReport(), I know it never actually gets used...
-        XProcConfiguration config = new XProcConfiguration("ee", schemaAware);
-        runtime = new XProcRuntime(config);
-
         startReport();
 
         for (String testfile : tests) {
@@ -172,9 +180,11 @@ public class RunTestReport {
     public TestSuiteResults run(String testfile) {
         Vector<TestSuiteResult> results = new Vector<TestSuiteResult> ();
 
+        /*
         XProcConfiguration config = new XProcConfiguration("ee", schemaAware);
         runtime = new XProcRuntime(config);
         runtime.getConfiguration().debug = debug;
+        */
 
         XdmNode doc, root;
         try {
@@ -262,7 +272,7 @@ public class RunTestReport {
             result = new TestSuiteResult(testNode.getBaseURI().toASCIIString());
         }
 
-        System.err.println("Running test: " + testNode.getBaseURI());
+        reporter.runningTest(testNode.getBaseURI());
 
         XProcTest t = new XProcTest(testNode);
 
@@ -476,28 +486,14 @@ public class RunTestReport {
         try {
             xpipeline.run();
         } catch (XProcException e) {
-            if (debug) {
-                e.printStackTrace();
-            }
+            logger.debug(e.getMessage(), e);
             throw e;
         } catch (Throwable e) {
-            if (debug) {
-                e.printStackTrace();
-            }
+            logger.debug(e.getMessage(), e);
             throw new XProcException(e);
         }
 
         Hashtable<String, ReadablePipe> pipeoutputs = new Hashtable<String, ReadablePipe> ();
-    /* WTF?
-    Set<String> pipeouts = xpipeline.getOutputs();
-    for (String port : outputs.keySet()) {
-        if (pipeouts.contains(port)) {
-            ReadablePipe rpipe = xpipeline.readFrom(port);
-            rpipe.canReadSequence(true);
-            pipeoutputs.put(port, rpipe);
-        }
-    }
-    */
 
         Set<String> pipeouts = xpipeline.getOutputs();
         for (String port : pipeouts) {
@@ -518,108 +514,23 @@ public class RunTestReport {
     }
 
     private void startReport() {
-        GregorianCalendar cal = new GregorianCalendar();
+        Hashtable<String,String> props = new Hashtable<String,String> ();
+        props.put("name", runtime.getProductName());
+        props.put("vendor", runtime.getVendor());
+        props.put("vendor-uri", runtime.getVendorURI());
+        props.put("version", runtime.getProductVersion());
+        props.put("language", runtime.getLanguage());
+        props.put("xproc-version", runtime.getXProcVersion());
+        props.put("xpath-version", runtime.getXPathVersion());
+        props.put("psvi-supported", ""+runtime.getPSVISupported());
 
-        System.out.println("<test-report xmlns='http://xproc.org/ns/testreport'>");
-        System.out.println("<title>XProc Test Results for XML Calabash</title>");
-        System.out.print("<date>");
-        System.out.print(cal.get(Calendar.YEAR));
-        System.out.print("-");
-        if (cal.get(Calendar.MONTH)+1 < 10) {
-            System.out.print("0");
-        }
-        System.out.print(cal.get(Calendar.MONTH)+1);
-        System.out.print("-");
-        if (cal.get(Calendar.DAY_OF_MONTH) < 10) {
-            System.out.print("0");
-        }
-        System.out.print(cal.get(Calendar.DAY_OF_MONTH));
-        System.out.print("T");
-        if (cal.get(Calendar.HOUR_OF_DAY) < 10) {
-            System.out.print("0");
-        }
-        System.out.print(cal.get(Calendar.HOUR_OF_DAY));
-        System.out.print(":");
-        if (cal.get(Calendar.MINUTE) < 10) {
-            System.out.print("0");
-        }
-        System.out.print(cal.get(Calendar.MINUTE));
-        System.out.print(":");
-        if (cal.get(Calendar.SECOND) < 10) {
-            System.out.print("0");
-        }
-        System.out.print(cal.get(Calendar.SECOND));
-        System.out.println("</date>");
+        reporter.startReport(props);
 
-        System.out.println("<processor>");
-        System.out.println("<name>" + runtime.getProductName() + "</name>");
-        System.out.println("<vendor>" + runtime.getVendor() + "</vendor>");
-        System.out.println("<vendor-uri>" + runtime.getVendorURI() + "</vendor-uri>");
-        System.out.println("<version>" + runtime.getProductVersion() + "</version>");
-        System.out.println("<language>" + runtime.getLanguage() + "</language>");
-        System.out.println("<xproc-version>" + runtime.getXProcVersion() + "</xproc-version>");
-        System.out.println("<xpath-version>" + runtime.getXPathVersion() + "</xpath-version>");
-        System.out.println("<psvi-supported>" + runtime.getPSVISupported() + "</psvi-supported>");
-        System.out.println("</processor>");
     }
 
     private void endReport() {
-        System.out.println("</test-report>");
+        reporter.endReport();
     }
-
-    /*
-    public void dump(XdmNode node, int depth) {
-        XdmSequenceIterator iter = null;
-
-        for (int i = 0; i < depth; i++) {
-            System.err.print(" ");
-        }
-
-        if (node.getNodeKind() == XdmNodeKind.DOCUMENT) {
-            System.err.println("D: " + node.getBaseURI());
-            iter = node.axisIterator(Axis.CHILD);
-            while (iter.hasNext()) {
-                dump((XdmNode) iter.next(), depth+1);
-            }
-            return;
-        }
-
-        if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
-            System.err.println("E: " + node.getNodeName());
-            iter = node.axisIterator(Axis.ATTRIBUTE);
-            while (iter.hasNext()) {
-                dump((XdmNode) iter.next(), depth+1);
-            }
-            iter = node.axisIterator(Axis.CHILD);
-            while (iter.hasNext()) {
-                dump((XdmNode) iter.next(), depth+1);
-            }
-            return;
-        }
-
-        if (node.getNodeKind() == XdmNodeKind.ATTRIBUTE) {
-            System.err.println("A: " + node.getNodeName() + " = \"" + node.getStringValue() + "\"");
-            return;
-        }
-
-        if (node.getNodeKind() == XdmNodeKind.TEXT) {
-            System.err.println("T: \"" + node.getStringValue() + "\"");
-            return;
-        }
-
-        if (node.getNodeKind() == XdmNodeKind.COMMENT) {
-            System.err.println("C: \"" + node.getStringValue() + "\"");
-            return;
-        }
-
-        if (node.getNodeKind() == XdmNodeKind.PROCESSING_INSTRUCTION) {
-            System.err.println("P: " + node.getNodeName() + " \"" + node.getStringValue() + "\"");
-            return;
-        }
-
-        System.err.print("WTF: " + node.getNodeKind());
-    }
-    */
 
     public String serializeAsXML(XdmNode node) {
         try {
@@ -639,7 +550,8 @@ public class RunTestReport {
 
             return result;
         } catch (SaxonApiException sae) {
-            sae.printStackTrace();
+            logger.warn("Failed to serialize node: " + node);
+            logger.debug(sae.getMessage(), sae);
             return "";
         }
     }
@@ -780,7 +692,7 @@ public class RunTestReport {
                         docroot = node;
                     }
                 }
-                
+
                 if (t_document.equals(docroot.getNodeName())) {
                     href = docroot.getAttributeValue(_href);
                     if (href != null) {
@@ -905,9 +817,9 @@ public class RunTestReport {
             if (title == null) {
                 makeReport(results);
             } else {
-                System.out.println("<test-suite>");
+                reporter.startTestSuite();
                 makeReport(results);
-                System.out.println("</test-suite>");
+                reporter.endTestSuite();
             }
         }
     }
@@ -993,54 +905,18 @@ public class RunTestReport {
         }
 
         public void report() {
-            String gi = "pass";
-            if (!passed) {
-                gi = "fail";
-            }
-
-            System.out.println("<" + gi + " uri='" + testfile + "'>");
-
-            if (title != null) {
-                System.out.println("<title>" + title + "</title>");
-            }
-
-            /*
-            if (description != null) {
-                System.out.println("<description>");
-                for (XdmNode node : description) {
-                    System.out.println(serializeAsXML(node));
-                }
-                System.out.println("</description>");
-            }
-            */
+            reporter.startTestResults(passed, testfile, title);
 
             if ((actualError != null && expectedError == null)
                 || (actualError == null && expectedError != null)
                 || (actualError != null && expectedError != null && !actualError.equals(expectedError))) {
-                System.out.print("<error");
-                if (expectedError != null) {
-                    System.out.print(" expected='" + expectedError + "'");
-                }
-                System.out.println(">" + actualError + "</error>");
+                reporter.testError(expectedError, actualError);
             }
 
-            for (String message : errorMessages) {
-                System.out.println("<message>" + xmlEscape(message) + "</message>");
-            }
-
-            if (expected != null) {
-                System.out.print("<expected>");
-                System.out.print(serialize(expected));
-                System.out.println("</expected>");
-            }
-
-            if (actual != null) {
-                System.out.print("<actual>");
-                System.out.print(serialize(actual));
-                System.out.println("</actual>");
-            }
-
-            System.out.println("</" + gi + ">");
+            reporter.testErrorMessages(errorMessages);
+            reporter.testExpected(expected);
+            reporter.testActual(actual);
+            reporter.endTestResults(passed);
         }
 
         public void catchException(Throwable t) {
@@ -1060,11 +936,5 @@ public class RunTestReport {
             }
         }
 
-        private String xmlEscape(String str) {
-            str = str.replaceAll("&", "&amp;");
-            str = str.replaceAll("<", "&lt;");
-            str = str.replaceAll(">", "&gt;");
-            return str;
-        }
     }
 }

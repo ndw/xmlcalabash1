@@ -1,0 +1,49 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error"
+        error="err:XD0023">
+  
+  <t:title>Test err:XD0023 - #008</t:title>
+  
+  <t:description xmlns="http://www.w3.org/1999/xhtml">                                                              
+    <p>Tests p:xpath-context usage within p:choose.</p>
+  </t:description>     
+  
+  <t:input port='source'>
+    <foo:document xmlns:foo="http://www.foo.com" xmlns:bar="http://www.bar.com">
+      <bar:title>Some Title</bar:title>
+      <foo:para>Some paragraph.</foo:para>
+    </foo:document>
+    
+  </t:input>
+  
+  <t:pipeline>
+    <p:pipeline version='1.0' name="pipeline">
+      
+      <p:choose>
+        <p:xpath-context xmlns:foo="http://www.foo.com">
+          <p:pipe step="pipeline" port="source"/>
+        </p:xpath-context>
+        <p:when test="/foo:document/bar:title" xmlns:bar="http://www.bar.com">
+          <p:identity>
+            <p:input port="source">
+              <p:inline><success/></p:inline>
+            </p:input>
+          </p:identity>
+        </p:when>
+        <p:otherwise>
+          <p:identity>
+            <p:input port="source">
+              <p:inline><failure/></p:inline>                                     
+            </p:input>
+          </p:identity>
+        </p:otherwise>
+      </p:choose>
+      
+    </p:pipeline>
+  </t:pipeline>
+  
+</t:test>
+

@@ -1,0 +1,39 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error">
+  
+  <t:title>Test p:namespaces #005</t:title>
+  
+  <t:input port="source">
+    <doc xmlns:pfx="http://www.example.org/ns">
+      <pfx:elem/>
+      <pfx:elem/>
+      <pfx:elem/>
+    </doc>
+  </t:input>
+  
+  <t:pipeline>
+    <p:pipeline version="1.0">
+      <p:variable name="count" select="count(//pfx:*)">
+        <p:namespaces element="/*"/>
+      </p:variable>
+
+      <p:add-attribute match="/result" attribute-name="count">
+        <p:with-option name="attribute-value" select="$count"/>
+        <p:input port="source">
+          <p:inline>
+            <result/>
+          </p:inline>
+        </p:input>
+      </p:add-attribute>
+    </p:pipeline>
+  </t:pipeline>
+  
+  <t:output port="result">
+    <result count="3"/>
+  </t:output>
+  
+</t:test>
+

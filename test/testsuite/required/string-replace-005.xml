@@ -1,0 +1,35 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step">
+  <t:title>Test p:string-replace #005</t:title>
+  
+  <t:description>
+    <p xmlns='http://www.w3.org/1999/xhtml'>Tests that the step
+    XPath context is correct in <code>p:string-replace</code>.</p>
+  </t:description>
+
+  <t:input port="source">
+    <t:document>
+      <doc>
+        <para version="1">some text</para>
+        <para version="2">some other text</para>
+        <para version="3">some <emph version="4">emphasized</emph> text</para>
+      </doc>
+    </t:document>
+  </t:input>
+  
+  <t:pipeline>
+    <p:pipeline version='1.0'>
+      <p:string-replace match="*/@version" replace="number(.)+1"/>
+    </p:pipeline>
+  </t:pipeline>
+  
+  <t:output port="result">
+    <doc>
+      <para version="2">some text</para>
+      <para version="3">some other text</para>
+      <para version="4">some <emph version="5">emphasized</emph> text</para>
+    </doc>
+  </t:output>
+</t:test>

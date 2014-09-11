@@ -13,6 +13,7 @@ import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.model.Serialization;
 import com.xmlcalabash.model.Step;
 import com.xmlcalabash.model.Variable;
+import com.xmlcalabash.util.MessageFormatter;
 import com.xmlcalabash.util.TreeWriter;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -87,7 +88,7 @@ public class XPipeline extends XCompoundStep {
 
     public void writeTo(String port, XdmNode node) {
         WritablePipe pipe = outputs.get(port+"|");
-        finest(step.getNode(), "writesTo " + pipe + " for " + port);
+        logger.trace(MessageFormatter.nodeMessage(step.getNode(), "writesTo " + pipe + " for " + port));
         pipe.write(node);
     }
 
@@ -122,9 +123,9 @@ public class XPipeline extends XCompoundStep {
         }
         */
 
-        fine(null, "Running " + infoName + " " + step.getName());
+        logger.trace("Running " + infoName + " " + step.getName());
         if (runtime.getAllowGeneralExpressions()) {
-            fine(step.getNode(), "Running with the 'general-values' extension enabled.");
+            logger.trace(MessageFormatter.nodeMessage(step.getNode(), "Running with the 'general-values' extension enabled."));
         }
 
         XProcData data = runtime.getXProcData();
@@ -191,7 +192,7 @@ public class XPipeline extends XCompoundStep {
                     while (reader.moreDocuments()) {
                         XdmNode doc = reader.read();
                         pipe.write(doc);
-                        finest(step.getNode(), "Pipeline input copy from " + reader + " to " + pipe);
+                        logger.trace(MessageFormatter.nodeMessage(step.getNode(), "Pipeline input copy from " + reader + " to " + pipe));
                     }
                 }
             }
@@ -250,7 +251,7 @@ public class XPipeline extends XCompoundStep {
                         while (reader.moreDocuments()) {
                             XdmNode doc = reader.read();
                             pipe.write(doc);
-                            finest(step.getNode(), "Pipeline output copy from " + reader + " to " + pipe);
+                            logger.trace(MessageFormatter.nodeMessage(step.getNode(), "Pipeline output copy from " + reader + " to " + pipe));
                         }
                     }
                 } finally {

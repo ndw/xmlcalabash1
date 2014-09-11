@@ -25,6 +25,7 @@ import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
+import com.xmlcalabash.util.MessageFormatter;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TreeWriter;
 import net.sf.saxon.Configuration;
@@ -119,7 +120,7 @@ public class ValidateWithXSD extends DefaultStep {
     }
 
     public void validateWithSaxonSA(SchemaManager manager) throws SaxonApiException {
-        fine(step.getNode(), "Validating with Saxon");
+        logger.trace(MessageFormatter.nodeMessage(step.getNode(), "Validating with Saxon"));
 
         String xsdVersion = step.getExtensionAttribute(cx_version);
         if (xsdVersion != null) {
@@ -135,16 +136,16 @@ public class ValidateWithXSD extends DefaultStep {
         try {
             Method clearSchemaCache = config.getClass().getMethod("clearSchemaCache", paramTypes);
             clearSchemaCache.invoke(config);
-            finest(step.getNode(), "Cleared schema cache.");
+            logger.trace(MessageFormatter.nodeMessage(step.getNode(), "Cleared schema cache."));
         } catch (NoSuchMethodException nsme) {
             // nop; oh, well
-            finest(step.getNode(), "Cannot reset schema cache.");
+            logger.debug(MessageFormatter.nodeMessage(step.getNode(), "Cannot reset schema cache."));
         } catch (IllegalAccessException nsme) {
             // nop; oh, well
-            finest(step.getNode(), "Cannot reset schema cache.");
+            logger.debug(MessageFormatter.nodeMessage(step.getNode(), "Cannot reset schema cache."));
         } catch (InvocationTargetException nsme) {
             // nop; oh, well
-            finest(step.getNode(), "Cannot reset schema cache.");
+            logger.debug(MessageFormatter.nodeMessage(step.getNode(), "Cannot reset schema cache."));
         }
 
         XdmNode doc = source.read();
@@ -159,7 +160,7 @@ public class ValidateWithXSD extends DefaultStep {
         while (schemas.moreDocuments()) {
             XdmNode schemaNode = schemas.read();
             String targetNS = schemaNode.getBaseURI().toASCIIString();
-            finer(step.getNode(), "Caching input schema: " + targetNS);
+            logger.debug(MessageFormatter.nodeMessage(step.getNode(), "Caching input schema: " + targetNS));
             if (targetNS.equals(namespace)) {
                 tryNamespaces = false;
             }
@@ -205,7 +206,9 @@ public class ValidateWithXSD extends DefaultStep {
         validator.setUseXsiSchemaLocation(useHints);
         
         try {
-            finer(step.getNode(), "Validating: " + doc.getBaseURI().toASCIIString());
+            logger.trace(MessageFormatter.nodeMessage(step.getNode(),
+                    "Validating: " + doc.getBaseURI().toASCIIString()));
+
             validator.validate(doc.asSource());
             if (validationException != null) {
                 throw (SaxonApiException) validationException;
@@ -221,7 +224,7 @@ public class ValidateWithXSD extends DefaultStep {
     }
 
     private void validateWithXerces() throws SaxonApiException {
-        fine(step.getNode(), "Validating with Xerces");
+        logger.trace(MessageFormatter.nodeMessage(step.getNode(), "Validating with Xerces"));
 
         Vector<XdmNode> schemaDocuments = new Vector<XdmNode> ();
         while (schemas.moreDocuments()) {

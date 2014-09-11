@@ -13,7 +13,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Stack;
 import java.util.Vector;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
 
 import javax.xml.XMLConstants;
 import javax.xml.transform.sax.SAXSource;
@@ -40,6 +40,7 @@ import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XsltCompiler;
 import net.sf.saxon.s9api.XsltExecutable;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
@@ -51,7 +52,6 @@ import org.xml.sax.helpers.XMLReaderFactory;
  */
 public class Parser {
     // TODO: Make new QName() values throughout static
-
     private static QName px_name = new QName(XProcConstants.NS_CALABASH_EX,"name");
     private static QName _name = new QName("name");
     private static QName _href = new QName("href");
@@ -68,7 +68,7 @@ public class Parser {
     private Stack<DeclareStep> declStack = null;
     protected HashSet<String> topLevelImports = new HashSet<String> ();
     private boolean loadingStandardLibrary = false;
-    private Logger logger = Logger.getLogger(this.getClass().getName());
+    private Logger logger = LoggerFactory.getLogger(Parser.class);
     private static int importCount = 0;
 
     public Parser(XProcRuntime runtime) {

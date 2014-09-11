@@ -1,0 +1,37 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:px="http://xproc.dev.java.net/ns/extensions"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error"
+        error="err:XS0009">
+  <t:title>Test for err:XS0009 - 002</t:title>
+
+  <t:description xmlns="http://www.w3.org/1999/xhtml">
+    <p>It is a static error if the p:group and p:catch
+    subpipelines declare different outputs.</p>
+  </t:description>
+  
+  <t:input port="source">
+    <doc xmlns=""/>
+  </t:input>
+  
+  <t:pipeline>
+    <p:pipeline version='1.0'>
+      <p:try>
+        <p:group>
+          <p:output port="out"/>
+          <p:identity/>
+        </p:group>
+        <p:catch>
+          <p:output port="out" primary="false">
+            <p:pipe step="identity" port="result"/>
+          </p:output>
+          <p:identity name="identity"/>
+        </p:catch>
+      </p:try>
+    </p:pipeline>
+  </t:pipeline>
+  
+</t:test>
+

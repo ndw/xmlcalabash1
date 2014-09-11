@@ -1,0 +1,56 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error">
+
+<t:title>Test p:template-010</t:title>
+
+<t:description xmlns="http://www.w3.org/1999/xhtml">
+<p>Calabash Note: the comparison function used by the test harness ignores
+comments and PIs, so this test may appear to pass even when it should fail.</p>
+</t:description>
+
+<t:input port='source'>
+<doc>
+<p>A para.</p>
+</doc>
+</t:input>
+
+<t:option name="opt" value="value"/>
+
+<t:pipeline>
+<p:pipeline version='1.0' name="main">
+<p:option name="opt" select="'default-opt-value'"/>
+<p:variable name="v1" select="'v1'"/>
+<p:variable name="v2" select="'v2'"/>
+
+<p:template>
+  <p:input port="template">
+    <p:inline><doc>
+  <?pi {concat("a", ",", "b", ",", "c")}?>
+  <!-- 3 + 4 = {3+4} -->
+  {{{/doc/p}}}
+  <!-- {/doc/p} -->
+  <![CDATA[foo{{{/doc/p}}}bar]]>
+</doc></p:inline>
+  </p:input>
+  <p:input port="source">
+    <p:pipe step="main" port="source"/>
+  </p:input>
+</p:template>
+
+</p:pipeline>
+</t:pipeline>
+
+<t:output port='result'>
+<doc>
+  <?pi a,b,c?>
+  <!-- 3 + 4 = 7 -->
+  {<p>A para.</p>}
+  <!-- A para. -->
+  foo{<p>A para.</p>}bar
+</doc>
+</t:output>
+</t:test>
+

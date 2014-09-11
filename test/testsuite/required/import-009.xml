@@ -1,0 +1,46 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error">
+
+  <t:title>Test p:import #009</t:title>
+  <t:description xmlns="http://www.w3.org/1999/xhtml">
+    <p>Tests that importing a pipeline does not expose its
+    in-scope (local or imported) step types.</p>
+  </t:description>
+
+  <t:pipeline>
+    <p:declare-step version='1.0'>
+      <p:output port="result"/>
+
+      <p:import href="pipeline-imported.xpl"/>
+
+      <p:choose xmlns:foo="http://acme.com/test" xmlns:test="http://xproc.org/ns/testsuite/test">
+        <p:when test="p:step-available('foo:imported') and not(p:step-available('foo:nested')) and not(p:step-available('test:step'))">
+          <p:identity>
+            <p:input port="source">
+              <p:inline>
+                <success/>
+              </p:inline>
+            </p:input>
+          </p:identity>
+        </p:when>
+        <p:otherwise>
+          <p:identity>
+            <p:input port="source">
+              <p:inline>
+                <failure/>
+              </p:inline>
+            </p:input>
+          </p:identity>
+        </p:otherwise>
+      </p:choose>
+
+    </p:declare-step>
+  </t:pipeline>
+
+  <t:output port="result"><success/></t:output>
+
+</t:test>
+

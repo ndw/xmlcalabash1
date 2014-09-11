@@ -1,0 +1,31 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error"
+        error="err:XD0034">
+  
+  <t:title>Test err:XD0034 - 013</t:title>
+  
+  <t:description xmlns="http://www.w3.org/1999/xhtml">
+    <p>It is a dynamic error to specify a new namespace or prefix
+    if the lexical value of the specified name contains a colon.</p>
+  </t:description>
+
+  <t:pipeline>
+    <p:declare-step version='1.0'>
+      <p:error xmlns:foo="http://foo.com"
+               code="foo:bar"
+               code-namespace="http://baz.com">
+        <p:input port="source">
+          <p:inline>
+            <message>Bang!</message>
+          </p:inline>
+        </p:input>
+      </p:error>
+      <p:sink/>
+    </p:declare-step>
+  </t:pipeline>
+  
+</t:test>
+

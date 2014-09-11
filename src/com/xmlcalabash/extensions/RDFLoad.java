@@ -14,6 +14,8 @@ import org.apache.jena.riot.system.ParserProfile;
 import org.apache.jena.riot.system.RiotLib;
 import org.apache.jena.riot.system.StreamRDF;
 import org.apache.jena.riot.system.StreamRDFLib;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -69,9 +71,9 @@ public class RDFLoad extends RDFStep {
             parser.setProfile(prof);
             try {
                 parser.parse();
-            } catch (Throwable e) {
-                System.err.println("Parse error in RDFLoad document; processing partial document");
-                e.printStackTrace();
+            } catch (Exception e) {
+                logger.warn("Parse error in RDFLoad document; processing partial document");
+                logger.debug(e.getMessage(), e);
             }
             conn.getInputStream().close();
         } catch (MalformedURLException e) {

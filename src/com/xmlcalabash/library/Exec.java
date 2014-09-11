@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.io.File;
 
 import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.util.MessageFormatter;
 import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
@@ -187,7 +188,7 @@ public class Exec extends DefaultStep {
                 builder.directory(new File(cwd));
             }
 
-            fine(step.getNode(), "Exec: " + showCmd);
+            logger.trace(MessageFormatter.nodeMessage(step.getNode(), "Exec: " + showCmd));
 
             Process process = builder.start();
 

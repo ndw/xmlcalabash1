@@ -1,0 +1,45 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+	xmlns:cx="http://xmlcalabash.com/ns/extensions"
+	xmlns:exf="http://exproc.org/standard/functions"
+        xmlns:err="http://www.w3.org/ns/xproc-error">
+
+<t:title>Test exf:cwd() #001</t:title>
+
+<t:description xmlns="http://www.w3.org/1999/xhtml">
+<p>Tests the proposed exproc.org extension function
+<a href="http://exproc.org/proposed/functions/#cwd"><code>exf:cwd()</code></a>.
+</p>
+<p>The test succeeds if any value other than the empty string is inserted
+into the cwd attribute on the test paragraph.</p>
+</t:description>
+
+<t:input port='source'>
+<doc>
+<p cwd=""/>
+</doc>
+</t:input>
+
+<t:pipeline>
+<p:pipeline name="pipeline" exclude-inline-prefixes="t c cx err" version="1.0">
+
+<p:import href="http://xmlcalabash.com/extension/steps/library-1.0.xpl"/>
+
+<p:string-replace match="@cwd">
+  <p:with-option name="replace" select="concat('&quot;',exf:cwd(),'&quot;')"/>
+</p:string-replace>
+
+<p:count>
+  <p:input port="source" select="//*[@cwd='']"/>
+</p:count>
+
+</p:pipeline>
+</t:pipeline>
+
+<t:output port='result'>
+<c:result>0</c:result>
+</t:output>
+
+</t:test>

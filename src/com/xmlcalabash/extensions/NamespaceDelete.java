@@ -5,10 +5,13 @@ import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.library.DefaultStep;
 import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.util.MessageFormatter;
 import com.xmlcalabash.util.S9apiUtils;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 
@@ -52,7 +55,8 @@ public class NamespaceDelete extends DefaultStep {
 
         while (source.moreDocuments()) {
             XdmNode doc = source.read();
-            runtime.finest(this, step.getNode(), "Namespace-delete step " + step.getName() + " read " + doc.getDocumentURI());
+            logger.trace(MessageFormatter.nodeMessage(step.getNode(),
+                    "Namespace-delete step " + step.getName() + " read " + doc.getDocumentURI()));
             doc = S9apiUtils.removeNamespaces(runtime, doc, excludeUris, false);
             result.write(doc);
         }

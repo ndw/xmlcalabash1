@@ -27,6 +27,7 @@ import java.io.PrintWriter;
 import java.net.URI;
 import java.util.zip.GZIPOutputStream;
 
+import com.xmlcalabash.util.*;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.Serializer;
@@ -41,11 +42,6 @@ import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.util.Base64;
-import com.xmlcalabash.util.JSONtoXML;
-import com.xmlcalabash.util.S9apiUtils;
-import com.xmlcalabash.util.TreeWriter;
-import com.xmlcalabash.util.XMLtoJSON;
 
 /**
  *
@@ -109,9 +105,10 @@ public class Store extends DefaultStep {
         }
 
         if (method == CompressionMethod.GZIP) {
-            finer(hrefOpt == null ? null : hrefOpt.getNode(), "Gzipping" + (href == null ? "" : " to \"" + href + "\"."));
+            logger.trace(MessageFormatter.nodeMessage(hrefOpt == null ? null : hrefOpt.getNode(),
+                    "Gzipping" + (href == null ? "" : " to \"" + href + "\".")));
         } else {
-            finer(hrefOpt.getNode(), "Storing to \"" + href + "\".");
+            logger.trace(MessageFormatter.nodeMessage(hrefOpt.getNode(), "Storing to \"" + href + "\"."));
         }
 
         String decode = step.getExtensionAttribute(cx_decode);

@@ -1,0 +1,29 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error"
+        error="err:XC0006">
+
+  <t:title>Test for err:XC0006 #001</t:title>
+  
+  <t:description xmlns="http://www.w3.org/1999/xhtml">
+    <p>It is a dynamic error if the method is not specified on a c:request.</p>
+  </t:description>
+
+  <t:pipeline>
+    <p:declare-step version='1.0'>
+      <p:output port="result"/>
+      <p:http-request>
+        <p:input port="source">
+          <p:inline>
+            <c:request href="http://tests.xproc.org/service/fixed-xml"/>
+          </p:inline>
+        </p:input>
+      </p:http-request>
+      
+    </p:declare-step>
+  </t:pipeline>
+
+</t:test>
+

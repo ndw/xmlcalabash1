@@ -9,6 +9,7 @@ import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.model.Step;
 import com.xmlcalabash.model.Variable;
+import com.xmlcalabash.util.MessageFormatter;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XPathCompiler;
@@ -62,7 +63,7 @@ public class XUntilUnchanged extends XCompoundStep {
     }
 
     public void run() throws SaxonApiException {
-        fine(null, "Running cx:until-unchanged " + step.getName());
+        logger.trace("Running cx:until-unchanged " + step.getName());
 
         XProcData data = runtime.getXProcData();
         data.openFrame(this);
@@ -103,7 +104,7 @@ public class XUntilUnchanged extends XCompoundStep {
                         // Setup the current port before we compute variables!
                         current.resetWriter();
                         current.write(is_doc);
-                        finest(step.getNode(), "Copy to current");
+                        logger.trace(MessageFormatter.nodeMessage(step.getNode(), "Copy to current"));
 
                         sequencePosition++;
                         runtime.getXProcData().setIterationPosition(sequencePosition);

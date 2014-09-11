@@ -63,6 +63,7 @@ public class Pipelines extends BaseResource {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected Representation post(Representation entity, Variant variant) {
         Form form = getQuery();
         Random random = new Random();
@@ -91,8 +92,7 @@ public class Pipelines extends BaseResource {
 
         Calendar expires = GregorianCalendar.getInstance();
         if (seconds >= 0) {
-            long millis = seconds;
-            long extime = expires.getTimeInMillis() + (millis*1000);
+            long extime = expires.getTimeInMillis() + (seconds*1000);
             expires.setTimeInMillis(extime);
         } else {
             expires.setTimeInMillis(Long.MAX_VALUE);

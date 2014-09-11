@@ -1,0 +1,26 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:err="http://www.w3.org/ns/xproc-error"
+        error="err:XD0027">
+  <t:title>Test for err:XD0027 #001</t:title>
+  
+  <t:description xmlns="http://www.w3.org/1999/xhtml">
+    <p>It is a dynamic error if the processor encounters
+    an xpath-version that it does not support.</p>
+  </t:description>
+
+  <t:input port="source">
+    <doc/>
+  </t:input>
+
+  <t:pipeline>
+    <p:declare-step version='1.0' xpath-version="1.5">
+      <p:input port="source"/>
+      <p:output port="result"/>
+      <p:identity/>
+    </p:declare-step>
+  </t:pipeline>
+  
+</t:test>

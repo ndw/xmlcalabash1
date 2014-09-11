@@ -24,6 +24,8 @@ import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.QName;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 
@@ -79,7 +81,7 @@ public class DataBinding extends Binding {
             indent += " ";
         }
 
-        System.err.println(indent + "Data binding to " + getHref());
+        logger.trace(indent + "Data binding to " + getHref());
     }
 }
 

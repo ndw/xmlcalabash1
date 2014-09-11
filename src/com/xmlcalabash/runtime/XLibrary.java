@@ -13,7 +13,8 @@ import com.xmlcalabash.model.DeclareStep;
 import com.xmlcalabash.model.Step;
 import net.sf.saxon.s9api.QName;
 
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by IntelliJ IDEA.
@@ -25,7 +26,7 @@ import java.util.logging.Logger;
 public class XLibrary {
     private XProcRuntime runtime = null;
     private PipelineLibrary library = null;
-    private Logger logger = Logger.getLogger(this.getClass().getName());
+    private Logger logger = LoggerFactory.getLogger(XLibrary.class);
 
     public XLibrary(XProcRuntime runtime, PipelineLibrary library) {
         this.runtime = runtime;

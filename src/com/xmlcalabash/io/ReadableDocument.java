@@ -28,6 +28,7 @@ import java.nio.charset.Charset;
 import java.util.Vector;
 import java.util.regex.Pattern;
 
+import com.xmlcalabash.util.MessageFormatter;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -42,6 +43,8 @@ import com.xmlcalabash.model.Step;
 import com.xmlcalabash.util.HttpUtils;
 import com.xmlcalabash.util.JSONtoXML;
 import com.xmlcalabash.util.XPointer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -50,6 +53,7 @@ import com.xmlcalabash.util.XPointer;
 public class ReadableDocument implements ReadablePipe {
     private static final String ACCEPT_XML = "application/xml, text/xml, application/xml-external-parsed-entity, text/xml-external-parsed-entity";
     private static final String ACCPET_JSON = "application/json, application/javascript, text/javascript, text/*, */*";
+    private Logger logger = LoggerFactory.getLogger(ReadableDocument.class);
     protected DocumentSequence documents = null;
     protected String uri = null;
     protected XProcRuntime runtime = null;
@@ -126,7 +130,8 @@ public class ReadableDocument implements ReadablePipe {
         XdmNode doc = documents.get(pos++);
 
         if (reader != null) {
-            runtime.finest(null, reader.getNode(), reader.getName() + " select read '" + (doc == null ? "null" : doc.getBaseURI()) + "' from " + this);
+            logger.trace(MessageFormatter.nodeMessage(reader.getNode(),
+                    reader.getName() + " select read '" + (doc == null ? "null" : doc.getBaseURI()) + "' from " + this));
         }
 
         return doc;

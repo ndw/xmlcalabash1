@@ -16,12 +16,11 @@ import java.net.URI;
 import java.util.Hashtable;
 import java.util.Vector;
 import java.util.Iterator;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.util.S9apiUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * Created by IntelliJ IDEA.
@@ -47,17 +46,22 @@ public class DefaultStep implements XProcStep {
     public static final QName _undeclare_prefixes = new QName("", "undeclare-prefixes");
     public static final QName _version = new QName("", "version");
 
+    protected Logger logger = null;
     private Hashtable<QName,RuntimeValue> options = null;
     protected XProcRuntime runtime = null;
     protected XAtomicStep step = null;
-    protected Logger logger = Logger.getLogger(this.getClass().getName());
-
-    //private String logger = null;
 
     public DefaultStep(XProcRuntime runtime, XAtomicStep step) {
         this.runtime = runtime;
-        this.step =step;
+        this.step = step;
 
+        Class impl = runtime.getConfiguration().implementations.get(step.getType());
+        if (impl == null) {
+            // We're headed for a world of hurt...
+            logger = LoggerFactory.getLogger(DefaultStep.class);
+        } else {
+            logger = LoggerFactory.getLogger(impl);
+        }
     }
 
     public XAtomicStep getStep() {
@@ -150,18 +154,6 @@ public class DefaultStep implements XProcStep {
         runtime.info(this, node, message);
     }
 
-    public void fine(XdmNode node, String message) {
-        runtime.fine(this, node, message);
-    }
-
-    public void finer(XdmNode node, String message) {
-        runtime.finer(this, node, message);
-    }
-
-    public void finest(XdmNode node, String message) {
-        runtime.finest(this, node, message);
-    }
-
     public void run() throws SaxonApiException {
         String type = null;
         if (XProcConstants.NS_XPROC.equals(step.getType().getNamespaceURI())) {
@@ -169,7 +161,7 @@ public class DefaultStep implements XProcStep {
         } else {
             type = step.getType().getClarkName();
         }
-        fine(null, "Running " + type + " " + step.getName());
+        logger.trace("Running " + type + " " + step.getName());
     }
 
     public Serializer makeSerializer() {

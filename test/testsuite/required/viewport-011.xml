@@ -1,0 +1,76 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error">
+  <t:title>Test viewport #011</t:title>
+  
+  <t:description xmlns="http://www.w3.org/1999/xhtml">
+    <p>Test nested <code>p:viewport</code> and correct
+    propagation of p:iteration-size and p:iteration-position.</p>
+  </t:description>
+
+  <t:input port="source">
+    <doc>
+      <sub>
+        <para/>
+        <para/>
+        <para/>
+      </sub>
+      <sub>
+        <para/>
+        <para/>
+        <para/>
+        <para/>
+      </sub>
+    </doc>
+  </t:input>
+
+  <t:pipeline>
+    <p:pipeline version='1.0'>
+
+      <p:viewport match="sub">
+        <p:variable name="p1" select="p:iteration-position()"/>
+        <p:variable name="s1" select="p:iteration-size()"/>
+
+        <!-- a p:group wrapper to tests that p:iteration-position
+             and p:iteration-size are not affected -->
+        <p:group>
+          <p:variable name="p2" select="p:iteration-position()"/>
+          <p:variable name="s2" select="p:iteration-size()"/>
+
+          <p:viewport match="para">
+            <p:variable name="p3" select="p:iteration-position()"/>
+            <p:variable name="s3" select="p:iteration-size()"/>
+            
+            <p:add-attribute match="item" attribute-name="pos">
+              <p:input port="source">
+                <p:inline>
+                  <item/>
+                </p:inline>
+              </p:input>
+              <p:with-option name="attribute-value" select="concat($p1, ',', $s1, '-', $p2, ',', $s2, '-', $p3, ',', $s3)"/>
+            </p:add-attribute>
+          </p:viewport>
+        </p:group>
+      </p:viewport>
+
+    </p:pipeline>
+  </t:pipeline>
+
+  <t:output port="result">
+    <doc>
+      <sub>
+        <item pos="1,2-1,2-1,3"/>
+        <item pos="1,2-1,2-2,3"/>
+        <item pos="1,2-1,2-3,3"/>
+      </sub>
+      <sub>
+        <item pos="2,2-2,2-1,4"/>
+        <item pos="2,2-2,2-2,4"/>
+        <item pos="2,2-2,2-3,4"/>
+        <item pos="2,2-2,2-4,4"/>
+      </sub>
+    </doc>
+  </t:output>
+</t:test>

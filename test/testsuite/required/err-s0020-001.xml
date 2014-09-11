@@ -1,0 +1,31 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error"
+        error="err:XS0020">
+  <t:title>Test for err:XS0020 - 001</t:title>
+  
+  <t:description xmlns="http://www.w3.org/1999/xhtml">
+    <p>It is a static error if the binding attribute on p:namespaces
+    is specified and its value is not the name of an in-scope binding.</p>
+  </t:description>
+  
+  <t:input port="source">
+    <doc/>
+  </t:input>
+
+  <t:pipeline>
+    <p:pipeline version='1.0'>
+
+      <p:delete>
+        <p:with-option name="match" select="'foo'">
+          <p:namespaces binding="not-in-scope"/>
+        </p:with-option>
+      </p:delete>
+
+    </p:pipeline>
+  </t:pipeline>
+
+</t:test>
+

@@ -1,0 +1,26 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:err="http://www.w3.org/ns/xproc-error"
+        error="err:XD0020">
+  <t:title>Test for err:XD0020 #001</t:title>
+  
+  <t:description xmlns="http://www.w3.org/1999/xhtml">
+    <p>It is a dynamic error if the combination of
+    serialization options specified or defaulted
+    is not allowed.</p>
+  </t:description>
+
+  <t:input port='source' href="../doc/s-input.xml"/>
+  
+  <t:pipeline>
+    <p:declare-step version='1.0' name="main">
+      <p:input port="source"/>
+      
+      <p:store href="file:///tmp/standalone-001.xml"
+               omit-xml-declaration="true" standalone="true"/>
+    </p:declare-step>
+  </t:pipeline>
+  
+</t:test>

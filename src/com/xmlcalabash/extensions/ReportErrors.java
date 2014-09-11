@@ -8,6 +8,7 @@ import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.library.DefaultStep;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.util.MessageFormatter;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -108,7 +109,8 @@ public class ReportErrors extends DefaultStep {
 
         while (source.moreDocuments()) {
             XdmNode doc = source.read();
-            runtime.finest(this, step.getNode(), "ReportErrors step " + step.getName() + " read " + doc.getDocumentURI());
+            logger.trace(MessageFormatter.nodeMessage(step.getNode(),
+                    "ReportErrors step " + step.getName() + " read " + doc.getDocumentURI()));
             result.write(doc);
         }
     }

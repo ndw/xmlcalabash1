@@ -1,0 +1,27 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error">
+
+  <t:title>Test p:xinclude #004</t:title>
+
+  <t:input port="source">
+    <t:document href="../doc/input-en-cs.xml"/>
+  </t:input>
+
+  <t:pipeline>
+    <p:pipeline version='1.0'>
+      <p:xinclude fixup-xml-lang="true"/>
+    </p:pipeline>
+  </t:pipeline>
+
+  <t:output port="result">
+    <doc>
+      <para xml:id="para-en" xml:lang="en">This paragraph is in English.</para>
+      <para xml:id="para-cs" xml:lang="cs">Tento odstavec je česky.</para>
+    </doc>
+  </t:output>
+
+</t:test>
+

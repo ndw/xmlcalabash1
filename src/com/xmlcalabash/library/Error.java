@@ -66,9 +66,9 @@ public class Error extends DefaultStep {
 
         XdmNode doc = source.read();
         if (doc == null) {
-            finest(null, "Error step read empty");
+            logger.trace("Error step read empty");
         } else {
-            finest(null, "Error step read " + doc.getDocumentURI());
+            logger.trace("Error step read " + doc.getDocumentURI());
         }
 
         RuntimeValue codeNameValue = getOption(_code);

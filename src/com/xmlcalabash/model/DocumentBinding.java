@@ -21,6 +21,8 @@ package com.xmlcalabash.model;
 
 import net.sf.saxon.s9api.XdmNode;
 import com.xmlcalabash.core.XProcRuntime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -54,6 +56,6 @@ public class DocumentBinding extends Binding {
             indent += " ";
         }
 
-        System.err.println(indent + "URI binding to " + getHref());
+        logger.trace(indent + "URI binding to " + getHref());
     }
 }

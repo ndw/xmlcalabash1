@@ -3,6 +3,7 @@ package com.xmlcalabash.runtime;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.util.MessageFormatter;
 import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.*;
@@ -60,13 +61,13 @@ public class XTry extends XCompoundStep {
                 XInput xinput = getInput(rport);
                 WritablePipe wpipe = xinput.getWriter();
                 outputs.put(port, wpipe);
-                finest(step.getNode(), " writes to " + wpipe + " for " + port);
+                logger.trace(MessageFormatter.nodeMessage(step.getNode(), " writes to " + wpipe + " for " + port));
             } else {
                 XOutput xoutput = new XOutput(runtime, output);
                 addOutput(xoutput);
                 WritablePipe wpipe = xoutput.getWriter();
                 outputs.put(port, wpipe);
-                finest(step.getNode(), " writes to " + wpipe + " for " + port);
+                logger.trace(MessageFormatter.nodeMessage(step.getNode(), " writes to " + wpipe + " for " + port));
             }
         }
     }

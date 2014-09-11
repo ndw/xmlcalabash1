@@ -890,6 +890,7 @@ public class CalabashTask extends MatchingTask {
      *
      * @param libraries the configured Resources object represented as {@code <library>}.
      */
+    @SuppressWarnings("unchecked")
     public void addConfiguredLibrary(UseableResources libraries) {
         if (!libraries.shouldUse()) {
             log("Skipping library as it is configured to be unused.", Project.MSG_DEBUG);
@@ -1229,6 +1230,7 @@ public class CalabashTask extends MatchingTask {
      * @param outputResources  the map of output ports to resources
      * @throws BuildException if the processing fails.
      */
+    @SuppressWarnings("unchecked")
     private void process(Map<String, List<TypedResource>> inputResources, Map<String, Union> outputResources) throws BuildException {
         if (!force && (pipelineResource != null)) {
             long pipelineLastModified = pipelineResource.getLastModified();
@@ -1348,7 +1350,7 @@ public class CalabashTask extends MatchingTask {
             throw new BuildException(ex);
         } else {
             log("Caught an exception: " + ex, Project.MSG_WARN);
-            ex.printStackTrace(new PrintStream(new LogOutputStream(this, Project.MSG_VERBOSE)));
+            log(ex, Project.MSG_DEBUG);
         }
     }
 

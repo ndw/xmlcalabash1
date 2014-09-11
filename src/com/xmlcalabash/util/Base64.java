@@ -1,7 +1,7 @@
 package com.xmlcalabash.util;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>Encodes and decodes to and from Base64 notation.</p>
@@ -486,7 +486,7 @@ public class Base64
 
     
     // -------------------------- BEGIN PATCH ---------------------------------
-    private static final Logger LOG = Logger.getLogger(Base64.class.getName());
+    private static final Logger LOG = LoggerFactory.getLogger(Base64.class.getName());
     /** 
      * Closes the given Closeable, checking for null, 
      * logging any Exception that occurs in the process. 
@@ -496,7 +496,7 @@ public class Base64
             try {
                 c.close();
             } catch (Exception e) {
-                LOG.log(Level.FINER, "Error closing resource", e);
+                LOG.debug("Error closing resource", e);
             }
         }
     }

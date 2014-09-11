@@ -1,0 +1,32 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error">
+  <t:title>Test for-each #006</t:title>
+  
+  <t:description xmlns="http://www.w3.org/1999/xhtml">
+    <p>Test <code>p:for-each</code> with nested <code>p:output</code></p>
+  </t:description>
+
+  <t:pipeline>
+    <p:declare-step version='1.0'>
+      <p:output port="result" sequence="true"/>
+      
+      <p:for-each>
+        <p:iteration-source>
+          <p:empty/>
+        </p:iteration-source>
+        <p:output port="out" sequence="true"/>
+        <p:identity/>
+      </p:for-each>
+
+      <p:count/>
+  
+    </p:declare-step>
+  </t:pipeline>
+
+  <t:output port="result">
+    <c:result>0</c:result>
+  </t:output>
+</t:test>

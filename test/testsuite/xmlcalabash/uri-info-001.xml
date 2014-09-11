@@ -1,0 +1,52 @@
+<?xml-stylesheet type="text/xsl" href="http://tests.xproc.org/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite">
+
+<t:title>Test cx:uri-info</t:title>
+
+<t:pipeline>
+<p:declare-step version='1.0' name="main"
+                xmlns:p="http://www.w3.org/ns/xproc"
+                xmlns:c="http://www.w3.org/ns/xproc-step"
+                xmlns:cx="http://xmlcalabash.com/ns/extensions"
+                xmlns:err="http://www.w3.org/ns/xproc-error">
+<p:input port="source"/>
+<p:output port="result"/>
+
+<p:declare-step type="cx:uri-info">
+     <p:output port="result"/>
+     <p:option name="href" required="true"/>
+     <p:option name="username"/>
+     <p:option name="password"/>
+     <p:option name="auth-method"/>
+     <p:option name="send-authorization"/>
+</p:declare-step>
+
+<cx:uri-info href="http://tests.xproc.org/graphics/icon.png"/>
+<!-- Date is different every time so skip it. -->
+<p:delete match="c:uri-info/c:header[@name='Date']"/>
+<!-- Keep-Alive varies a bit, so skip it too. -->
+<p:delete match="c:uri-info/c:header[@name='Keep-Alive']"/>
+
+</p:declare-step>
+</t:pipeline>
+
+<t:output port='result'>
+<c:uri-info xmlns:c="http://www.w3.org/ns/xproc-step"
+            href="http://tests.xproc.org/graphics/icon.png"
+            status="200"
+            readable="true"
+            exists="true"
+            uri="http://tests.xproc.org/graphics/icon.png"
+            last-modified="2010-03-03T21:52:55Z"
+            size="3859">
+  <c:header name="Server" value="Apache"/>
+  <c:header name="Last-Modified" value="Wed, 03 Mar 2010 21:52:55 GMT"/>
+  <c:header name="ETag" value="&#34;f13-480ec8131bbc0&#34;"/>
+  <c:header name="Accept-Ranges" value="bytes"/>
+  <c:header name="Content-Length" value="3859"/>
+  <c:header name="Connection" value="Keep-Alive"/>
+  <c:header name="Content-Type" value="image/png"/>
+</c:uri-info>
+</t:output>
+
+</t:test>

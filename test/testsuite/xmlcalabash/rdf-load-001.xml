@@ -1,0 +1,41 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:cx="http://xmlcalabash.com/ns/extensions"
+        xmlns:sem="http://marklogic.com/semantics"
+        xmlns:err="http://www.w3.org/ns/xproc-error">
+
+<t:title>Test cx:rdf-load #001</t:title>
+
+<t:pipeline>
+<p:declare-step version='1.0' name="pipeline">
+<p:output port="result"/>
+
+<p:declare-step type="cx:rdf-load">
+  <p:input port="source" sequence="true"/>
+  <p:output port="result" sequence="true"/>
+  <p:option name="href" required="true"/>
+  <p:option name="language"/>
+  <p:option name="graph"/>
+  <p:option name="max-triples-per-document" select="100"/>
+</p:declare-step>
+
+<cx:rdf-load href="data/nwn.rdf">
+  <p:input port="source">
+    <p:empty/>
+  </p:input>
+</cx:rdf-load>
+
+<!-- just count them because the order is irrelevant and maybe non-deterministic -->
+<p:count>
+  <p:input port="source" select="/sem:triples/sem:triple"/>
+</p:count>
+
+</p:declare-step>
+</t:pipeline>
+
+<t:output port='result'><c:result>34</c:result></t:output>
+
+</t:test>
+

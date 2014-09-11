@@ -1,0 +1,67 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error">
+
+  <t:title>Test p:in-scope-names #002</t:title>
+  
+  <t:pipeline>
+    <p:declare-step version='1.0' name="main">
+      <p:output port="result"/>
+      <p:option name="opt" select="'value1'"/>
+      <p:variable name="ex:opt" select="'value2'" xmlns:ex="http://www.example.org/xproc"/>
+      <p:variable name="var" select="'value3'"/>
+
+      <p:group>
+        <p:variable name="ex:var" select="'value4'" xmlns:ex="http://www.example.org/xproc"/>
+      
+        <p:in-scope-names name="vars"/>
+        
+        <!-- c:param-set is unordered, but we want to force
+             an order so that the test comes out right... -->
+        
+        <p:identity name="pick1">
+          <p:input port="source" select="/c:param-set/c:param[@name='opt' and @namespace='']">
+            <p:pipe step="vars" port="result"/>
+          </p:input>
+        </p:identity>
+        
+        <p:identity name="pick2">
+          <p:input port="source" select="/c:param-set/c:param[@name='opt' and @namespace!='']">
+            <p:pipe step="vars" port="result"/>
+          </p:input>
+        </p:identity>
+        
+        <p:identity name="pick3">
+          <p:input port="source" select="/c:param-set/c:param[@name='var' and @namespace='']">
+            <p:pipe step="vars" port="result"/>
+          </p:input>
+        </p:identity>
+        
+        <p:identity name="pick4">
+          <p:input port="source" select="/c:param-set/c:param[@name='var' and @namespace!='']">
+            <p:pipe step="vars" port="result"/>
+          </p:input>
+        </p:identity>
+        
+        <p:wrap-sequence wrapper="c:param-set">
+          <p:input port="source">
+            <p:pipe step="pick1" port="result"/>
+            <p:pipe step="pick2" port="result"/>
+            <p:pipe step="pick3" port="result"/>
+            <p:pipe step="pick4" port="result"/>
+          </p:input>
+        </p:wrap-sequence>
+        
+      </p:group>
+      
+    </p:declare-step>
+  </t:pipeline>
+  
+  <t:output port='result'>
+    <c:param-set xmlns:c="http://www.w3.org/ns/xproc-step"><c:param value="value1" namespace="" name="opt"/><c:param value="value2" namespace="http://www.example.org/xproc" name="opt"/><c:param value="value3" namespace="" name="var"/><c:param value="value4" namespace="http://www.example.org/xproc" name="var"/></c:param-set>
+  </t:output>
+  
+</t:test>
+

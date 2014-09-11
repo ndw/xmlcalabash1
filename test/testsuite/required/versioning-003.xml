@@ -1,0 +1,32 @@
+<?xml-stylesheet type="text/xsl" href="/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite"
+        xmlns:p="http://www.w3.org/ns/xproc"
+        xmlns:c="http://www.w3.org/ns/xproc-step"
+        xmlns:err="http://www.w3.org/ns/xproc-error">
+
+<t:title>Test versioning #003</t:title>
+
+<t:description xmlns="http://www.w3.org/1999/xhtml">
+  <p>Forwards-compatible mode: On any element in the XProc
+  namespace, unrecognized attributes (other than extension attributes)
+  are ignored.</p>
+</t:description>
+
+<t:pipeline>
+<p:declare-step version="2.0">
+  <p:output port="result"/>
+ 
+  <p:identity>
+    <p:input port="source">
+      <p:inline new-attribute="foo">
+        <doc/>
+      </p:inline>
+    </p:input>
+  </p:identity>
+
+</p:declare-step>
+</t:pipeline>
+
+<t:output port="result"><doc/></t:output>
+
+</t:test>
