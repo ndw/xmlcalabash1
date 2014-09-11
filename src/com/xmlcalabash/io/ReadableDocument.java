@@ -136,9 +136,10 @@ public class ReadableDocument implements ReadablePipe {
         readDoc = true;
         if (uri != null) {
             try {
+                boolean sameDocumentReference = uri.startsWith("#");
                 // What if this is a directory?
                 URI baseURI = URI.create(base);
-                if ("file".equalsIgnoreCase(baseURI.resolve(uri).getScheme())) {
+                if (!sameDocumentReference && "file".equalsIgnoreCase(baseURI.resolve(uri).getScheme())) {
                     final DataStore store = runtime.getDataStore();
                     store.infoEntry(uri, base, "*/*", new DataInfo() {
                         public void list(URI id, String media, long lastModified)
