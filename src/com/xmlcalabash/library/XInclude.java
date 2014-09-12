@@ -57,9 +57,6 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
     private static final QName xi_fallback = new QName("http://www.w3.org/2001/XInclude","fallback");
     private static final QName _fixup_xml_base = new QName("", "fixup-xml-base");
     private static final QName _fixup_xml_lang = new QName("", "fixup-xml-lang");
-    private static final QName cx_mark_roots = new QName("cx",XProcConstants.NS_CALABASH_EX,"mark-roots");
-    private static final QName cx_copy_attributes = new QName("cx",XProcConstants.NS_CALABASH_EX,"copy-attributes");
-    private static final QName cx_root = new QName("cx",XProcConstants.NS_CALABASH_EX,"root");
     private static final QName _encoding = new QName("", "encoding");
     private static final QName _href = new QName("", "href");
     private static final QName _parse = new QName("", "parse");
@@ -102,24 +99,8 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
 
         fixupBase = getOption(_fixup_xml_base, false);
         fixupLang = getOption(_fixup_xml_lang, false);
-
-        String mark = getStep().getExtensionAttribute(cx_copy_attributes);
-        if (mark == null || "false".equals(mark)) {
-            // nop
-        } else if ("true".equals(mark)) {
-            copyAttributes = true;
-        } else {
-            throw new XProcException("On p:xinclude, cx:copy-attributes must be 'true' or 'false'.");
-        }
-
-        mark = getStep().getExtensionAttribute(cx_mark_roots);
-        if (mark == null || "false".equals(mark)) {
-            // nop
-        } else if ("true".equals(mark)) {
-            markRoots = true;
-        } else {
-            throw new XProcException("On p:xinclude, cx:mark-roots must be 'true' or 'false'.");
-        }
+        copyAttributes = true; // XInclude 1.1
+        markRoots = true; // XInclude 1.1
 
         XdmNode doc = source.read();
         XdmNode xdoc = expandXIncludes(doc);
@@ -419,7 +400,6 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                         boolean copy = !"".equals(child.getNodeName().getNamespaceURI()); // must be in a ns
                         copy = copy && !(XProcConstants.xml_base.equals(child.getNodeName()) && fixupBase);
                         copy = copy && !(XProcConstants.xml_lang.equals(child.getNodeName()) && fixupLang);
-                        copy = copy && !(cx_mark_roots.equals(child.getNodeName()) && markRoots);
 
                         if (copy) {
                             copied.add(child.getNodeName());
@@ -432,8 +412,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                 while (iter.hasNext()) {
                     XdmNode child = (XdmNode) iter.next();
                     if ((XProcConstants.xml_base.equals(child.getNodeName()) && fixupBase)
-                        || (XProcConstants.xml_lang.equals(child.getNodeName()) && fixupLang)
-                        || (cx_mark_roots.equals(child.getNodeName()) && markRoots)) {
+                        || (XProcConstants.xml_lang.equals(child.getNodeName()) && fixupLang)) {
                         // nop;
                     } else {
                         if (!copied.contains(child.getNodeName())) {
@@ -445,10 +424,6 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                 if (fixupBase) {
                     copied.add(XProcConstants.xml_base);
                     matcher.addAttribute(XProcConstants.xml_base, node.getBaseURI().toASCIIString());
-                }
-                if (markRoots) {
-                    copied.add(cx_root);
-                    matcher.addAttribute(cx_root, "true");
                 }
                 String lang = getLang(node);
                 if (fixupLang && lang != null) {
