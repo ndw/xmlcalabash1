@@ -57,6 +57,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
     private static final QName xi_fallback = new QName("http://www.w3.org/2001/XInclude","fallback");
     private static final QName _fixup_xml_base = new QName("", "fixup-xml-base");
     private static final QName _fixup_xml_lang = new QName("", "fixup-xml-lang");
+    private static final QName cx_trim = new QName("cx", XProcConstants.NS_CALABASH_EX, "trim");
     private static final QName _encoding = new QName("", "encoding");
     private static final QName _href = new QName("", "href");
     private static final QName _parse = new QName("", "parse");
@@ -70,8 +71,9 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
     private Stack<String> inside = new Stack<String> ();
     private boolean fixupBase = false;
     private boolean fixupLang = false;
-    private boolean markRoots = false;
     private boolean copyAttributes = false;
+    private boolean defaultTrimText = false;
+    private boolean trimText = false;
     private Exception mostRecentException = null;
 
     /**
@@ -100,7 +102,16 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
         fixupBase = getOption(_fixup_xml_base, false);
         fixupLang = getOption(_fixup_xml_lang, false);
         copyAttributes = true; // XInclude 1.1
-        markRoots = true; // XInclude 1.1
+
+        String trim = getStep().getExtensionAttribute(cx_trim);
+        if (trim == null || "false".equals(trim)) {
+            // nop
+        } else if ("true".equals(trim)) {
+            defaultTrimText = true;
+            trimText = true;
+        } else {
+            throw new XProcException("XInclude cx:trim must be 'true' or 'false'.");
+        }
 
         XdmNode doc = source.read();
         XdmNode xdoc = expandXIncludes(doc);
@@ -139,6 +150,16 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
             XPointer xpointer = null;
             XdmNode subdoc = null;
             boolean textfragok = runtime.getAllowXPointerOnText();
+
+            trimText = defaultTrimText;
+            String trim = node.getAttributeValue(cx_trim);
+            if (trim == null) {
+                // nop
+            } else if ("true".equals(trim) || "false".equals(trim)) {
+                trimText = "true".equals(trim);
+            } else {
+                throw new XProcException("XInclude cx:trim must be 'true' or 'false'.");
+            }
 
             /* HACK */
             if ("text".equals(parse) && node.getAttributeValue(_fragid) != null) {
@@ -199,7 +220,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                 }
 
                 for (XdmNode snode : nodes) {
-                    if ((fixupBase || fixupLang || markRoots || copyAttributes) && snode.getNodeKind() == XdmNodeKind.ELEMENT) {
+                    if ((fixupBase || fixupLang || copyAttributes) && snode.getNodeKind() == XdmNodeKind.ELEMENT) {
                         Fixup fixup = new Fixup(runtime,node);
                         snode = fixup.fixup(snode);
                     }
@@ -307,7 +328,11 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
             }
         }
 
-        return data;
+        if (trimText) {
+            return data.trim();
+        } else {
+            return data;
+        }
     }
 
     public XdmNode readXML(String href, String base) {
