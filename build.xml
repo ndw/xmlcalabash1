@@ -193,7 +193,7 @@
   <target name="jar" depends="compile">
     <taskdef resource="aQute/bnd/ant/taskdef.properties">
       <classpath>
-        <fileset dir="osgi" includes="bnd-*.jar"/>
+        <fileset dir="resources/osgi" includes="bnd-*.jar"/>
       </classpath>
     </taskdef>
     <bnd
@@ -201,7 +201,7 @@
       eclipse="false"
       failok="false"
       exceptions="true"
-      files="osgi/calabash.bnd"
+      files="resources/osgi/calabash.bnd"
       output="calabash.jar"/>
   </target>
 
