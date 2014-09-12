@@ -1,0 +1,48 @@
+<rdf:RDF xmlns:doap="http://usefulinc.com/ns/doap/#" xmlns:foaf="http://xmlns.com/foaf/0.1/" xmlns:gal="http://norman.walsh.name/rdf/gallery#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" xmlns:cc="http://web.resource.org/cc/" xmlns:t="http://norman.walsh.name/knows/taxonomy#" xmlns:cvs="http://nwalsh.com/rdf/cvs#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/">
+<rdf:Description rdf:about="http://norman.walsh.name/2013/10/12/xprocRDF">
+<rdf:type rdf:resource="http://norman.walsh.name/knows/taxonomy#Article"/>
+<dc:type rdf:resource="http://purl.org/dc/dcmitype/Text"/>
+<dc:format>text/html</dc:format>
+<dc:isFormatOf rdf:resource="http://norman.walsh.name/2013/10/12/xprocRDF.xml"/>
+<dcterms:created>2013-10-12T14:08:46-05:00</dcterms:created>
+<dcterms:issued>2013-10-12T14:10:12.743833-05:00</dcterms:issued>
+<dc:identifier>16,10</dc:identifier>
+<dc:title>XProc + RDF</dc:title>
+<dc:date>2013-10-12T14:08:46-05:00</dc:date>
+<dc:creator rdf:resource="http://norman.walsh.name/knows/who#norman-walsh"/>
+<dc:rights>
+Copyright © 2013 Norman Walsh. This work is licensed under the Creative Commons Attribution-NonCommercial License.
+</dc:rights>
+<cc:license rdf:resource="http://creativecommons.org/licenses/by-nc/2.0/"/>
+<rdf:type rdf:resource="http://web.resource.org/cc/Work"/>
+<dc:description>
+I finally got around to implementing some RDF extension steps for XML Calabash. I think they play nicely with semantics support in MarkLogic 7 and I'm really quite pleased with the results.
+</dc:description>
+<dc:subject rdf:resource="http://norman.walsh.name/knows/taxonomy#MarkLogic"/>
+<dc:subject rdf:resource="http://norman.walsh.name/knows/taxonomy#RDF"/>
+<dc:subject rdf:resource="http://norman.walsh.name/knows/taxonomy#XProc"/>
+<dc:subject rdf:resource="http://norman.walsh.name/knows/taxonomy#Calabash"/>
+</rdf:Description>
+<rdf:Description rdf:about="http://norman.walsh.name/2013/10/12/xprocRDF.xml">
+<dc:format>application/docbook+xml</dc:format>
+<dc:hasFormat rdf:resource="http://norman.walsh.name/2010/09/26/nymug"/>
+<dcterms:created>2013-10-12T14:08:46-05:00</dcterms:created>
+<dcterms:issued>2013-10-12T14:10:12.743833-05:00</dcterms:issued>
+<dc:identifier>16,10</dc:identifier>
+<dc:title>XProc + RDF</dc:title>
+<dc:date>2013-10-12T14:08:46-05:00</dc:date>
+<dc:creator rdf:resource="http://norman.walsh.name/knows/who#norman-walsh"/>
+<dc:rights>
+Copyright © 2013 Norman Walsh. This work is licensed under the Creative Commons Attribution-NonCommercial License.
+</dc:rights>
+<cc:license rdf:resource="http://creativecommons.org/licenses/by-nc/2.0/"/>
+<rdf:type rdf:resource="http://web.resource.org/cc/Work"/>
+<dc:description>
+I finally got around to implementing some RDF extension steps for XML Calabash. I think they play nicely with semantics support in MarkLogic 7 and I'm really quite pleased with the results.
+</dc:description>
+<dc:subject rdf:resource="http://norman.walsh.name/knows/taxonomy#MarkLogic"/>
+<dc:subject rdf:resource="http://norman.walsh.name/knows/taxonomy#RDF"/>
+<dc:subject rdf:resource="http://norman.walsh.name/knows/taxonomy#XProc"/>
+<dc:subject rdf:resource="http://norman.walsh.name/knows/taxonomy#Calabash"/>
+</rdf:Description>
+</rdf:RDF>

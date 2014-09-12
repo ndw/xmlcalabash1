@@ -1,0 +1,29 @@
+<?xml-stylesheet type="text/xsl" href="http://tests.xproc.org/style/testcase.xsl"?>
+<t:test xmlns:t="http://xproc.org/ns/testsuite">
+
+<t:title>Test p:xinclude 1.1 support</t:title>
+
+<t:pipeline>
+<p:declare-step version='1.0' name="main"
+                xmlns:p="http://www.w3.org/ns/xproc"
+                xmlns:c="http://www.w3.org/ns/xproc-step"
+                xmlns:cx="http://xmlcalabash.com/ns/extensions"
+                xmlns:err="http://www.w3.org/ns/xproc-error">
+<p:input port="source">
+  <p:document href="data/book.xml"/>
+</p:input>
+<p:output port="result"/>
+
+<p:xinclude/>
+</p:declare-step>
+
+</t:pipeline>
+
+<t:output port='result'
+          xmlns:c="http://www.w3.org/ns/xproc-step">
+<doc xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:ex="http://example.com/">
+   <chapter ex:root="true"/>
+</doc>
+</t:output>
+
+</t:test>

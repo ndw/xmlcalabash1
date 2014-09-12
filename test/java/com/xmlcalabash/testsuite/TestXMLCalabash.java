@@ -164,4 +164,9 @@ public class TestXMLCalabash {
     public void testUriInfo001() {
         suiteRunner.runTest(TESTROOT + "uri-info-001.xml");
     }
+
+    @Test
+    public void testXInclude001() {
+        suiteRunner.runTest(TESTROOT + "xinclude-001.xml");
+    }
 }
