@@ -398,8 +398,10 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                         XdmNode child = (XdmNode) iter.next();
 
                         boolean copy = !"".equals(child.getNodeName().getNamespaceURI()); // must be in a ns
-                        copy = copy && !(XProcConstants.xml_base.equals(child.getNodeName()) && fixupBase);
-                        copy = copy && !(XProcConstants.xml_lang.equals(child.getNodeName()) && fixupLang);
+                        // Can't copy xml:base it'll get relative URIs wrong and it's controlled separately
+                        copy = copy && !(XProcConstants.xml_base.equals(child.getNodeName()));
+                        // Don't copy xml:lang, it's controlled separately
+                        copy = copy && !(XProcConstants.xml_lang.equals(child.getNodeName()));
 
                         if (copy) {
                             copied.add(child.getNodeName());
