@@ -7,7 +7,7 @@
     </Console>
   </Appenders>
   <Loggers>
-    <Logger name="com.xmlcalabash" level="info">
+    <Logger name="com.xmlcalabash" level="info" additivity="false">
       <AppenderRef ref="Console"/>
     </Logger>
     <Root level="warn">
