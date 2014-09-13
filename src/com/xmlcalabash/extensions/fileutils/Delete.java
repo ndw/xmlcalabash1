@@ -117,7 +117,11 @@ public class Delete extends DefaultStep {
             public void list(URI id, String media, long lastModified)
                     throws IOException {
                 String entry = id.toASCIIString();
-                entries.addAll(getAllEntries(entry, entry));
+                try {
+                    entries.addAll(getAllEntries(entry, entry));
+                } catch (FileNotFoundException e) {
+                    // ignore it, we tried to recurse through a file that wasn't a directory
+                }
                 entries.add(entry);
             }
         });
