@@ -539,6 +539,8 @@ java -Xmx1024m -jar %INSTALL_PATH/calabash.jar "$@"
     <copy todir="${install.dir}/lib">
       <fileset file="lib/commons*.jar"/>
       <fileset file="lib/http*.jar"/>
+      <fileset file="lib/org.restlet*.jar"/>
+      <fileset file="lib/servlet-api.jar"/>
       <fileset file="lib/log4j*.jar"/>
       <fileset file="lib/slf4j*.jar"/>
       <fileset file="lib/jcl-over-slf4j*.jar"/>

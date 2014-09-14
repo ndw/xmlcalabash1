@@ -1,8 +1,10 @@
 package com.xmlcalabash.piperack;
 
+import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XPipeline;
 import net.sf.saxon.s9api.QName;
+import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 import org.restlet.representation.Variant;
@@ -21,15 +23,26 @@ public class Run extends BaseResource {
             return badRequest(Status.CLIENT_ERROR_NOT_FOUND, "no pipeline: " + pipelineUri(id), variant.getMediaType());
         }
 
-        HashMap<QName,String> options = convertForm(getQuery());
-
         PipelineConfiguration pipeconfig = getPipelines().get(id);
         XPipeline xpipeline = pipeconfig.pipeline;
 
-        for (QName name : options.keySet()) {
-            RuntimeValue value = new RuntimeValue(options.get(name), null, null);
-            xpipeline.passOption(name, value);
+        // Passing options was never documented and this is redundant with the behavior of posting
+        // to the base pipeline endoing, /pipelines/{id}
+        /*
+        if (MediaType.MULTIPART_FORM_DATA.equals(entity.getMediaType(), true)) {
+            try {
+                processMultipartForm(pipeconfig, entity, variant);
+            } catch (XProcException e) {
+                return badRequest(Status.CLIENT_ERROR_BAD_REQUEST, e.getMessage(), variant.getMediaType());
+            }
+        } else {
+            HashMap<QName,String> options = convertForm(getQuery());
+            for (QName name : options.keySet()) {
+                RuntimeValue value = new RuntimeValue(options.get(name), null, null);
+                xpipeline.passOption(name, value);
+            }
         }
+        */
 
         return runPipeline(id);
     }

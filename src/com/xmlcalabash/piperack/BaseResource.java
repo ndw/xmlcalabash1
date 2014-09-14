@@ -1,10 +1,14 @@
 package com.xmlcalabash.piperack;
 
 import com.xmlcalabash.core.XProcConfiguration;
+import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.io.ReadableData;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritableDocument;
+import com.xmlcalabash.model.DeclareStep;
+import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.model.Serialization;
 import com.xmlcalabash.runtime.XPipeline;
 import com.xmlcalabash.util.TreeWriter;
@@ -16,25 +20,25 @@ import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XsltCompiler;
 import net.sf.saxon.s9api.XsltExecutable;
 import net.sf.saxon.s9api.XsltTransformer;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.restlet.data.Form;
 import org.restlet.data.MediaType;
 import org.restlet.data.ServerInfo;
 import org.restlet.data.Status;
+import org.restlet.ext.fileupload.RestletFileUpload;
 import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
 import org.restlet.representation.Variant;
 import org.restlet.resource.ServerResource;
+import org.xml.sax.InputSource;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.net.URI;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.TimeZone;
-import java.util.Vector;
+import java.util.*;
 import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -331,6 +335,122 @@ public class BaseResource extends ServerResource {
             Representation result = new StringRepresentation(xml, MediaType.APPLICATION_XML);
             setStatus(Status.SUCCESS_OK);
             return result;
+        } catch (Exception e) {
+            throw new XProcException(e);
+        }
+    }
+
+    protected Representation processMultipartForm(PipelineConfiguration pipeconfig, Representation entity, Variant variant) {
+        XPipeline xpipeline = pipeconfig.pipeline;
+        XProcRuntime runtime = pipeconfig.runtime;
+
+        if (pipeconfig.ran) {
+            pipeconfig.reset();
+            xpipeline.reset();
+        }
+
+        String message = "";
+
+        HashMap<String,String> nameValuePairs = new HashMap<String,String> ();
+        HashMap<String,String> nsBindings = new HashMap<String,String> ();
+
+        DiskFileItemFactory factory = new DiskFileItemFactory();
+        factory.setSizeThreshold(100240);
+
+        RestletFileUpload upload = new RestletFileUpload(factory);
+        List<FileItem> items;
+        try {
+            items = upload.parseRequest(getRequest());
+
+            File file = null;
+            String filename = null;
+
+            for (final Iterator<FileItem> it = items.iterator(); it.hasNext(); ) {
+                FileItem fi = it.next();
+                String fieldName = fi.getFieldName();
+                String name = fi.getName();
+
+                if (name == null) {
+                    Matcher matcher = xmlnsRE.matcher(fieldName);
+                    if (matcher.matches()) {
+                        nsBindings.put(matcher.group(1), new String(fi.get(), "utf-8"));
+                    } else {
+                        nameValuePairs.put(fieldName, new String(fi.get(), "utf-8"));
+                    }
+                } else {
+                    String port = fieldName;
+
+                    if (pipeconfig.documentCount(port) == 0) {
+                        xpipeline.clearInputs(port);
+                    }
+                    pipeconfig.writeTo(port);
+
+                    try {
+                        XdmNode doc = null;
+                        MediaType m = new MediaType(fi.getContentType());
+
+                        if (isXml(m)) {
+                            doc = runtime.parse(new InputSource(fi.getInputStream()));
+                        } else {
+                            ReadablePipe pipe = null;
+                            pipe = new ReadableData(runtime, XProcConstants.c_data, fi.getInputStream(), fi.getContentType());
+                            doc = pipe.read();
+                        }
+                        xpipeline.writeTo(port, doc);
+                    } catch (Exception e) {
+                        throw new XProcException(e);
+                    }
+
+                    message += "Posted input to port '" + port + "'\n";
+                }
+            }
+
+
+            for (String fieldName : nameValuePairs.keySet()) {
+                QName qname = qnameFromForm(fieldName, nsBindings);
+                RuntimeValue value = new RuntimeValue(nameValuePairs.get(fieldName));
+                DeclareStep pipeline = xpipeline.getDeclareStep();
+
+                boolean option = false;
+                for (QName oname : pipeline.getOptions()) {
+                    option = option || oname.equals(qname);
+                }
+
+                // Note: We explicitly set option to true again so that the behavior of
+                // multipart forms is consistent with the behavior of non-form data.
+                // Maybe I should support posting parameters like this in both cases.
+
+                option = true;
+
+                if (option) {
+                    xpipeline.passOption(qname, value);
+                    pipeconfig.setGVOption(qname);
+                    message += "Option " + qname.getClarkName() + "=" + value.getString() + "\n";
+                } else {
+                    String port = null;
+                    if (port == null) {
+                        // Figure out the default parameter port
+                        for (String iport : xpipeline.getInputs()) {
+                            com.xmlcalabash.model.Input input = pipeline.getInput(iport);
+                            if (input.getParameterInput() && input.getPrimary()) {
+                                port = iport;
+                            }
+                        }
+                    }
+
+                    if (port == null) {
+                        throw new XProcException("No primary parameter input port.");
+                    }
+
+                    xpipeline.setParameter(port, qname, value);
+                    pipeconfig.setParameter(qname, value.getString());
+                    message += "Parameter " + qname.getClarkName() + "=" + value.getString() + "\n";
+                }
+            }
+
+            return okResponse(message, variant.getMediaType(), Status.SUCCESS_OK);
+        } catch (XProcException e) {
+            throw e;
         } catch (Exception e) {
             throw new XProcException(e);
         }
