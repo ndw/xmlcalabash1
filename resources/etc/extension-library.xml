@@ -54,7 +54,7 @@
 <p:declare-step type="cx:message">
    <p:input port="source" sequence="true"/>
    <p:output port="result" sequence="true"/>
-   <p:option name="log"/>
+   <p:option name="log" cx:type="error|warn|info|debug|trace"/>
    <p:option name="message" required="true"/>
 </p:declare-step>
 
