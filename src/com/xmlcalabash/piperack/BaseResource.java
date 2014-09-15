@@ -32,6 +32,8 @@ import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
 import org.restlet.representation.Variant;
 import org.restlet.resource.ServerResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 
 import java.io.ByteArrayOutputStream;
@@ -81,10 +83,14 @@ public class BaseResource extends ServerResource {
 
     protected static final Pattern xmlnsRE = Pattern.compile("^xmlns:(.+)$");
     protected static final Pattern qnameRE = Pattern.compile("^(.+):(.+)$");
+    protected static final Pattern portRE = Pattern.compile("(\\w+)@(.+)");
     protected static final HashSet<String> emptyExcludeNS = new HashSet<String> ();
+
+    protected Logger logger = null;
 
     public BaseResource() {
         super();
+        logger = LoggerFactory.getLogger(this.getClass());
         getVariants().add(new Variant(MediaType.TEXT_PLAIN));
         getVariants().add(new Variant(MediaType.APPLICATION_XML));
         getVariants().add(new Variant(MediaType.TEXT_HTML));
@@ -341,6 +347,8 @@ public class BaseResource extends ServerResource {
     }
 
     protected Representation processMultipartForm(PipelineConfiguration pipeconfig, Representation entity, Variant variant) {
+        String id = (String) getRequest().getAttributes().get("id");
+
         XPipeline xpipeline = pipeconfig.pipeline;
         XProcRuntime runtime = pipeconfig.runtime;
 
@@ -391,10 +399,12 @@ public class BaseResource extends ServerResource {
 
                         if (isXml(m)) {
                             doc = runtime.parse(new InputSource(fi.getInputStream()));
+                            logger.debug("Posting XML document to " + port + " for " + id);
                         } else {
                             ReadablePipe pipe = null;
                             pipe = new ReadableData(runtime, XProcConstants.c_data, fi.getInputStream(), fi.getContentType());
                             doc = pipe.read();
+                            logger.debug("Posting non-XML document to " + port + " for " + id);
                         }
                         xpipeline.writeTo(port, doc);
                     } catch (Exception e) {
@@ -407,27 +417,19 @@ public class BaseResource extends ServerResource {
 
 
             for (String fieldName : nameValuePairs.keySet()) {
-                QName qname = qnameFromForm(fieldName, nsBindings);
                 RuntimeValue value = new RuntimeValue(nameValuePairs.get(fieldName));
                 DeclareStep pipeline = xpipeline.getDeclareStep();
 
-                boolean option = false;
-                for (QName oname : pipeline.getOptions()) {
-                    option = option || oname.equals(qname);
-                }
+                if (fieldName.startsWith("-p")) {
+                    fieldName = fieldName.substring(2);
 
-                // Note: We explicitly set option to true again so that the behavior of
-                // multipart forms is consistent with the behavior of non-form data.
-                // Maybe I should support posting parameters like this in both cases.
+                    String port= null;
+                    Matcher matcher = portRE.matcher(fieldName);
+                    if (matcher.matches()) {
+                        port = matcher.group(1);
+                        fieldName = matcher.group(2);
+                    }
 
-                option = true;
-
-                if (option) {
-                    xpipeline.passOption(qname, value);
-                    pipeconfig.setGVOption(qname);
-                    message += "Option " + qname.getClarkName() + "=" + value.getString() + "\n";
-                } else {
-                    String port = null;
                     if (port == null) {
                         // Figure out the default parameter port
                         for (String iport : xpipeline.getInputs()) {
@@ -442,16 +444,30 @@ public class BaseResource extends ServerResource {
                         throw new XProcException("No primary parameter input port.");
                     }
 
+                    logger.debug("Parameter " + fieldName + "=" + value.getString() + " for " + id);
+
+                    QName qname = qnameFromForm(fieldName, nsBindings);
                     xpipeline.setParameter(port, qname, value);
                     pipeconfig.setParameter(qname, value.getString());
                     message += "Parameter " + qname.getClarkName() + "=" + value.getString() + "\n";
+                } else {
+                    logger.debug("Option " + fieldName + "=" + value.getString() + " for " + id);
+
+                    QName qname = qnameFromForm(fieldName, nsBindings);
+                    xpipeline.passOption(qname, value);
+                    pipeconfig.setGVOption(qname);
+                    message += "Option " + qname.getClarkName() + "=" + value.getString() + "\n";
                 }
             }
 
             return okResponse(message, variant.getMediaType(), Status.SUCCESS_OK);
         } catch (XProcException e) {
+            pipeconfig.reset();
+            xpipeline.reset();
             throw e;
         } catch (Exception e) {
+            pipeconfig.reset();
+            xpipeline.reset();
             throw new XProcException(e);
         }
     }
