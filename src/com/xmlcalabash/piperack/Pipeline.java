@@ -20,6 +20,7 @@ import org.restlet.representation.Variant;
 import org.xml.sax.InputSource;
 import java.net.URI;
 import java.util.*;
+import java.util.regex.Matcher;
 
 /**
  * Ths file is part of XMLCalabash.
@@ -186,22 +187,64 @@ public class Pipeline extends BaseResource {
 
                 if (isXml(entity.getMediaType())) {
                     doc = runtime.parse(new InputSource(entity.getStream()));
+                    logger.debug("Posting XML document to " + pipeconfig.definput + " for " + id);
                 } else {
                     ReadablePipe pipe = null;
                     pipe = new ReadableData(runtime, XProcConstants.c_data, entity.getStream(), entity.getMediaType().toString());
                     doc = pipe.read();
+                    logger.debug("Posting non-XML document to " + pipeconfig.definput + " for " + id);
                 }
 
                 xpipeline.writeTo(pipeconfig.definput, doc);
 
-                HashMap<QName, String> options = convertForm(getQuery());
+                HashMap<String, String> nsBindings = bindingsFromForm(getQuery());
+                HashMap<String, String> options = convertFormStrings(getQuery());
 
-                for (QName name : options.keySet()) {
-                    RuntimeValue value = new RuntimeValue(options.get(name), null, null);
-                    xpipeline.passOption(name, value);
+                DeclareStep pipeline = xpipeline.getDeclareStep();
+                for (String fieldName : options.keySet()) {
+                    RuntimeValue value = new RuntimeValue(options.get(fieldName));
+
+                    if (fieldName.startsWith("-p")) {
+                        fieldName = fieldName.substring(2);
+
+                        String port= null;
+                        Matcher matcher = portRE.matcher(fieldName);
+                        if (matcher.matches()) {
+                            port = matcher.group(1);
+                            fieldName = matcher.group(2);
+                        }
+
+                        if (port == null) {
+                            // Figure out the default parameter port
+                            for (String iport : xpipeline.getInputs()) {
+                                com.xmlcalabash.model.Input input = pipeline.getInput(iport);
+                                if (input.getParameterInput() && input.getPrimary()) {
+                                    port = iport;
+                                }
+                            }
+                        }
+
+                        if (port == null) {
+                            throw new XProcException("No primary parameter input port.");
+                        }
+
+                        logger.debug("Parameter " + fieldName + "=" + value.getString() + " for " + id);
+
+                        QName qname = qnameFromForm(fieldName, nsBindings);
+                        xpipeline.setParameter(port, qname, value);
+                        pipeconfig.setParameter(qname, value.getString());
+                    } else {
+                        logger.debug("Option " + fieldName + "=" + value.getString() + " for " + id);
+
+                        QName qname = qnameFromForm(fieldName, nsBindings);
+                        xpipeline.passOption(qname, value);
+                        pipeconfig.setGVOption(qname);
+                    }
                 }
             }
         } catch (Exception e) {
+            pipeconfig.reset();
+            xpipeline.reset();
             return badRequest(Status.CLIENT_ERROR_BAD_REQUEST, e.getMessage(), variant.getMediaType());
         }
 

@@ -183,6 +183,21 @@ public class BaseResource extends ServerResource {
         return converted;
     }
 
+    protected HashMap<String,String> convertFormStrings(Form params) {
+        HashMap<String,String> converted = new HashMap<String,String>();
+
+        for (String key : params.getNames()) {
+            Matcher matcher = xmlnsRE.matcher(key);
+            if (matcher.matches()) {
+                // nop
+            } else {
+                converted.put(key, params.getFirstValue(key));
+            }
+        }
+
+        return converted;
+    }
+
     protected String serialize(XdmNode doc, MediaType type) {
         XProcRuntime runtime = getGlobalRuntime();
         String format = "text";
@@ -416,9 +431,9 @@ public class BaseResource extends ServerResource {
             }
 
 
+            DeclareStep pipeline = xpipeline.getDeclareStep();
             for (String fieldName : nameValuePairs.keySet()) {
                 RuntimeValue value = new RuntimeValue(nameValuePairs.get(fieldName));
-                DeclareStep pipeline = xpipeline.getDeclareStep();
 
                 if (fieldName.startsWith("-p")) {
                     fieldName = fieldName.substring(2);
