@@ -134,6 +134,9 @@ public class Zip extends DefaultStep {
         while (source.moreDocuments()) {
             XdmNode doc = source.read();
             XdmNode root = S9apiUtils.getDocumentElement(doc);
+            if (root == null) {
+                throw new NullPointerException("XML document " + doc.getDocumentURI() + " has no root element.");
+            }
             srcManifest.put(root.getBaseURI().toASCIIString(), doc);
         }
 
