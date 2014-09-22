@@ -154,6 +154,9 @@
 <implementation type="cx:delta-xml"
 		class-name="com.xmlcalabash.extensions.DeltaXML"/>
 
+<implementation type="cx:ditaa"
+		class-name="com.xmlcalabash.extensions.DiTAA"/>
+
 <implementation type="cx:eval"
 		class-name="com.xmlcalabash.extensions.Eval"/>
 
@@ -180,6 +183,9 @@
 
 <implementation type="cx:pretty-print"
 		class-name="com.xmlcalabash.extensions.PrettyPrint"/>
+
+<implementation type="cx:plantuml"
+		class-name="com.xmlcalabash.extensions.PlantUML"/>
 
 <implementation type="cx:metadata-extractor"
 		class-name="com.xmlcalabash.extensions.MetadataExtractor"/>

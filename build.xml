@@ -232,6 +232,8 @@
       <src path="src"/>
       <!-- Optional features -->
       <exclude name="com/xmlcalabash/extensions/MetadataExtractor.java"/>
+      <exclude name="com/xmlcalabash/extensions/DiTAA.java"/>
+      <exclude name="com/xmlcalabash/extensions/PlantUML.java"/>
       <exclude name="com/xmlcalabash/extensions/DeltaXML.java"/>
       <exclude name="com/xmlcalabash/extensions/SendMail.java"/>
       <exclude name="com/xmlcalabash/extensions/xmlunit/Compare.java"/>
@@ -286,7 +288,7 @@
   </target>
 
   <target name="optional-features"
-          depends="compile-MetadataException,
+          depends="compile-MetadataException,compile-DiTAA,compile-PlantUML,
                    compile-XEP,compile-FOP,compile-AH,compile-SendMail,
                    compile-DeltaXML,compile-XMLUnit,compile-XCC,
                    compile-RDF"/>
@@ -339,6 +341,40 @@
       -->
       <src path="src"/>
       <include name="com/xmlcalabash/extensions/MetadataExtractor.java"/>
+    </javac>
+  </target>
+
+  <available classname="org.stathissideris.ascii2image.graphics.Diagram"
+             property="DiTAA.present">
+    <classpath refid="build.classpath"/>
+  </available>
+
+  <target name="compile-DiTAA" depends="init" if="DiTAA.present">
+    <javac destdir="${build.dir}"
+	   classpathref="build.classpath"
+           source="${j.ver}" target="${j.ver}" includeantruntime="false">
+      <!--
+      <compilerarg value="-Xlint"/>
+      -->
+      <src path="src"/>
+      <include name="com/xmlcalabash/extensions/DiTAA.java"/>
+    </javac>
+  </target>
+
+  <available classname="net.sourceforge.plantuml.SourceStringReader"
+             property="PlantUML.present">
+    <classpath refid="build.classpath"/>
+  </available>
+
+  <target name="compile-PlantUML" depends="init" if="PlantUML.present">
+    <javac destdir="${build.dir}"
+	   classpathref="build.classpath"
+           source="${j.ver}" target="${j.ver}" includeantruntime="false">
+      <!--
+      <compilerarg value="-Xlint"/>
+      -->
+      <src path="src"/>
+      <include name="com/xmlcalabash/extensions/PlantUML.java"/>
     </javac>
   </target>
 
