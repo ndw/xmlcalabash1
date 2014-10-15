@@ -86,7 +86,6 @@ public class SystemProperty extends XProcExtensionFunctionDefinition {
                       lexicalQName,
                       false,
                       false,
-                      xPathContext.getConfiguration().getNameChecker(),
                       staticContext.getNamespaceResolver());
              } catch (XPathException e) {
                  if (e.getErrorCodeLocalPart()==null || e.getErrorCodeLocalPart().equals("FOCA0002")

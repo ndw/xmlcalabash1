@@ -72,7 +72,7 @@ public class PipeLogger {
             return;
         }
 
-        serializer = new Serializer();
+        serializer = runtime.getProcessor().newSerializer();
         serializer.setOutputProperty(Serializer.Property.METHOD, "xml");
         serializer.setOutputProperty(Serializer.Property.ENCODING, "utf-8");
         serializer.setOutputProperty(Serializer.Property.OMIT_XML_DECLARATION, "yes");

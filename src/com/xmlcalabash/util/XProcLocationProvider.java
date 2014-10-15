@@ -42,11 +42,18 @@ public class XProcLocationProvider implements SourceLocationProvider {
         }
     }
 
-    public int getLineNumber(long locationId) {
+    @Override
+    public String getSystemId(int i) {
+        return null;
+    }
+
+    @Override
+    public int getLineNumber(int i) {
         return 0;
     }
 
-    public int getColumnNumber(long locationId) {
+    @Override
+    public int getColumnNumber(int i) {
         return 0;
     }
 }

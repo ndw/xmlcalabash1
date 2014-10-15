@@ -1006,7 +1006,7 @@ public class XProcRuntime {
                 transformer.setDestination(result);
                 transformer.transform();
 
-                Serializer serializer = new Serializer();
+                Serializer serializer = getProcessor().newSerializer();
                 serializer.setOutputProperty(Serializer.Property.INDENT, "yes");
 
                 OutputStream outstr = null;

@@ -107,7 +107,6 @@ public class StepAvailable extends XProcExtensionFunctionDefinition {
                      lexicalQName,
                      false,
                      false,
-                     xPathContext.getConfiguration().getNameChecker(),
                      staticContext.getNamespaceResolver());
             } catch (XPathException e) {
                 // FIXME: bad formatting

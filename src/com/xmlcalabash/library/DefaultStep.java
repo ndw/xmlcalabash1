@@ -165,7 +165,7 @@ public class DefaultStep implements XProcStep {
     }
 
     public Serializer makeSerializer() {
-        Serializer serializer = new Serializer();
+        Serializer serializer = runtime.getProcessor().newSerializer();
 
         if (options == null) {
             return serializer;

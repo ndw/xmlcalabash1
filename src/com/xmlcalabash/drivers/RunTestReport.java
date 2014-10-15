@@ -534,7 +534,7 @@ public class RunTestReport {
 
     public String serializeAsXML(XdmNode node) {
         try {
-            Serializer serializer = new Serializer();
+            Serializer serializer = runtime.getProcessor().newSerializer();
 
             serializer.setOutputProperty(Serializer.Property.BYTE_ORDER_MARK, "no");
             serializer.setOutputProperty(Serializer.Property.ENCODING, "utf-8");

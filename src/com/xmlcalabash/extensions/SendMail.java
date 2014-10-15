@@ -164,7 +164,7 @@ public class SendMail extends DefaultStep {
                     String contentType = null;
                     if (html) {
                         ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                        Serializer serializer = new Serializer();
+                        Serializer serializer = runtime.getProcessor().newSerializer();
                         serializer.setOutputProperty(Serializer.Property.ENCODING, "utf-8");
                         serializer.setOutputProperty(Serializer.Property.INDENT, "no");
                         serializer.setOutputProperty(Serializer.Property.OMIT_XML_DECLARATION, "yes");

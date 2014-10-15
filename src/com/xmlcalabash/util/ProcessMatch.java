@@ -73,10 +73,12 @@ public class ProcessMatch extends TreeWriter {
         XdmNode node = match.getNode();
         String expr = match.getString();
 
+        System.err.println("BASE: " + node.getBaseURI());
+
         try {
             XPathEvaluator xeval = new XPathEvaluator(saxonConfig);
             NamespaceResolver resolver = new MatchingNamespaceResolver(match.getNamespaceBindings());
-            xeval.setNamespaceResolver(resolver);
+            xeval.getStaticContext().setNamespaceResolver(resolver);
 
             matcher = xeval.createPattern(match.getString());
 
@@ -129,7 +131,7 @@ public class ProcessMatch extends TreeWriter {
         try {
             XPathEvaluator xeval = new XPathEvaluator(saxonConfig);
             NamespaceResolver resolver = new MatchingNamespaceResolver(match.getNamespaceBindings());
-            xeval.setNamespaceResolver(resolver);
+            xeval.getStaticContext().setNamespaceResolver(resolver);
 
             matcher = xeval.createPattern(match.getString());
 

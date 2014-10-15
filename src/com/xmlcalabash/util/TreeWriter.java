@@ -82,14 +82,14 @@ public class TreeWriter {
      */
     public TreeWriter(XProcRuntime xproc) {
         runtime = xproc;
+        pool = xproc.getProcessor().getUnderlyingConfiguration().getNamePool();
         controller = new Controller(runtime.getProcessor().getUnderlyingConfiguration());
-        pool = controller.getNamePool();
         xLocationProvider = new XProcLocationProvider();
     }
 
     public TreeWriter(Processor proc) {
+        pool = proc.getUnderlyingConfiguration().getNamePool();
         controller = new Controller(proc.getUnderlyingConfiguration());
-        pool = controller.getNamePool();
         xLocationProvider = new XProcLocationProvider();
 
     }
@@ -234,6 +234,7 @@ public class TreeWriter {
 
         // Hack. See comment at top of file
         if (!"".equals(overrideBaseURI.toASCIIString())) {
+            System.err.println("Override base uri: " + overrideBaseURI.toASCIIString());
             receiver.setSystemId(overrideBaseURI.toASCIIString());
         }
 
@@ -256,6 +257,8 @@ public class TreeWriter {
         } else {
             locId = xLocationProvider.allocateLocation(sysId);
         }
+
+        System.err.println(elemName + ": " + sysId + ": " + locId);
 
         try {
             receiver.startElement(elemName, typeCode, locId, 0);

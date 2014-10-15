@@ -67,14 +67,14 @@ public class DeltaXML extends DefaultStep {
             // FIXME: Grotesque hackery!
 
             StringWriter sw = new StringWriter();
-            Serializer serializer = new Serializer();
+            Serializer serializer = runtime.getProcessor().newSerializer();
             serializer.setOutputWriter(sw);
             S9apiUtils.serialize(runtime, docA, serializer);
 
             String docAxml = sw.toString();
 
             sw = new StringWriter();
-            serializer = new Serializer();
+            serializer = runtime.getProcessor().newSerializer();
             serializer.setOutputWriter(sw);
             S9apiUtils.serialize(runtime, docB, serializer);
 

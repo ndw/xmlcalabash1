@@ -88,7 +88,7 @@ public class NodeToBytes {
     private static void storeXML(XProcRuntime runtime, XdmNode doc, OutputStream stream) {
         try {
             try {
-                Serializer serializer = new Serializer();
+                Serializer serializer = runtime.getProcessor().newSerializer();
                 serializer.setOutputProperty(Serializer.Property.ENCODING, "utf-8");
                 serializer.setOutputProperty(Serializer.Property.INDENT, "no");
                 serializer.setOutputProperty(Serializer.Property.OMIT_XML_DECLARATION, "yes");
