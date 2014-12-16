@@ -120,7 +120,7 @@
   </available>
 
   <available property="saxon96"
-             classname="net.sf.saxon.Configuration.getNameChecker">
+             classname="net.sf.saxon.expr.Component">
     <classpath refid="build.classpath"/>
   </available>
 
@@ -193,8 +193,8 @@
     </loadfile>
   </target>
 
-  <target name="saxon-version" depends="saxon95,saxon96">
-    <echo>Currently using saxon ${saxon-version}</echo>
+  <target name="saxon-version" depends="saxon96,saxon95">
+    <echo>Currently using saxon ${saxon-version} (${saxon-version-short})</echo>
     <echo>Currently using java ${java.version}</echo>
   </target>
 
