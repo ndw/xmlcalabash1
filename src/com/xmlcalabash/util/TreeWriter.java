@@ -234,7 +234,6 @@ public class TreeWriter {
 
         // Hack. See comment at top of file
         if (!"".equals(overrideBaseURI.toASCIIString())) {
-            System.err.println("Override base uri: " + overrideBaseURI.toASCIIString());
             receiver.setSystemId(overrideBaseURI.toASCIIString());
         }
 
@@ -257,8 +256,6 @@ public class TreeWriter {
         } else {
             locId = xLocationProvider.allocateLocation(sysId);
         }
-
-        System.err.println(elemName + ": " + sysId + ": " + locId);
 
         try {
             receiver.startElement(elemName, typeCode, locId, 0);

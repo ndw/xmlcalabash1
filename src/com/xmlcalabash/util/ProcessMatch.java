@@ -73,8 +73,6 @@ public class ProcessMatch extends TreeWriter {
         XdmNode node = match.getNode();
         String expr = match.getString();
 
-        System.err.println("BASE: " + node.getBaseURI());
-
         try {
             XPathEvaluator xeval = new XPathEvaluator(saxonConfig);
             NamespaceResolver resolver = new MatchingNamespaceResolver(match.getNamespaceBindings());
