@@ -26,7 +26,13 @@
   <property name="dist.dir" value="dist"/>
   <property name="build.dir" value="out/production/Calabash"/>
   <property name="test.dir" value="out/test/Calabash"/>
-  <property name="docs.repo.dir" value="../docs-calabash"/>
+
+  <!-- Chicken and egg problem. New plan: require updated docs to be
+       published before release. That was probably the old plan too,
+       but now it's going to be enforced.
+  -->
+  <property name="docs.baseuri"
+            value="https://ndw.github.io/xmlcalabash1-docs/download/"/>
 
   <!-- where my Saxon EE license lives -->
   <property name="license.dir" value="/home/ndw/java"/>
@@ -113,6 +119,11 @@
     <classpath refid="build.classpath"/>
   </available>
 
+  <available property="saxon96"
+             classname="net.sf.saxon.Configuration.getNameChecker">
+    <classpath refid="build.classpath"/>
+  </available>
+
   <pathconvert property="run.classpath" refid="build.classpath" pathsep=" ">
     <map from="${basedir}/" to=""/>
   </pathconvert>
@@ -125,6 +136,8 @@
     <property name="dist-version" value="${version}-${saxon-version-short}"/>
     <property name="install.dir" value="${dist.dir}/calabash-${dist-version}"/>
     <property name="docs.install.dir" value="${dist.dir}/calabash-${version}"/>
+    <available property="docs.present"
+               file="${docs.install.dir}/docs/reference/index.html"/>
   </target>
 
   <target name="ant-version">
@@ -159,18 +172,28 @@
     </loadfile>
   </target>
 
-  <target name="saxon94" if="saxon94" unless="saxon95">
-    <property name="saxon-version-short" value="94"/>
-    <property name="saxon-version" value="9.4.0.7"/>
+  <target name="saxon96" if="saxon96">
+    <property name="saxon-version-short" value="96"/>
+    <tempfile property="saxon-version-tmp-file"
+              destdir="${java.io.tmpdir}"
+              prefix="saxon.version"
+              suffix=".tmp"
+              deleteonexit="true"/>
+    <java classname="net.sf.saxon.Version"
+          classpathref="build.classpath"
+          output="${saxon-version-tmp-file}"/>
+    <loadfile property="saxon-version"
+              srcFile="${saxon-version-tmp-file}">
+      <filterchain>
+        <tokenfilter>
+          <stringtokenizer suppressdelims="true"/>
+          <containsregex pattern="\d+\.\d+\.\d+(\.\d+)?"/>
+        </tokenfilter>
+      </filterchain>
+    </loadfile>
   </target>
 
-  <target name="saxon93" unless="saxon94">
-    <property name="saxon-version-short" value="93"/>
-    <property name="saxon-version" value="9.3.0"/>
-  </target>
-
-  <target name="saxon-version" depends="saxon93,saxon94,saxon95">
-
+  <target name="saxon-version" depends="saxon95,saxon96">
     <echo>Currently using saxon ${saxon-version}</echo>
     <echo>Currently using java ${java.version}</echo>
   </target>
@@ -489,24 +512,21 @@
     </javac>
   </target>
 
-  <available property="docs.present"
-             file="${docs.repo.dir}/build/index.html"/>
+  <target name="docs.missing" depends="init" unless="docs.present">
+    <mkdir dir="${docs.install.dir}"/>
+    <mkdir dir="${docs.install.dir}/docs"/>
 
-  <target name="docs.missing" unless="docs.present">
-    <echo>You must run the 'dist' target on the 'docs-calabash1' repo first.</echo>
+    <get src="${docs.baseuri}/xmlcalabash-ref-${version}.zip"
+         dest="${docs.install.dir}/docs"/>
+    <unzip src="${docs.install.dir}/docs/xmlcalabash-ref-${version}.zip"
+           dest="${docs.install.dir}/docs"/>
+    <delete file="${docs.install.dir}/docs/xmlcalabash-ref-${version}.zip"/>
+    <move file="${docs.install.dir}/docs/xmlcalabash-ref-${version}"
+          tofile="${docs.install.dir}/docs/reference"/>
   </target>
 
   <target name="docs-dist" depends="init,docs.missing" if="dist.ready">
-    <mkdir dir="${docs.install.dir}"/>
-    <mkdir dir="${docs.install.dir}/docs"/>
     <mkdir dir="${docs.install.dir}/docs/notices"/>
-    <mkdir dir="${docs.install.dir}/docs/reference"/>
-    <mkdir dir="${docs.install.dir}/docs/reference/css"/>
-    <mkdir dir="${docs.install.dir}/docs/reference/js"/>
-    <mkdir dir="${docs.install.dir}/docs/reference/img"/>
-    <copy todir="${docs.install.dir}/docs/reference">
-      <fileset dir="${docs.repo.dir}/build"/>
-    </copy>
 
     <copy todir="${docs.install.dir}/docs/notices">
       <fileset file="resources/notices/**"/>
@@ -514,13 +534,10 @@
     <copy todir="${docs.install.dir}">
       <fileset file="resources/README"/>
     </copy>
-
-    <delete dir="docs/build"/>
   </target>
 
   <condition property="dist.ready">
     <and>
-      <istrue value="${docs.present}"/>
       <istrue value="${izpack.present}"/>
     </and>
   </condition>
