@@ -18,7 +18,7 @@
   <property name="version" value="${version.major}.${version.minor}.${version.release}"/>
 
   <!-- pick your favorite java version -->
-  <property name="j.ver" value="1.7"/>
+  <property name="j.ver" value="1.6"/>
 
   <!-- so I can point to a directory containing commercial jars -->
   <property name="lib.dir" value="lib"/>
@@ -119,6 +119,11 @@
     <classpath refid="build.classpath"/>
   </available>
 
+  <available property="saxon96"
+             classname="net.sf.saxon.Configuration.getNameChecker">
+    <classpath refid="build.classpath"/>
+  </available>
+
   <pathconvert property="run.classpath" refid="build.classpath" pathsep=" ">
     <map from="${basedir}/" to=""/>
   </pathconvert>
@@ -167,18 +172,28 @@
     </loadfile>
   </target>
 
-  <target name="saxon94" if="saxon94" unless="saxon95">
-    <property name="saxon-version-short" value="94"/>
-    <property name="saxon-version" value="9.4.0.7"/>
+  <target name="saxon96" if="saxon96">
+    <property name="saxon-version-short" value="96"/>
+    <tempfile property="saxon-version-tmp-file"
+              destdir="${java.io.tmpdir}"
+              prefix="saxon.version"
+              suffix=".tmp"
+              deleteonexit="true"/>
+    <java classname="net.sf.saxon.Version"
+          classpathref="build.classpath"
+          output="${saxon-version-tmp-file}"/>
+    <loadfile property="saxon-version"
+              srcFile="${saxon-version-tmp-file}">
+      <filterchain>
+        <tokenfilter>
+          <stringtokenizer suppressdelims="true"/>
+          <containsregex pattern="\d+\.\d+\.\d+(\.\d+)?"/>
+        </tokenfilter>
+      </filterchain>
+    </loadfile>
   </target>
 
-  <target name="saxon93" unless="saxon94">
-    <property name="saxon-version-short" value="93"/>
-    <property name="saxon-version" value="9.3.0"/>
-  </target>
-
-  <target name="saxon-version" depends="saxon93,saxon94,saxon95">
-
+  <target name="saxon-version" depends="saxon95,saxon96">
     <echo>Currently using saxon ${saxon-version}</echo>
     <echo>Currently using java ${java.version}</echo>
   </target>
