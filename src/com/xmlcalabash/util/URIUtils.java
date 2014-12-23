@@ -21,6 +21,7 @@
 package com.xmlcalabash.util;
 
 import com.xmlcalabash.core.XProcException;
+
 import java.io.UnsupportedEncodingException;
 import java.io.File;
 import java.net.URI;
@@ -99,5 +100,11 @@ public class URIUtils {
     public static URI makeAbsolute(String localFn) {
         URI cwd = cwdAsURI();
         return cwd.resolve(encode(localFn));
+    }
+    
+    public static File toFile(URI uri) {
+        if (!"file".equalsIgnoreCase(uri.getScheme()))
+            throw new IllegalStateException("Expecting a file URI");
+        return new File((uri.getAuthority() != null && uri.getAuthority().length() > 0)?"//"+uri.getAuthority()+uri.getPath():uri.getPath());
     }
 }

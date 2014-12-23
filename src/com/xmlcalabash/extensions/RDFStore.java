@@ -8,9 +8,12 @@ import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.util.Base64;
 import com.xmlcalabash.util.TreeWriter;
+import com.xmlcalabash.util.URIUtils;
+
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
+
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RiotReader;
 import org.apache.jena.riot.lang.LangRIOT;
@@ -105,7 +108,7 @@ public class RDFStore extends RDFStep {
                 baos = new ByteArrayOutputStream();
                 outstr = baos;
             } else if (href.getScheme().equals("file")) {
-                File output = new File(href);
+                File output = URIUtils.toFile(href);
 
                 File path = new File(output.getParent());
                 if (!path.isDirectory()) {
