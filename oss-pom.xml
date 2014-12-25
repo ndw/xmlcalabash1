@@ -223,6 +223,20 @@
     </dependency>
 
     <dependency>
+      <artifactId>jcl-over-slf4j</artifactId>
+      <groupId>org.slf4j</groupId>
+      <version>1.7.7</version>
+    </dependency>
+
+    <!-- Needed by Jena -->
+    <dependency>
+      <artifactId>log4j-over-slf4j</artifactId>
+      <groupId>org.slf4j</groupId>
+      <version>1.7.7</version>
+      <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
       <artifactId>log4j-core</artifactId>
       <groupId>org.apache.logging.log4j</groupId>
       <version>2.0.2</version>
@@ -253,6 +267,59 @@
           <artifactId>xml-apis</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+
+    <dependency>
+      <artifactId>javax.servlet-api</artifactId>
+      <groupId>javax.servlet</groupId>
+      <version>3.1.0</version>
+      <scope>provided</scope>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <artifactId>jena-arq</artifactId>
+      <groupId>org.apache.jena</groupId>
+      <version>2.12.1</version>
+      <optional>true</optional>
+      <exclusions>
+        <exclusion>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-log4j12</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <artifactId>semargl-rdfa</artifactId>
+      <groupId>org.semarglproject</groupId>
+      <version>0.6.1</version>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <artifactId>org.restlet</artifactId>
+      <groupId>org.restlet.jee</groupId>
+      <version>2.2.2</version>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <artifactId>org.restlet.ext.fileupload</artifactId>
+      <groupId>org.restlet.jee</groupId>
+      <version>2.2.2</version>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <artifactId>org.restlet.ext.slf4j</artifactId>
+      <groupId>org.restlet.jee</groupId>
+      <version>2.2.2</version>
+      <optional>true</optional>
     </dependency>
   </dependencies>
 
@@ -363,6 +430,13 @@
                 <exclude>com/xmlcalabash/extensions/marklogic/XCCAdhocQuery.java</exclude>
                 <exclude>com/xmlcalabash/extensions/marklogic/XCCInsertDocument.java</exclude>
                 <exclude>com/xmlcalabash/extensions/marklogic/XCCInvokeModule.java</exclude>
+
+                <!-- Only for debugging -->
+                <exclude>com/xmlcalabash/drivers/SaxonProblem.java</exclude>
+
+                <!-- These depend on some unknown version of PlantUML -->
+                <exclude>com/xmlcalabash/extensions/DiTAA.java</exclude>
+                <exclude>com/xmlcalabash/extensions/PlantUML.java</exclude>
               </excludes>
             </configuration>
           </execution>
@@ -414,4 +488,11 @@
       </plugin>
     </plugins>
   </build>
+
+  <repositories>
+    <repository>
+      <id>restlet</id>
+      <url>https://repository.sonatype.org/content/repositories/restlet/</url>
+    </repository>
+  </repositories>
 </project>
