@@ -105,6 +105,7 @@ import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.StepErrorListener;
 import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.util.URIUtils;
+import com.xmlcalabash.util.XProcSystemPropertySet;
 import com.xmlcalabash.util.XProcURIResolver;
 
 import static java.lang.String.format;
@@ -145,6 +146,7 @@ public class XProcRuntime {
     private XProcConfigurer configurer = null;
     private String htmlParser = null;
     private Vector<XProcExtensionFunctionDefinition> exFuncs = new Vector<XProcExtensionFunctionDefinition>();
+    private Vector<XProcSystemPropertySet> systemPropertySets = new Vector<XProcSystemPropertySet>();
 
     private Output profile = null;
     private Hashtable<XStep,Calendar> profileHash = null;
@@ -246,6 +248,7 @@ public class XProcRuntime {
         }
 
         htmlParser = config.htmlParser;
+        addSystemPropertySet(XProcSystemPropertySet.BUILTIN);
 
         reset();
     }
@@ -1043,5 +1046,39 @@ public class XProcRuntime {
                 throw new XProcException(ioe);
             }
         }
+    }
+
+    /**
+     * Registers an {@code XProcSystemPropertySet}. It will be consulted whenever the <a href="http://www.w3.org/TR/xproc/#f.system-property">{@code p:system-property}</a> function is evaluated.
+     *
+     * <p>The {@linkplain com.xmlcalabash.util.XProcSystemPropertySet#BUILTIN built-in} {@code XProcSystemPropertySet} is added automatically. Other property sets may be added with this method by applications using XML Calabash.</p>
+     *
+     * @see #getSystemProperty
+     */
+    public void addSystemPropertySet(XProcSystemPropertySet systemPropertySet) {
+        systemPropertySets.add(systemPropertySet);
+    }
+
+    /**
+     * Looks up a <a href="http://www.w3.org/TR/xproc/#f.system-property">system property</a> by the given name. If no such system property is found, this method returns {@code null}.
+     *
+     * <p>This method consults {@linkplain com.xmlcalabash.util.XProcSystemPropertySet#BUILTIN the built-in} {@link com.xmlcalabash.util.XProcSystemPropertySet}, and any other {@code XProcSystemPropertySet}s that have been {@linkplain #addSystemPropertySet registered}.</p>
+     *
+     * @see #addSystemPropertySet
+     * @see com.xmlcalabash.util.XProcSystemPropertySet#systemProperty
+     * @param propertyName the name of the system property to look up
+     * @return the string value of that system property, or {@code null}
+     * @throws XProcException if any error occurs
+     */
+    public String getSystemProperty(QName propertyName) throws XProcException {
+        synchronized (systemPropertySets) {
+            for (XProcSystemPropertySet propSet : systemPropertySets) {
+                String value = propSet.systemProperty(this, propertyName);
+                if (value != null)
+                    return value;
+            }
+        }
+
+        return null;
     }
 }
