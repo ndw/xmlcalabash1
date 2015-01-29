@@ -90,7 +90,9 @@ public class XPipelineCall extends XAtomicStep {
             }
         }
 
+        runtime.start(this);
         newstep.run();
+        runtime.finish(this);
 
     }
 }
