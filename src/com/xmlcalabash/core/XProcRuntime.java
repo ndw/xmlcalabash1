@@ -963,6 +963,8 @@ public class XProcRuntime {
         String name = step.getType().getClarkName();
         profileWriter.addAttribute(profileType, name);
         profileWriter.addAttribute(profileName, step.getStep().getName());
+        profileWriter.addAttribute(new QName("", "xpl-href"), ""+step.getStep().xplFile());
+        profileWriter.addAttribute(new QName("", "xpl-line"), ""+step.getStep().xplLine());
         profileWriter.startContent();
     }
 
