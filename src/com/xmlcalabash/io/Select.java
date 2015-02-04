@@ -156,6 +156,10 @@ public class Select implements ReadablePipe {
         reader = step;
     }
 
+    public void setNames(String stepName, String portName) {
+        // nop;
+    }
+
     public XdmNode read () throws SaxonApiException {
         if (!initialized) {
             readSource();

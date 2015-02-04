@@ -42,6 +42,8 @@ public class Pipe implements ReadablePipe, WritablePipe {
     private boolean writeSeqOk = false;
     private Step writer = null;
     private Step reader = null;
+    private String stepName = null;
+    private String portName = null;
 
     /** Creates a new instance of Pipe */
     public Pipe(XProcRuntime xproc) {
@@ -64,6 +66,12 @@ public class Pipe implements ReadablePipe, WritablePipe {
 
     public void setWriter(Step step) {
         writer  = step;
+    }
+
+    // These are for debugging...
+    public void setNames(String stepName, String portName) {
+        this.stepName = stepName;
+        this.portName = portName;
     }
 
     public void canWriteSequence(boolean sequence) {
@@ -113,7 +121,7 @@ public class Pipe implements ReadablePipe, WritablePipe {
 
     public XdmNode read () {
         if (pos > 0 && !readSeqOk) {
-            throw XProcException.dynamicError(6);
+            dynamicError(6);
         }
 
         XdmNode doc = documents.get(pos++);
@@ -134,12 +142,21 @@ public class Pipe implements ReadablePipe, WritablePipe {
         documents.add(doc);
 
         if (documents.size() > 1 && !writeSeqOk) {
-            throw XProcException.dynamicError(7);
+            dynamicError(7);
         }
     }
 
     public String toString() {
         return "[pipe #" + id + "] (" + documents + ")";
+    }
+
+    private void dynamicError(int errno) {
+        String msg = null;
+        if (stepName != null) {
+            msg = "Reading " + portName + " on " + stepName;
+        }
+        throw XProcException.dynamicError(errno, (String) msg);
+
     }
 }
 

@@ -32,6 +32,7 @@ public interface ReadablePipe {
     public boolean readSequence();
     public XdmNode read() throws SaxonApiException;
     public void setReader(Step step);
+    public void setNames(String stepName, String portName);
     public void resetReader();
     public boolean moreDocuments();
     public boolean closed();

@@ -1083,6 +1083,10 @@ public class XProcConfiguration {
             // I don't care
         }
 
+        public void setNames(String stepName, String portName) {
+            // nop;
+        }
+
         public void resetReader() {
             read = false;
         }

@@ -263,6 +263,10 @@ public class ReadableData implements ReadablePipe {
         reader = step;
     }
 
+    public void setNames(String stepName, String portName) {
+        // nop;
+    }
+
     public boolean moreDocuments() {
         DocumentSequence docs = ensureDocuments();
         return pos < docs.size();

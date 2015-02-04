@@ -103,6 +103,10 @@ public class ReadableDocument implements ReadablePipe {
         reader = step;
     }
 
+    public void setNames(String stepName, String portName) {
+        // nop;
+    }
+
     public boolean moreDocuments() {
         if (!readDoc) {
             readDoc();
