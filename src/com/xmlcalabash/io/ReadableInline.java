@@ -121,6 +121,10 @@ public class ReadableInline implements ReadablePipe {
         reader = step;
     }
 
+    public void setNames(String stepName, String portName) {
+        // nop;
+    }
+
     public XdmNode read() throws SaxonApiException {
         XdmNode doc = documents.get(pos++);
 

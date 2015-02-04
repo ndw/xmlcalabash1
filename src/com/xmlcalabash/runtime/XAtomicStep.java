@@ -114,6 +114,7 @@ public class XAtomicStep extends XStep {
             }
 
             pipe = start.getBinding(pnbinding.getStep(), pnbinding.getPort());
+            pipe.setNames(pnbinding.getStep(), pnbinding.getPort());
         } else if (binding.getBindingType() == Binding.INLINE_BINDING) {
             InlineBinding ibinding = (InlineBinding) binding;
             pipe = new ReadableInline(runtime, ibinding.nodes(), ibinding.getExcludedNamespaces());

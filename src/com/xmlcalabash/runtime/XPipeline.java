@@ -244,7 +244,7 @@ public class XPipeline extends XCompoundStep {
                     for (ReadablePipe reader : inputs.get(port)) {
                         // Check for the case where there are no documents, but a sequence is not allowed
                         if (!reader.moreDocuments() && !pipe.writeSequence()) {
-                            throw XProcException.dynamicError(7);
+                            throw XProcException.dynamicError(7, "Reading " + wport + " on " + name);
                         }
 
 
