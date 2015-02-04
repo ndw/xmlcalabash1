@@ -152,7 +152,10 @@ public class XProcRuntime {
     private QName profileProfile = new QName("http://xmlcalabash.com/ns/profile", "profile");
     private QName profileType = new QName("", "type");
     private QName profileName = new QName("", "name");
+    private QName profileHref = new QName("", "href");
+    private QName profileLine = new QName("", "line");
     private QName profileTime = new QName("http://xmlcalabash.com/ns/profile", "time");
+    private String p_declare_step_clark = XProcConstants.p_declare_step.getClarkName();
 
     public XProcRuntime(XProcConfiguration config) {
         this.config = config;
@@ -961,8 +964,19 @@ public class XProcRuntime {
         }
 
         String name = step.getType().getClarkName();
-        profileWriter.addAttribute(profileType, name);
+        if (p_declare_step_clark.equals(name)
+                && step.getType() != null
+                && step.getStep().getDeclaredType() != null) {
+            profileWriter.addAttribute(profileType, step.getStep().getDeclaredType().getClarkName());
+        } else {
+            profileWriter.addAttribute(profileType, name);
+        }
+
         profileWriter.addAttribute(profileName, step.getStep().getName());
+        if (step.getStep().getNode() != null) {
+            profileWriter.addAttribute(profileHref, step.getStep().xplFile());
+            profileWriter.addAttribute(profileLine, ""+step.getStep().xplLine());
+        }
         profileWriter.startContent();
     }
 
