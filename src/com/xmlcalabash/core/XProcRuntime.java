@@ -156,6 +156,7 @@ public class XProcRuntime {
     private QName profileLine = new QName("", "line");
     private QName profileTime = new QName("http://xmlcalabash.com/ns/profile", "time");
     private String p_declare_step_clark = XProcConstants.p_declare_step.getClarkName();
+    private String p_pipeline_clark = XProcConstants.p_pipeline.getClarkName();
 
     public XProcRuntime(XProcConfiguration config) {
         this.config = config;
@@ -964,7 +965,7 @@ public class XProcRuntime {
         }
 
         String name = step.getType().getClarkName();
-        if (p_declare_step_clark.equals(name)
+        if ((p_declare_step_clark.equals(name) || p_pipeline_clark.equals(name))
                 && step.getType() != null
                 && step.getStep().getDeclaredType() != null) {
             profileWriter.addAttribute(profileType, step.getStep().getDeclaredType().getClarkName());
