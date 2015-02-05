@@ -140,7 +140,7 @@ public class XForEach extends XCompoundStep {
                         }
 
                         if (docsCopied != 1 && !seqOk) {
-                            throw XProcException.dynamicError(6);
+                            throw XProcException.dynamicError(6, "Writing to " + wport + " on " + getStep().getName());
                         }
                     }
                 }

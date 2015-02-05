@@ -95,7 +95,7 @@ public class Store extends DefaultStep {
         XdmNode doc = source.read();
 
         if (doc == null || source.moreDocuments()) {
-            throw XProcException.dynamicError(6);
+            throw XProcException.dynamicError(6, "Reading source on " + getStep().getName());
         }
 
         String href = null, base = null;

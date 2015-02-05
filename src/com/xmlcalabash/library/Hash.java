@@ -116,7 +116,7 @@ public class Hash extends DefaultStep implements ProcessMatchingNodes {
         matcher.match(source.read(), getOption(_match));
 
         if (source.moreDocuments()) {
-            throw XProcException.dynamicError(6);
+            throw XProcException.dynamicError(6, "Reading source on " + getStep().getName());
         }
 
         result.write(matcher.getResult());
