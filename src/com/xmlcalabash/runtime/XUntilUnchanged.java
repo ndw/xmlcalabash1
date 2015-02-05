@@ -140,7 +140,7 @@ public class XUntilUnchanged extends XCompoundStep {
                         }
 
                         if (docsCopied != 1) {
-                            throw XProcException.dynamicError(6);
+                            throw XProcException.dynamicError(6, "Writing to " + iPortName + " on " + getStep().getName());
                         }
 
                         for (XStep step : subpipeline) {

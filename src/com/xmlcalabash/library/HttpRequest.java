@@ -402,7 +402,7 @@ public class HttpRequest extends DefaultStep {
                         InputStream bodyStream = httpResult.getEntity().getContent();
                         readBodyContent(tree, bodyStream, httpResult);
                     } else {
-                        throw XProcException.dynamicError(6);
+                        throw XProcException.dynamicError(6, "Reading HTTP response on " + getStep().getName());
                     }
                 }
             }

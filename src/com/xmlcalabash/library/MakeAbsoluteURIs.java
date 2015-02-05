@@ -81,7 +81,7 @@ public class MakeAbsoluteURIs extends DefaultStep implements ProcessMatchingNode
         matcher.match(doc, getOption(_match));
 
         if (source.moreDocuments()) {
-            throw XProcException.dynamicError(6);
+            throw XProcException.dynamicError(6, "Reading source on " + getStep().getName());
         }
 
         result.write(matcher.getResult());

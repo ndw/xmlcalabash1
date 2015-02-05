@@ -105,7 +105,7 @@ public class NamespaceRename extends DefaultStep implements ProcessMatchingNodes
         }
 
         if (source.moreDocuments()) {
-            throw XProcException.dynamicError(6);
+            throw XProcException.dynamicError(6, "Reading source on " + getStep().getName());
         }
     }
 
