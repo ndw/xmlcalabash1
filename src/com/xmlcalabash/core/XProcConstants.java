@@ -32,6 +32,7 @@ import java.util.Properties;
  */
 public class XProcConstants {
     public static final String XPROC_VERSION = initializeVersion();
+    public static final String NS_XML = "http://www.w3.org/XML/1998/namespace";
     public static final String NS_XPROC = "http://www.w3.org/ns/xproc";
     public static final String NS_XPROC_ERROR = "http://www.w3.org/ns/xproc-error";
     public static final String NS_XPROC_ERROR_EX = "http://xproc.org/ns/errors";
