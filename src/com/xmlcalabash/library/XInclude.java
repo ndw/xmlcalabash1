@@ -53,10 +53,13 @@ import com.xmlcalabash.runtime.XAtomicStep;
  * @author ndw
  */
 public class XInclude extends DefaultStep implements ProcessMatchingNodes {
+    private static final String localAttrNS = "http://www.w3.org/2001/XInclude/local-attributes";
+
     private static final QName xi_include = new QName("http://www.w3.org/2001/XInclude","include");
     private static final QName xi_fallback = new QName("http://www.w3.org/2001/XInclude","fallback");
     private static final QName _fixup_xml_base = new QName("", "fixup-xml-base");
     private static final QName _fixup_xml_lang = new QName("", "fixup-xml-lang");
+    private static final QName _set_xml_id = new QName("", "set-xml-id");
     private static final QName cx_trim = new QName("cx", XProcConstants.NS_CALABASH_EX, "trim");
     private static final QName _encoding = new QName("", "encoding");
     private static final QName _href = new QName("", "href");
@@ -69,6 +72,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
     private WritablePipe result = null;
     private Stack<ProcessMatch> matcherStack = new Stack<ProcessMatch> ();
     private Stack<String> inside = new Stack<String> ();
+    private Stack<String> setXmlId = new Stack<String> ();
     private boolean fixupBase = false;
     private boolean fixupLang = false;
     private boolean copyAttributes = false;
@@ -147,6 +151,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
             String href = node.getAttributeValue(_href);
             String parse = node.getAttributeValue(_parse);
             String xptr = node.getAttributeValue(_xpointer);
+            String setId = node.getAttributeValue(_set_xml_id);
             XPointer xpointer = null;
             XdmNode subdoc = null;
             boolean textfragok = runtime.getAllowXPointerOnText();
@@ -183,6 +188,8 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                 readText(href, node, node.getBaseURI().toASCIIString(), xpointer, matcher);
                 return false;
             } else {
+                setXmlId.push(setId);
+
                 subdoc = readXML(href, node.getBaseURI().toASCIIString());
 
                 String iuri = null;
@@ -234,6 +241,8 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                         matcher.addSubtree(snode);
                     }
                 }
+
+                setXmlId.pop();
 
                 return false;
             }
@@ -418,19 +427,34 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                 root = false;
 
                 if (copyAttributes) {
+                    // Handle set-xml-id; it suppresses copying the xml:id attribute and optionally
+                    // provides a value for it. (The value "" removes the xml:id.)
+                    String setId = setXmlId.peek();
+                    if (setId != null) {
+                        copied.add(XProcConstants.xml_id);
+                        if (!"".equals(setId)) {
+                            matcher.addAttribute(XProcConstants.xml_id, setId);
+                        }
+                    }
+
                     XdmSequenceIterator iter = xinclude.axisIterator(Axis.ATTRIBUTE);
                     while (iter.hasNext()) {
                         XdmNode child = (XdmNode) iter.next();
 
-                        boolean copy = !"".equals(child.getNodeName().getNamespaceURI()); // must be in a ns
-                        // Can't copy xml:base it'll get relative URIs wrong and it's controlled separately
-                        copy = copy && !(XProcConstants.xml_base.equals(child.getNodeName()));
-                        // Don't copy xml:lang, it's controlled separately
-                        copy = copy && !(XProcConstants.xml_lang.equals(child.getNodeName()));
+                        // Attribute must be in a namespace
+                        boolean copy = !"".equals(child.getNodeName().getNamespaceURI());
+
+                        // But not in the XML namespace
+                        copy = copy && !XProcConstants.NS_XML.equals(child.getNodeName().getNamespaceURI());
 
                         if (copy) {
-                            copied.add(child.getNodeName());
-                            matcher.addAttribute(child);
+                            QName aname = child.getNodeName();
+                            if (localAttrNS.equals(aname.getNamespaceURI())) {
+                                aname = new QName("", aname.getLocalName());
+                            }
+
+                            copied.add(aname);
+                            matcher.addAttribute(aname, child.getStringValue());
                         }
                     }
                 }
