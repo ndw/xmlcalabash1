@@ -62,6 +62,12 @@
    <p:option name="href" cx:type="xsd:anyURI"/>
 </p:declare-step>
 
+<p:declare-step type="cx:mathml-to-svg">
+   <p:input port="source" sequence="false"/>
+   <p:input port="parameters" kind="parameter"/>
+   <p:output port="result" sequence="false"/>
+</p:declare-step>
+
 <p:declare-step type="cx:message">
    <p:input port="source" sequence="true"/>
    <p:output port="result" sequence="true"/>

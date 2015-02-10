@@ -79,9 +79,6 @@
 <implementation type="p:replace"
 		class-name="com.xmlcalabash.library.Replace"/>
 
-<implementation type="p:serialize"
-		class-name="com.xmlcalabash.library.Serialize"/>
-
 <implementation type="p:set-attributes"
 		class-name="com.xmlcalabash.library.SetAttributes"/>
 
@@ -162,6 +159,9 @@
 
 <implementation type="cx:java-properties"
 		class-name="com.xmlcalabash.extensions.JavaProperties"/>
+
+<implementation type="cx:mathml-to-svg"
+		class-name="com.xmlcalabash.extensions.MathMLtoSVG"/>
 
 <implementation type="cx:message"
 		class-name="com.xmlcalabash.extensions.Message"/>

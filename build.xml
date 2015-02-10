@@ -256,6 +256,7 @@
       <!-- Optional features -->
       <exclude name="com/xmlcalabash/extensions/MetadataExtractor.java"/>
       <exclude name="com/xmlcalabash/extensions/DiTAA.java"/>
+      <exclude name="com/xmlcalabash/extensions/MathMLtoSVG.java"/>
       <exclude name="com/xmlcalabash/extensions/PlantUML.java"/>
       <exclude name="com/xmlcalabash/extensions/DeltaXML.java"/>
       <exclude name="com/xmlcalabash/extensions/SendMail.java"/>
@@ -314,7 +315,7 @@
           depends="compile-MetadataException,compile-DiTAA,compile-PlantUML,
                    compile-XEP,compile-FOP,compile-AH,compile-SendMail,
                    compile-DeltaXML,compile-XMLUnit,compile-XCC,
-                   compile-RDF"/>
+                   compile-RDF,compile-MathMLtoSVG"/>
 
   <condition property="XMLUnit.present">
     <and>
@@ -381,6 +382,21 @@
       -->
       <src path="src"/>
       <include name="com/xmlcalabash/extensions/DiTAA.java"/>
+    </javac>
+  </target>
+
+  <available classname="net.sourceforge.jeuclid.converter.Converter"
+             property="MathMLtoSVG.present">
+    <classpath refid="build.classpath"/>
+  </available>
+
+
+  <target name="compile-MathMLtoSVG" depends="init" if="MathMLtoSVG.present">
+    <javac destdir="${build.dir}"
+	   classpathref="build.classpath"
+           source="${j.ver}" target="${j.ver}" includeantruntime="false">
+      <src path="src"/>
+      <include name="com/xmlcalabash/extensions/MathMLtoSVG.java"/>
     </javac>
   </target>
 
