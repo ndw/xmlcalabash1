@@ -84,13 +84,12 @@ public class Store extends DefaultStep {
     }
 
     public void run() throws SaxonApiException {
-        super.run();
+        RuntimeValue hrefOpt = getOption(_href);
+        super.run(": href=" + hrefOpt.getValue().toString());
 
         if (runtime.getSafeMode()) {
             throw XProcException.dynamicError(21);
         }
-
-        RuntimeValue hrefOpt = getOption(_href);
 
         XdmNode doc = source.read();
 

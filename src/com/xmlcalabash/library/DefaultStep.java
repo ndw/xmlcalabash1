@@ -155,13 +155,17 @@ public class DefaultStep implements XProcStep {
     }
 
     public void run() throws SaxonApiException {
+        run("");
+    }
+
+    public void run(String addnLog) {
         String type = null;
         if (XProcConstants.NS_XPROC.equals(step.getType().getNamespaceURI())) {
             type = step.getType().getLocalName();
         } else {
             type = step.getType().getClarkName();
         }
-        logger.debug("Running " + type + " " + step.getName());
+        logger.debug("Running " + type + " " + step.getName() + addnLog);
     }
 
     public Serializer makeSerializer() {
