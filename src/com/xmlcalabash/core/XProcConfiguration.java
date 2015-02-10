@@ -36,6 +36,8 @@ import com.xmlcalabash.model.Step;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.Source;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 
 import static com.xmlcalabash.util.URIUtils.encode;
@@ -63,6 +65,8 @@ public class XProcConfiguration {
     public static final QName _value = new QName("", "value");
     public static final QName _loader = new QName("", "loader");
     public static final QName _exclude_inline_prefixes = new QName("", "exclude-inline-prefixes");
+
+    protected Logger logger = null;
 
     public String saxonProcessor = "he";
     public boolean schemaAware = false;
@@ -139,6 +143,8 @@ public class XProcConfiguration {
     }
 
     private void init(String proctype, boolean schemaAware, Input saxoncfg) {
+        logger = LoggerFactory.getLogger(this.getClass());
+
         if (schemaAware) {
             proctype = "ee";
         }
@@ -934,9 +940,10 @@ public class XProcConfiguration {
                 Class<?> klass = Class.forName(value);
                 implementations.put(name, klass);
             } catch (ClassNotFoundException e) {
-                // nop
+                logger.debug("Class not found: " + value);
             } catch (NoClassDefFoundError e) {
-                // nop
+                String msg = e.getMessage();
+                logger.debug("Cannot instantiate " + value + ", missing class: " + msg);
             }
         }
     }
