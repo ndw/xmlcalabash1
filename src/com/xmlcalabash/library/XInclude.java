@@ -151,10 +151,42 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
             String href = node.getAttributeValue(_href);
             String parse = node.getAttributeValue(_parse);
             String xptr = node.getAttributeValue(_xpointer);
+            String fragid = node.getAttributeValue(_fragid);
             String setId = node.getAttributeValue(_set_xml_id);
             XPointer xpointer = null;
             XdmNode subdoc = null;
-            boolean textfragok = runtime.getAllowXPointerOnText();
+
+            if (parse == null) {
+                parse = "xml";
+            }
+
+            if (parse.contains(";")) {
+                parse = parse.substring(0, parse.indexOf(";")).trim();
+            }
+
+            if ("application/xml".equals(parse) || ("text/xml".equals(parse) || parse.endsWith("+xml"))) {
+                parse = "xml";
+            } else if (parse.startsWith("text/")) {
+                parse = "text";
+            } else {
+                logger.info("Unrecognized parse value on XInclude: " + parse + " using 'xml' instead.");
+                parse = "xml";
+            }
+
+            if (xptr != null && fragid != null) {
+                if (!xptr.equals(fragid)) {
+                    if ("xml".equals(parse)) {
+                        logger.info("XInclude specifies different xpointer/fragid, using xpointer for xml: " + xptr);
+                    } else {
+                        xptr = fragid;
+                        logger.info("XInclude specifies different xpointer/fragid, using fragid for " + parse + ": " + xptr);
+                    }
+                }
+            }
+
+            if (xptr == null && fragid != null) {
+                xptr = fragid;
+            }
 
             trimText = defaultTrimText;
             String trim = node.getAttributeValue(cx_trim);
@@ -167,13 +199,8 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
             }
 
             /* HACK */
-            if ("text".equals(parse) && node.getAttributeValue(_fragid) != null) {
-                xptr = node.getAttributeValue(_fragid);
-                // FIXME: This is a total hack
-                if (!xptr.startsWith("text(")) {
-                    xptr = "text(" + xptr + ")";
-                }
-                textfragok = true;
+            if ("text".equals(parse) && !xptr.trim().startsWith("text(")) {
+                xptr = "text(" + xptr + ")";
             }
 
             if (xptr != null) {
@@ -181,10 +208,6 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
             }
 
             if ("text".equals(parse)) {
-                if (!textfragok && xpointer != null) {
-                    throw XProcException.stepError(1, "XPointer is not allowed on XInclude when parse='text'");
-                }
-
                 readText(href, node, node.getBaseURI().toASCIIString(), xpointer, matcher);
                 return false;
             } else {
