@@ -77,8 +77,8 @@ public class XProcConfiguration {
     public Hashtable<QName,String> options = new Hashtable<QName,String> ();
     public boolean safeMode = false;
     public String stepName = null;
-    public String entityResolver = null;
-    public String uriResolver = null;
+    public String entityResolver = "org.xmlresolver.Resolver";
+    public String uriResolver = "org.xmlresolver.Resolver";
     public String errorListener = null;
     public Hashtable<QName,Class> implementations = new Hashtable<QName,Class> ();
     public Hashtable<String,String> serializationOptions = new Hashtable<String,String>();
