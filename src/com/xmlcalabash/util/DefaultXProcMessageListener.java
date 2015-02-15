@@ -37,6 +37,9 @@ public class DefaultXProcMessageListener implements XProcMessageListener {
 
     public void error(Throwable exception) {
         log.error(exceptionMessage(exception) + exception.getMessage());
+        if (exception.getCause() != null) {
+            log.error("    cause: " + exceptionMessage(exception.getCause()) + exception.getCause().getMessage());
+        }
     }
 
     private String exceptionMessage(Throwable exception) {
