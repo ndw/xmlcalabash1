@@ -29,6 +29,7 @@ import java.util.regex.Pattern;
 public class XPointerScheme {
     protected QName schemeName = null;
     protected String schemeData = null;
+    private int readLimit = 0;
     private static final Pattern rangeRE = Pattern.compile("^.*?=(\\d*)?(,(\\d*)?)?$");
     private static final Pattern lengthRE = Pattern.compile("^length=(\\d+)(,.*)?$");
 
@@ -50,7 +51,8 @@ public class XPointerScheme {
         return schemeData;
     }
 
-    public XPointerScheme(QName name, String data) {
+    public XPointerScheme(QName name, String data, int readLimit) {
+        this.readLimit = readLimit;
         schemeName = name;
         schemeData = data;
     }
@@ -106,7 +108,7 @@ public class XPointerScheme {
         return selectedNodes;
     }
 
-    public String selectText(InputStreamReader stream, int contentLength) {
+    public String selectText(BufferedReader rd, int contentLength) {
         String select = textEquivalent();
 
         if (select == null) {
@@ -128,10 +130,9 @@ public class XPointerScheme {
         // md5-value       =  32HEXDIG
 
         String data = "";
-        BufferedReader rd = null;
-
-        rd = new BufferedReader(stream);
         try {
+            rd.mark(readLimit);
+
             String parts[] = select.split("\\s*;\\s*");
             for (int pos = 1; pos < parts.length; pos++) {
                 // start at 1 because we want to skip the scheme
@@ -174,21 +175,19 @@ public class XPointerScheme {
                 throw new XProcException("Unparseable XPointer: " + schemeName + "(" + schemeData + ")");
             }
 
-            try {
-                String line;
-                while ((line = rd.readLine()) != null) {
-                    if (chars) {
-                        data += selectChars(line);
-                    } else {
-                        data += selectLines(line);
-                    }
+            String line;
+            while ((line = rd.readLine()) != null) {
+                if (chars) {
+                    data += selectChars(line);
+                } else {
+                    data += selectLines(line);
                 }
-            } catch (IOException ioe) {
-                throw new XProcException(ioe);
             }
+        } catch (IOException ioe) {
+            throw new XProcException(ioe);
         } finally {
             try {
-                rd.close();
+                rd.reset();
             } catch (IOException ioe) {
                 throw new XProcException(ioe);
             }

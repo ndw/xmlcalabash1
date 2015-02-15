@@ -61,6 +61,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
     private static final QName _fixup_xml_lang = new QName("", "fixup-xml-lang");
     private static final QName _set_xml_id = new QName("", "set-xml-id");
     private static final QName cx_trim = new QName("cx", XProcConstants.NS_CALABASH_EX, "trim");
+    private static final QName cx_read_limit = new QName("cx", XProcConstants.NS_CALABASH_EX, "read-limit");
     private static final QName _encoding = new QName("", "encoding");
     private static final QName _href = new QName("", "href");
     private static final QName _parse = new QName("", "parse");
@@ -78,6 +79,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
     private boolean copyAttributes = false;
     private boolean defaultTrimText = false;
     private boolean trimText = false;
+    private int readLimit = 1024 * 1000 * 100;
     private Exception mostRecentException = null;
 
     /**
@@ -115,6 +117,15 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
             trimText = true;
         } else {
             throw new XProcException("XInclude cx:trim must be 'true' or 'false'.");
+        }
+
+        trim = getStep().getExtensionAttribute(cx_read_limit);
+        if (trim != null) {
+            try {
+                readLimit = Integer.parseInt(trim);
+            } catch (NumberFormatException nfe) {
+                throw new XProcException(nfe);
+            }
         }
 
         XdmNode doc = source.read();
@@ -164,9 +175,9 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                 parse = parse.substring(0, parse.indexOf(";")).trim();
             }
 
-            if ("application/xml".equals(parse) || ("text/xml".equals(parse) || parse.endsWith("+xml"))) {
+            if ("xml".equals(parse) || "application/xml".equals(parse) || ("text/xml".equals(parse) || parse.endsWith("+xml"))) {
                 parse = "xml";
-            } else if (parse.startsWith("text/")) {
+            } else if ("text".equals(parse) || parse.startsWith("text/")) {
                 parse = "text";
             } else {
                 logger.info("Unrecognized parse value on XInclude: " + parse + " using 'xml' instead.");
@@ -198,13 +209,12 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                 throw new XProcException("XInclude cx:trim must be 'true' or 'false'.");
             }
 
-            /* HACK */
-            if ("text".equals(parse) && !xptr.trim().startsWith("text(")) {
-                xptr = "text(" + xptr + ")";
-            }
-
             if (xptr != null) {
-                xpointer = new XPointer(xptr);
+                /* HACK */
+                if ("text".equals(parse) && !xptr.trim().startsWith("text(")) {
+                    xptr = "text(" + xptr + ")";
+                }
+                xpointer = new XPointer(xptr, readLimit);
             }
 
             if ("text".equals(parse)) {
@@ -220,6 +230,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                 if (subdoc == null) {
                     logger.trace(MessageFormatter.nodeMessage(node, "XInclude parse failed: " + href));
                     fallback(node, href);
+                    setXmlId.pop();
                     return false;
                 } else {
                     iuri = subdoc.getBaseURI().toASCIIString();
@@ -247,6 +258,12 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                 } else {
                     Hashtable<String,String> nsBindings = xpointer.xpathNamespaces();
                     nodes = xpointer.selectNodes(runtime,subdoc);
+                    if (nodes == null) {
+                        logger.trace(MessageFormatter.nodeMessage(node, "XInclude parse failed: " + href));
+                        fallback(node, href);
+                        setXmlId.pop();
+                        return false;
+                    }
                 }
 
                 for (XdmNode snode : nodes) {
@@ -341,24 +358,19 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
         }
 
         // Get the response
-        InputStreamReader stream = new InputStreamReader(content, charset);
-        BufferedReader rd = null;
-
+        BufferedReader rd = new BufferedReader(new InputStreamReader(content, charset));
 
         String data = "";
         if (xpointer != null) {
-            data = xpointer.selectText(stream, (int) len);
+            data = xpointer.selectText(rd, (int) len);
         } else {
-            rd = new BufferedReader(stream);
-            try {
-                String line;
-                while ((line = rd.readLine()) != null) {
-                    data += line + "\n";
-                }
-            } finally {
-                rd.close();
+            String line;
+            while ((line = rd.readLine()) != null) {
+                data += line + "\n";
             }
         }
+
+        rd.close();
 
         if (trimText) {
             return data.trim();
