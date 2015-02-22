@@ -1,8 +1,0 @@
-Some of these jars are copied into the installer. Ideally, I suppose
-I'd copy them all (plus others, perhaps), but I haven't worked out the
-licensing issues.
-
-The jars in here that aren't copied are used for the ant build
-process. Make sure they're up-to-date with respect to the
-distributions that you have on your CLASSPATH or you may get runtime
-exceptions.
