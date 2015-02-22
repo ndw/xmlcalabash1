@@ -277,7 +277,7 @@ task makeDist(dependsOn: [ build, renameJar, copyLib ]) << {
   println "Created distribution in build/dist"
 }
 
-task zipDist(dependsOn: makeDist, type: Zip) {
+task zipDist(dependsOn: makeDist, type: Zip) << {
   from('build/dist') {
     into 'calabash-' + version
   }
