@@ -1,5 +1,4 @@
 # Ignore these files. Note to self: Files in .git/info/exclude are also ignored.
 /build/
 /.gradle/
-/lib/
 /src/main/java/com/xmlcalabash/testdrivers/
