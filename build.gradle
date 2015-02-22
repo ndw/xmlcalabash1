@@ -95,8 +95,9 @@ publishing {
 project.ext.saxonRelease = saxonVersion.substring(0,5)
 project.ext.saxonBranch  = saxonVersion.substring(0,3).replaceAll("\\.", "")
 project.ext.releaseVersion = version
+project.ext.docsVersion = "1.0.25"
 project.ext.distVersion = version + "-" + saxonBranch
-project.ext.refDocZip = 'xmlcalabash-ref-' + version + '.zip'
+project.ext.refDocZip = 'xmlcalabash-ref-' + project.ext.docsVersion + '.zip'
 
 version = project.ext.distVersion // - gets turned into . in some contexts
 group = "com.xmlcalabash"
@@ -204,7 +205,7 @@ task copyReferenceDocs(dependsOn: downloadReferenceDocs, type: Copy) {
   into { "build" }
   doLast {
     copy {
-      from "build/xmlcalabash-ref-" + project.ext.releaseVersion
+      from "build/xmlcalabash-ref-" + project.ext.docsVersion
       into "build/dist/docs/reference"
     }
   }
