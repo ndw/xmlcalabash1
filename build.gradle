@@ -367,7 +367,9 @@ task makeIZPackShell(dependsOn: copyVERSION) << {
 task setupIZPack(dependsOn: [makeDist, makeIZPackShell], type: JavaExec) {
   classpath = fileTree(dir: 'lib').include("*.jar") \
               + files("lib/saxon-license.lic") \
-              + files("build/dist/calabash.jar")
+              + files("build/dist/calabash.jar") \
+              + configurations.runtime
+
   main = 'net.sf.saxon.Transform'
   args('-s:src/main/izpack/install.xml',
        '-xsl:resources/izpack-filter.xsl',
