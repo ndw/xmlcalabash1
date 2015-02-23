@@ -12,7 +12,10 @@ before_script:
   - echo whereami
   - echo `pwd`
 
-before_install: lib/update-lib.sh
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -y libicu-dev
+  - lib/update-lib.sh
 
 deploy:
   provider: releases
