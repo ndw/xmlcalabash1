@@ -8,13 +8,7 @@ env:
   - secure: epDgr7lHHIkV7kN+XlXTqlP45hxia2qmom4UV6PxCJOmQE0XsB6b6KU3ErXq8mUobn7SEvpQSTk+Kp1/sJrZPbSaWhEiswRBpDTXP7quSQfcKr8Je2uELqXomz16NSL1AR1Dp8h5qyDpZPV4BwzoyVzb4gJ+GdINg4dOE0dhCi0=
   - secure: BMlH6Yko0wWhavp5vslnieHoT/1N0IvP1llgkOROfVDb3vGEZ33uzDHzjkTl6jCF1pb47A3jJtxUPM6JdrYuKZQnB2IrIBJhZkDEHITzzK6INVtAFAb8s7AYk7tiA//qBf6o8u3sEE66/XwDwTOtZYU19HfF3h2X7V3lwOTAalQ=
 
-before_script:
-  - echo whereami
-  - echo `pwd`
-
 before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -y libicu-dev libicu48
   - lib/update-lib.sh
 
 deploy:
