@@ -109,16 +109,7 @@ group = "com.xmlcalabash"
 // These tasks test for the presence of the third party libraries
 // and exclude extensions that require them if they are not
 // available.
-
-// We start with a task that can download them if certain magic
-// environment variables are specified. You aren't expected to
-// be able to do this. Just put the commercial jars in your lib
-// directory manually if you have them.
-task getCommercialJars(type: Exec) {
-  commandLine 'lib/update-lib.sh'
-}
-
-task checkXEP(dependsOn: getCommercialJars) {
+task checkXEP {
   doFirst {
     try {
       Class.forName("com.renderx.xep.FormatterImpl")
@@ -130,7 +121,7 @@ task checkXEP(dependsOn: getCommercialJars) {
 }
 compileJava.dependsOn checkXEP
 
-task checkDiTAA(dependsOn: getCommercialJars) {
+task checkDiTAA {
   doFirst {
     try {
       Class.forName("org.stathissideris.ascii2image.graphics.Diagram")
@@ -142,7 +133,7 @@ task checkDiTAA(dependsOn: getCommercialJars) {
 }
 compileJava.dependsOn checkDiTAA
 
-task checkAntennaHouse(dependsOn: getCommercialJars) {
+task checkAntennaHouse {
   doFirst {
     try {
       Class.forName("jp.co.antenna.XfoJavaCtl.XfoObj")
@@ -155,7 +146,7 @@ task checkAntennaHouse(dependsOn: getCommercialJars) {
 }
 compileJava.dependsOn checkAntennaHouse
 
-task checkDeltaXML(dependsOn: getCommercialJars) {
+task checkDeltaXML {
   doFirst {
     try {
       Class.forName("com.deltaxml.core.DXPConfiguration")
@@ -167,7 +158,7 @@ task checkDeltaXML(dependsOn: getCommercialJars) {
 }
 compileJava.dependsOn checkDeltaXML
 
-task checkPrince(dependsOn: getCommercialJars) {
+task checkPrince {
   doFirst {
     try {
       Class.forName("com.princexml.Prince")
