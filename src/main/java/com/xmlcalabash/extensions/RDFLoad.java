@@ -1,12 +1,15 @@
 package com.xmlcalabash.extensions;
 
 import com.hp.hpl.jena.rdf.model.StmtIterator;
+import com.hp.hpl.jena.sparql.util.Context;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.runtime.XAtomicStep;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.ReaderRIOT;
 import org.apache.jena.riot.RiotReader;
 import org.apache.jena.riot.lang.LangRIOT;
 import org.apache.jena.riot.system.ErrorHandler;
@@ -64,17 +67,16 @@ public class RDFLoad extends RDFStep {
             URL url = baseURI.resolve(href).toURL();
             URLConnection conn = url.openConnection();
 
+            ReaderRIOT reader = RDFDataMgr.createReader(lang);
             StreamRDF dest = StreamRDFLib.dataset(dataset.asDatasetGraph());
-            LangRIOT parser = RiotReader.createParser(conn.getInputStream(), lang, href, dest);
             ErrorHandler handler = new ParserErrorHandler(href);
             ParserProfile prof = RiotLib.profile(lang, href, handler);
-            parser.setProfile(prof);
-            try {
-                parser.parse();
-            } catch (Exception e) {
-                logger.warn("Parse error in RDFLoad document; processing partial document");
-                logger.debug(e.getMessage(), e);
-            }
+            Context context = new Context();
+
+            reader.setErrorHandler(handler);
+            reader.setParserProfile(prof);
+
+            reader.read(conn.getInputStream(), href, lang.getContentType(), dest, context);
             conn.getInputStream().close();
         } catch (MalformedURLException e) {
             throw new XProcException(e);
