@@ -241,6 +241,7 @@ task copyToDist(dependsOn: [copyLib,copyNotices,copyReferenceDocs,copySchemas,
 jar.dependsOn copyToDist
 
 jar {
+  archiveName "calabash-" + version + ".jar"
   manifest {
     instruction 'Built-By', builtBy
     instruction 'Implementation-Vendor', 'Norman Walsh'
@@ -267,7 +268,7 @@ izpack {
   outputFile = file("build/distributions/xmlcalabash-" + project.ext.distVersion + ".jar")
 }
 
-task renameJar(dependsOn: jar,  type: Copy) {
+task renameJar(dependsOn: jar, type: Copy) {
   from "build/libs/calabash-" + version + ".jar"
   into "build/dist"
   rename 'calabash.*\\.jar', "calabash.jar"
