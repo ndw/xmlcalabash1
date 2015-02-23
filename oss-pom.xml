@@ -8,7 +8,7 @@
 
   <groupId>com.xmlcalabash</groupId>
   <artifactId>xmlcalabash-saxon95</artifactId>
-  <version>1.0.14-SNAPSHOT</version>
+  <version>1.0.23</version>
   <name>XML Calabash</name>
   <description>XML Calabash - an implementation of XProc: An XML Pipeline Language</description>
   <url>http://xmlcalabash.com/</url>
@@ -76,7 +76,7 @@
     <dependency>
       <groupId>net.sf.saxon</groupId>
       <artifactId>Saxon-HE</artifactId>
-      <version>9.5.1-1</version>
+      <version>9.5.1-5</version>
       <!-- Marking this dependency as optional allows users to explicitly include
            the correct Saxon version in the calling library. -->
       <optional>true</optional>
@@ -87,6 +87,12 @@
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
       <version>4.2.5</version>
+      <exclusions>
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
@@ -177,6 +183,20 @@
       <version>1.1</version>
       <scope>compile</scope>
       <optional>true</optional>
+      <exclusions>
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>xml-apis</groupId>
+          <artifactId>xml-apis</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>xml-apis</groupId>
+          <artifactId>xml-apis-ext</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
@@ -193,6 +213,112 @@
       <type>jar</type>
       <version>4.3.1</version>
       <scope>compile</scope>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <artifactId>slf4j-api</artifactId>
+      <groupId>org.slf4j</groupId>
+      <version>1.7.7</version>
+    </dependency>
+
+    <dependency>
+      <artifactId>jcl-over-slf4j</artifactId>
+      <groupId>org.slf4j</groupId>
+      <version>1.7.7</version>
+    </dependency>
+
+    <!-- Needed by Jena -->
+    <dependency>
+      <artifactId>log4j-over-slf4j</artifactId>
+      <groupId>org.slf4j</groupId>
+      <version>1.7.7</version>
+      <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
+      <artifactId>log4j-core</artifactId>
+      <groupId>org.apache.logging.log4j</groupId>
+      <version>2.0.2</version>
+      <scope>runtime</scope>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <artifactId>log4j-slf4j-impl</artifactId>
+      <groupId>org.apache.logging.log4j</groupId>
+      <version>2.0.2</version>
+      <scope>runtime</scope>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <artifactId>trang</artifactId>
+      <groupId>com.thaiopensource</groupId>
+      <version>20091111</version>
+      <optional>true</optional>
+      <exclusions>
+        <exclusion>
+          <groupId>net.sf.saxon</groupId>
+          <artifactId>saxon</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>xml-apis</groupId>
+          <artifactId>xml-apis</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <artifactId>javax.servlet-api</artifactId>
+      <groupId>javax.servlet</groupId>
+      <version>3.1.0</version>
+      <scope>provided</scope>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <artifactId>jena-arq</artifactId>
+      <groupId>org.apache.jena</groupId>
+      <version>2.12.1</version>
+      <optional>true</optional>
+      <exclusions>
+        <exclusion>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-log4j12</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <artifactId>semargl-rdfa</artifactId>
+      <groupId>org.semarglproject</groupId>
+      <version>0.6.1</version>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <artifactId>org.restlet</artifactId>
+      <groupId>org.restlet.jee</groupId>
+      <version>2.2.2</version>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <artifactId>org.restlet.ext.fileupload</artifactId>
+      <groupId>org.restlet.jee</groupId>
+      <version>2.2.2</version>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <artifactId>org.restlet.ext.slf4j</artifactId>
+      <groupId>org.restlet.jee</groupId>
+      <version>2.2.2</version>
       <optional>true</optional>
     </dependency>
   </dependencies>
@@ -304,6 +430,13 @@
                 <exclude>com/xmlcalabash/extensions/marklogic/XCCAdhocQuery.java</exclude>
                 <exclude>com/xmlcalabash/extensions/marklogic/XCCInsertDocument.java</exclude>
                 <exclude>com/xmlcalabash/extensions/marklogic/XCCInvokeModule.java</exclude>
+
+                <!-- Only for debugging -->
+                <exclude>com/xmlcalabash/drivers/SaxonProblem.java</exclude>
+
+                <!-- These depend on some unknown version of PlantUML -->
+                <exclude>com/xmlcalabash/extensions/DiTAA.java</exclude>
+                <exclude>com/xmlcalabash/extensions/PlantUML.java</exclude>
               </excludes>
             </configuration>
           </execution>
@@ -355,4 +488,11 @@
       </plugin>
     </plugins>
   </build>
+
+  <repositories>
+    <repository>
+      <id>restlet</id>
+      <url>https://repository.sonatype.org/content/repositories/restlet/</url>
+    </repository>
+  </repositories>
 </project>
