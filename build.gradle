@@ -264,7 +264,7 @@ jar {
 izpack {
   baseDir = file("build/dist")
   installFile = file("build/install.xml")
-  outputFile = file("build/distributions/calabash-" + project.ext.distVersion + ".jar")
+  outputFile = file("build/distributions/xmlcalabash-" + project.ext.distVersion + ".jar")
 }
 
 task renameJar(dependsOn: jar,  type: Copy) {

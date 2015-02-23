@@ -7,8 +7,8 @@ deploy:
   api_key:
     secure: l3nyoZ4HIm0prCduEECCMGrQYiyom8NIuXix81qJAAhC6/M4TaiXVoWc5fmWjyCt9Z73fD0khVZjQABabwg96+tX3nEdr3zZMGmT8BgV/GWa7xFn1o7qZtv0wgwjwlo+rOWqAVEAwLxBh9p//FCNRrv5MAqKpQTtGVFMGVdwKeY=
   file:
-    - build/distributions/calabash-$TRAVIS_TAG.jar
-    - build/distributions/calabash-$TRAVIS_TAG.zip
+    - build/distributions/xmlcalabash-$TRAVIS_TAG.jar
+    - build/distributions/xmlcalabash-$TRAVIS_TAG.zip
   skip_cleanup: true
   on:
     tags: true
