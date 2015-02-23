@@ -11,4 +11,10 @@ then
     for f in `cat filelist`; do
         curl -s -o $f -u "$XMLC_NAME:$XMLC_PASS" "$XMLC_BASE/$f"
     done
+    mkdir AH
+    cd AH
+    curl -s -o filelist -u "$XMLC_NAME:$XMLC_PASS" "$XMLC_BASE/AH/filelist"
+    for f in `cat filelist`; do
+        curl -s -o $f -u "$XMLC_NAME:$XMLC_PASS" "$XMLC_BASE/AH/$f"
+    done
 fi
