@@ -8,7 +8,7 @@ env:
   - secure: BMlH6Yko0wWhavp5vslnieHoT/1N0IvP1llgkOROfVDb3vGEZ33uzDHzjkTl6jCF1pb47A3jJtxUPM6JdrYuKZQnB2IrIBJhZkDEHITzzK6INVtAFAb8s7AYk7tiA//qBf6o8u3sEE66/XwDwTOtZYU19HfF3h2X7V3lwOTAalQ=
 
 before_script:
-  - echo "where am i: "
+  - echo whereami
   - echo `pwd`
 
 before_install: lib/update-lib.sh
@@ -18,8 +18,8 @@ deploy:
   api_key:
     secure: l3nyoZ4HIm0prCduEECCMGrQYiyom8NIuXix81qJAAhC6/M4TaiXVoWc5fmWjyCt9Z73fD0khVZjQABabwg96+tX3nEdr3zZMGmT8BgV/GWa7xFn1o7qZtv0wgwjwlo+rOWqAVEAwLxBh9p//FCNRrv5MAqKpQTtGVFMGVdwKeY=
   file:
-  - build/distributions/xmlcalabash-$TRAVIS_TAG.jar
-  - build/distributions/xmlcalabash-$TRAVIS_TAG.zip
+    - build/distributions/xmlcalabash-$TRAVIS_TAG.jar
+    - build/distributions/xmlcalabash-$TRAVIS_TAG.zip
   skip_cleanup: true
   on:
     tags: true
