@@ -11,10 +11,9 @@ then
     for f in `cat filelist`; do
         curl -s -o $f -u "$XMLC_NAME:$XMLC_PASS" "$XMLC_BASE/$f"
     done
-    mkdir AH
+    mkdir -p AH
     cd AH
-    curl -s -o filelist -u "$XMLC_NAME:$XMLC_PASS" "$XMLC_BASE/AH/filelist"
-    for f in `cat filelist`; do
-        curl -s -o $f -u "$XMLC_NAME:$XMLC_PASS" "$XMLC_BASE/AH/$f"
-    done
+    curl -s -o archive.tar.gz -u "$XMLC_NAME:$XMLC_PASS" "$XMLC_BASE/AH/archive.tar.gz"
+    tar zxf archive.tar.gz
+    rm archive.tar.gz
 fi
