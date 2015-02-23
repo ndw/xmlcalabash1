@@ -269,7 +269,7 @@ izpack {
 
 task renameJar(dependsOn: jar,  type: Copy) {
   from "build/libs/calabash-" + version + ".jar"
-  into { "build/dist" }
+  into "build/dist"
   rename 'calabash.*\\.jar', "calabash.jar"
 }
 
