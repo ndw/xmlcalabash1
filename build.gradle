@@ -1,0 +1,384 @@
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+
+  dependencies {
+    classpath fileTree(dir: 'lib').include("*.jar")
+    classpath group: 'net.sf.saxon', name: 'Saxon-HE', version: saxonVersion
+  }
+}
+
+plugins {
+  id "java"
+  id "osgi"
+  id "maven-publish"
+  id "com.bmuschko.izpack" version "2.0"
+  id "de.undercouch.download" version "1.2"
+}
+
+import de.undercouch.gradle.tasks.download.Download
+
+repositories {
+  mavenCentral()
+  maven { url "http://maven.restlet.org" }
+  maven { url "http://developer.marklogic.com/maven2" }
+}
+
+dependencies {
+  izpack 'org.codehaus.izpack:izpack-standalone-compiler:4.3.4'
+
+  compile fileTree(dir: 'lib').include("*.jar")
+  compile (
+    [group: 'com.drewnoakes', name: 'metadata-extractor', version: '2.7.2'],
+
+    [group: 'com.marklogic', name: 'marklogic-xcc', version: '6.0.2'],
+    [group: 'com.thaiopensource', name: 'jing', version: '20091111', transitive: false],
+    [group: 'javax.mail', name: 'javax.mail-api', version: '1.5.2'],
+    [group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'],
+    [group: 'junit', name: 'junit', version: '4.12'],
+    [group: 'net.java.dev.msv', name: 'msv-core', version: '2013.6.1'],
+    [group: 'net.sf.saxon', name: 'Saxon-HE', version: saxonVersion ],
+    [group: 'net.sourceforge.jeuclid', name: 'jeuclid-core', version: '3.1.9', transitive: false],
+    [group: 'net.sourceforge.plantuml', name: 'plantuml', version: '8020'],
+    [group: 'nu.validator.htmlparser', name: 'htmlparser', version: '1.4'],
+    [group: 'org.apache.ant', name: 'ant', version: '1.9.4'],
+    [group: 'org.apache.avalon.framework', name: 'avalon-framework-api', version: '4.3.1'],
+    [group: 'org.apache.avalon.framework', name: 'avalon-framework-impl', version: '4.3.1'],
+    [group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.2.5'],
+    [group: 'org.apache.jena', name: 'jena', version: '2.12.1'],
+    [group: 'org.apache.jena', name: 'jena-arq', version: '2.12.1', transitive: false],
+    [group: 'org.apache.jena', name: 'jena-iri', version: '1.1.1', transitive: false],
+    [group: 'org.apache.jena', name: 'jena-core', version: '2.12.1', transitive: false],
+    [group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.1'],
+    [group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.1'],
+    [group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.1'],
+    [group: 'org.apache.xmlgraphics', name: 'fop', version: '1.1'],
+    [group: 'org.ccil.cowan.tagsoup', name: 'tagsoup', version: '1.2.1'],
+    [group: 'org.restlet.jee', name: 'org.restlet', version: '2.2.2'],
+    [group: 'org.restlet.jee', name: 'org.restlet.ext.fileupload', version: '2.2.2'],
+    [group: 'org.restlet.jee', name: 'org.restlet.ext.slf4j', version: '2.2.2'],
+    [group: 'org.semarglproject', name: 'semargl-core', version: '0.6.1'],
+    [group: 'org.semarglproject', name: 'semargl-rdfa', version: '0.6.1'],
+    [group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.10'],
+    [group: 'org.slf4j', name: 'slf4j-api', version: '1.7.10'],
+    [group: 'xmlunit', name: 'xmlunit', version: '1.6']
+  )
+}
+
+sourceSets {
+  main {
+    java {
+      srcDir 'src/main/java'
+      exclude 'com/xmlcalabash/testdrivers/**'
+    }
+    resources {
+      srcDirs 'src/main/resources'
+    }
+  }
+}
+
+publishing {
+  publications {
+    mavenJava(MavenPublication) {
+      from components.java
+    }
+  }
+
+  repositories {
+    maven {
+      url "$buildDir/repo"
+    }
+  }
+}
+
+// Variables
+project.ext.saxonRelease = saxonVersion.substring(0,5)
+project.ext.saxonBranch  = saxonVersion.substring(0,3).replaceAll("\\.", "")
+project.ext.releaseVersion = version
+project.ext.docsVersion = "1.0.25"
+project.ext.distVersion = version + "-" + saxonBranch
+project.ext.refDocZip = 'xmlcalabash-ref-' + project.ext.docsVersion + '.zip'
+
+version = project.ext.distVersion // - gets turned into . in some contexts
+group = "com.xmlcalabash"
+
+// There are several steps that rely on third party libraries that
+// are either not free (RenderX, AntennaHouse, etc.) or are not
+// available through a maven repository (AFAICT, such as DiTAA).
+// These tasks test for the presence of the third party libraries
+// and exclude extensions that require them if they are not
+// available.
+task checkXEP {
+  doFirst {
+    try {
+      Class.forName("com.renderx.xep.FormatterImpl")
+    } catch (Exception e) {
+      println "XEP classes unavailable, skipping FoXEP"
+      sourceSets.main.java.exclude 'com/xmlcalabash/util/FoXEP.java'
+    }
+  }
+}
+compileJava.dependsOn checkXEP
+
+task checkDiTAA {
+  doFirst {
+    try {
+      Class.forName("org.stathissideris.ascii2image.graphics.Diagram")
+    } catch (Exception e) {
+      println "DiTAA classes unavailable, skipping DiTAA"
+      sourceSets.main.java.exclude 'com/xmlcalabash/extensions/DiTAA.java'
+    }
+  }
+}
+compileJava.dependsOn checkDiTAA
+
+task checkAntennaHouse {
+  doFirst {
+    try {
+      Class.forName("jp.co.antenna.XfoJavaCtl.XfoObj")
+    } catch (Exception e) {
+      println "AntennaHouse classes unavailable, skipping *AH"
+      sourceSets.main.java.exclude 'com/xmlcalabash/util/CssAH.java'
+      sourceSets.main.java.exclude 'com/xmlcalabash/util/FoAH.java'
+    }
+  }
+}
+compileJava.dependsOn checkAntennaHouse
+
+task checkDeltaXML {
+  doFirst {
+    try {
+      Class.forName("com.deltaxml.core.DXPConfiguration")
+    } catch (Exception e) {
+      println "DeltaXML classes unavailable, skipping DeltaXML"
+      sourceSets.main.java.exclude 'com/xmlcalabash/extensions/DeltaXML.java'
+    }
+  }
+}
+compileJava.dependsOn checkDeltaXML
+
+task checkPrince {
+  doFirst {
+    try {
+      Class.forName("com.princexml.Prince")
+    } catch (Exception e) {
+      println "PrinceXML classes unavailable, skipping PrinceCSS"
+      sourceSets.main.java.exclude 'com/xmlcalabash/util/CssPrince.java'
+    }
+  }
+}
+compileJava.dependsOn checkPrince
+
+compileJava {
+  options.deprecation = true
+}
+
+task copyLib(type: Copy) {
+  FileCollection runtime  = configurations.runtime
+  FileCollection localLib = fileTree(dir: 'lib').include("*.jar")
+  FileCollection lib = runtime - localLib
+  lib = lib + files(["lib/ditaa0_9.jar", "lib/xmlresolver.jar"])
+  String path = ""
+  lib.each {
+    File file -> path += " lib/" + file.name
+  }
+  project.ext.runtimeClasspath = path.trim()
+
+  from lib
+  into { "build/dist/lib" }
+}
+
+task copyNotices(type: Copy) {
+  from 'resources/notices'
+  into 'build/dist/docs/notices'
+}
+jar.dependsOn copyNotices
+
+task downloadReferenceDocs(type: Download) {
+  src docsBaseURI + project.ext.refDocZip
+  dest new File(buildDir, refDocZip)
+}
+downloadReferenceDocs.onlyIf { !file("$buildDir/$refDocZip").exists() }
+
+task copyReferenceDocs(dependsOn: downloadReferenceDocs, type: Copy) {
+  from zipTree(downloadReferenceDocs.dest)
+  into { "build" }
+  doLast {
+    copy {
+      from "build/xmlcalabash-ref-" + project.ext.docsVersion
+      into "build/dist/docs/reference"
+    }
+  }
+}
+
+task copySchemas(type: Copy) {
+  from 'resources/schemas'
+  into 'build/dist/schemas'
+}
+
+task copyREADME(type: Copy) {
+  from 'resources/README'
+  into 'build/dist'
+}
+
+task copyXpl(type: Copy) {
+  FileCollection xpl = fileTree(dir: 'xpl').exclude("submit-test-report.xpl")
+  from xpl
+  into 'build/dist/xpl'
+}
+
+// Just depend on something that will create build/dist
+task copyVERSION(dependsOn: copyXpl) << {
+  def outputFile = new File("$buildDir/dist", "VERSION")
+  outputFile.withPrintWriter { writer ->
+    writer.println project.ext.distVersion
+  }
+}
+
+task copyToDist(dependsOn: [copyLib,copyNotices,copyReferenceDocs,copySchemas,
+                            copyXpl,copyREADME,copyVERSION]) {
+}
+jar.dependsOn copyToDist
+
+jar {
+  archiveName "calabash-" + version + ".jar"
+  manifest {
+    instruction 'Built-By', builtBy
+    instruction 'Implementation-Vendor', 'Norman Walsh'
+    instruction 'Implementation-Title', 'XML Calabash'
+    instruction 'Implementation-Version', project.ext.distVersion
+    instruction 'Main-Class', 'com.xmlcalabash.drivers.Main'
+    instruction 'Bundle-SymbolicName', 'com.xmlcalabash'
+    instruction 'Bundle-RequiredExecutionEnvironment', 'J2SE-1.6'
+    instruction 'Export-Package', '*, etc'
+    instruction 'Import-Package', 'net.sf.saxon.*;version=' + project.ext.saxonRelease + ',\
+  javax.crypto.*,\
+  javax.xml.*,\
+  org.apache.commons.httpclient.*,\
+  org.xml.sax.*,\
+  *;resolution:=optional'
+    instruction 'DynamicImport-Package', '*'
+    instruction 'Class-Path', project.ext.runtimeClasspath + " lib"
+  }
+}
+
+izpack {
+  baseDir = file("build/dist")
+  installFile = file("build/install.xml")
+  outputFile = file("build/distributions/xmlcalabash-" + project.ext.distVersion + ".jar")
+}
+
+task renameJar(dependsOn: jar, type: Copy) {
+  from "build/libs/calabash-" + version + ".jar"
+  into "build/dist"
+  rename 'calabash.*\\.jar', "calabash.jar"
+}
+
+task makeDist(dependsOn: [ build, renameJar, copyLib ]) << {
+  println "Created distribution in build/dist"
+}
+
+task zipDist(dependsOn: makeDist, type: Zip) {
+  from('build/dist')
+  exclude(["calabash", "calabash.bat"])
+  into 'xmlcalabash-' + version
+  archiveName 'xmlcalabash-' + version + ".zip"
+}
+
+task izPackDist(dependsOn: izPackCreateInstaller) {
+  // nop
+}
+
+task dist(dependsOn: [zipDist, izPackDist]) {
+  // nop
+}
+
+task testSuiteMessages << {
+  println "Running test-suite...this may take a few minutes..."
+  println "  Sending report to " + testsReport + "; errors to " + testsErrors
+}
+
+task testSuite(dependsOn: [makeDist, testSuiteMessages], type: JavaExec) {
+  classpath = fileTree(dir: 'lib').include("*.jar") \
+              + files("lib/saxon-license.lic") \
+              + files("lib/deltaxml.lic") \
+              + files("build/dist/calabash.jar")
+  main = 'com.xmlcalabash.drivers.RunTestReport'
+  maxHeapSize = "1024m"
+  args('-D', '-a',
+       testsRoot + '/tests/required/test-suite.xml',
+       testsRoot + '/tests/serialization/test-suite.xml',
+       testsRoot + '/tests/optional/test-suite.xml',
+       testsRoot + '/tests/extension/test-suite.xml',
+       'http://xmlcalabash.com/tests/test-suite.xml')
+  // 'http://localhost:8130/tests/test-suite.xml')
+
+  standardOutput = new FileOutputStream(new File(testsReport))
+  errorOutput = new FileOutputStream(new File(testsErrors))
+}
+
+task htmlReport(dependsOn: testSuite, type: JavaExec) {
+  classpath = fileTree(dir: 'lib').include("*.jar") \
+              + files("lib/saxon-license.lic") \
+              + files("build/dist/calabash.jar")
+  main = 'net.sf.saxon.Transform'
+  args('-s:' + testsReport,
+       '-xsl:resources/format-report.xsl',
+       '-o:' + testsFormat)
+}
+
+task aDocReport(dependsOn: testSuite, type: JavaExec) {
+  classpath = fileTree(dir: 'lib').include("*.jar") \
+              + files("lib/saxon-license.lic") \
+              + files("build/dist/calabash.jar")
+  main = 'net.sf.saxon.Transform'
+  args('-s:' + testsReport,
+       '-xsl:resources/asciidoc-report.xsl',
+       '-o:' + testsADoc)
+}
+
+task aDocErrReport(dependsOn: testSuite, type: JavaExec) {
+  classpath = fileTree(dir: 'lib').include("*.jar") \
+              + files("lib/saxon-license.lic") \
+              + files("build/dist/calabash.jar")
+  main = 'net.sf.saxon.Transform'
+  args('-s:' + testsReport,
+       '-xsl:resources/asciidoc-report.xsl',
+       '-o:' + testsFailADoc,
+       'show-pass=0',
+       'show-partial=0')
+}
+
+task report(dependsOn: [htmlReport,aDocReport,aDocErrReport]) {
+  // nop
+}
+
+// Just depend on something that will create build/dist
+task makeIZPackShell(dependsOn: copyVERSION) << {
+  def shell = new File("$buildDir/dist", "calabash")
+  shell.setExecutable(true)
+  shell.withPrintWriter { writer ->
+    writer.println '#!/bin/bash'
+    writer.println 'java -Xmx1024m -cp %INSTALL_PATH/calabash.jar com.xmlcalabash.drivers.Main "$@"'
+  }
+
+  def batch = new File("$buildDir/dist", "calabash.bat")
+  batch.withPrintWriter { writer ->
+    writer.println 'java -Xmx1024m -cp %INSTALL_PATH/calabash.jar com.xmlcalabash.drivers.Main %*'
+  }
+}
+
+task setupIZPack(dependsOn: [makeDist, makeIZPackShell], type: JavaExec) {
+  classpath = fileTree(dir: 'lib').include("*.jar") \
+              + files("lib/saxon-license.lic") \
+              + files("build/dist/calabash.jar") \
+              + configurations.runtime
+
+  main = 'net.sf.saxon.Transform'
+  args('-s:src/main/izpack/install.xml',
+       '-xsl:resources/izpack-filter.xsl',
+       '-o:build/install.xml',
+       'version.label='+project.ext.distVersion)
+}
+izPackCreateInstaller.dependsOn setupIZPack

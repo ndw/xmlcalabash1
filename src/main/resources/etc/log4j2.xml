@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Default log4j2 configuration file for XML Calabash -->
+<Configuration status="warn">
+  <Appenders>
+    <Console name="Console" target="SYSTEM_ERR">
+      <PatternLayout pattern="%-5level: %msg%n" />
+    </Console>
+  </Appenders>
+  <Loggers>
+    <Logger name="com.xmlcalabash" level="info" additivity="false">
+      <AppenderRef ref="Console"/>
+    </Logger>
+    <Root level="warn">
+      <AppenderRef ref="Console" />
+    </Root>
+  </Loggers>
+</Configuration>
