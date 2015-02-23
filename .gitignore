@@ -1,2 +1,5 @@
 # Ignore these files. Note to self: Files in .git/info/exclude are also ignored.
+#
+/.gradle/
+/build/
 /target/

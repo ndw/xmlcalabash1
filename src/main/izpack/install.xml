@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<installation version="1.0">
+
+   <info>
+      <appname>XML Calabash</appname>
+      <appversion>{VERSION}</appversion>
+      <appsubpath>xmlcalabash-{VERSION}</appsubpath>
+      <authors>
+         <author name="Norman Walsh" email="ndw@nwalsh.com"/>
+      </authors>
+      <url>http://xmlcalabash.com/</url>
+      <javaversion>1.6</javaversion>
+   </info>
+
+   <guiprefs width="640" height="480" resizable="no"/>
+   <locale>
+      <langpack iso3="eng"/>
+   </locale>
+
+   <resources>
+     <res id="LicencePanel.licence" src="../../resources/notices/CDDL+GPL.txt"/>
+   </resources>
+
+   <panels>
+     <panel classname="HelloPanel"/>
+     <panel classname="LicencePanel"/>
+     <panel classname="TargetPanel"/>
+     <panel classname="PacksPanel"/>
+     <panel classname="InstallPanel"/>
+     <panel classname="FinishPanel"/>
+   </panels>
+
+   <packs>
+     <pack name="Base" required="yes">
+       <description>The base files</description>
+       <fileset dir="." targetdir="$INSTALL_PATH"/>
+       <parsable type="shell" targetfile="$INSTALL_PATH/calabash"/>
+       <parsable type="shell" targetfile="$INSTALL_PATH/calabash.bat"/>
+       <executable targetfile="$INSTALL_PATH/calabash" stage="never"/>
+     </pack>
+   </packs>
+</installation>
