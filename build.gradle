@@ -277,10 +277,11 @@ task makeDist(dependsOn: [ build, renameJar, copyLib ]) << {
   println "Created distribution in build/dist"
 }
 
-task zipDist(dependsOn: makeDist, type: Zip) << {
-  from('build/dist') {
-    into 'calabash-' + version
-  }
+task zipDist(dependsOn: makeDist, type: Zip) {
+  from('build/dist')
+  exclude(["calabash", "calabash.bat"])
+  into 'xmlcalabash-' + version
+  archiveName 'xmlcalabash-' + version + ".zip"
 }
 
 task izPackDist(dependsOn: izPackCreateInstaller) {
@@ -354,6 +355,7 @@ task report(dependsOn: [htmlReport,aDocReport,aDocErrReport]) {
 // Just depend on something that will create build/dist
 task makeIZPackShell(dependsOn: copyVERSION) << {
   def shell = new File("$buildDir/dist", "calabash")
+  shell.setExecutable(true)
   shell.withPrintWriter { writer ->
     writer.println '#!/bin/bash'
     writer.println 'java -Xmx1024m -cp %INSTALL_PATH/calabash.jar com.xmlcalabash.drivers.Main "$@"'
