@@ -59,7 +59,7 @@ dependencies {
     [group: 'org.apache.xmlgraphics', name: 'fop', version: '1.1'],
     [group: 'org.atteo.classindex', name: 'classindex', version: '3.3'],
     [group: 'org.ccil.cowan.tagsoup', name: 'tagsoup', version: '1.2.1'],
-    [group: 'org.docbook', name: 'docbook-xsl-java-saxon', version: docbookVersion],
+    [group: 'org.docbook', name: 'docbook-xsl-java-saxon', version: '1.2.0-96'],
     [group: 'org.restlet.jee', name: 'org.restlet', version: '2.2.2'],
     [group: 'org.restlet.jee', name: 'org.restlet.ext.fileupload', version: '2.2.2'],
     [group: 'org.restlet.jee', name: 'org.restlet.ext.slf4j', version: '2.2.2'],
