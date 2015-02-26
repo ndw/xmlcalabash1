@@ -1,6 +1,11 @@
 language: java
 script: gradle dist
 
+# Hack dummy values into the gradle properties
+install:
+  - echo sonatypeUsername=none >> gradle.properties
+  - echo sonatypePassword=none >> gradle.properties
+
 env:
   global:
   - LD_LIBRARY_PATH=/home/travis/build/ndw/xmlcalabash1/lib/AH

@@ -12,7 +12,8 @@ buildscript {
 plugins {
   id "java"
   id "osgi"
-  id "maven-publish"
+  id "maven"
+  id "signing"
   id "com.bmuschko.izpack" version "2.0"
   id "de.undercouch.download" version "1.2"
 }
@@ -82,20 +83,6 @@ sourceSets {
   }
 }
 
-publishing {
-  publications {
-    mavenJava(MavenPublication) {
-      from components.java
-    }
-  }
-
-  repositories {
-    maven {
-      url "$buildDir/repo"
-    }
-  }
-}
-
 // Variables
 project.ext.saxonRelease = saxonVersion.substring(0,5)
 project.ext.saxonBranch  = saxonVersion.substring(0,3).replaceAll("\\.", "")
@@ -106,6 +93,65 @@ project.ext.refDocZip = 'xmlcalabash-ref-' + project.ext.docsVersion + '.zip'
 
 version = project.ext.distVersion // - gets turned into . in some contexts
 group = "com.xmlcalabash"
+
+task copyLib(type: Copy) {
+  FileCollection runtime  = configurations.runtime
+  FileCollection localLib = fileTree(dir: 'lib').include("*.jar")
+  FileCollection lib = runtime - localLib
+  lib = lib + files(["lib/ditaa0_9.jar"])
+  String path = ""
+  lib.each {
+    File file -> path += " lib/" + file.name
+  }
+  project.ext.runtimeClasspath = path.trim()
+
+  from lib
+  into { "build/dist/lib" }
+}
+
+jar {
+  archiveName "calabash-" + version + ".jar"
+  manifest {
+    instruction 'Built-By', builtBy
+    instruction 'Implementation-Vendor', 'Norman Walsh'
+    instruction 'Implementation-Title', 'XML Calabash'
+    instruction 'Implementation-Version', project.ext.distVersion
+    instruction 'Main-Class', 'com.xmlcalabash.drivers.Main'
+    instruction 'Bundle-SymbolicName', 'com.xmlcalabash'
+    instruction 'Bundle-RequiredExecutionEnvironment', 'J2SE-1.6'
+    instruction 'Export-Package', '*, etc'
+    instruction 'Import-Package', 'net.sf.saxon.*;version=' + project.ext.saxonRelease + ',\
+  javax.crypto.*,\
+  javax.xml.*,\
+  org.apache.commons.httpclient.*,\
+  org.xml.sax.*,\
+  *;resolution:=optional'
+    instruction 'DynamicImport-Package', '*'
+    instruction 'Class-Path', project.ext.runtimeClasspath + " lib"
+  }
+}
+
+izpack {
+  baseDir = file("build/dist")
+  installFile = file("build/install.xml")
+  outputFile = file("build/distributions/xmlcalabash-" + project.ext.distVersion + ".jar")
+}
+
+// I refuse to put my PGP password in a file, so there's no way to
+// make this work from a CI environment.
+gradle.taskGraph.whenReady { taskGraph ->
+    if (taskGraph.hasTask(":uploadArchives")) {
+        Console console = System.console()
+        console.printf "\n\nWe have to sign some things in this build." +
+                       "\n\nPlease enter your signing details.\n\n"
+
+        def password = console.readPassword("PGP Private Key Password: ")
+
+        allprojects { ext."signing.password" = password }
+
+        console.printf "\nThanks.\n\n"
+    }
+}
 
 // There are several steps that rely on third party libraries that
 // are either not free (RenderX, AntennaHouse, etc.) or are not
@@ -178,21 +224,6 @@ compileJava {
   options.deprecation = true
 }
 
-task copyLib(type: Copy) {
-  FileCollection runtime  = configurations.runtime
-  FileCollection localLib = fileTree(dir: 'lib').include("*.jar")
-  FileCollection lib = runtime - localLib
-  lib = lib + files(["lib/ditaa0_9.jar"])
-  String path = ""
-  lib.each {
-    File file -> path += " lib/" + file.name
-  }
-  project.ext.runtimeClasspath = path.trim()
-
-  from lib
-  into { "build/dist/lib" }
-}
-
 task copyNotices(type: Copy) {
   from 'resources/notices'
   into 'build/dist/docs/notices'
@@ -245,38 +276,25 @@ task copyToDist(dependsOn: [copyLib,copyNotices,copyReferenceDocs,copySchemas,
 }
 jar.dependsOn copyToDist
 
-jar {
-  archiveName "calabash-" + version + ".jar"
-  manifest {
-    instruction 'Built-By', builtBy
-    instruction 'Implementation-Vendor', 'Norman Walsh'
-    instruction 'Implementation-Title', 'XML Calabash'
-    instruction 'Implementation-Version', project.ext.distVersion
-    instruction 'Main-Class', 'com.xmlcalabash.drivers.Main'
-    instruction 'Bundle-SymbolicName', 'com.xmlcalabash'
-    instruction 'Bundle-RequiredExecutionEnvironment', 'J2SE-1.6'
-    instruction 'Export-Package', '*, etc'
-    instruction 'Import-Package', 'net.sf.saxon.*;version=' + project.ext.saxonRelease + ',\
-  javax.crypto.*,\
-  javax.xml.*,\
-  org.apache.commons.httpclient.*,\
-  org.xml.sax.*,\
-  *;resolution:=optional'
-    instruction 'DynamicImport-Package', '*'
-    instruction 'Class-Path', project.ext.runtimeClasspath + " lib"
-  }
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from tasks.javadoc.destinationDir
 }
 
-izpack {
-  baseDir = file("build/dist")
-  installFile = file("build/install.xml")
-  outputFile = file("build/distributions/xmlcalabash-" + project.ext.distVersion + ".jar")
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
 }
 
 task renameJar(dependsOn: jar, type: Copy) {
   from "build/libs/calabash-" + version + ".jar"
   into "build/dist"
   rename 'calabash.*\\.jar', "calabash.jar"
+}
+
+task copyJavaDoc(dependsOn: javadoc, type: Copy) {
+  from "build/docs"
+  into "build/dist/docs"
 }
 
 task makeDist(dependsOn: [ build, renameJar, copyLib ]) << {
@@ -386,3 +404,55 @@ task setupIZPack(dependsOn: [makeDist, makeIZPackShell], type: JavaExec) {
        'version.label='+project.ext.distVersion)
 }
 izPackCreateInstaller.dependsOn setupIZPack
+
+artifacts {
+  archives javadocJar
+  archives sourcesJar
+}
+
+signing {
+  required { gradle.taskGraph.hasTask("uploadArchives") }
+  sign configurations.archives
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+              authentication(userName: sonatypeUsername, password: sonatypePassword)
+            }
+
+            pom.project {
+               name 'annotations'
+               packaging 'jar'
+               description 'An XProc processor'
+               url 'https://github.com/ndw/xmlcalabash1'
+
+               scm {
+                   url 'scm:git@github.com:ndw/xmlcalabash1.git'
+                   connection 'scm:git@github.com:ndw/xmlcalabash1.git'
+                   developerConnection 'scm:git@github.com:ndw/xmlcalabash1.git'
+               }
+
+/*
+               licenses {
+                   license {
+                       name 'The Apache Software License, Version 2.0'
+                       url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                       distribution 'repo'
+                   }
+               }
+*/
+
+               developers {
+                   developer {
+                       id 'ndw'
+                       name 'Norman Walsh'
+                   }
+               }
+           }
+        }
+    }
+}
