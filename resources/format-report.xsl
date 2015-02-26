@@ -12,7 +12,7 @@
 <xsl:preserve-space elements="*"/>
 
 <xsl:variable name="errors"
-	      select="document('etc/error-list.xml')/err:error-list"/>
+	      select="document('../src/main/resources/etc/error-list.xml')/err:error-list"/>
 
 <xsl:template match="tr:test-report">
   <html>
