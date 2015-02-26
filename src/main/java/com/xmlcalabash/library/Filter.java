@@ -20,6 +20,7 @@
 
 package com.xmlcalabash.library;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.io.Select;
@@ -33,6 +34,11 @@ import com.xmlcalabash.runtime.XAtomicStep;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:filter",
+        type = "{http://www.w3.org/ns/xproc}filter")
+
 public class Filter extends DefaultStep {
     private static final QName _select = new QName("", "select");
     protected static final String logger = "org.xproc.library.filter";

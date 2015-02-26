@@ -20,6 +20,7 @@
 
 package com.xmlcalabash.library;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcConstants;
@@ -68,6 +69,11 @@ import java.io.IOException;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:validate-with-xml-schema",
+        type = "{http://www.w3.org/ns/xproc}validate-with-xml-schema")
+
 public class ValidateWithXSD extends DefaultStep {
     private static final QName _assert_valid = new QName("", "assert-valid");
     private static final QName _mode = new QName("", "mode");

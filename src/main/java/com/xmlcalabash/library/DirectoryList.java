@@ -25,6 +25,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.util.MessageFormatter;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -46,6 +47,11 @@ import org.slf4j.LoggerFactory;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:directory-list",
+        type = "{http://www.w3.org/ns/xproc}directory-list")
+
 public class DirectoryList extends DefaultStep {
     private static final QName _name = new QName("", "name");
     private static final QName _path = new QName("", "path");

@@ -19,6 +19,7 @@
 
 package com.xmlcalabash.library;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.WritablePipe;
@@ -42,6 +43,11 @@ import java.util.Hashtable;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:in-scope-names",
+        type = "{http://www.w3.org/ns/xproc}in-scope-names")
+
 public class InScopeNames extends Parameters {
     /** Creates a new instance of Count */
     public InScopeNames(XProcRuntime runtime, XAtomicStep step) {

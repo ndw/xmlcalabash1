@@ -21,6 +21,7 @@ package com.xmlcalabash.library;
  */
 
 import com.xmlcalabash.config.JingConfigurer;
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.util.Base64;
 import com.xmlcalabash.util.TreeWriter;
 import net.sf.saxon.s9api.QName;
@@ -57,6 +58,11 @@ import java.net.URI;
  * Time: 8:02:33 AM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "p:validate-with-relax-ng",
+        type = "{http://www.w3.org/ns/xproc}validate-with-relax-ng")
+
 public class ValidateJing extends DefaultStep {
     private static final QName _assert_valid = new QName("", "assert-valid");
     private static final QName _dtd_attribute_values = new QName("", "dtd-attribute-values");

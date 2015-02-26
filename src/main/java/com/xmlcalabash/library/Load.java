@@ -21,6 +21,7 @@ package com.xmlcalabash.library;
 
 import java.net.URI;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
@@ -38,6 +39,11 @@ import org.slf4j.LoggerFactory;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:load",
+        type = "{http://www.w3.org/ns/xproc}load")
+
 public class Load extends DefaultStep {
     private static final QName _href = new QName("href");
     private static final QName _dtd_validate = new QName("dtd-validate");

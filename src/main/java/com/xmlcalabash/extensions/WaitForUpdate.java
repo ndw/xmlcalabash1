@@ -1,5 +1,6 @@
 package com.xmlcalabash.extensions;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
@@ -38,6 +39,11 @@ import java.util.TimeZone;
  * Time: 7:44:07 AM
  * To change this template use File | Settings | File Templates.
  */
+
+
+@XMLCalabash(
+        name = "cx:wait-for-update",
+        type = "{http://xmlcalabash.com/ns/extensions}wait-for-update")
 
 public class WaitForUpdate extends DefaultStep {
     private static final QName _href = new QName("","href");

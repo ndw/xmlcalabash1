@@ -15,6 +15,7 @@ import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import com.xmlcalabash.core.XMLCalabash;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -36,6 +37,12 @@ import com.xmlcalabash.util.TreeWriter;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "pxp:unzip",
+        type = "{http://exproc.org/proposed/steps}unzip " +
+                "{http://xmlcalabash.com/ns/extensions}unzip")
+
 public class Unzip extends DefaultStep {
     private static final String ACCEPT_ZIP = "application/zip, */*";
     protected final static QName _href = new QName("", "href");

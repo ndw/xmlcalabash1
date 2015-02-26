@@ -23,6 +23,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Vector;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
@@ -42,6 +43,11 @@ import com.xmlcalabash.util.S9apiUtils;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:xquery",
+        type = "{http://www.w3.org/ns/xproc}xquery")
+
 public class XQuery extends DefaultStep {
     private static final QName _content_type = new QName("content-type");
 

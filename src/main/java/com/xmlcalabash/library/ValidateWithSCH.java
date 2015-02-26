@@ -1,5 +1,6 @@
 package com.xmlcalabash.library;
 
+import com.xmlcalabash.core.XMLCalabash;
 import net.sf.saxon.om.StandardNames;
 import net.sf.saxon.s9api.*;
 import net.sf.saxon.Configuration;
@@ -34,6 +35,10 @@ import java.util.Iterator;
  * Time: 11:06:11 AM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "p:validate-with-schematron",
+        type = "{http://www.w3.org/ns/xproc}validate-with-schematron")
 
 public class ValidateWithSCH extends DefaultStep {
     private static final QName _assert_valid = new QName("", "assert-valid");

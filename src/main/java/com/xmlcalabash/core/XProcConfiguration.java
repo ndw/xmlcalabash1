@@ -1,5 +1,6 @@
 package com.xmlcalabash.core;
 
+import com.nwalsh.annotations.SaxonExtensionFunction;
 import com.xmlcalabash.piperack.PipelineSource;
 import com.xmlcalabash.util.*;
 import net.sf.saxon.Configuration;
@@ -36,6 +37,8 @@ import com.xmlcalabash.model.Step;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.Source;
 
+import org.atteo.classindex.ClassFilter;
+import org.atteo.classindex.ClassIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
@@ -87,7 +90,7 @@ public class XProcConfiguration {
     public Hashtable<QName,Class> implementations = new Hashtable<QName,Class> ();
     public Hashtable<String,String> serializationOptions = new Hashtable<String,String>();
     public LogOptions logOpt = LogOptions.WRAPPED;
-    public Vector<String> extensionFunctions = new Vector<String>();
+    public Hashtable<String,SaxonExtensionFunction> extensionFunctions = new Hashtable<String,SaxonExtensionFunction>();
     public String foProcessor = null;
     public String cssProcessor = null;
     public String xprocConfigurer = null;
@@ -183,6 +186,9 @@ public class XProcConfiguration {
             this.schemaAware = cfgProcessor.isSchemaAware();
             saxonProcessor = Configuration.softwareEdition.toLowerCase();
         }
+
+        findStepClasses();
+        findExtensionFunctions();
     }
 
     private void createSaxonProcessor(String proctype, boolean schemaAware, Input saxoncfg) {
@@ -219,6 +225,38 @@ public class XProcConfiguration {
         String actualtype = Configuration.softwareEdition;
         if ((proctype != null) && !"he".equals(proctype) && (!actualtype.toLowerCase().equals(proctype))) {
             System.err.println("Failed to obtain " + proctype.toUpperCase() + " processor; using " + actualtype + " instead.");
+        }
+    }
+
+    private void findStepClasses() {
+        Iterable<Class<?>> classes = ClassFilter.only().from(ClassIndex.getAnnotated(XMLCalabash.class));
+        for (Class<?> klass : classes) {
+            XMLCalabash annotation = klass.getAnnotation(XMLCalabash.class);
+            for (String clarkName: annotation.type().split("\\s+")) {
+                try {
+                    QName name = QName.fromClarkName(clarkName);
+                    logger.trace("Found step type annotation: " + clarkName);
+                    if (implementations.containsKey(name)) {
+                        logger.debug("Ignoring step type annotation for configured step: " + clarkName);
+                    }
+                    implementations.put(name, klass);
+                } catch (IllegalArgumentException iae) {
+                    logger.debug("Failed to parse step annotation type: " + clarkName);
+                }
+            }
+        }
+    }
+
+    private void findExtensionFunctions() {
+        Iterable<Class<?>> classes = ClassIndex.getAnnotated(SaxonExtensionFunction.class);
+        for (Class<?> klass : classes) {
+            String name = klass.getCanonicalName();
+            SaxonExtensionFunction annotation = klass.getAnnotation(SaxonExtensionFunction.class);
+            logger.trace("Found Saxon extension function: " + klass.getCanonicalName());
+            if (extensionFunctions.containsKey(name)) {
+                logger.debug("Duplicate saxon extension function class: " + name);
+            }
+            extensionFunctions.put(name, annotation);
         }
     }
 
@@ -580,7 +618,7 @@ public class XProcConfiguration {
     private void parseNamespaceBinding(XdmNode node) {
         String aname = node.getAttributeValue(_prefix);
         String avalue = node.getAttributeValue(_uri);
-        nsBindings.put(aname,avalue);
+        nsBindings.put(aname, avalue);
     }
 
     private void parseDebug(XdmNode node) {
@@ -602,7 +640,7 @@ public class XProcConfiguration {
 
     private void parseExtensionFunction(XdmNode node) {
         String value = node.getAttributeValue(_class_name);
-        extensionFunctions.add(value);
+        extensionFunctions.put(value, null);
     }
 
     private void parseFoProcessor(XdmNode node) {

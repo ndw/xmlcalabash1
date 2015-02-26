@@ -1,5 +1,6 @@
 package com.xmlcalabash.library;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.core.XProcRuntime;
@@ -15,6 +16,11 @@ import com.xmlcalabash.runtime.XAtomicStep;
  * Time: 7:44:07 AM
  * To change this template use File | Settings | File Templates.
  */
+
+
+@XMLCalabash(
+        name = "p:identity",
+        type = "{http://www.w3.org/ns/xproc}identity")
 
 public class Identity extends DefaultStep {
     private ReadablePipe source = null;

@@ -1,5 +1,6 @@
 package com.xmlcalabash.extensions;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.core.XProcRuntime;
@@ -20,6 +21,10 @@ import java.net.URI;
  * Time: 7:44:07 AM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "cx:collection-manager",
+        type = "{http://xmlcalabash.com/ns/extensions}collection-manager")
 
 public class CollectionManager extends DefaultStep {
     private static final QName _href = new QName("","href");

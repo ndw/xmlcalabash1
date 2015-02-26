@@ -29,6 +29,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.core.XProcConstants;
@@ -47,6 +49,11 @@ import com.xmlcalabash.runtime.XAtomicStep;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:hash",
+        type = "{http://www.w3.org/ns/xproc}hash")
+
 public class Hash extends DefaultStep implements ProcessMatchingNodes {
     private static final QName _value = new QName("", "value");
     private static final QName _algorithm = new QName("", "algorithm");

@@ -4,6 +4,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import com.xmlcalabash.core.XMLCalabash;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 
@@ -23,6 +24,10 @@ import com.xmlcalabash.util.TreeWriter;
  * Time: 7:44:07 AM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "cx:get-cookies",
+        type = "{http://xmlcalabash.com/ns/extensions}get-cookies")
 
 public class GetCookies extends DefaultStep {
     private static final QName _cookies = new QName("","cookies");

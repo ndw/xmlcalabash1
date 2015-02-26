@@ -1,5 +1,6 @@
 package com.xmlcalabash.extensions;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
@@ -34,6 +35,10 @@ import java.util.Vector;
  * Time: 7:44:07 AM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "cx:rdfa",
+        type = "{http://xmlcalabash.com/ns/extensions}rdfa")
 
 public class RDFa extends RDFStep {
     private long count = 0;

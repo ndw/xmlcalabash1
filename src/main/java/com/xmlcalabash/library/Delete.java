@@ -20,6 +20,8 @@
 package com.xmlcalabash.library;
 
 import java.util.Map;
+
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.util.ProcessMatchingNodes;
 import com.xmlcalabash.util.ProcessMatch;
@@ -35,6 +37,11 @@ import com.xmlcalabash.runtime.XAtomicStep;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:delete",
+        type = "{http://www.w3.org/ns/xproc}delete")
+
 public class Delete extends DefaultStep implements ProcessMatchingNodes {
     private static final QName _match = new QName("", "match");
     private ReadablePipe source = null;

@@ -5,6 +5,7 @@ import com.drew.imaging.jpeg.JpegProcessingException;
 import com.drew.metadata.Directory;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.Tag;
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
@@ -40,6 +41,10 @@ import java.util.StringTokenizer;
  * Time: 7:44:07 AM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "cx:metadata-extractor",
+        type = "{http://xmlcalabash.com/ns/extensions}metadata-extractor")
 
 public class MetadataExtractor extends DefaultStep {
     private static final QName _href = new QName("","href");

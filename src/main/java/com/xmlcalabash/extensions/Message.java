@@ -1,5 +1,6 @@
 package com.xmlcalabash.extensions;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.core.XProcRuntime;
@@ -21,6 +22,10 @@ import org.slf4j.LoggerFactory;
  * Time: 7:44:07 AM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "cx:message",
+        type = "{http://xmlcalabash.com/ns/extensions}message")
 
 public class Message extends DefaultStep {
     private static final QName _message = new QName("","message");

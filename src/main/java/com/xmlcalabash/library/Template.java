@@ -19,6 +19,7 @@
 
 package com.xmlcalabash.library;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
@@ -52,6 +53,12 @@ import java.util.Vector;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:template",
+        type = "{http://www.w3.org/ns/xproc}template " +
+                "{http://www.w3.org/ns/xproc}document-template") // deprecated
+
 public class Template extends DefaultStep implements ProcessMatchingNodes {
     private ReadablePipe source = null;
     private ReadablePipe template = null;

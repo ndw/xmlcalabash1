@@ -1,5 +1,6 @@
 package com.xmlcalabash.extensions;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
@@ -49,6 +50,11 @@ import java.util.Vector;
  * Time: 7:14 AM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "cx:send-mail",
+        type = "{http://xmlcalabash.com/ns/extensions}send-mail")
+
 public class SendMail extends DefaultStep {
     public final static String NS_EMAIL = "URN:ietf:params:email-xml:";
     public final static String NS_RFC822 = "URN:ietf:params:rfc822:";

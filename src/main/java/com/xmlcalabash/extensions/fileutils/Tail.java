@@ -9,6 +9,7 @@ import java.io.Reader;
 import java.net.URI;
 import java.util.Vector;
 
+import com.xmlcalabash.core.XMLCalabash;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 
@@ -30,6 +31,12 @@ import com.xmlcalabash.util.TreeWriter;
  * Time: 3:17:23 PM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "pxf:tail",
+        type = "{http://exproc.org/proposed/steps/file}tail " +
+                "{http://xmlcalabash.com/ns/extensions/fileutils}tail")
+
 public class Tail extends DefaultStep {
     private static final QName _href = new QName("href");
     private static final QName _count = new QName("count");

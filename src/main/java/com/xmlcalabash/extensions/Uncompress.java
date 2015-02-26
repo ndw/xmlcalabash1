@@ -19,6 +19,7 @@
 
 package com.xmlcalabash.extensions;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.ReadablePipe;
@@ -38,6 +39,14 @@ import java.io.ByteArrayInputStream;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "cx:uncompress",
+        type = "{http://xmlcalabash.com/ns/extensions}uncompress " +
+                "{http://xmlcalabash.com/ns/extensions}gunzip " +
+                "{http://exproc.org/proposed/steps}uncompress " +
+                "{http://exproc.org/proposed/steps}gunzip")
+
 public class Uncompress extends DefaultStep {
     protected static final String logger = "com.xmlcalabash.extensions.gunzip";
     private static final QName _compression_method = new QName("compression-method");

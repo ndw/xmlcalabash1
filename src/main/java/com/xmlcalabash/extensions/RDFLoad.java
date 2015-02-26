@@ -2,6 +2,7 @@ package com.xmlcalabash.extensions;
 
 import com.hp.hpl.jena.rdf.model.StmtIterator;
 import com.hp.hpl.jena.sparql.util.Context;
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.runtime.XAtomicStep;
@@ -34,6 +35,10 @@ import java.util.Iterator;
  * Time: 7:44:07 AM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "cx:rdf-load",
+        type = "{http://xmlcalabash.com/ns/extensions}rdf-load")
 
 public class RDFLoad extends RDFStep {
     /**

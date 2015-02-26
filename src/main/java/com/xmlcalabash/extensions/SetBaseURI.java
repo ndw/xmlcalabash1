@@ -1,5 +1,6 @@
 package com.xmlcalabash.extensions;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
@@ -20,6 +21,10 @@ import java.net.URI;
  * Time: 7:44:07 AM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "pxp:set-base-uri",
+        type = "{http://exproc.org/proposed/steps}set-base-uri")
 
 public class SetBaseURI extends DefaultStep {
     private static final QName _uri = new QName("","uri");

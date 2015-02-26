@@ -1,5 +1,6 @@
 package com.xmlcalabash.extensions;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.library.DefaultStep;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
@@ -37,6 +38,11 @@ import java.util.Iterator;
  * Time: 5:22:42 PM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "cx:eval",
+        type = "{http://xmlcalabash.com/ns/extensions}eval")
+
 public class Eval extends DefaultStep {
     protected final static QName cx_document = new QName("cx", XProcConstants.NS_CALABASH_EX, "document");
     protected final static QName cx_options = new QName("cx", XProcConstants.NS_CALABASH_EX, "options");

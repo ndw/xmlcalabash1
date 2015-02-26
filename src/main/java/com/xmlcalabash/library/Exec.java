@@ -31,6 +31,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.File;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.util.MessageFormatter;
 import com.xmlcalabash.util.TreeWriter;
@@ -58,6 +59,11 @@ import net.sf.saxon.s9api.XdmNode;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:exec",
+        type = "{http://www.w3.org/ns/xproc}exec")
+
 public class Exec extends DefaultStep {
     private static final QName c_result = new QName("c", XProcConstants.NS_XPROC_STEP, "result");
     private static final QName c_line = new QName("c", XProcConstants.NS_XPROC_STEP, "line");

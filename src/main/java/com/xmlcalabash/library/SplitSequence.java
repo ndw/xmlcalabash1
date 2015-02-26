@@ -19,6 +19,7 @@
 
 package com.xmlcalabash.library;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.ReadablePipe;
@@ -44,6 +45,11 @@ import com.xmlcalabash.util.DocumentSequenceIterator;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:split-sequence",
+        type = "{http://www.w3.org/ns/xproc}split-sequence")
+
 public class SplitSequence extends DefaultStep {
     private static final QName _test = new QName("", "test");
     private static final QName _initial_only = new QName("", "initial-only");

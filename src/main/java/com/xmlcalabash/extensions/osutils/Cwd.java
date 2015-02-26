@@ -1,5 +1,6 @@
 package com.xmlcalabash.extensions.osutils;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.library.DefaultStep;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.core.XProcRuntime;
@@ -22,6 +23,12 @@ import java.io.IOException;
  * Time: 7:48:27 PM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "pos:cwd",
+        type = "{http://exproc.org/proposed/steps/os}cwd " +
+                "{http://xmlcalabash.com/ns/extensions/osutils}cwd")
+
 public class Cwd extends DefaultStep {
     private WritablePipe result = null;
 

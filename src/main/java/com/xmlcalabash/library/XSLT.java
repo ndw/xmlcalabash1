@@ -32,6 +32,7 @@ import javax.xml.transform.dom.DOMResult;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.sax.SAXSource;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcConstants;
@@ -66,6 +67,11 @@ import org.xml.sax.InputSource;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:xslt",
+        type = "{http://www.w3.org/ns/xproc}xslt")
+
 public class XSLT extends DefaultStep {
     private static final QName _initial_mode = new QName("", "initial-mode");
     private static final QName _template_name = new QName("", "template-name");

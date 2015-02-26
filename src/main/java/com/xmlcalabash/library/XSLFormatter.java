@@ -7,6 +7,7 @@ import java.net.URI;
 import java.util.Properties;
 import java.util.Vector;
 
+import com.xmlcalabash.core.XMLCalabash;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 
@@ -29,6 +30,11 @@ import com.xmlcalabash.util.TreeWriter;
  * Time: 6:59:07 PM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "p:xsl-formatter",
+        type = "{http://www.w3.org/ns/xproc}xsl-formatter")
+
 public class XSLFormatter extends DefaultStep {
     private static final QName _href = new QName("","href");
     private static final QName _content_type = new QName("","content-type");

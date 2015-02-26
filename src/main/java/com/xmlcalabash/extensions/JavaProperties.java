@@ -6,6 +6,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.Properties;
 
+import com.xmlcalabash.core.XMLCalabash;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 
@@ -26,6 +27,11 @@ import com.xmlcalabash.util.TreeWriter;
  * Time: 7:44:07 AM
  * To change this template use File | Settings | File Templates.
  */
+
+
+@XMLCalabash(
+        name = "cx:java-properties",
+        type = "{http://xmlcalabash.com/ns/extensions}java-properties")
 
 public class JavaProperties extends DefaultStep {
     private static final String ACCEPT_TEXT = "text/plain, text/*, */*";

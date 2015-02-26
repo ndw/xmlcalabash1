@@ -1,5 +1,6 @@
 package com.xmlcalabash.extensions;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.ReadablePipe;
@@ -30,6 +31,10 @@ import java.io.UnsupportedEncodingException;
  * Time: 7:44:07 AM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "cx:pretty-print",
+        type = "{http://xmlcalabash.com/ns/extensions}pretty-print")
 
 public class PrettyPrint extends DefaultStep {
     private ReadablePipe source = null;

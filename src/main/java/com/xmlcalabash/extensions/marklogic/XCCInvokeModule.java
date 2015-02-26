@@ -1,5 +1,6 @@
 package com.xmlcalabash.extensions.marklogic;
 
+import com.xmlcalabash.core.XMLCalabash;
 import net.sf.saxon.s9api.*;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.Configuration;
@@ -32,6 +33,11 @@ import org.xml.sax.InputSource;
  * Time: 11:24:59 AM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "ml:invoke-module",
+        type = "{http://xmlcalabash.com/ns/extensions/marklogic}invoke-module")
+
 public class XCCInvokeModule extends DefaultStep {
     private static final QName _pipeinfo = new QName("","pipeinfo");
     private static final QName _user = new QName("","user");

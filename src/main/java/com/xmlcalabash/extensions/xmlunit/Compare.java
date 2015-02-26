@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.io.ByteArrayOutputStream;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.core.XProcException;
@@ -49,6 +50,11 @@ import org.xml.sax.SAXException;
 /**
 * @author Charles Foster
 */
+
+@XMLCalabash(
+        name = "cxu:compare",
+        type = "{http://xmlcalabash.com/ns/extensions/xmlunit}compare")
+
 public class Compare extends DefaultStep
 {
 	private static final QName c_result = new QName("c", XProcConstants.NS_XPROC_STEP, "result");
