@@ -50,16 +50,17 @@ dependencies {
     [group: 'org.apache.avalon.framework', name: 'avalon-framework-impl', version: '4.3.1'],
     [group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.2.5'],
     [group: 'org.apache.jena', name: 'jena', version: '2.12.1'],
-    [group: 'org.apache.jena', name: 'jena-arq', version: '2.12.1'],
+    [group: 'org.apache.jena', name: 'jena-arq', version: '2.12.1', transitive: false],
     [group: 'org.apache.jena', name: 'jena-core', version: '2.12.1', transitive: false],
     [group: 'org.apache.jena', name: 'jena-iri', version: '1.1.1', transitive: false],
+    [group: 'xerces', name: 'xercesImpl', version: '2.11.0'],
     [group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.1'],
     [group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.1'],
     [group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.1'],
     [group: 'org.apache.xmlgraphics', name: 'fop', version: '1.1'],
     [group: 'org.atteo.classindex', name: 'classindex', version: '3.3'],
     [group: 'org.ccil.cowan.tagsoup', name: 'tagsoup', version: '1.2.1'],
-    [group: 'org.docbook', name: 'docbook-xsl-java-saxon', version: '1.2.0-96'],
+    [group: 'org.docbook', name: 'docbook-xsl-java-saxon', version: '1.2.1-95'],
     [group: 'org.restlet.jee', name: 'org.restlet', version: '2.2.2'],
     [group: 'org.restlet.jee', name: 'org.restlet.ext.fileupload', version: '2.2.2'],
     [group: 'org.restlet.jee', name: 'org.restlet.ext.slf4j', version: '2.2.2'],
@@ -323,7 +324,7 @@ task testSuiteMessages << {
 
 task testSuite(dependsOn: [makeDist, testSuiteMessages], type: JavaExec) {
   classpath = fileTree(dir: 'lib').include("*.jar") \
-              + files("lib/saxon-license.lic") \
+              + fileTree(dir: 'lib/' + saxonVersion).include('*.jar') \
               + files("lib/deltaxml.lic") \
               + files("build/dist/calabash.jar")
   main = 'com.xmlcalabash.drivers.RunTestReport'
@@ -342,7 +343,6 @@ task testSuite(dependsOn: [makeDist, testSuiteMessages], type: JavaExec) {
 
 task htmlReport(dependsOn: testSuite, type: JavaExec) {
   classpath = fileTree(dir: 'lib').include("*.jar") \
-              + files("lib/saxon-license.lic") \
               + files("build/dist/calabash.jar")
   main = 'net.sf.saxon.Transform'
   args('-s:' + testsReport,
@@ -352,7 +352,6 @@ task htmlReport(dependsOn: testSuite, type: JavaExec) {
 
 task aDocReport(dependsOn: testSuite, type: JavaExec) {
   classpath = fileTree(dir: 'lib').include("*.jar") \
-              + files("lib/saxon-license.lic") \
               + files("build/dist/calabash.jar")
   main = 'net.sf.saxon.Transform'
   args('-s:' + testsReport,
@@ -362,7 +361,6 @@ task aDocReport(dependsOn: testSuite, type: JavaExec) {
 
 task aDocErrReport(dependsOn: testSuite, type: JavaExec) {
   classpath = fileTree(dir: 'lib').include("*.jar") \
-              + files("lib/saxon-license.lic") \
               + files("build/dist/calabash.jar")
   main = 'net.sf.saxon.Transform'
   args('-s:' + testsReport,
@@ -393,7 +391,6 @@ task makeIZPackShell(dependsOn: copyVERSION) << {
 
 task setupIZPack(dependsOn: [makeDist, makeIZPackShell], type: JavaExec) {
   classpath = fileTree(dir: 'lib').include("*.jar") \
-              + files("lib/saxon-license.lic") \
               + files("build/dist/calabash.jar") \
               + configurations.runtime
 
