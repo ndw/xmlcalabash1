@@ -5,6 +5,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.util.AxisNodes;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.QName;
@@ -30,6 +31,10 @@ import com.xmlcalabash.util.S9apiUtils;
  * Time: 7:44:07 AM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "cx:set-cookies",
+        type = "{http://xmlcalabash.com/ns/extensions}set-cookies")
 
 public class SetCookies extends DefaultStep {
     private static final QName _cookies = new QName("","cookies");

@@ -22,6 +22,7 @@ package com.xmlcalabash.library;
 import java.util.Vector;
 import java.util.Hashtable;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.util.ProcessMatchingNodes;
 import com.xmlcalabash.util.ProcessMatch;
@@ -35,6 +36,11 @@ import com.xmlcalabash.runtime.XAtomicStep;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:string-replace",
+        type = "{http://www.w3.org/ns/xproc}string-replace")
+
 public class StringReplace extends DefaultStep implements ProcessMatchingNodes {
     private static final QName _match = new QName("", "match");
     private static final QName _replace = new QName("", "replace");

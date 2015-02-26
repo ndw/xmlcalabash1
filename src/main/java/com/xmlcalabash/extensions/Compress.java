@@ -19,6 +19,7 @@
 
 package com.xmlcalabash.extensions;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.library.Store;
@@ -32,6 +33,14 @@ import net.sf.saxon.s9api.SaxonApiException;
  *
  * N.B. This step implements both pxp:gzip and pxp:compress
  */
+
+@XMLCalabash(
+        name = "cx:compress",
+        type = "{http://xmlcalabash.com/ns/extensions}compress " +
+                "{http://xmlcalabash.com/ns/extensions}gzip " +
+                "{http://exproc.org/proposed/steps}compress " +
+                "{http://exproc.org/proposed/steps}gzip")
+
 public class Compress extends Store {
     private static final QName _compression_method = new QName("compression-method");
 

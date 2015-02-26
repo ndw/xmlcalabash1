@@ -1,5 +1,6 @@
 package com.xmlcalabash.extensions.fileutils;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.library.DefaultStep;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.core.XProcRuntime;
@@ -22,6 +23,12 @@ import java.net.URI;
  * Time: 3:17:23 PM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "pxf:tempfile",
+        type = "{http://exproc.org/proposed/steps/file}tempfile " +
+                "{http://xmlcalabash.com/ns/extensions/fileutils}tempfile")
+
 public class Tempfile extends DefaultStep {
     private static final QName _href = new QName("href");
     private static final QName _prefix = new QName("prefix");

@@ -1,5 +1,6 @@
 package com.xmlcalabash.extensions.marklogic;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.util.Base64;
 import com.xmlcalabash.util.S9apiUtils;
 import net.sf.saxon.s9api.*;
@@ -35,6 +36,11 @@ import org.xml.sax.InputSource;
  * Time: 11:24:59 AM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "ml:insert-document",
+        type = "{http://xmlcalabash.com/ns/extensions/marklogic}insert-document")
+
 public class XCCInsertDocument extends DefaultStep {
     private static final QName _user = new QName("","user");
     private static final QName _password = new QName("","password");

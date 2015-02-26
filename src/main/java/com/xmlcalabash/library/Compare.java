@@ -21,6 +21,7 @@ package com.xmlcalabash.library;
 
 import java.util.Iterator;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.core.XProcException;
@@ -42,6 +43,11 @@ import com.xmlcalabash.runtime.XAtomicStep;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:compare",
+        type = "{http://www.w3.org/ns/xproc}compare")
+
 public class Compare extends DefaultStep {
     private static final QName c_result = new QName("c", XProcConstants.NS_XPROC_STEP, "result");
     private static final QName doca = new QName("","doca");

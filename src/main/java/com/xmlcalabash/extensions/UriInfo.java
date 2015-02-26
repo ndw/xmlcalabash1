@@ -1,5 +1,6 @@
 package com.xmlcalabash.extensions;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.library.DefaultStep;
 import com.xmlcalabash.library.HttpRequest;
 import com.xmlcalabash.io.WritablePipe;
@@ -30,6 +31,11 @@ import java.util.TimeZone;
  * Time: 9:41:54 PM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "cx:uri-info",
+        type = "{http://xmlcalabash.com/ns/extensions}uri-info")
+
 public class UriInfo extends DefaultStep {
     private static final QName _href = new QName("href");
     private static final QName _method = new QName("method");

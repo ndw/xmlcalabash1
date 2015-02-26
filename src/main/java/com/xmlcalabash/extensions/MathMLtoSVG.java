@@ -1,5 +1,6 @@
 package com.xmlcalabash.extensions;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.ReadablePipe;
@@ -36,6 +37,10 @@ import java.util.Properties;
  * Time: 7:44:07 AM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "cx:mathml-to-svg",
+        type = "{http://xmlcalabash.com/ns/extensions}mathml-to-svg")
 
 public class MathMLtoSVG extends DefaultStep {
     private ReadablePipe source = null;

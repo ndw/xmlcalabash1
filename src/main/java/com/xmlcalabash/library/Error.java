@@ -19,6 +19,7 @@
 
 package com.xmlcalabash.library;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcConstants;
@@ -35,6 +36,11 @@ import com.xmlcalabash.runtime.XAtomicStep;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:error",
+        type = "{http://www.w3.org/ns/xproc}error")
+
 public class Error extends DefaultStep {
     private static final QName c_error = new QName("c", XProcConstants.NS_XPROC_STEP, "error");
     private static final QName _name = new QName("name");

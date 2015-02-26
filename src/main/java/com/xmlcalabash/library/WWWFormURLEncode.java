@@ -22,6 +22,7 @@ package com.xmlcalabash.library;
 import java.io.UnsupportedEncodingException;
 import java.util.Vector;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.util.ProcessMatch;
@@ -38,6 +39,11 @@ import com.xmlcalabash.runtime.XAtomicStep;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:www-form-urlencode",
+        type = "{http://www.w3.org/ns/xproc}www-form-urlencode")
+
 public class WWWFormURLEncode extends DefaultStep implements ProcessMatchingNodes {
     private ReadablePipe source = null;
     private WritablePipe result = null;

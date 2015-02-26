@@ -19,6 +19,7 @@
 
 package com.xmlcalabash.library;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
@@ -35,6 +36,11 @@ import com.xmlcalabash.runtime.XAtomicStep;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:pack",
+        type = "{http://www.w3.org/ns/xproc}pack")
+
 public class Pack extends DefaultStep {
     protected static final String logger = "org.xproc.library.identity";
     private static final QName _wrapper = new QName("wrapper");

@@ -19,6 +19,7 @@
 
 package com.xmlcalabash.library;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.model.RuntimeValue;
@@ -40,6 +41,11 @@ import java.util.Hashtable;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:add-attribute",
+        type = "{http://www.w3.org/ns/xproc}add-attribute")
+
 public class AddAttribute extends DefaultStep implements ProcessMatchingNodes {
     private static final QName _match = new QName("", "match");
     private static final QName _attribute_name = new QName("", "attribute-name");

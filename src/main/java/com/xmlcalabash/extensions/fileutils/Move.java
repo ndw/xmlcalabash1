@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 
+import com.xmlcalabash.core.XMLCalabash;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 
@@ -28,6 +29,12 @@ import com.xmlcalabash.util.TreeWriter;
  * Time: 3:17:23 PM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "pxf:move",
+        type = "{http://exproc.org/proposed/steps/file}move " +
+                "{http://xmlcalabash.com/ns/extensions/fileutils}move")
+
 public class Move extends DefaultStep {
     private static final QName _href = new QName("href");
     private static final QName _target = new QName("target");

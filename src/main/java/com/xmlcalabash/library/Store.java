@@ -27,6 +27,7 @@ import java.io.PrintWriter;
 import java.net.URI;
 import java.util.zip.GZIPOutputStream;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.util.*;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -47,6 +48,11 @@ import com.xmlcalabash.runtime.XAtomicStep;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:store",
+        type = "{http://www.w3.org/ns/xproc}store")
+
 public class Store extends DefaultStep {
     private static final QName _href = new QName("href");
     private static final QName _encoding = new QName("encoding");

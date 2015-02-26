@@ -23,6 +23,7 @@ import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.util.HttpUtils;
@@ -57,6 +58,11 @@ import com.xmlcalabash.runtime.XAtomicStep;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:unescape-markup",
+        type = "{http://www.w3.org/ns/xproc}unescape-markup")
+
 public class UnescapeMarkup extends DefaultStep {
     private static final QName _namespace = new QName("namespace");
     private static final QName _content_type = new QName("content-type");

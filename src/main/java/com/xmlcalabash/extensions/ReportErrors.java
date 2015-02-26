@@ -1,5 +1,6 @@
 package com.xmlcalabash.extensions;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
@@ -22,6 +23,10 @@ import net.sf.saxon.s9api.XdmSequenceIterator;
  * Time: 7:44:07 AM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "cx:report-errors",
+        type = "{http://xmlcalabash.com/ns/extensions}report-errors")
 
 public class ReportErrors extends DefaultStep {
     private static final QName c_error = new QName(XProcConstants.NS_XPROC_STEP, "error");

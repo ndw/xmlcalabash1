@@ -19,6 +19,7 @@
 
 package com.xmlcalabash.library;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.util.AxisNodes;
 import com.xmlcalabash.util.S9apiUtils;
@@ -39,6 +40,11 @@ import com.xmlcalabash.runtime.XAtomicStep;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:escape-markup",
+        type = "{http://www.w3.org/ns/xproc}escape-markup")
+
 public class EscapeMarkup extends DefaultStep {
     private ReadablePipe source = null;
     private WritablePipe result = null;

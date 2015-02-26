@@ -1,5 +1,6 @@
 package com.xmlcalabash.extensions;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.library.DefaultStep;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.io.ReadablePipe;
@@ -24,6 +25,11 @@ import org.xml.sax.InputSource;
  * Time: 8:51:10 AM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "cx:delta-xml",
+        type = "{http://xmlcalabash.com/ns/extensions}delta-xml")
+
 public class DeltaXML extends DefaultStep {
     private ReadablePipe source = null;
     private ReadablePipe alternate = null;

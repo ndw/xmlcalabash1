@@ -46,6 +46,7 @@ import java.util.Vector;
 import javax.xml.transform.URIResolver;
 import javax.xml.transform.sax.SAXSource;
 
+import com.nwalsh.annotations.SaxonExtensionFunction;
 import com.xmlcalabash.util.Input;
 import com.xmlcalabash.util.Output;
 import net.sf.saxon.Configuration;
@@ -232,8 +233,14 @@ public class XProcRuntime {
             profileWriter.startDocument(URI.create("http://xmlcalabash.com/output/profile.xml"));
         }
 
-        for (String className : config.extensionFunctions) {
+        String warnLevel = "INFO";
+        for (String className : config.extensionFunctions.keySet()) {
             try {
+                SaxonExtensionFunction annotation = config.extensionFunctions.get(className);
+                if (annotation != null) {
+                    warnLevel = annotation.warnLevel().toUpperCase();
+                }
+
                 Object def = Class.forName(className).newInstance();
                 logger.trace("Instantiated: " + className);
                 if (def instanceof ExtensionFunctionDefinition)
@@ -242,10 +249,16 @@ public class XProcRuntime {
                     processor.registerExtensionFunction((ExtensionFunction) def);
                 else
                     logger.info("Failed to instantiate extension function " + className + " because that class implements neither ExtensionFunction nor ExtensionFunctionDefinition.");
-            } catch (NoClassDefFoundError ncdfe) {
-                logger.info("Failed to instantiate extension function: " + className);
-            } catch (Exception e) {
-                logger.info("Failed to instantiate extension function: " + className);
+            } catch (Throwable e) {
+                if ("INFO".equals(warnLevel)) {
+                    logger.info("Failed to instantiate extension function: " + className);
+                } else if ("DEBUG".equals(warnLevel)) {
+                    logger.debug("Failed to instantiate extension function: " + className);
+                } else if ("TRACE".equals(warnLevel)) {
+                    logger.trace("Failed to instantiate extension function: " + className);
+                } else {
+                    logger.error("Failed to instantiate extension function: " + className);
+                }
             }
         }
 

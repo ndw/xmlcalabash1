@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.regex.Pattern;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.util.*;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.QName;
@@ -52,6 +53,11 @@ import com.xmlcalabash.runtime.XAtomicStep;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:xinclude",
+        type = "{http://www.w3.org/ns/xproc}xinclude")
+
 public class XInclude extends DefaultStep implements ProcessMatchingNodes {
     private static final String localAttrNS = "http://www.w3.org/2001/XInclude/local-attributes";
 

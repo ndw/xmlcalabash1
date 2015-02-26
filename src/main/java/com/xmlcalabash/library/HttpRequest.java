@@ -34,6 +34,7 @@ import java.util.Vector;
 
 import javax.xml.XMLConstants;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.util.*;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.QName;
@@ -91,6 +92,11 @@ import com.xmlcalabash.io.DataStore.DataReader;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.runtime.XAtomicStep;
+
+
+@XMLCalabash(
+        name = "p:http-request",
+        type = "{http://www.w3.org/ns/xproc}http-request")
 
 public class HttpRequest extends DefaultStep {
     private static final QName c_request = new QName("c", XProcConstants.NS_XPROC_STEP, "request");

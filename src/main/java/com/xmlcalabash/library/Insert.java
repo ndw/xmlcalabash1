@@ -20,6 +20,8 @@
 package com.xmlcalabash.library;
 
 import java.util.Map;
+
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.util.ProcessMatchingNodes;
@@ -34,6 +36,11 @@ import com.xmlcalabash.runtime.XAtomicStep;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:insert",
+        type = "{http://www.w3.org/ns/xproc}insert")
+
 public class Insert extends DefaultStep implements ProcessMatchingNodes {
     private static final QName _match = new QName("match");
     private static final QName _position = new QName("position");

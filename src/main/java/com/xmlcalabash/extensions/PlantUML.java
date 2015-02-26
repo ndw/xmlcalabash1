@@ -1,5 +1,6 @@
 package com.xmlcalabash.extensions;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
@@ -27,6 +28,10 @@ import java.io.ByteArrayOutputStream;
  * Time: 7:44:07 AM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "cx:plantuml",
+        type = "{http://xmlcalabash.com/ns/extensions}plantuml")
 
 public class PlantUML extends DefaultStep {
     private static final QName _format = new QName("", "format");

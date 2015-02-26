@@ -1,5 +1,6 @@
 package com.xmlcalabash.extensions;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
@@ -22,6 +23,10 @@ import java.util.HashSet;
  * Time: 7:44:07 AM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "cx:namespace-delete",
+        type = "{http://xmlcalabash.com/ns/extensions}namespace-delete")
 
 public class NamespaceDelete extends DefaultStep {
     private static final QName _prefixes = new QName("","prefixes");

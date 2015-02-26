@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Iterator;
 import java.util.Stack;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.util.ProcessMatchingNodes;
@@ -50,6 +51,11 @@ import net.sf.saxon.type.Untyped;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:wrap",
+        type = "{http://www.w3.org/ns/xproc}wrap")
+
 public class Wrap extends DefaultStep implements ProcessMatchingNodes {
     private static final QName _match = new QName("match");
     private static final QName _wrapper = new QName("wrapper");

@@ -21,6 +21,7 @@ package com.xmlcalabash.library;
 
 import java.util.Hashtable;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.util.TreeWriter;
@@ -39,6 +40,11 @@ import com.xmlcalabash.runtime.XAtomicStep;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:parameters",
+        type = "{http://www.w3.org/ns/xproc}parameters")
+
 public class Parameters extends DefaultStep {
     private static final QName c_param_set = new QName("c", XProcConstants.NS_XPROC_STEP, "param-set");
     private static final QName c_param = new QName("c", XProcConstants.NS_XPROC_STEP, "param");

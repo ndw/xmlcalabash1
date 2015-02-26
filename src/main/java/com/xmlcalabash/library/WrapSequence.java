@@ -19,6 +19,7 @@
 
 package com.xmlcalabash.library;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.util.TreeWriter;
@@ -39,6 +40,11 @@ import com.xmlcalabash.model.RuntimeValue;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:wrap-sequence",
+        type = "{http://www.w3.org/ns/xproc}wrap-sequence")
+
 public class WrapSequence extends DefaultStep {
     private static QName _wrapper = new QName("", "wrapper");
     private static QName _wrapper_prefix = new QName("", "wrapper-prefix");

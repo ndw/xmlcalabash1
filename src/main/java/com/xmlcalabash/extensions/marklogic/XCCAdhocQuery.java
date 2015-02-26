@@ -13,6 +13,7 @@ import com.marklogic.xcc.types.XdmBinary;
 import com.marklogic.xcc.types.XdmDocument;
 import com.marklogic.xcc.types.XdmElement;
 import com.marklogic.xcc.types.XdmVariable;
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.util.Base64;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.QName;
@@ -43,6 +44,11 @@ import org.xml.sax.InputSource;
  * Time: 11:24:59 AM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "ml:adhoc-query",
+        type = "{http://xmlcalabash.com/ns/extensions/marklogic}adhoc-query")
+
 public class XCCAdhocQuery extends DefaultStep {
     private static final QName _user = new QName("","user");
     private static final QName _password = new QName("","password");

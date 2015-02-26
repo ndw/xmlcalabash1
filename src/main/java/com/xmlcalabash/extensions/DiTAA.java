@@ -1,5 +1,6 @@
 package com.xmlcalabash.extensions;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
@@ -29,6 +30,10 @@ import java.util.ArrayList;
  * Time: 7:44:07 AM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "cx:ditaa",
+        type = "{http://xmlcalabash.com/ns/extensions}ditaa")
 
 public class DiTAA extends DefaultStep {
     private static final QName _shadows = new QName("", "shadows");

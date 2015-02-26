@@ -27,6 +27,7 @@ import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.util.*;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.QName;
@@ -52,6 +53,12 @@ import com.xmlcalabash.util.TreeWriter;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "pxp:zip",
+        type = "{http://exproc.org/proposed/steps}zip " +
+                "{http://xmlcalabash.com/ns/extensions}zip")
+
 public class Zip extends DefaultStep {
     protected final static QName _href = new QName("", "href");
     protected final static QName _name = new QName("", "name");

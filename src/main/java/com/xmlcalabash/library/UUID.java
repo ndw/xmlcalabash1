@@ -19,6 +19,7 @@
 
 package com.xmlcalabash.library;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.core.XProcException;
@@ -34,6 +35,11 @@ import com.xmlcalabash.runtime.XAtomicStep;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:uuid",
+        type = "{http://www.w3.org/ns/xproc}uuid")
+
 public class UUID extends DefaultStep implements ProcessMatchingNodes {
     private static final QName _version = new QName("", "version");
     private static final QName _match = new QName("", "match");

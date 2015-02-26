@@ -19,6 +19,7 @@
 
 package com.xmlcalabash.library;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
@@ -33,6 +34,11 @@ import com.xmlcalabash.runtime.XAtomicStep;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:www-form-urldecode",
+        type = "{http://www.w3.org/ns/xproc}www-form-urldecode")
+
 public class WWWFormURLDecode extends DefaultStep {
     public static final QName _value = new QName("", "value");
     public static final QName _name = new QName("", "name");

@@ -22,6 +22,7 @@ package com.xmlcalabash.library;
 import java.net.URI;
 import java.util.Map;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.util.MessageFormatter;
@@ -40,6 +41,11 @@ import com.xmlcalabash.runtime.XAtomicStep;
  *
  * @author ndw
  */
+
+@XMLCalabash(
+        name = "p:make-absolute-uris",
+        type = "{http://www.w3.org/ns/xproc}make-absolute-uris")
+
 public class MakeAbsoluteURIs extends DefaultStep implements ProcessMatchingNodes {
     private static final QName _match = new QName("", "match");
     private static final QName _base_uri = new QName("", "base-uri");

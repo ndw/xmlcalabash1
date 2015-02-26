@@ -1,5 +1,6 @@
 package com.xmlcalabash.extensions;
 
+import com.xmlcalabash.core.XMLCalabash;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -32,6 +33,12 @@ import java.io.IOException;
  * Time: 6:35:09 PM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "cx:nvdl",
+        type = "{http://xmlcalabash.com/ns/extensions}nvdl " +
+                "{http://exproc.org/proposed/steps}nvdl")
+
 public class NVDL extends DefaultStep {
     private static final QName _assert_valid = new QName("", "assert-valid");
 

@@ -1,5 +1,6 @@
 package com.xmlcalabash.extensions.osutils;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.library.DefaultStep;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.core.XProcRuntime;
@@ -23,6 +24,12 @@ import java.util.Map;
  * Time: 7:48:27 PM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "pos:env",
+        type = "{http://exproc.org/proposed/steps/os}env " +
+                "{http://xmlcalabash.com/ns/extensions/osutils}env")
+
 public class Env extends DefaultStep {
     private static final QName c_env = new QName("c", XProcConstants.NS_XPROC_STEP, "env");
     private static final QName _name = new QName("name");

@@ -5,6 +5,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.Properties;
 
+import com.xmlcalabash.core.XMLCalabash;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -31,6 +32,11 @@ import org.slf4j.LoggerFactory;
  * Time: 6:59:07 PM
  * To change this template use File | Settings | File Templates.
  */
+
+@XMLCalabash(
+        name = "cx:css-formatter",
+        type = "{http://xmlcalabash.com/ns/extensions}css-formatter")
+
 public class CssFormatter extends DefaultStep {
     private static final QName _href = new QName("","href");
     private static final QName _content_type = new QName("","content-type");
