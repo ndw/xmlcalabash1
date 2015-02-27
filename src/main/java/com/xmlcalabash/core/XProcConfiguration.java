@@ -90,7 +90,7 @@ public class XProcConfiguration {
     public Hashtable<QName,Class> implementations = new Hashtable<QName,Class> ();
     public Hashtable<String,String> serializationOptions = new Hashtable<String,String>();
     public LogOptions logOpt = LogOptions.WRAPPED;
-    public Hashtable<String,SaxonExtensionFunction> extensionFunctions = new Hashtable<String,SaxonExtensionFunction>();
+    public HashMap<String,SaxonExtensionFunction> extensionFunctions = new HashMap<String,SaxonExtensionFunction>();
     public String foProcessor = null;
     public String cssProcessor = null;
     public String xprocConfigurer = null;
