@@ -88,9 +88,8 @@ sourceSets {
 project.ext.saxonRelease = saxonVersion.substring(0,5)
 project.ext.saxonBranch  = saxonVersion.substring(0,3).replaceAll("\\.", "")
 project.ext.releaseVersion = version
-project.ext.docsVersion = "1.0.25"
 project.ext.distVersion = version + "-" + saxonBranch
-project.ext.refDocZip = 'xmlcalabash-ref-' + project.ext.docsVersion + '.zip'
+project.ext.refDocZip = 'xmlcalabash-ref-' + docsVersion + '.zip'
 
 version = project.ext.distVersion // - gets turned into . in some contexts
 group = "com.xmlcalabash"
@@ -111,7 +110,6 @@ task copyLib(type: Copy) {
 }
 
 jar {
-  archiveName "calabash-" + version + ".jar"
   manifest {
     instruction 'Built-By', builtBy
     instruction 'Implementation-Vendor', 'Norman Walsh'
@@ -242,7 +240,7 @@ task copyReferenceDocs(dependsOn: downloadReferenceDocs, type: Copy) {
   into { "build" }
   doLast {
     copy {
-      from "build/xmlcalabash-ref-" + project.ext.docsVersion
+      from "build/xmlcalabash-ref-" + docsVersion
       into "build/dist/docs/reference"
     }
   }
@@ -287,10 +285,9 @@ task sourcesJar(type: Jar) {
     classifier = 'sources'
 }
 
-task renameJar(dependsOn: jar, type: Copy) {
-  from "build/libs/calabash-" + version + ".jar"
+task copyJar(dependsOn: jar, type: Copy) {
+  from "build/libs/xmlcalabash-" + version + ".jar"
   into "build/dist"
-  rename 'calabash.*\\.jar', "calabash.jar"
 }
 
 task copyJavaDoc(dependsOn: javadoc, type: Copy) {
@@ -298,7 +295,7 @@ task copyJavaDoc(dependsOn: javadoc, type: Copy) {
   into "build/dist/docs"
 }
 
-task makeDist(dependsOn: [ build, renameJar, copyLib ]) << {
+task makeDist(dependsOn: [ build, copyJar, copyLib ]) << {
   println "Created distribution in build/dist"
 }
 
@@ -326,7 +323,7 @@ task testSuite(dependsOn: [makeDist, testSuiteMessages], type: JavaExec) {
   classpath = fileTree(dir: 'lib').include("*.jar") \
               + fileTree(dir: 'lib/' + saxonVersion).include('*.jar') \
               + files("lib/deltaxml.lic") \
-              + files("build/dist/calabash.jar")
+              + files("build/dist/xmlcalabash-" + version + ".jar")
   main = 'com.xmlcalabash.drivers.RunTestReport'
   maxHeapSize = "1024m"
   args('-D', '-a',
@@ -343,7 +340,7 @@ task testSuite(dependsOn: [makeDist, testSuiteMessages], type: JavaExec) {
 
 task htmlReport(dependsOn: testSuite, type: JavaExec) {
   classpath = fileTree(dir: 'lib').include("*.jar") \
-              + files("build/dist/calabash.jar")
+              + files("build/dist/xmlcalabash-" + version + ".jar")
   main = 'net.sf.saxon.Transform'
   args('-s:' + testsReport,
        '-xsl:resources/format-report.xsl',
@@ -352,7 +349,7 @@ task htmlReport(dependsOn: testSuite, type: JavaExec) {
 
 task aDocReport(dependsOn: testSuite, type: JavaExec) {
   classpath = fileTree(dir: 'lib').include("*.jar") \
-              + files("build/dist/calabash.jar")
+              + files("build/dist/xmlcalabash-" + version + ".jar")
   main = 'net.sf.saxon.Transform'
   args('-s:' + testsReport,
        '-xsl:resources/asciidoc-report.xsl',
@@ -361,7 +358,7 @@ task aDocReport(dependsOn: testSuite, type: JavaExec) {
 
 task aDocErrReport(dependsOn: testSuite, type: JavaExec) {
   classpath = fileTree(dir: 'lib').include("*.jar") \
-              + files("build/dist/calabash.jar")
+              + files("build/dist/xmlcalabash-" + version + ".jar")
   main = 'net.sf.saxon.Transform'
   args('-s:' + testsReport,
        '-xsl:resources/asciidoc-report.xsl',
@@ -377,21 +374,21 @@ task report(dependsOn: [htmlReport,aDocReport,aDocErrReport]) {
 // Just depend on something that will create build/dist
 task makeIZPackShell(dependsOn: copyVERSION) << {
   def shell = new File("$buildDir/dist", "calabash")
-  shell.setExecutable(true)
   shell.withPrintWriter { writer ->
     writer.println '#!/bin/bash'
-    writer.println 'java -Xmx1024m -cp %INSTALL_PATH/calabash.jar com.xmlcalabash.drivers.Main "$@"'
+    writer.println 'java -Xmx1024m -cp %INSTALL_PATH/xmlcalabash-' + version + '.jar com.xmlcalabash.drivers.Main "$@"'
   }
+  shell.setExecutable(true)
 
   def batch = new File("$buildDir/dist", "calabash.bat")
   batch.withPrintWriter { writer ->
-    writer.println 'java -Xmx1024m -cp %INSTALL_PATH/calabash.jar com.xmlcalabash.drivers.Main %*'
+    writer.println 'java -Xmx1024m -cp %INSTALL_PATH/xmlcalabash-' + version + '.jar com.xmlcalabash.drivers.Main %*'
   }
 }
 
 task setupIZPack(dependsOn: [makeDist, makeIZPackShell], type: JavaExec) {
   classpath = fileTree(dir: 'lib').include("*.jar") \
-              + files("build/dist/calabash.jar") \
+              + files("build/dist/xmlcalabash-" + version + ".jar") \
               + configurations.runtime
 
   main = 'net.sf.saxon.Transform'
@@ -413,46 +410,47 @@ signing {
 }
 
 uploadArchives {
-    repositories {
-        mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+  repositories {
+    mavenDeployer {
+      beforeDeployment { MavenDeployment deployment ->
+        signing.signPom(deployment) }
 
-            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-              authentication(userName: sonatypeUsername, password: sonatypePassword)
-            }
+      repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+        authentication(userName: sonatypeUsername, password: sonatypePassword)
+      }
 
-            pom.project {
-               name 'annotations'
-               packaging 'jar'
-               description 'An XProc processor'
-               url 'https://github.com/ndw/xmlcalabash1'
+      pom.project {
+        name 'XML Calabash'
+        packaging 'jar'
+        description 'An XProc 1.0 processor'
+        url 'https://github.com/ndw/xmlcalabash1'
 
-               scm {
-                   url 'scm:git@github.com:ndw/xmlcalabash1.git'
-                   connection 'scm:git@github.com:ndw/xmlcalabash1.git'
-                   developerConnection 'scm:git@github.com:ndw/xmlcalabash1.git'
-               }
-
-               licenses {
-                 license {
-                   name 'Common Development and Distribution License (CDDL) version 1.0'
-                   url 'http://www.opensource.org/licenses/cddl1.txt'
-                   distribution 'repo'
-                 }
-                 license {
-                   name 'GNU General Public License version 2'
-                   url 'http://www.gnu.org/licenses/gpl-2.0.txt'
-                   distribution 'repo'
-                 }
-               }
-
-               developers {
-                   developer {
-                       id 'ndw'
-                       name 'Norman Walsh'
-                   }
-               }
-           }
+        scm {
+          url 'scm:git@github.com:ndw/xmlcalabash1.git'
+          connection 'scm:git@github.com:ndw/xmlcalabash1.git'
+          developerConnection 'scm:git@github.com:ndw/xmlcalabash1.git'
         }
+
+        licenses {
+          license {
+            name 'Common Development and Distribution License (CDDL) version 1.0'
+            url 'http://www.opensource.org/licenses/cddl1.txt'
+            distribution 'repo'
+          }
+          license {
+            name 'GNU General Public License version 2'
+            url 'http://www.gnu.org/licenses/gpl-2.0.txt'
+            distribution 'repo'
+          }
+        }
+
+        developers {
+          developer {
+            id 'ndw'
+            name 'Norman Walsh'
+          }
+        }
+      }
     }
+  }
 }
