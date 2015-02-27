@@ -49,6 +49,7 @@ dependencies {
     [group: 'org.apache.avalon.framework', name: 'avalon-framework-api', version: '4.3.1'],
     [group: 'org.apache.avalon.framework', name: 'avalon-framework-impl', version: '4.3.1'],
     [group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.2.5'],
+    [group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.2.5'],
     [group: 'org.apache.jena', name: 'jena', version: '2.12.1'],
     [group: 'org.apache.jena', name: 'jena-arq', version: '2.12.1', transitive: false],
     [group: 'org.apache.jena', name: 'jena-core', version: '2.12.1', transitive: false],
@@ -286,7 +287,7 @@ task sourcesJar(type: Jar) {
 }
 
 task copyJar(dependsOn: jar, type: Copy) {
-  from "build/libs/xmlcalabash-" + version + ".jar"
+  from "build/libs/xmlcalabash-" + distVersion + ".jar"
   into "build/dist"
 }
 
