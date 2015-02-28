@@ -88,7 +88,7 @@ sourceSets {
 project.ext.saxonRelease = saxonVersion.substring(0,5)
 project.ext.saxonBranch  = saxonVersion.substring(0,3).replaceAll("\\.", "")
 project.ext.releaseVersion = version
-project.ext.distVersion = version + "-" + saxonBranch
+project.ext.distVersion = version + "-" + saxonBranch + snapshot
 project.ext.refDocZip = 'xmlcalabash-ref-' + docsVersion + '.zip'
 
 version = project.ext.distVersion // - gets turned into . in some contexts
@@ -413,9 +413,14 @@ uploadArchives {
   repositories {
     mavenDeployer {
       beforeDeployment { MavenDeployment deployment ->
-        signing.signPom(deployment) }
+        signing.signPom(deployment)
+      }
 
       repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+        authentication(userName: sonatypeUsername, password: sonatypePassword)
+      }
+
+      snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
         authentication(userName: sonatypeUsername, password: sonatypePassword)
       }
 
