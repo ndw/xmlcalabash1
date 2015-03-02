@@ -285,7 +285,11 @@ task sourcesJar(type: Jar) {
     classifier = 'sources'
 }
 
-task copyJar(dependsOn: jar, type: Copy) {
+task showCopyJar(dependsOn: jar) {
+  println "Copy from " + "build/libs/xmlcalabash-" + distVersion + ".jar"
+}
+
+task copyJar(dependsOn: [jar, showCopyJar], type: Copy) {
   from "build/libs/xmlcalabash-" + distVersion + ".jar"
   into "build/dist"
 }
