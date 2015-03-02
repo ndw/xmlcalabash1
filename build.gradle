@@ -110,6 +110,7 @@ task copyLib(type: Copy) {
 }
 
 jar {
+  baseName "xmlcalabash"
   manifest {
     instruction 'Built-By', builtBy
     instruction 'Implementation-Vendor', 'Norman Walsh'
@@ -276,13 +277,15 @@ task copyToDist(dependsOn: [copyLib,copyNotices,copyReferenceDocs,copySchemas,
 jar.dependsOn copyToDist
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from tasks.javadoc.destinationDir
+  baseName = "xmlcalabash"
+  classifier = 'javadoc'
+  from tasks.javadoc.destinationDir
 }
 
 task sourcesJar(type: Jar) {
-    from sourceSets.main.allSource
-    classifier = 'sources'
+  baseName = "xmlcalabash"
+  from sourceSets.main.allSource
+  classifier = 'sources'
 }
 
 task showCopyJar(dependsOn: jar) {
