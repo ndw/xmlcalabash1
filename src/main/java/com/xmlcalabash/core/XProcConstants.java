@@ -141,13 +141,11 @@ public class XProcConstants {
                 throw new UnsupportedOperationException("JAR file doesn't contain version.properties file!?");
             }
             config.load(stream);
-            String major = config.getProperty("version.major");
-            String minor = config.getProperty("version.minor");
-            String release = config.getProperty("version.release");
-            if (major == null || minor == null || release == null) {
+            String version = config.getProperty("version");
+            if (version == null) {
                 throw new UnsupportedOperationException("Invalid version.properties in JAR file!?");
             }
-            return major + "." + minor + "." + release;
+            return version;
         } catch (IOException ioe) {
             throw new UnsupportedOperationException("No version.properties in JAR file!?");
         }
