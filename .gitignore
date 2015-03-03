@@ -3,3 +3,4 @@
 /.gradle/
 /build/
 /target/
+/src/main/resources/etc/version.properties
