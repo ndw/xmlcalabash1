@@ -47,9 +47,7 @@ dependencies {
   compile fileTree(dir: 'lib').include("*.jar")
   compile (
     [group: 'com.drewnoakes', name: 'metadata-extractor', version: '2.7.2'],
-
     [group: 'com.nwalsh', name: 'nwalsh-annotations', version: '1.0.0'],
-    [group: 'com.nwalsh', name: 'xmlresolver', version: '0.12.0'],
     [group: 'com.thaiopensource', name: 'jing', version: '20091111', transitive: false],
     [group: 'javax.mail', name: 'javax.mail-api', version: '1.5.2'],
     [group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'],
@@ -75,6 +73,7 @@ dependencies {
     [group: 'org.restlet.jee', name: 'org.restlet.ext.slf4j', version: '2.2.2'],
     [group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.10'],
     [group: 'org.slf4j', name: 'slf4j-api', version: '1.7.10'],
+    [group: 'org.xmlresolver', name: 'xmlresolver', version: '0.12.1'],
     [group: 'xmlunit', name: 'xmlunit', version: '1.6']
   )
 
