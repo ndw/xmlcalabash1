@@ -73,6 +73,7 @@ public class Main {
     private XProcRuntime runtime = null;
     private Logger logger = LoggerFactory.getLogger(Main.class);
     private boolean debug = false;
+    private int chaseMemoryLeaks = 0;
 
     /**
      * @param args the command line arguments
@@ -94,10 +95,22 @@ public class Main {
 
         try {
             XProcConfiguration config = userArgs.createConfiguration();
+            runtime = new XProcRuntime(config);
+            debug = config.debug;
 
-            if (run(userArgs, config)) {
-                // It's just sooo much nicer if there's a newline at the end.
-                System.out.println();
+            if (chaseMemoryLeaks != 0) {
+                while (chaseMemoryLeaks > 0) {
+                    System.err.println("Checking for memory leaks, running " + chaseMemoryLeaks);
+                    run(userArgs, config);
+                    //System.out.println("Hit enter to run again: ");
+                    //System.in.read();
+                    chaseMemoryLeaks--;
+                }
+            } else {
+                if (run(userArgs, config)) {
+                    // It's just sooo much nicer if there's a newline at the end.
+                    System.out.println();
+                }
             }
 
         } catch (UnsupportedOperationException uoe) {
@@ -137,9 +150,6 @@ public class Main {
     }
 
     boolean run(UserArgs userArgs, XProcConfiguration config) throws SaxonApiException, IOException, URISyntaxException {
-        runtime = new XProcRuntime(config);
-        debug = config.debug;
-
         if (userArgs.isShowVersion()) {
             XProcConfiguration.showVersion(runtime);
         }

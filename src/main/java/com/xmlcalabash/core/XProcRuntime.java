@@ -297,21 +297,21 @@ public class XProcRuntime {
         exFuncs.add(new VersionAvailable(this));
         exFuncs.add(new XPathVersionAvailable(this));
 
-        reset();
-    }
-
-    public void resetExtensionFunctions() {
         for (XProcExtensionFunctionDefinition xf : exFuncs) {
             processor.registerExtensionFunction(xf);
         }
+
+        reset();
     }
 
     public void close() {
+        HttpClientUtils.closeQuietly(httpClient);
+        httpClient = null;
+
         for (XProcExtensionFunctionDefinition xf : exFuncs) {
             xf.close();
         }
-        HttpClientUtils.closeQuietly(httpClient);
-        httpClient = null;
+        exFuncs = null;
     }
 
     public XProcConfigurer getConfigurer() {

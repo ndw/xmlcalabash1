@@ -165,6 +165,7 @@ public class RunTestReport {
 
         RunTestReport test = new RunTestReport(runtime, new DefaultTestReporter(runtime));
         test.runTests(tests);
+        runtime.close();
     }
 
     public void runTests(Vector<String> tests) {
