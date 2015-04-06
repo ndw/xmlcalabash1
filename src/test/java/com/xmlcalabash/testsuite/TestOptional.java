@@ -1,5 +1,6 @@
 package com.xmlcalabash.testsuite;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -17,6 +18,11 @@ public class TestOptional {
     @BeforeClass
     public static void setupClass() {
         suiteRunner = new SuiteRunner();
+    }
+
+    @AfterClass
+    public static void teardownClass() {
+        suiteRunner.close();
     }
 
     @Ignore

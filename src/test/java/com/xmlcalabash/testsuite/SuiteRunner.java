@@ -13,6 +13,10 @@ public class SuiteRunner {
     XProcConfiguration config = new XProcConfiguration("he", true);
     XProcRuntime runtime = new XProcRuntime(config);
 
+    public void close() {
+        runtime.close();
+    }
+
     protected RunTestReport reporter = new RunTestReport(runtime, new DefaultTestReporter(runtime));
 
     public void runTest(String test) {
