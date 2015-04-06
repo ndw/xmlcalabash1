@@ -117,7 +117,6 @@ task copyLib(type: Copy) {
   FileCollection runtime  = configurations.runtime
   FileCollection localLib = fileTree(dir: 'lib').include("*.jar")
   FileCollection lib = runtime - localLib
-  lib = lib + files(["lib/ditaa0_9.jar"])
   String path = ""
   lib.each {
     File file -> path += " lib/" + file.name
@@ -174,7 +173,7 @@ gradle.taskGraph.whenReady { taskGraph ->
 
 // There are several steps that rely on third party libraries that
 // are either not free (RenderX, AntennaHouse, etc.) or are not
-// available through a maven repository (AFAICT, such as DiTAA).
+// available through a maven repository.
 // These tasks test for the presence of the third party libraries
 // and exclude extensions that require them if they are not
 // available.
@@ -189,18 +188,6 @@ task checkXEP {
   }
 }
 compileJava.dependsOn checkXEP
-
-task checkDiTAA {
-  doFirst {
-    try {
-      Class.forName("org.stathissideris.ascii2image.graphics.Diagram")
-    } catch (Exception e) {
-      println "DiTAA classes unavailable, skipping DiTAA"
-      sourceSets.main.java.exclude 'com/xmlcalabash/extensions/DiTAA.java'
-    }
-  }
-}
-compileJava.dependsOn checkDiTAA
 
 task checkAntennaHouse {
   doFirst {
