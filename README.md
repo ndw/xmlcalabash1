@@ -1,6 +1,6 @@
-# XML Calabash (1.0.xx)
+# XML Calabash (1.1.x)
 
-This project contains the "1.0" version of XML Calabash.
+This project contains the "1.1" version of XML Calabash.
 
 [![Build Status](https://travis-ci.org/ndw/xmlcalabash1.svg?branch=saxon96)](https://travis-ci.org/ndw/xmlcalabash1.svg?branch=saxon96)
 
@@ -16,4 +16,26 @@ I'm no longer attempting to maintain the Saxon 9.4 version.
 * The `docs` branch is moribund, see [the docs repo](http://github.com/ndw/xmlcalabash1-docs)
   instead.
 
-You can download compiled versions from [XMLCalabash.com](http://xmlcalabash.com/).
+You can download compiled versions from [the releases page](https://github.com/ndw/xmlcalabash1/releases).
+
+## Modularity
+
+As of version 1.1.0, XML Calabash is distributed in modules. This
+repository contains the core processor. The jar files from additional
+repositories are needed for some functionality:
+
+| Module   | Functionality |
+| [deltaxml](http://github.com/ndw/xmlcalabash1-deltaxml) | XML comparison with [Delta XML](http://www.deltaxml.com/) |
+| [ditaa](http://github.com/ndw/xmlcalabash1-ditaa) | ASCII diagrams with [ditaa](http://sourceforge.net/projects/ditaa/) |
+| [mathml-to-svg](http://github.com/ndw/xmlcalabash1-mathml-to-svg) | MathML to SVG conversion with [JEuclid](http://sourceforge.net/projects/jeuclid/) |
+| [metadata-extractor](http://github.com/ndw/xmlcalabash1-metadata-extractor) | Image [Metadata Extractor](https://drewnoakes.com/code/exif/) |
+| [plantuml](http://github.com/ndw/xmlcalabash1-plantuml) | ASCII diagrams with [PlantUML](http://sourceforge.net/projects/plantuml/) |
+| [print](http://github.com/ndw/xmlcalabash1-print) | Printing with [XSL FO](http://www.w3.org/standards/techs/xsl#w3c_all) or [CSS](http://www.w3.org/Style/CSS/) |
+| [rdf](http://github.com/ndw/xmlcalabash1-rdf) | Read/write/query [RDF](http://www.w3.org/RDF/) |
+| [sendmail](http://github.com/ndw/xmlcalabash1-sendmail) | Sending email |
+| [xcc](http://github.com/ndw/xmlcalabash1-xcc) | [MarkLogic](http://www.marklogic.com/) XCC steps |
+| [xmlunit](http://github.com/ndw/xmlcalabash1-xmlunt) | XML comparison with [XMLUnit](http://www.xmlunit.org/) |
+
+Simply place the appropriate jar files in your classpath, there's no
+additional configuration required. Note that you will also need commercial
+libraries and licenses for some steps.
