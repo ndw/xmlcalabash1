@@ -40,3 +40,6 @@ repositories are needed for some functionality:
 Simply place the appropriate jar files in your classpath, there's no
 additional configuration required. Note that you will also need commercial
 libraries and licenses for some steps.
+
+These steps (and XML Calabash itself) are also available
+[through Maven](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.xmlcalabash%22).
