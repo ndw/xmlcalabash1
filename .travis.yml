@@ -12,9 +12,7 @@ env:
   - secure: g27RcVSujgAB0vwOvuQs2LPbuukck0xXQCkib2IJKrYfGpl6kDWMsOabjGj31A/nzrhRSPVG4Xyj2CScBtasvvvI6HjWxLHwKydnXUn1eouRN9SlHvY+/eewAVnBQOFVLKHUfOxhL213C4x0S2rCYZ12oeJ6Z9j7XRXjoLLmeR0=
   - secure: epDgr7lHHIkV7kN+XlXTqlP45hxia2qmom4UV6PxCJOmQE0XsB6b6KU3ErXq8mUobn7SEvpQSTk+Kp1/sJrZPbSaWhEiswRBpDTXP7quSQfcKr8Je2uELqXomz16NSL1AR1Dp8h5qyDpZPV4BwzoyVzb4gJ+GdINg4dOE0dhCi0=
   - secure: BMlH6Yko0wWhavp5vslnieHoT/1N0IvP1llgkOROfVDb3vGEZ33uzDHzjkTl6jCF1pb47A3jJtxUPM6JdrYuKZQnB2IrIBJhZkDEHITzzK6INVtAFAb8s7AYk7tiA//qBf6o8u3sEE66/XwDwTOtZYU19HfF3h2X7V3lwOTAalQ=
-
-before_install:
-  - lib/update-lib.sh
+  - secure: JW6zTYrBeLJf9cZsibDAA5R1JSr7pNQTQB9mve2ilF4oNLpm9TyjfW7hccCk3rk9Azprf99/CwSyh+5pXyMqqrGwf8iG4UUrm0z+eAUaiRc8aiwLWV6+TZeFPMtOJ96+pA1EL2xT3Z3czGCUpELDo7p1vv/882kizotwqg4r6M0=
 
 deploy:
   provider: releases
@@ -31,4 +29,3 @@ deploy:
 #after_success:
 #  - find . -type f -print
 #  - unzip -v build/distributions/*.zip
-
