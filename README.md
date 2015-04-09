@@ -25,6 +25,7 @@ repository contains the core processor. The jar files from additional
 repositories are needed for some functionality:
 
 | Module   | Functionality |
+| -------- | ------------- |
 | [deltaxml](http://github.com/ndw/xmlcalabash1-deltaxml) | XML comparison with [Delta XML](http://www.deltaxml.com/) |
 | [ditaa](http://github.com/ndw/xmlcalabash1-ditaa) | ASCII diagrams with [ditaa](http://sourceforge.net/projects/ditaa/) |
 | [mathml-to-svg](http://github.com/ndw/xmlcalabash1-mathml-to-svg) | MathML to SVG conversion with [JEuclid](http://sourceforge.net/projects/jeuclid/) |
