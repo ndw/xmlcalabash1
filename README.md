@@ -35,7 +35,7 @@ repositories are needed for some functionality:
 | [rdf](http://github.com/ndw/xmlcalabash1-rdf) | Read/write/query [RDF](http://www.w3.org/RDF/) |
 | [sendmail](http://github.com/ndw/xmlcalabash1-sendmail) | Sending email |
 | [xcc](http://github.com/ndw/xmlcalabash1-xcc) | [MarkLogic](http://www.marklogic.com/) XCC steps |
-| [xmlunit](http://github.com/ndw/xmlcalabash1-xmlunt) | XML comparison with [XMLUnit](http://www.xmlunit.org/) |
+| [xmlunit](http://github.com/ndw/xmlcalabash1-xmlunit) | XML comparison with [XMLUnit](http://www.xmlunit.org/) |
 
 Simply place the appropriate jar files in your classpath, there's no
 additional configuration required. Note that you will also need commercial
