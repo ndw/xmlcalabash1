@@ -1,3 +1,5 @@
+/* Possibly requires gradle 2.x */
+
 buildscript {
   repositories {
     mavenCentral()
@@ -73,16 +75,16 @@ dependencies {
     fileTree(dir: 'lib').include("*.jar"),
     fileTree(dir: 'lib/' + saxonVersion).include('*.jar'),
     files("lib/deltaxml.lic"),
-    [group: 'com.xmlcalabash', name: 'xmlcalabash1-deltaxml', version: '1.1+'],
-    [group: 'com.xmlcalabash', name: 'xmlcalabash1-ditaa', version: '1.1+'],
-    [group: 'com.xmlcalabash', name: 'xmlcalabash1-mathml-to-svg', version: '1.1+'],
-    [group: 'com.xmlcalabash', name: 'xmlcalabash1-metadata-extractor', version: '1.1+'],
-    [group: 'com.xmlcalabash', name: 'xmlcalabash1-plantuml', version: '1.1+'],
-    [group: 'com.xmlcalabash', name: 'xmlcalabash1-print', version: '1.1+'],
-    [group: 'com.xmlcalabash', name: 'xmlcalabash1-rdf', version: '1.1+'],
-    [group: 'com.xmlcalabash', name: 'xmlcalabash1-sendmail', version: '1.1+'],
-    [group: 'com.xmlcalabash', name: 'xmlcalabash1-xcc', version: '1.1+'],
-    [group: 'com.xmlcalabash', name: 'xmlcalabash1-xmlunit', version: '1.1+']
+    [group: 'com.xmlcalabash', name: 'xmlcalabash1-deltaxml', version: '1.1.1'],
+    [group: 'com.xmlcalabash', name: 'xmlcalabash1-ditaa', version: '1.1.1'],
+    [group: 'com.xmlcalabash', name: 'xmlcalabash1-mathml-to-svg', version: '1.1.1'],
+    [group: 'com.xmlcalabash', name: 'xmlcalabash1-metadata-extractor', version: '1.1.1'],
+    [group: 'com.xmlcalabash', name: 'xmlcalabash1-plantuml', version: '1.1.1'],
+    [group: 'com.xmlcalabash', name: 'xmlcalabash1-print', version: '1.1.1'],
+    [group: 'com.xmlcalabash', name: 'xmlcalabash1-rdf', version: '1.1.1'],
+    [group: 'com.xmlcalabash', name: 'xmlcalabash1-sendmail', version: '1.1.1'],
+    [group: 'com.xmlcalabash', name: 'xmlcalabash1-xcc', version: '1.1.1'],
+    [group: 'com.xmlcalabash', name: 'xmlcalabash1-xmlunit', version: '1.1.1']
   )
 }
 
