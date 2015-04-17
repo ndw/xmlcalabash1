@@ -27,6 +27,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.MessageDigest;
@@ -265,6 +267,8 @@ public class XProcRuntime {
         htmlParser = config.htmlParser;
 
         reset();
+
+        initializeSteps();
     }
 
     public XProcRuntime(XProcRuntime runtime) {
@@ -302,6 +306,25 @@ public class XProcRuntime {
         }
 
         reset();
+
+        initializeSteps();
+    }
+
+    private void initializeSteps() {
+        for (Class klass : config.implementations.values()) {
+            try {
+                Method config = klass.getMethod("configureStep", XProcRuntime.class);
+                config.invoke(null, this);
+            } catch (NoSuchMethodException e) {
+                // nevermind
+            } catch (IllegalAccessException e) {
+                // nevermind
+            } catch (InvocationTargetException e) {
+                // nevermind
+            } catch (Exception e) {
+                System.err.println("Caught: " + e);
+            }
+        }
     }
 
     public void close() {
