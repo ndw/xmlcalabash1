@@ -65,16 +65,32 @@ public class XProcURIResolver implements URIResolver, EntityResolver, ModuleURIR
         uriResolver = resolver;
     }
 
+    public URIResolver getUnderlyingURIResolver() {
+        return uriResolver;
+    }
+
     public void setUnderlyingEntityResolver(EntityResolver resolver) {
         entityResolver = resolver;
+    }
+
+    public EntityResolver getUnderlyingEntityResolver() {
+        return entityResolver;
     }
 
     public void setUnderlyingUnparsedTextURIResolver(UnparsedTextURIResolver resolver) {
         unparsedTextResolver = resolver;
     }
 
+    public UnparsedTextURIResolver getUnderlyingUnparsedTextURIResolver() {
+        return unparsedTextResolver;
+    }
+
     public void setUnderlyingModuleURIResolver(ModuleURIResolver resolver) {
         moduleURIResolver = resolver;
+    }
+
+    public ModuleURIResolver getUnderlyingModuleURIResolver() {
+        return moduleURIResolver;
     }
 
     public void cache(XdmNode doc, URI baseURI) {
