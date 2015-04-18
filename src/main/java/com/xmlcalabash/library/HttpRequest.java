@@ -1110,8 +1110,7 @@ public class HttpRequest extends DefaultStep {
             store.readEntry(href, base, "application/xml, text/xml, */*", overrideContentType, new DataReader() {
                 public void load(URI id, String contentType, InputStream bodyStream, long len)
                         throws IOException {
-                    // FIXME: Is ISO-8859-1 the right default?
-                    String charset = HttpUtils.getCharset(contentType, "ISO-8859-1");
+                    String charset = HttpUtils.getCharset(contentType, System.getProperty("file.encoding","UTF-8"));
 
                     TreeWriter tree = new TreeWriter(runtime);
                     tree.startDocument(id);
