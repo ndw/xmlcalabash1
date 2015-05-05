@@ -1073,7 +1073,12 @@ public class Parser {
 
         value = node.getAttributeValue(new QName("method"));
         if (value != null) {
-            QName name = new QName(value, node);
+            QName name = null;
+            if (value.contains(":")) {
+                name = new QName(value, node);
+            } else {
+                name = new QName("", value);
+            }
             if ("".equals(name.getPrefix())) {
                 String method = name.getLocalName();
                 if ("html".equals(method) || "xhtml".equals(method) || "text".equals(method) || "xml".equals(method)) {
