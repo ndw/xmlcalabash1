@@ -117,37 +117,44 @@ public class XProcConfiguration {
     private boolean firstOutput = false;
 
     public XProcConfiguration() {
-        init("he", false, null);
+        logger = LoggerFactory.getLogger(this.getClass());
+        initSaxonProcessor("he", false, null);
     }
 
     // This constructor is historical, the (String, boolean) constructor is preferred
     public XProcConfiguration(boolean schemaAware) {
-        init("he", schemaAware, null);
+        logger = LoggerFactory.getLogger(this.getClass());
+        initSaxonProcessor("he", schemaAware, null);
+        init();
     }
 
     public XProcConfiguration(Input saxoncfg) {
-        init(null, false, saxoncfg);
+        logger = LoggerFactory.getLogger(this.getClass());
+        initSaxonProcessor(null, false, saxoncfg);
+        init();
     }
 
     public XProcConfiguration(String proctype, boolean schemaAware) {
-        init(proctype, schemaAware, null);
+        logger = LoggerFactory.getLogger(this.getClass());
+        initSaxonProcessor(proctype, schemaAware, null);
+        init();
     }
 
     public XProcConfiguration(Processor processor) {
+        logger = LoggerFactory.getLogger(this.getClass());
         cfgProcessor = processor;
         loadConfiguration();
         if (schemaAware != processor.isSchemaAware()) {
             throw new XProcException("Schema awareness in configuration conflicts with specified processor.");
         }
+        init();
     }
 
     public Processor getProcessor() {
         return cfgProcessor;
     }
 
-    private void init(String proctype, boolean schemaAware, Input saxoncfg) {
-        logger = LoggerFactory.getLogger(this.getClass());
-
+    private void initSaxonProcessor(String proctype, boolean schemaAware, Input saxoncfg) {
         if (schemaAware) {
             proctype = "ee";
         }
@@ -186,7 +193,13 @@ public class XProcConfiguration {
             this.schemaAware = cfgProcessor.isSchemaAware();
             saxonProcessor = Configuration.softwareEdition.toLowerCase();
         }
+    }
 
+    private void init() {
+        // If we got a schema aware processor, make sure it's reflected in our config
+        // FIXME: are there other things that should be reflected this way?
+        this.schemaAware = cfgProcessor.isSchemaAware();
+        saxonProcessor = Configuration.softwareEdition.toLowerCase();
         findStepClasses();
         findExtensionFunctions();
     }
@@ -221,6 +234,9 @@ public class XProcConfiguration {
         } else {
             cfgProcessor = new Processor(licensed);
         }
+
+        cfgProcessor.getUnderlyingConfiguration().setStripsAllWhiteSpace(false);
+        cfgProcessor.getUnderlyingConfiguration().setStripsWhiteSpace(Whitespace.NONE);
 
         String actualtype = Configuration.softwareEdition;
         if ((proctype != null) && !"he".equals(proctype) && (!actualtype.toLowerCase().equals(proctype))) {
@@ -274,9 +290,6 @@ public class XProcConfiguration {
         URI home = URIUtils.homeAsURI();
         URI cwd = URIUtils.cwdAsURI();
         URI puri = home;
-
-        cfgProcessor.getUnderlyingConfiguration().setStripsAllWhiteSpace(false);
-        cfgProcessor.getUnderlyingConfiguration().setStripsWhiteSpace(Whitespace.NONE);
 
         String cfg = System.getProperty("com.xmlcalabash.config.global");
         try {
