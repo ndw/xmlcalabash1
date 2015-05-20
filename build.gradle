@@ -70,7 +70,7 @@ dependencies {
     [group: 'org.restlet.jee', name: 'org.restlet.ext.slf4j', version: '2.2.2'],
     [group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.10'],
     [group: 'org.slf4j', name: 'slf4j-api', version: '1.7.10'],
-    [group: 'org.xmlresolver', name: 'xmlresolver', version: '0.12.1'],
+    [group: 'org.xmlresolver', name: 'xmlresolver', version: '0.12.2'],
   )
 
   reportruntime (
