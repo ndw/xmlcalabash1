@@ -216,7 +216,9 @@ public class XProcRuntime {
             throw new XProcException(e);
         }
 
-        processor.getUnderlyingConfiguration().setURIResolver(uriResolver);
+        if (config.catalogs.size() > 0) {
+            uriResolver.addCatalogs(config.catalogs);
+        }
 
         StepErrorListener errListener = new StepErrorListener(this);
         saxonConfig.setErrorListener(errListener);

@@ -17,7 +17,10 @@ import net.sf.saxon.value.Whitespace;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.lang.reflect.Method;
+import java.net.URL;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Vector;
@@ -28,6 +31,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.io.InputStream;
 import java.io.File;
+import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
 
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.DocumentSequence;
@@ -107,6 +112,7 @@ public class XProcConfiguration {
     public String jsonFlavor = JSONtoXML.MARKLOGIC;
     public boolean useXslt10 = false;
     public boolean htmlSerializer = false;
+    public Vector<String> catalogs = new Vector<String> ();
 
     public int piperackPort = 8088;
     public int piperackDefaultExpires = 300;
@@ -119,6 +125,7 @@ public class XProcConfiguration {
     public XProcConfiguration() {
         logger = LoggerFactory.getLogger(this.getClass());
         initSaxonProcessor("he", false, null);
+        init();
     }
 
     // This constructor is historical, the (String, boolean) constructor is preferred
@@ -202,6 +209,20 @@ public class XProcConfiguration {
         saxonProcessor = Configuration.softwareEdition.toLowerCase();
         findStepClasses();
         findExtensionFunctions();
+
+        String classPath = System.getProperty("java.class.path");
+        String[] pathElements = classPath.split(System.getProperty("path.separator"));
+        for (String s : pathElements) {
+            try {
+                JarFile jar = new JarFile(s);
+                ZipEntry catalog = jar.getEntry("catalog.xml");
+                if (catalog != null) {
+                    catalogs.add("jar:file://" + s + "!/catalog.xml");
+                }
+            } catch (IOException e) {
+                // nevermind
+            }
+        }
     }
 
     private void createSaxonProcessor(String proctype, boolean schemaAware, Input saxoncfg) {
