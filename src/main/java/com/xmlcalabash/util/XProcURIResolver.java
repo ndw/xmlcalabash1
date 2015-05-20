@@ -28,6 +28,8 @@ import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcRuntime;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -38,7 +40,11 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Hashtable;
+import java.util.List;
+
 import org.slf4j.Logger;
+import org.xmlresolver.CatalogSource;
+import org.xmlresolver.Resolver;
 
 /**
  * Created by IntelliJ IDEA.
@@ -91,6 +97,29 @@ public class XProcURIResolver implements URIResolver, EntityResolver, ModuleURIR
 
     public ModuleURIResolver getUnderlyingModuleURIResolver() {
         return moduleURIResolver;
+    }
+
+    public void addCatalogs(List<String> catalogs) {
+        if (uriResolver instanceof org.xmlresolver.Resolver) {
+            Resolver res = (org.xmlresolver.Resolver) uriResolver;
+            for (String catalog : catalogs) {
+                logger.debug("Adding catalog to resolver: " + catalog);
+                try {
+                    URL cat = new URL(catalog);
+                    InputSource source = new InputSource(cat.openStream());
+                    source.setSystemId(catalog);
+
+                    CatalogSource catsource = new CatalogSource.InputSourceCatalogSource(source);
+                    res.getCatalog().addSource(catsource);
+                } catch (MalformedURLException e) {
+                    logger.info("Malformed catalog URI in jar file: " + catalog);
+                } catch (IOException e) {
+                    logger.info("I/O error reading catalog URI in jar file: " + catalog);
+                }
+            }
+        } else {
+            logger.debug("Not adding catalogs to resolver, uriResolver is not an org.xmlresolver.Resolver");
+        }
     }
 
     public void cache(XdmNode doc, URI baseURI) {
@@ -184,6 +213,25 @@ public class XProcURIResolver implements URIResolver, EntityResolver, ModuleURIR
             try {
                 URI baseURI = new URI(base);
                 URI resURI = baseURI.resolve(href);
+
+                String path = baseURI.toASCIIString();
+                int pos = path.indexOf("!");
+                if (pos > 0 && (path.startsWith("jar:file:") || path.startsWith("jar:http:") || path.startsWith("jar:https:"))) {
+                    // You can't resolve() against jar: scheme URIs because they appear to be opaque.
+                    // I wonder if what follows is kosher...
+                    String fakeURIstr = "http://example.com";
+                    String subpath = path.substring(pos+1);
+                    if (subpath.startsWith("/")) {
+                        fakeURIstr += subpath;
+                    } else {
+                        fakeURIstr += "/" + subpath;
+                    }
+                    URI fakeURI = new URI(fakeURIstr);
+                    resURI = fakeURI.resolve(href);
+                    fakeURIstr = path.substring(0,pos+1) + resURI.getPath();
+                    resURI = new URI(fakeURIstr);
+                }
+
                 source = new SAXSource(new InputSource(resURI.toASCIIString()));
 
                 XMLReader reader = ((SAXSource) source).getXMLReader();
