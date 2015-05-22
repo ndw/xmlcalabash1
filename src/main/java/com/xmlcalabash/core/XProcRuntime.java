@@ -134,6 +134,7 @@ public class XProcRuntime {
     private URI baseURI = null;
     private boolean allowGeneralExpressions = true;
     private boolean allowXPointerOnText = true;
+    private boolean allowTextResults = true;
     private boolean transparentJSON = false;
     private String jsonFlavor = JSONtoXML.MARKLOGIC;
     private boolean useXslt10 = false;
@@ -225,6 +226,7 @@ public class XProcRuntime {
 
         allowGeneralExpressions = config.extensionValues;
         allowXPointerOnText = config.xpointerOnText;
+        allowTextResults = config.allowTextResults;
         transparentJSON = config.transparentJSON;
         jsonFlavor = config.jsonFlavor;
         useXslt10 = config.useXslt10;
@@ -457,6 +459,10 @@ public class XProcRuntime {
 
     public boolean getAllowXPointerOnText() {
         return allowXPointerOnText;
+    }
+
+    public boolean getAllowTextResults() {
+        return allowTextResults;
     }
 
     public boolean transparentJSON() {

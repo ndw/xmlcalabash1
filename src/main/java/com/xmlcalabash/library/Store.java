@@ -55,7 +55,6 @@ import com.xmlcalabash.runtime.XAtomicStep;
 
 public class Store extends DefaultStep {
     private static final QName _href = new QName("href");
-    private static final QName _encoding = new QName("encoding");
     private static final QName _content_type = new QName("content-type");
     private static final QName c_encoding = new QName("c", XProcConstants.NS_XPROC_STEP, "encoding");
     private static final QName c_body = new QName("c", XProcConstants.NS_XPROC_STEP, "body");
@@ -116,8 +115,13 @@ public class Store extends DefaultStep {
             logger.trace(MessageFormatter.nodeMessage(hrefOpt.getNode(), "Storing to \"" + href + "\"."));
         }
 
-        String decode = step.getExtensionAttribute(cx_decode);
         XdmNode root = S9apiUtils.getDocumentElement(doc);
+
+        String decode = step.getExtensionAttribute(cx_decode);
+        if (decode == null) {
+            decode = root.getAttributeValue(cx_decode);
+        }
+
         String contentType = root.getAttributeValue(_content_type);
         URI contentId;
         if (("true".equals(decode) || "1".equals(decode) || method != CompressionMethod.NONE)
