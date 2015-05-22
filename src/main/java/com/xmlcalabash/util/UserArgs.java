@@ -85,6 +85,7 @@ public class UserArgs {
     protected StepArgs lastStep = null;
     protected boolean extensionValues = false;
     protected boolean allowXPointerOnText = false;
+    protected boolean allowTextResults = false;
     protected boolean useXslt10 = false;
     protected boolean htmlSerializer = false;
     protected boolean transparentJSON = false;
@@ -404,6 +405,10 @@ public class UserArgs {
         this.allowXPointerOnText = allowXPointerOnText;
     }
 
+    public void setAllowTextResults(boolean allowTextResults) {
+        this.allowTextResults = allowTextResults;
+    }
+
     public void setUseXslt10(boolean useXslt10) {
         this.useXslt10 = useXslt10;
     }
@@ -556,6 +561,7 @@ public class UserArgs {
         if ((jsonFlavor != null) && !knownFlavor(jsonFlavor)) {
             config.jsonFlavor = jsonFlavor;
         }
+        config.allowTextResults |= allowTextResults;
         config.useXslt10 |= useXslt10;
         config.htmlSerializer |= htmlSerializer;
 

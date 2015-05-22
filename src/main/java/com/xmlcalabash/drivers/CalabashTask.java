@@ -662,6 +662,20 @@ public class CalabashTask extends MatchingTask {
     }
 
     /**
+     * Set whether non-XML (text) results can be returned from p:xslt and p:xquery steps,
+     * default is false.
+     *
+     * @param allowTextResults true if text results are allowed
+     */
+    public void setAllowTextResults(boolean allowTextResults) {
+        try {
+            userArgs.setAllowTextResults(allowTextResults);
+        } catch (Exception e) {
+            handleError(e);
+        }
+    }
+
+    /**
      * Set whether to enable use of XSLT 1.0;
      * optional, default is false.
      *

@@ -50,6 +50,7 @@ import com.xmlcalabash.util.S9apiUtils;
 
 public class XQuery extends DefaultStep {
     private static final QName _content_type = new QName("content-type");
+    private static final QName cx_decode = new QName("cx", XProcConstants.NS_CALABASH_EX, "decode");
 
     private ReadablePipe source = null;
     private Hashtable<QName,RuntimeValue> params = new Hashtable<QName,RuntimeValue> ();
@@ -140,10 +141,48 @@ public class XQuery extends DefaultStep {
             Iterator<XdmItem> iter = xqeval.iterator();
             while (iter.hasNext()) {
                 XdmItem item = iter.next();
+                XdmNode node = null;
+
                 if (item.isAtomicValue()) {
-                    throw new XProcException(step.getNode(), "Not expecting atomic values back from XQuery!");
+                    if (runtime.getAllowTextResults()) {
+                        TreeWriter tree = new TreeWriter(runtime);
+                        tree.startDocument(step.getNode().getBaseURI());
+                        tree.addStartElement(XProcConstants.c_result);
+                        tree.addAttribute(_content_type, "text/plain");
+                        tree.addAttribute(cx_decode,"true");
+                        tree.startContent();
+                        tree.addText(item.getStringValue());
+                        tree.addEndElement();
+                        tree.endDocument();
+                        node = tree.getResult();
+                    } else {
+                        throw new XProcException(step.getNode(), "p:xquery returned atomic value");
+                    }
+                } else {
+                    node = (XdmNode) item;
+
+                    // If the document isn't well-formed XML, encode it as text
+                    try {
+                        S9apiUtils.assertDocument(node);
+                    } catch (XProcException e) {
+                        // If the document isn't well-formed XML, encode it as text
+                        if (runtime.getAllowTextResults()) {
+                            // Document is apparently not well-formed XML.
+                            TreeWriter tree = new TreeWriter(runtime);
+                            tree.startDocument(step.getNode().getBaseURI());
+                            tree.addStartElement(XProcConstants.c_result);
+                            tree.addAttribute(_content_type, "text/plain");
+                            tree.addAttribute(cx_decode,"true");
+                            tree.startContent();
+                            tree.addText(node.toString());
+                            tree.addEndElement();
+                            tree.endDocument();
+                            node = tree.getResult();
+                        } else {
+                            throw new XProcException(step.getStep(), "p:xquery returned non-XML result", e.getCause());
+                        }
+                    }
                 }
-                XdmNode node = (XdmNode) item;
 
                 if (node.getNodeKind() != XdmNodeKind.DOCUMENT) {
                     // Make a document for this node...is this the right thing to do?

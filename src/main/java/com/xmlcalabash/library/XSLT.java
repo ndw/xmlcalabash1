@@ -77,6 +77,8 @@ public class XSLT extends DefaultStep {
     private static final QName _template_name = new QName("", "template-name");
     private static final QName _output_base_uri = new QName("", "output-base-uri");
     private static final QName _version = new QName("", "version");
+    private static final QName _content_type = new QName("content-type");
+    private static final QName cx_decode = new QName("cx", XProcConstants.NS_CALABASH_EX, "decode");
     private ReadablePipe sourcePipe = null;
     private ReadablePipe stylesheetPipe = null;
     private WritablePipe resultPipe = null;
@@ -258,7 +260,29 @@ public class XSLT extends DefaultStep {
                 String sysId = document.getBaseURI().toASCIIString();
                 xformed.getUnderlyingNode().setSystemId(sysId);
             }
-            resultPipe.write(xformed);
+
+            // If the document isn't well-formed XML, encode it as text
+            try {
+                S9apiUtils.assertDocument(xformed);
+                resultPipe.write(xformed);
+            } catch (XProcException e) {
+                // If the document isn't well-formed XML, encode it as text
+                if (runtime.getAllowTextResults()) {
+                    // Document is apparently not well-formed XML.
+                    TreeWriter tree = new TreeWriter(runtime);
+                    tree.startDocument(xformed.getBaseURI());
+                    tree.addStartElement(XProcConstants.c_result);
+                    tree.addAttribute(_content_type, "text/plain");
+                    tree.addAttribute(cx_decode,"true");
+                    tree.startContent();
+                    tree.addText(xformed.toString());
+                    tree.addEndElement();
+                    tree.endDocument();
+                    resultPipe.write(tree.getResult());
+                } else {
+                    throw new XProcException(step.getStep(), "p:xslt returned non-XML result", e.getCause());
+                }
+            }
         }
     }
     
@@ -337,7 +361,28 @@ public class XSLT extends DefaultStep {
             String href = result.getSystemId();
             XdmDestination xdmResult = secondaryResults.get(href);
             XdmNode doc = xdmResult.getXdmNode();
-            secondaryPipe.write(doc);
+
+            try {
+                S9apiUtils.assertDocument(doc);
+                secondaryPipe.write(doc);
+            } catch (XProcException e) {
+                // If the document isn't well-formed XML, encode it as text
+                if (runtime.getAllowTextResults()) {
+                    // Document is apparently not well-formed XML.
+                    TreeWriter tree = new TreeWriter(runtime);
+                    tree.startDocument(doc.getBaseURI());
+                    tree.addStartElement(XProcConstants.c_result);
+                    tree.addAttribute(_content_type, "text/plain");
+                    tree.addAttribute(cx_decode,"true");
+                    tree.startContent();
+                    tree.addText(doc.toString());
+                    tree.addEndElement();
+                    tree.endDocument();
+                    secondaryPipe.write(tree.getResult());
+                } else {
+                    throw new XProcException(step.getStep(), "p:xslt returned non-XML secondary result", e.getCause());
+                }
+            }
         }
     }
 

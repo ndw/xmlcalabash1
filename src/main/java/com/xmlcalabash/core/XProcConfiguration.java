@@ -112,6 +112,7 @@ public class XProcConfiguration {
     public String jsonFlavor = JSONtoXML.MARKLOGIC;
     public boolean useXslt10 = false;
     public boolean htmlSerializer = false;
+    public boolean allowTextResults = false;
     public Vector<String> catalogs = new Vector<String> ();
 
     public int piperackPort = 8088;
@@ -387,6 +388,7 @@ public class XProcConfiguration {
         extensionValues = "true".equals(System.getProperty("com.xmlcalabash.general-values", ""+extensionValues));
         xpointerOnText = "true".equals(System.getProperty("com.xmlcalabash.xpointer-on-text", ""+xpointerOnText));
         transparentJSON = "true".equals(System.getProperty("com.xmlcalabash.transparent-json", ""+transparentJSON));
+        allowTextResults = "true".equals(System.getProperty("com.xmlcalabash.allow-text-results", ""+allowTextResults));
         safeMode = "true".equals(System.getProperty("com.xmlcalabash.safe-mode", ""+safeMode));
         jsonFlavor = System.getProperty("com.xmlcalabash.json-flavor", jsonFlavor);
         useXslt10 = "true".equals(System.getProperty("com.xmlcalabash.use-xslt-10", ""+useXslt10));
@@ -721,6 +723,8 @@ public class XProcConfiguration {
             if (! JSONtoXML.knownFlavor(jsonFlavor)) {
                 throw new XProcException("Unrecognized JSON flavor: " + jsonFlavor);
             }
+        } else if ("allow-text-results".equals(name)) {
+            allowTextResults = "true".equals(value);
         } else if ("use-xslt-1.0".equals(name) || "use-xslt-10".equals(name)) {
             useXslt10 = "true".equals(value);
         } else if ("html-serializer".equals(name)) {

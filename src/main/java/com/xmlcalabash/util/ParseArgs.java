@@ -149,6 +149,8 @@ public class ParseArgs {
                     userArgs.setExtensionValues(true);
                 } else if ("xpointer-on-text".equals(ext)) {
                     userArgs.setAllowXPointerOnText(true);
+                } else if ("allow-text-results".equals(ext)) {
+                    userArgs.setAllowTextResults(true);
                 } else if ("use-xslt-1.0".equals(ext) || "use-xslt-10".equals(ext)) {
                     userArgs.setUseXslt10(true);
                 } else if ("html-serializer".equals(ext)) {
