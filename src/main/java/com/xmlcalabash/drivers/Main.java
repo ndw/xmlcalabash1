@@ -81,7 +81,9 @@ public class Main {
     public static void main(String[] args) throws IOException {
         Main main = new Main();
         main.run(args);
-        System.exit(exitStatus);
+        if (exitStatus != 0) {
+            System.exit(exitStatus);
+        }
     }
 
     public void run(String[] args) throws IOException {
