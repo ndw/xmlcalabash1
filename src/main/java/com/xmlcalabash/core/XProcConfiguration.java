@@ -220,6 +220,10 @@ public class XProcConfiguration {
                 if (catalog != null) {
                     catalogs.add("jar:file://" + s + "!/catalog.xml");
                 }
+                catalog = jar.getEntry("META-INF/catalog.xml");
+                if (catalog != null) {
+                    catalogs.add("jar:file://" + s + "!/META-INF/catalog.xml");
+                }
             } catch (IOException e) {
                 // nevermind
             }
