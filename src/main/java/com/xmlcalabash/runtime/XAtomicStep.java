@@ -345,6 +345,7 @@ public class XAtomicStep extends XStep {
         // Calculate all the options
         DeclareStep decl = step.getDeclaration();
         inScopeOptions = parent.getInScopeOptions();
+        Hashtable<QName,RuntimeValue> futureOptions = new Hashtable<QName,RuntimeValue> ();
         for (QName name : step.getOptions()) {
             Option option = step.getOption(name);
             RuntimeValue value = computeValue(option);
@@ -362,7 +363,11 @@ public class XAtomicStep extends XStep {
             }
 
             xstep.setOption(name, value);
-            inScopeOptions.put(name, value);
+            futureOptions.put(name, value);
+        }
+
+        for (QName opt : futureOptions.keySet()) {
+            inScopeOptions.put(opt, futureOptions.get(opt));
         }
 
         xstep.reset();
