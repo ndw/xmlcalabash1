@@ -167,6 +167,10 @@ public class ValidateWithSCH extends DefaultStep {
 
         XdmNode report = result.getXdmNode();
 
+        // Write the report before throwing an exception so that p:log on the validate
+        // step can do something useful.
+        reportPipe.write(report);
+
         boolean failedAsserts = checkFailedAssert(report);
 
         if (failedAsserts && getOption(_assert_valid,false)) {
@@ -174,7 +178,6 @@ public class ValidateWithSCH extends DefaultStep {
         }
 
         resultPipe.write(sourceXML);
-        reportPipe.write(report);
     }
 
     private boolean checkFailedAssert(XdmNode doc) {
