@@ -59,6 +59,7 @@ dependencies {
     [group: 'junit', name: 'junit', version: '4.12'],
     [group: 'net.java.dev.msv', name: 'msv-core', version: '2013.6.1'],
     [group: 'net.sf.saxon', name: 'Saxon-HE', version: saxonVersion ],
+    [group: 'com.ibm.icu', name: 'icu4j', version: '49.1'],
     [group: 'nu.validator.htmlparser', name: 'htmlparser', version: '1.4'],
     [group: 'org.apache.ant', name: 'ant', version: '1.9.4'],
     [group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.2.5'],
