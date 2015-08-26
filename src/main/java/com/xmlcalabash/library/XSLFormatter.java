@@ -85,6 +85,9 @@ public class XSLFormatter extends DefaultStep {
                     break;
                 } catch (NoClassDefFoundError ncdfe) {
                     logger.debug("No FO processor class available: " + className);
+                    if (runtime.getDebug()) {
+                        ncdfe.printStackTrace();
+                    }
                     pexcept = ncdfe;
                     provider = null;
                 } catch (Exception e) {
