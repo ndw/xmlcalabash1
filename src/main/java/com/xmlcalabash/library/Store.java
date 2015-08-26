@@ -261,42 +261,38 @@ public class Store extends DefaultStep {
         }
     }
 
-    private URI storeText(XdmNode doc, String href, String base,
-            String media) {
+    private URI storeText(XdmNode doc, String href, String base, String media) {
+        final Serializer serializer = makeSerializer();
+        serializer.setOutputProperty(Serializer.Property.METHOD, "text");
+
         if (media == null) {
             media = "text/plain";
         }
 
         try {
-            final String text = doc.getStringValue();
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            OutputStream outstr = baos;
+
+            if (method == CompressionMethod.GZIP) {
+                GZIPOutputStream gzout = new GZIPOutputStream(outstr);
+                outstr = gzout;
+            }
+
+            serializer.setOutputStream(outstr);
+            try {
+                S9apiUtils.serialize(runtime, doc, serializer);
+            } catch (SaxonApiException e) {
+                throw new IOException(e);
+            }
 
             if (href == null) {
-                OutputStream outstr = null;
-                ByteArrayOutputStream baos = null;
-                baos = new ByteArrayOutputStream();
-                outstr = baos;
-                try{
-                    if (method == CompressionMethod.GZIP) {
-                        GZIPOutputStream gzout = new GZIPOutputStream(outstr);
-                        outstr = gzout;
-                    }
-
-                    outstr.write(text.getBytes());
-                } finally {
-                    outstr.close();
-                }
                 returnData(baos);
                 return null;
             } else {
                 DataStore store = runtime.getDataStore();
                 return store.writeEntry(href, base, media, new DataWriter() {
                     public void store(OutputStream outstr) throws IOException {
-                        if (method == CompressionMethod.GZIP) {
-                            GZIPOutputStream gzout = new GZIPOutputStream(outstr);
-                            outstr = gzout;
-                        }
-
-                        outstr.write(text.getBytes());
+                        outstr.write(baos.toByteArray());
                     }
                 });
             }
