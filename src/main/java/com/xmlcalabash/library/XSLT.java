@@ -19,6 +19,7 @@
 
 package com.xmlcalabash.library;
 
+import java.io.ByteArrayOutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Hashtable;
@@ -49,6 +50,7 @@ import net.sf.saxon.lib.OutputURIResolver;
 import net.sf.saxon.lib.UnparsedTextURIResolver;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.Serializer;
 import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -271,7 +273,20 @@ public class XSLT extends DefaultStep {
                     tree.addAttribute(_content_type, "text/plain");
                     tree.addAttribute(cx_decode,"true");
                     tree.startContent();
-                    tree.addText(xformed.toString());
+
+                    // Serialize the content as text so that we don't wind up with encoded XML characters
+                    Serializer serializer = makeSerializer();
+                    serializer.setOutputProperty(Serializer.Property.METHOD, "text");
+
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    serializer.setOutputStream(baos);
+                    try {
+                        S9apiUtils.serialize(runtime, xformed, serializer);
+                    } catch (SaxonApiException e2) {
+                        throw new XProcException(e2);
+                    }
+
+                    tree.addText(baos.toString());
                     tree.addEndElement();
                     tree.endDocument();
                     resultPipe.write(tree.getResult());
@@ -369,7 +384,7 @@ public class XSLT extends DefaultStep {
                     tree.startDocument(doc.getBaseURI());
                     tree.addStartElement(XProcConstants.c_result);
                     tree.addAttribute(_content_type, "text/plain");
-                    tree.addAttribute(cx_decode,"true");
+                    tree.addAttribute(cx_decode, "true");
                     tree.startContent();
                     tree.addText(doc.toString());
                     tree.addEndElement();
