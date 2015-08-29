@@ -439,7 +439,11 @@ public class XAtomicStep extends XStep {
 
         QName pname = null;
         if (ns == null) {
-            pname = new QName(name,pnode);
+            if (name.contains(":")) {
+                pname = new QName(name,pnode);
+            } else {
+                pname = new QName(name);
+            }
         } else {
             int pos = name.indexOf(":");
             if (pos > 0) {
