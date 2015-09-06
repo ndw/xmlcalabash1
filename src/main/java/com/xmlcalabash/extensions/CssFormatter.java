@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 
 public class CssFormatter extends DefaultStep {
     private static final QName _href = new QName("","href");
+    private static final QName _css = new QName("","css");
     private static final QName _content_type = new QName("","content-type");
     private ReadablePipe source = null;
     private ReadablePipe css = null;
@@ -90,7 +91,7 @@ public class CssFormatter extends DefaultStep {
             throw new XProcException(step.getNode(), "Failed to instantiate CSS provider");
         }
 
-        while (css.moreDocuments()) {
+        while (css != null && css.moreDocuments()) {
             XdmNode style = css.read();
             provider.addStylesheet(style);
         }
@@ -101,6 +102,13 @@ public class CssFormatter extends DefaultStep {
         } else {
             contentType = "application/pdf";
         }
+
+        if (getOption(_css) != null) {
+            String s = getOption(_css).getString();
+            for (String css : s.split("\\s+")) {
+                provider.addStylesheet(css);
+            }
+       }
 
         String href = getOption(_href).getString();
         String base = getOption(_href).getBaseURI().toASCIIString();

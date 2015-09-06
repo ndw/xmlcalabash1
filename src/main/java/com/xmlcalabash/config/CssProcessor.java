@@ -17,5 +17,6 @@ import java.util.Properties;
 public interface CssProcessor {
     public void initialize(XProcRuntime runtime, XStep step, Properties options);
     public void addStylesheet(XdmNode doc);
+    public void addStylesheet(String uri);
     public void format(XdmNode doc, OutputStream out, String contentType);
 }
