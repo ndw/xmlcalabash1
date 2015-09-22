@@ -165,6 +165,27 @@ public class ParseArgs {
                 continue;
             }
 
+            if (arg.startsWith("--serialize")) {
+                String ser = parseString(null, "serialize");
+                String port = null;
+                String param = null;
+                String value = null;
+                int pos = ser.indexOf('=');
+                if (pos < 0) {
+                    throw new XProcException("Invalid serialization parameter: " + ser);
+                }
+                param = ser.substring(0,pos);
+                value = ser.substring(pos+1);
+                pos = param.indexOf(':');
+                if (pos >= 0) {
+                    port = param.substring(0, pos);
+                    param = param.substring(pos+1);
+                }
+
+                userArgs.setSerializationParameter(port, param, value);
+                continue;
+            }
+
             if (arg.startsWith("-")) {
                 throw new XProcException("Unrecognized option: '" + arg + "'.");
             }
