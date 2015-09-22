@@ -628,12 +628,6 @@ public class UserArgs {
         tree.startContent();
 
         tree.addStartElement(p_input);
-        tree.addAttribute(new QName("port"), "source");
-        tree.addAttribute(new QName("sequence"), "true");
-        tree.startContent();
-        tree.addEndElement();
-
-        tree.addStartElement(p_input);
         tree.addAttribute(new QName("port"), "parameters");
         tree.addAttribute(new QName("kind"), "parameter");
         tree.startContent();
@@ -902,6 +896,9 @@ public class UserArgs {
             }
 
             stepName = makeQName(plainStepName);
+            if ("".equals(stepName.getNamespaceURI())) {
+                stepName = new QName("p", "http://www.w3.org/ns/xproc", stepName.getLocalName());
+            }
 
             options.clear();
             for (Entry<String, String> plainOption : plainOptions.entrySet()) {
