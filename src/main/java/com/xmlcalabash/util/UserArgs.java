@@ -92,6 +92,7 @@ public class UserArgs {
     protected String jsonFlavor = null;
     protected Integer piperackPort = null;
     protected Integer piperackExpires = null;
+    protected Map<String,String> serParams = new HashMap<String, String> ();
 
     public void setDebug(boolean debug) {
         this.debug = debug;
@@ -425,6 +426,46 @@ public class UserArgs {
         this.jsonFlavor = jsonFlavor;
         if ((jsonFlavor != null) && !knownFlavor(jsonFlavor)) {
             throw new XProcException("Unknown JSON flavor: '" + jsonFlavor + "'.");
+        }
+    }
+
+    public void setSerializationParameter(String port, String param, String value) {
+        if (port == null) {
+            port = "*";
+        }
+        if (param.equals("byte-order-mark")
+                || param.equals("escape-uri-attributes")
+                || param.equals("include-content-type")
+                || param.equals("indent")
+                || param.equals("omit-xml-declaration")
+                || param.equals("undeclare-prefixes")
+                || param.equals("method")
+                || param.equals("doctype-public")
+                || param.equals("doctype-system")
+                || param.equals("encoding")
+                || param.equals("media-type")
+                || param.equals("normalization-form")
+                || param.equals("standalone")
+                || param.equals("version")) {
+            serParams.put(port + ":" + param, value);
+        } else {
+            throw new XProcException("Unsupported or unrecognized serialization parameter: " + param);
+        }
+    }
+
+    public String getSerializationParameter(String port, String param) {
+        if (serParams.containsKey(port + ":" + param)) {
+            return serParams.get(port + ":" + param);
+        } else {
+            return null;
+        }
+    }
+
+    public String getSerializationParameter(String param) {
+        if (serParams.containsKey("*:" + param)) {
+            return serParams.get("*:" + param);
+        } else {
+            return null;
         }
     }
 
