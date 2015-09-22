@@ -151,6 +151,26 @@ public class Main {
         }
     }
 
+    // This method runs the pipeline but doesn't catch any exceptions.
+    // The idea is you could call this from some other object and catch (or not) the
+    // exceptions yourself.
+    public void runMethod(String[] args) throws IOException, SaxonApiException, URISyntaxException {
+        UserArgs userArgs = new ParseArgs().parse(args);
+
+        XProcConfiguration config = userArgs.createConfiguration();
+        runtime = new XProcRuntime(config);
+        debug = config.debug;
+
+        try {
+            run(userArgs, config);
+        } finally {
+            // Here all memory should be freed by the next gc, right?
+            if (runtime != null) {
+                runtime.close();
+            }
+        }
+    }
+
     boolean run(UserArgs userArgs, XProcConfiguration config) throws SaxonApiException, IOException, URISyntaxException {
         if (userArgs.isShowVersion()) {
             XProcConfiguration.showVersion(runtime);
