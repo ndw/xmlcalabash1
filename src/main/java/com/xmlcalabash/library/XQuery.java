@@ -133,7 +133,7 @@ public class XQuery extends DefaultStep {
                 if (runtime.getAllowGeneralExpressions()) {
                     xqeval.setExternalVariable(name, v.getValue());
                 } else {
-                    xqeval.setExternalVariable(name, new XdmAtomicValue(v.getString()));
+                    xqeval.setExternalVariable(name, v.getUntypedAtomic(runtime));
                 }
 
             }

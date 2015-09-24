@@ -211,7 +211,7 @@ public class XSLT extends DefaultStep {
                 if (runtime.getAllowGeneralExpressions()) {
                     transformer.setParameter(name, v.getValue());
                 } else {
-                    transformer.setParameter(name, new XdmAtomicValue(v.getString()));
+                    transformer.setParameter(name, v.getUntypedAtomic(runtime));
                 }
             }
 
