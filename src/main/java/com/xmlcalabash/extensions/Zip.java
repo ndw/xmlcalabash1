@@ -12,6 +12,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
@@ -20,6 +21,7 @@ import java.util.Map;
 import java.util.zip.CRC32;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
@@ -27,8 +29,6 @@ import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import com.xmlcalabash.core.XMLCalabash;
-import com.xmlcalabash.util.*;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -36,18 +36,23 @@ import net.sf.saxon.s9api.Serializer;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.DataStore;
 import com.xmlcalabash.io.DataStore.DataInfo;
 import com.xmlcalabash.io.DataStore.DataReader;
-import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.io.ReadablePipe;
+import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.library.DefaultStep;
 import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.util.AxisNodes;
+import com.xmlcalabash.util.Base64;
+import com.xmlcalabash.util.JSONtoXML;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TreeWriter;
+import com.xmlcalabash.util.XMLtoJSON;
 
 /**
  *
@@ -185,7 +190,7 @@ public class Zip extends DefaultStep {
             store.readEntry(zipFn, zipFn, "application/zip, */*", null, new DataReader() {
                 public void load(URI id, String media, InputStream stream,
                         long len) throws IOException {
-                    read(id, stream, dfactory);
+                    read(id, zipFn, dfactory);
                 }
             });
         } catch (MalformedURLException mue) {
@@ -222,7 +227,7 @@ public class Zip extends DefaultStep {
         }
     }
 
-    void read(URI id, InputStream stream, final DatatypeFactory dfactory)
+    void read(URI id, String zipFn, final DatatypeFactory dfactory)
             throws IOException {
         TreeWriter tree = new TreeWriter(runtime);
     
@@ -231,13 +236,14 @@ public class Zip extends DefaultStep {
         tree.addAttribute(_href, id.toASCIIString());
         tree.startContent();
     
-        ZipInputStream zipStream = new ZipInputStream(stream);
+        ZipFile zipFile = new ZipFile(zipFn.substring("file:/".length()));
     
         try {
             GregorianCalendar cal = new GregorianCalendar();
 
-            ZipEntry entry = zipStream.getNextEntry();
-            while (entry != null) {
+            Enumeration<? extends ZipEntry> e = zipFile.entries();
+            while (e.hasMoreElements()) {
+                ZipEntry entry = e.nextElement();
                 cal.setTimeInMillis(entry.getTime());
                 XMLGregorianCalendar xmlCal = dfactory.newXMLGregorianCalendar(cal);
 
@@ -258,7 +264,6 @@ public class Zip extends DefaultStep {
                 tree.addAttribute(_date, xmlCal.toXMLFormat());
                 tree.startContent();
                 tree.addEndElement();
-                entry = zipStream.getNextEntry();
             }
 
             tree.addEndElement();
@@ -266,7 +271,7 @@ public class Zip extends DefaultStep {
             result.write(tree.getResult());
 
         } finally {
-            zipStream.close();
+            zipFile.close();
         }
     }
 
