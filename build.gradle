@@ -120,6 +120,14 @@ project.ext.refDocZip = 'xmlcalabash-ref-' + docsVersion + '.zip'
 version = project.ext.distVersion // - gets turned into . in some contexts
 group = "com.xmlcalabash"
 
+if (!hasProperty("sonatypeUsername")) {
+  ext.sonatypeUsername=""
+}
+
+if (!hasProperty("sonatypePassword")) {
+  ext.sonatypePassword=""
+}
+
 def Properties versionProps = new Properties()
 def versionPropsFile = file("src/main/resources/etc/version.properties")
 versionProps['version'] = releaseVersion
