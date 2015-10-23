@@ -467,6 +467,14 @@ uploadArchives {
           }
         }
 
+        repositories {
+          repository {
+            id 'maven-restlet'
+            name 'Public online Restlet repository'
+            url 'http://maven.restlet.org'
+          }
+        }
+
         developers {
           developer {
             id 'ndw'
