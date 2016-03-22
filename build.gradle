@@ -419,6 +419,54 @@ gradle.taskGraph.whenReady { taskGraph ->
   }
 }
 
+def mavenPom = {
+  name 'XML Calabash'
+  packaging 'jar'
+  description 'An XProc 1.0 processor'
+  url 'https://github.com/ndw/xmlcalabash1'
+
+  scm {
+    url 'scm:git@github.com:ndw/xmlcalabash1.git'
+    connection 'scm:git@github.com:ndw/xmlcalabash1.git'
+    developerConnection 'scm:git@github.com:ndw/xmlcalabash1.git'
+  }
+
+  licenses {
+    license {
+      name 'Common Development and Distribution License (CDDL) version 1.0'
+      url 'http://www.opensource.org/licenses/cddl1.txt'
+      distribution 'repo'
+    }
+    license {
+      name 'GNU General Public License version 2'
+      url 'http://www.gnu.org/licenses/gpl-2.0.txt'
+      distribution 'repo'
+    }
+  }
+
+  developers {
+    developer {
+      id 'ndw'
+      name 'Norman Walsh'
+    }
+  }
+
+  repositories {
+    repository {
+      id 'restlet'
+      url 'http://maven.restlet.org'
+    }
+  }
+}
+
+install {
+  repositories {
+    mavenInstaller {
+      pom.project(mavenPom)
+    }
+  }
+}
+
 uploadArchives {
   repositories {
     mavenDeployer {
@@ -434,46 +482,7 @@ uploadArchives {
         authentication(userName: sonatypeUsername, password: sonatypePassword)
       }
 
-      pom.project {
-        name 'XML Calabash'
-        packaging 'jar'
-        description 'An XProc 1.0 processor'
-        url 'https://github.com/ndw/xmlcalabash1'
-
-        scm {
-          url 'scm:git@github.com:ndw/xmlcalabash1.git'
-          connection 'scm:git@github.com:ndw/xmlcalabash1.git'
-          developerConnection 'scm:git@github.com:ndw/xmlcalabash1.git'
-        }
-
-        licenses {
-          license {
-            name 'Common Development and Distribution License (CDDL) version 1.0'
-            url 'http://www.opensource.org/licenses/cddl1.txt'
-            distribution 'repo'
-          }
-          license {
-            name 'GNU General Public License version 2'
-            url 'http://www.gnu.org/licenses/gpl-2.0.txt'
-            distribution 'repo'
-          }
-        }
-
-        developers {
-          developer {
-            id 'ndw'
-            name 'Norman Walsh'
-          }
-        }
-
-        repositories {
-          repository {
-            id 'restlet'
-            url 'http://maven.restlet.org'
-          }
-        }
-      }
-
+      pom.project(mavenPom)
     }
   }
 }
