@@ -465,7 +465,15 @@ uploadArchives {
             name 'Norman Walsh'
           }
         }
+
+        repositories {
+          repository {
+            id 'restlet'
+            url 'http://maven.restlet.org'
+          }
+        }
       }
+
     }
   }
 }
