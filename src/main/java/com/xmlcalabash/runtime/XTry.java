@@ -117,8 +117,8 @@ public class XTry extends XCompoundStep {
                 // Hey, no one reported this exception. We better do it.
                 treeWriter.addStartElement(c_error);
 
-                String message = xe.getMessage();
                 StructuredQName qCode = null;
+                String message = xe.getMessage();
 
                 if (xe instanceof XPathException) {
                     XPathException xxx = (XPathException) xe;
@@ -160,6 +160,10 @@ public class XTry extends XCompoundStep {
                     if (node.getColumnNumber() > 0) {
                         treeWriter.addAttribute(_column, ""+node.getColumnNumber());
                     }
+                }
+
+                if (message == null) {
+                    message = "";
                 }
 
                 treeWriter.startContent();
