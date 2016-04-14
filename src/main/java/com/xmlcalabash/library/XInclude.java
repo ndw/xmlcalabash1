@@ -292,6 +292,8 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
 
                 return false;
             }
+        } else if (xi_fallback.equals(node.getNodeName())) {
+            throw new XProcException("Invalid placement for xi:fallback element");
         } else {
             matcher.addStartElement(node);
             matcher.addAttributes(node);
