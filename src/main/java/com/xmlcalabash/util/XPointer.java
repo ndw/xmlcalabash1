@@ -1,5 +1,6 @@
 package com.xmlcalabash.util;
 
+import com.xmlcalabash.core.XProcConstants;
 import net.sf.saxon.s9api.*;
 
 import java.io.BufferedReader;
@@ -29,8 +30,10 @@ public class XPointer {
 
     private Vector<XPointerScheme> parts = new Vector<XPointerScheme> ();
     private int readLimit = 0;
+    private XProcRuntime runtime = null;
 
-    public XPointer(String xpointer, int readLimit) {
+    public XPointer(XProcRuntime runtime, String xpointer, int readLimit) {
+        this.runtime = runtime;
         this.readLimit = readLimit;
         String pointer = xpointer;
         while (pointer != null) {
@@ -103,6 +106,13 @@ public class XPointer {
         // FIXME: Hack! Is this acceptable?
         if (xpointer.startsWith("/") && !xpointer.contains("(")) {
             xpointer = "element(" + xpointer + ")";
+        } else {
+            try {
+                TypeUtils.checkType(runtime, xpointer, XProcConstants.xs_NCName, null);
+                xpointer = "element(" + xpointer + ")";
+            } catch (XProcException xe) {
+                // nop
+            }
         }
 
         xpointer = xpointer.trim();
