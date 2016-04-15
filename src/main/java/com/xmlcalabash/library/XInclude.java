@@ -254,7 +254,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
             } else {
                 setXmlId.push(setId);
 
-                subdoc = readXML(href, node.getBaseURI().toASCIIString());
+                subdoc = readXML(node, href, node.getBaseURI().toASCIIString());
 
                 String iuri = null;
 
@@ -412,16 +412,24 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
         }
     }
 
-    public XdmNode readXML(String href, String base) {
+    public XdmNode readXML(XdmNode node, String href, String base) {
         logger.trace("XInclude read XML: " + href + " (" + base + ")");
 
-        try {
-            XdmNode doc = runtime.parse(href, base);
-            return doc;
-        } catch (Exception e) {
-            logger.debug("XInclude read XML failed");
-            mostRecentException = e;
-            return null;
+        if (href == null || "".equals(href)) {
+            XdmNode ptr = node;
+            while (ptr.getParent() != null) {
+                ptr = ptr.getParent();
+            }
+            return ptr;
+        } else {
+            try {
+                XdmNode doc = runtime.parse(href, base);
+                return doc;
+            } catch (Exception e) {
+                logger.debug("XInclude read XML failed");
+                mostRecentException = e;
+                return null;
+            }
         }
     }
 
