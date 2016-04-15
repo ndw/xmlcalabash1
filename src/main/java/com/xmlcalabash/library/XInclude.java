@@ -66,6 +66,8 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
     private static final QName _fixup_xml_base = new QName("", "fixup-xml-base");
     private static final QName _fixup_xml_lang = new QName("", "fixup-xml-lang");
     private static final QName _set_xml_id = new QName("", "set-xml-id");
+    private static final QName _accept = new QName("", "accept");
+    private static final QName _accept_language = new QName("", "accept-language");
     private static final QName cx_trim = new QName("cx", XProcConstants.NS_CALABASH_EX, "trim");
     private static final QName cx_read_limit = new QName("cx", XProcConstants.NS_CALABASH_EX, "read-limit");
     private static final QName _encoding = new QName("", "encoding");
@@ -170,6 +172,19 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
             String xptr = node.getAttributeValue(_xpointer);
             String fragid = node.getAttributeValue(_fragid);
             String setId = node.getAttributeValue(_set_xml_id);
+            String accept = node.getAttributeValue(_accept);
+            String accept_lang = node.getAttributeValue(_accept_language);
+
+            if (accept != null && accept.matches(".*[^\u0020-\u007e].*")) {
+                throw new XProcException("Invalid characters in accept value");
+            }
+
+            if (accept_lang != null && accept_lang.matches(".*[^\u0020-\u007e].*")) {
+                throw new XProcException("Invalid characters in accept value");
+            }
+
+            // FIXME: Take accept and accept_language into consideration when retrieving resources
+
             XPointer xpointer = null;
             XdmNode subdoc = null;
 
