@@ -226,7 +226,7 @@ public class ReadableDocument implements ReadablePipe {
                 ptr = "element(" + ptr + ")";
             }
 
-            XPointer xptr = new XPointer(ptr, 1024 * 1000); // does this need to be configurable? No, because there can be only one fragid, right?
+            XPointer xptr = new XPointer(runtime, ptr, 1024 * 1000); // does this need to be configurable? No, because there can be only one fragid, right?
             Vector<XdmNode> nodes = xptr.selectNodes(runtime, doc);
 
             if (nodes.size() == 1) {

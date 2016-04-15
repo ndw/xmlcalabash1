@@ -48,21 +48,21 @@ public class XPointerTest extends TestCase {
     */
 
     public void testXmlns() {
-        XPointer xp = new XPointer("xmlns(a=http://example.com/a) xmlns(b=http://example.com/b)", 1024000);
+        XPointer xp = new XPointer(null, "xmlns(a=http://example.com/a) xmlns(b=http://example.com/b)", 1024000);
         assertNotNull(xp);
 
-        xp = new XPointer("xmlns(a=http://example.com/a)xmlns(b=http://example.com/b)", 1024000);
+        xp = new XPointer(null, "xmlns(a=http://example.com/a)xmlns(b=http://example.com/b)", 1024000);
         assertNotNull(xp);
 
-        xp = new XPointer("xmlns(a=http://example.com/^(a^))xmlns(b=http://example.com/b)", 1024000);
+        xp = new XPointer(null, "xmlns(a=http://example.com/^(a^))xmlns(b=http://example.com/b)", 1024000);
         assertNotNull(xp);
     }
 
     public void testSchemes() {
-        XPointer xp = new XPointer("xmlns(a=http://example.com/a) a:unk(a=^^b)", 1024000);
+        XPointer xp = new XPointer(null, "xmlns(a=http://example.com/a) a:unk(a=^^b)", 1024000);
         assertNotNull(xp);
 
-        xp = new XPointer("xmlns(a=http://example.com/a)xmlns(b=http://example.com/b) a:unk(a) b:unk(b)", 1024000);
+        xp = new XPointer(null, "xmlns(a=http://example.com/a)xmlns(b=http://example.com/b) a:unk(a) b:unk(b)", 1024000);
         assertNotNull(xp);
 
         /*

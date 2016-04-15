@@ -245,7 +245,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                 if ("text".equals(parse) && !xptr.trim().startsWith("text(")) {
                     xptr = "text(" + xptr + ")";
                 }
-                xpointer = new XPointer(xptr, readLimit);
+                xpointer = new XPointer(runtime, xptr, readLimit);
             }
 
             if ("text".equals(parse)) {
