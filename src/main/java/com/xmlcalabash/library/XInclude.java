@@ -185,6 +185,16 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
 
             // FIXME: Take accept and accept_language into consideration when retrieving resources
 
+            XdmNode fallback = null;
+            for (XdmNode child : new AxisNodes(node, Axis.CHILD, AxisNodes.SIGNIFICANT)) {
+                if (child.getNodeKind() == XdmNodeKind.ELEMENT && xi_fallback.equals(child.getNodeName())) {
+                    if (fallback != null) {
+                        throw new XProcException(step.getNode(), "XInclude element must contain at most one xi:fallback element.");
+                    }
+                    fallback = child;
+                }
+            }
+
             XPointer xpointer = null;
             XdmNode subdoc = null;
 
@@ -417,19 +427,13 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
 
     public void fallback(XdmNode node, String href) {
         logger.trace(MessageFormatter.nodeMessage(node, "fallback: " + node.getNodeName()));
-        boolean valid = true;
+
+        // N.B. We've already tested for at most one xi:fallback element
         XdmNode fallback = null;
         for (XdmNode child : new AxisNodes(node, Axis.CHILD, AxisNodes.SIGNIFICANT)) {
-            if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
-                valid = valid && xi_fallback.equals(child.getNodeName()) && (fallback == null);
+            if (child.getNodeKind() == XdmNodeKind.ELEMENT && xi_fallback.equals(child.getNodeName())) {
                 fallback = child;
-            } else {
-                valid = false;
             }
-        }
-
-        if (!valid) {
-            throw new XProcException(step.getNode(), "XInclude element must contain exactly one xi:fallback element.");
         }
 
         if (fallback == null) {
