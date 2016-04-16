@@ -195,6 +195,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                 }
             }
 
+            boolean forceFallback = false;
             XPointer xpointer = null;
             XdmNode subdoc = null;
 
@@ -211,8 +212,10 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
             } else if ("text".equals(parse) || parse.startsWith("text/")) {
                 parse = "text";
             } else {
-                logger.info("Unrecognized parse value on XInclude: " + parse + " using 'xml' instead.");
-                parse = "xml";
+                logger.info("Unrecognized parse value on XInclude: " + parse);
+                xptr = null;
+                fragid = null;
+                forceFallback = true;
             }
 
             if (xptr != null && fragid != null) {
@@ -248,7 +251,11 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                 xpointer = new XPointer(runtime, xptr, readLimit);
             }
 
-            if ("text".equals(parse)) {
+            if (forceFallback) {
+                logger.trace(MessageFormatter.nodeMessage(node, "XInclude fallback forced"));
+                fallback(node, href);
+                return false;
+            } else if ("text".equals(parse)) {
                 readText(href, node, node.getBaseURI().toASCIIString(), xpointer, matcher);
                 return false;
             } else {
