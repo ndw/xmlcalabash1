@@ -60,9 +60,10 @@ import com.xmlcalabash.runtime.XAtomicStep;
 
 public class XInclude extends DefaultStep implements ProcessMatchingNodes {
     private static final String localAttrNS = "http://www.w3.org/2001/XInclude/local-attributes";
+    private static final String xiNS = "http://www.w3.org/2001/XInclude";
 
-    private static final QName xi_include = new QName("http://www.w3.org/2001/XInclude","include");
-    private static final QName xi_fallback = new QName("http://www.w3.org/2001/XInclude","fallback");
+    private static final QName xi_include = new QName(xiNS,"include");
+    private static final QName xi_fallback = new QName(xiNS,"fallback");
     private static final QName _fixup_xml_base = new QName("", "fixup-xml-base");
     private static final QName _fixup_xml_lang = new QName("", "fixup-xml-lang");
     private static final QName _set_xml_id = new QName("", "set-xml-id");
@@ -187,11 +188,15 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
 
             XdmNode fallback = null;
             for (XdmNode child : new AxisNodes(node, Axis.CHILD, AxisNodes.SIGNIFICANT)) {
-                if (child.getNodeKind() == XdmNodeKind.ELEMENT && xi_fallback.equals(child.getNodeName())) {
-                    if (fallback != null) {
-                        throw new XProcException(step.getNode(), "XInclude element must contain at most one xi:fallback element.");
+                if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
+                    if (xi_fallback.equals(child.getNodeName())) {
+                        if (fallback != null) {
+                            throw new XProcException(step.getNode(), "XInclude element must contain at most one xi:fallback element.");
+                        }
+                        fallback = child;
+                    } else if (xiNS.equals(child.getNodeName().getNamespaceURI())) {
+                        throw new XProcException(step.getNode(), "Element not allowed as child of XInclude: " + child.getNodeKind());
                     }
-                    fallback = child;
                 }
             }
 
