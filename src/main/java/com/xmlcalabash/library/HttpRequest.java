@@ -139,7 +139,7 @@ public class HttpRequest extends DefaultStep {
     private ReadablePipe source = null;
     private WritablePipe result = null;
 
-    /** Creates a new instance of HttpRequest */
+    /* Creates a new instance of HttpRequest */
     public HttpRequest(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

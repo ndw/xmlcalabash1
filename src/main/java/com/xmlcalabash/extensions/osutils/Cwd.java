@@ -32,7 +32,7 @@ import java.io.IOException;
 public class Cwd extends DefaultStep {
     private WritablePipe result = null;
 
-    /**
+    /*
      * Creates a new instance of UriInfo
      */
     public Cwd(XProcRuntime runtime, XAtomicStep step) {

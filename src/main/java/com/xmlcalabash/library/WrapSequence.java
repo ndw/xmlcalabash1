@@ -55,7 +55,7 @@ public class WrapSequence extends DefaultStep {
     private QName wrapper = null;
     private RuntimeValue groupAdjacent = null;
 
-    /** Creates a new instance of WrapSequence */
+    /* Creates a new instance of WrapSequence */
     public WrapSequence(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

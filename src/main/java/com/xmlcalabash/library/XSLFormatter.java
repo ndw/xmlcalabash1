@@ -42,7 +42,7 @@ public class XSLFormatter extends DefaultStep {
     private WritablePipe result = null;
     private Properties options = new Properties();
 
-    /** Creates a new instance of Unzip */
+    /* Creates a new instance of Unzip */
     public XSLFormatter(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

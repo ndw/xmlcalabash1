@@ -56,7 +56,7 @@ public class WaitForUpdate extends DefaultStep {
     private long pauseBefore = 0;
     private long pauseAfter = 0;
 
-    /**
+    /*
      * Creates a new instance of Identity
      */
     public WaitForUpdate(XProcRuntime runtime, XAtomicStep step) {

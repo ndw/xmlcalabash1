@@ -51,7 +51,7 @@ import java.net.URI;
  * <li>pxp:zip</li>
  * </ul>
  * 
- * @author James Leigh <james@3roundstones.com>
+ * @author James Leigh &lt;james@3roundstones.com&gt;
  * 
  */
 public interface DataStore {
@@ -61,6 +61,8 @@ public interface DataStore {
 		 * 
 		 * @param content
 		 *            the document stream
+         * @throws IOException
+         *            if the document cannot be stored
 		 */
 		void store(OutputStream content) throws IOException;
 	}
@@ -77,6 +79,8 @@ public interface DataStore {
 		 *            the document stream
 		 * @param len
 		 *            the length of the document stream or -1 if not known
+         * @throws IOException
+         *            If the document could not be loaded
 		 */
 		void load(URI id, String media, InputStream content, long len)
 				throws IOException;
@@ -94,6 +98,8 @@ public interface DataStore {
 		 * @param lastModified
 		 *            the timestamp of the last time the document or directory
 		 *            was modified.
+         * @throws IOException
+         *            if the the document or directory could not be listed
 		 */
 		void list(URI id, String media, long lastModified) throws IOException;
 	}
@@ -132,6 +138,8 @@ public interface DataStore {
 	 *            the base URI used to resolve the document URI
 	 * @param accept
 	 *            comma separated list of acceptable mimetypes
+	 * @param overrideContentType
+     *            the override content type
 	 * @param handler
 	 *            passed the document stream to read it
 	 * @throws MalformedURLException

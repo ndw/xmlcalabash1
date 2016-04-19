@@ -71,7 +71,7 @@ public class Wrap extends DefaultStep implements ProcessMatchingNodes {
     private RuntimeValue groupAdjacent = null;
     private Stack<Boolean> inGroup = new Stack<Boolean> ();
 
-    /** Creates a new instance of Wrap */
+    /* Creates a new instance of Wrap */
     public Wrap(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

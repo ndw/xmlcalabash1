@@ -32,7 +32,7 @@ import java.util.HashSet;
 public class When extends DeclareStep {
     private String testExpr = null;
     
-    /** Creates a new instance of When */
+    /* Creates a new instance of When */
     public When(XProcRuntime xproc, XdmNode node, String name) {
         super(xproc, node, name);
         declaration = this;

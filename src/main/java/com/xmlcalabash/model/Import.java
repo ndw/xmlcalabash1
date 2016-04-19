@@ -35,7 +35,7 @@ public class Import extends Step {
     PipelineLibrary library = null;
     XdmNode root = null;
 
-    /** Creates a new instance of Import */
+    /* Creates a new instance of Import */
     public Import(XProcRuntime xproc, XdmNode node) {
         super(xproc, node, XProcConstants.p_import);
         //String x = node.getAttributeValue(new QName("", "href"));

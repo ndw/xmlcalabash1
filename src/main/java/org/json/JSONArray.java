@@ -176,6 +176,7 @@ public class JSONArray {
     
     /**
      * Construct a JSONArray from an array
+     * @param array The array.
      * @throws JSONException If not an array.
      */
     public JSONArray(Object array) throws JSONException {
@@ -829,7 +830,7 @@ public class JSONArray {
      *  representation of the object, beginning
      *  with <code>[</code>&nbsp;<small>(left bracket)</small> and ending
      *  with <code>]</code>&nbsp;<small>(right bracket)</small>.
-     * @throws JSONException
+     * @throws JSONException If syntax error.
      */
     public String toString(int indentFactor) throws JSONException {
         return toString(indentFactor, 0);
@@ -885,8 +886,9 @@ public class JSONArray {
      * <p>
      * Warning: This method assumes that the data structure is acyclical.
      *
+     * @param writer The writer.
      * @return The writer.
-     * @throws JSONException
+     * @throws JSONException If syntax error.
      */
     public Writer write(Writer writer) throws JSONException {
         try {

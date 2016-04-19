@@ -32,7 +32,7 @@ import com.xmlcalabash.core.XProcConstants;
  */
 public class Try  extends DeclareStep {
     
-    /** Creates a new instance of Try */
+    /* Creates a new instance of Try */
     public Try(XProcRuntime xproc, XdmNode node, String name) {
         super(xproc, node, name);
         declaration = this;

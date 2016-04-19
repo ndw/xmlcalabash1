@@ -39,7 +39,7 @@ public class Sink extends DefaultStep {
     protected static final String logger = "org.xproc.library.sink";
     private ReadablePipe source = null;
 
-    /**
+    /*
      * Creates a new instance of Sink
      */
     public Sink(XProcRuntime runtime, XAtomicStep step) {

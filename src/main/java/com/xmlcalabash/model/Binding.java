@@ -39,7 +39,7 @@ public abstract class Binding extends SourceArtifact {
 
     protected int bindingType = NO_BINDING;
 
-    /** Creates a new instance of Binding */
+    /* Creates a new instance of Binding */
     public Binding(XProcRuntime xproc, XdmNode node) {
         super(xproc, node);
     }

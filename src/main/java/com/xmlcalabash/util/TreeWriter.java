@@ -77,7 +77,7 @@ public class TreeWriter {
     protected boolean seenRoot = false;
     protected boolean inDocument = false;
 
-    /**
+    /*
      * Creates a new instance of ProcessMatch
      */
     public TreeWriter(XProcRuntime xproc) {

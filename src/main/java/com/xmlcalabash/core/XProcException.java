@@ -39,51 +39,51 @@ public class XProcException extends RuntimeException {
     private Step step = null;
     private XdmNode node = null;
 
-    /** Creates a new instance of XProcException */
+    /* Creates a new instance of XProcException */
     public XProcException() {
         super();
     }
 
-    /** Creates a new instance of XProcException */
+    /* Creates a new instance of XProcException */
     public XProcException(String message) {
         super(message);
     }
     
-    /** Creates a new instance of XProcException */
+    /* Creates a new instance of XProcException */
     public XProcException(Step step, String message) {
         super(message);
         this.step = step;
     }
 
-    /** Creates a new instance of XProcException */
+    /* Creates a new instance of XProcException */
     public XProcException(XdmNode node, String message) {
         super(message);
         this.node = node;
     }
 
-    /** Creates a new instance of XProcException */
+    /* Creates a new instance of XProcException */
     public XProcException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    /** Creates a new instance of XProcException */
+    /* Creates a new instance of XProcException */
     public XProcException(Step step, String message, Throwable cause) {
         super(message, cause);
         this.step = step;
     }
 
-    /** Creates a new instance of XProcException */
+    /* Creates a new instance of XProcException */
     public XProcException(Throwable cause) {
         super(cause);
     }
 
-    /** Creates a new instance of XProcException */
+    /* Creates a new instance of XProcException */
     public XProcException(XdmNode node, Throwable cause) {
         super(cause);
         this.node = node;
     }
 
-    /** Creates a new instance of XProcException */
+    /* Creates a new instance of XProcException */
     public XProcException(XdmNode node, String message, Throwable cause) {
         super(message, cause);
         this.node = node;

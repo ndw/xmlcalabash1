@@ -26,7 +26,7 @@ public class Identity extends DefaultStep {
     private ReadablePipe source = null;
     private WritablePipe result = null;
 
-    /**
+    /*
      * Creates a new instance of Identity
      */
     public Identity(XProcRuntime runtime, XAtomicStep step) {

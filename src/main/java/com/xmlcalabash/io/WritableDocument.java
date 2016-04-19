@@ -53,7 +53,7 @@ public class WritableDocument implements WritablePipe {
     private Step writer = null;
     private OutputStream ostream = null;
 
-    /** Creates a new instance of ReadableDocument */
+    /* Creates a new instance of ReadableDocument */
     public WritableDocument(XProcRuntime xproc, String uri, Serialization serial) {
         this.runtime = xproc;
         this.uri = uri;

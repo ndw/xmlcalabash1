@@ -56,7 +56,7 @@ public class Parameters extends DefaultStep {
     private WritablePipe result = null;
     Hashtable<QName,RuntimeValue> parameters = new Hashtable<QName,RuntimeValue> ();
 
-    /** Creates a new instance of Count */
+    /* Creates a new instance of Count */
     public Parameters(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

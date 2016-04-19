@@ -69,7 +69,7 @@ public class LabelElements extends DefaultStep implements ProcessMatchingNodes {
     private boolean replace = true;
     private int count = 1;
 
-    /** Creates a new instance of LabelElements */
+    /* Creates a new instance of LabelElements */
     public LabelElements(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

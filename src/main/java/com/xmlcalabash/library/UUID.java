@@ -49,7 +49,7 @@ public class UUID extends DefaultStep implements ProcessMatchingNodes {
     private ProcessMatch matcher = null;
     private String uuid = null;
 
-    /**
+    /*
      * Creates a new instance of UUID
      */
     public UUID(XProcRuntime runtime, XAtomicStep step) {

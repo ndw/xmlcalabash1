@@ -34,7 +34,7 @@ public class SetBaseURI extends DefaultStep {
     private TreeWriter tree = null;
     private URI baseURI = null;
 
-    /**
+    /*
      * Creates a new instance of SetBaseURI
      */
     public SetBaseURI(XProcRuntime runtime, XAtomicStep step) {

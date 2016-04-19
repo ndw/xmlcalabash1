@@ -46,7 +46,7 @@ public class Count extends DefaultStep {
     private ReadablePipe source = null;
     private WritablePipe result = null;
     
-    /** Creates a new instance of Count */
+    /* Creates a new instance of Count */
     public Count(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

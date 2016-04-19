@@ -45,7 +45,7 @@ import java.util.Properties;
  * mapping is read from the file in the system property
  * "content.types.user.table" if present.
  * 
- * @author James Leigh <james@3roundstones.com>
+ * @author James Leigh &lt;james@3roundstones.com&gt;
  */
 public class FileDataStore implements DataStore {
     private Logger logger = LoggerFactory.getLogger(FileDataStore.class);

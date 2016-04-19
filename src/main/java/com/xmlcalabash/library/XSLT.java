@@ -88,7 +88,7 @@ public class XSLT extends DefaultStep {
     private Hashtable<QName,RuntimeValue> params = new Hashtable<QName,RuntimeValue> ();
     private Hashtable<String, XdmDestination> secondaryResults = new Hashtable<String, XdmDestination> ();
 
-    /**
+    /*
      * Creates a new instance of XSLT
      */
     public XSLT(XProcRuntime runtime, XAtomicStep step) {

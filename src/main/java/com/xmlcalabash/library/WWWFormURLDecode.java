@@ -50,7 +50,7 @@ public class WWWFormURLDecode extends DefaultStep {
     private static final QName cx_encoding = new QName("cx", XProcConstants.NS_CALABASH_EX, "encoding");
     private WritablePipe result = null;
 
-    /** Creates a new instance of FormURLDecode */
+    /* Creates a new instance of FormURLDecode */
     public WWWFormURLDecode(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

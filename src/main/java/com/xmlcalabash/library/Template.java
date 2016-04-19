@@ -73,7 +73,7 @@ public class Template extends DefaultStep implements ProcessMatchingNodes {
     private static final int DQUOTEMODE = 3;
     private static final int END = 4;
 
-    /** Creates a new instance of LabelElements */
+    /* Creates a new instance of LabelElements */
     public Template(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

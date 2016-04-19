@@ -39,7 +39,7 @@ public class Option extends EndPoint implements ComputableValue {
     private XdmNode typeNode = null;
     private Vector<NamespaceBinding> nsBindings = new Vector<NamespaceBinding>();
 
-    /** Creates a new instance of Option */
+    /* Creates a new instance of Option */
     public Option(XProcRuntime xproc, XdmNode node) {
         super(xproc,node);
     }

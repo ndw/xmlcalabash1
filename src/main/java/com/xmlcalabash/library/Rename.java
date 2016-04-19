@@ -54,7 +54,7 @@ public class Rename extends DefaultStep implements ProcessMatchingNodes {
     private ProcessMatch matcher = null;
     private QName newName = null;
 
-    /** Creates a new instance of Rename */
+    /* Creates a new instance of Rename */
     public Rename(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

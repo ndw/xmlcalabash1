@@ -30,8 +30,8 @@ import java.util.HashSet;
  * @author ndw
  */
 public class Otherwise extends DeclareStep {
-    
-    /** Creates a new instance of Otherwise */
+
+    /* Creates a new instance of Otherwise */
     public Otherwise(XProcRuntime xproc, XdmNode node, String name) {
         super(xproc, node, name);
         declaration = this;

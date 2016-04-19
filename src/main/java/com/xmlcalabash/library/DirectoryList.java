@@ -65,7 +65,7 @@ public class DirectoryList extends DefaultStep {
     private String inclFilter = null;
     private String exclFilter = null;
 
-    /** Creates a new instance of DirectoryList */
+    /* Creates a new instance of DirectoryList */
     public DirectoryList(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

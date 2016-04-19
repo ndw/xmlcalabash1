@@ -51,7 +51,7 @@ public class SetCookies extends DefaultStep {
     private static DateFormat iso8601 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
     private ReadablePipe source = null;
 
-    /**
+    /*
      * Creates a new instance of Identity
      */
     public SetCookies(XProcRuntime runtime, XAtomicStep step) {

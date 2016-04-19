@@ -35,7 +35,7 @@ import java.util.Iterator;
  */
 public class XML {
 
-    /** The Character '&'. */
+    /** The Character '&amp;'. */
     public static final Character AMP   = new Character('&');
 
     /** The Character '''. */
@@ -47,10 +47,10 @@ public class XML {
     /** The Character '='. */
     public static final Character EQ    = new Character('=');
 
-    /** The Character '>'. */
+    /** The Character '&gt;'. */
     public static final Character GT    = new Character('>');
 
-    /** The Character '<'. */
+    /** The Character '&lt;'. */
     public static final Character LT    = new Character('<');
 
     /** The Character '?'. */
@@ -65,10 +65,10 @@ public class XML {
     /**
      * Replace special characters with XML escapes:
      * <pre>
-     * &amp; <small>(ampersand)</small> is replaced by &amp;amp;
-     * &lt; <small>(less than)</small> is replaced by &amp;lt;
-     * &gt; <small>(greater than)</small> is replaced by &amp;gt;
-     * &quot; <small>(double quote)</small> is replaced by &amp;quot;
+     * &amp; <code>(ampersand)</code> is replaced by &amp;amp;
+     * &lt; <code>(less than)</code> is replaced by &amp;lt;
+     * &gt; <code>(greater than)</code> is replaced by &amp;gt;
+     * &quot; <code>(double quote)</code> is replaced by &amp;quot;
      * </pre>
      * @param string The string to be escaped.
      * @return The escaped string.
@@ -100,8 +100,8 @@ public class XML {
     /**
      * Throw an exception if the string contains whitespace. 
      * Whitespace is not allowed in tagNames and attributes.
-     * @param string
-     * @throws JSONException
+     * @param string The string
+     * @throws JSONException If something goes wrong.
      */
     public static void noSpace(String string) throws JSONException {
     	int i, length = string.length();
@@ -122,7 +122,7 @@ public class XML {
      * @param context The JSONObject that will include the new material.
      * @param name    The tag name.
      * @return true if the close tag is processed.
-     * @throws JSONException
+     * @throws JSONException If something goes wrong.
      */
     private static boolean parse(XMLTokener x, JSONObject context,
                                  String name) throws JSONException {
@@ -294,10 +294,10 @@ public class XML {
      * does not like to distinguish between elements and attributes.
      * Sequences of similar elements are represented as JSONArrays. Content
      * text may be placed in a "content" member. Comments, prologs, DTDs, and
-     * <code>&lt;[ [ ]]></code> are ignored.
+     * <code>&lt;[ [ ]]&gt;</code> are ignored.
      * @param string The source string.
      * @return A JSONObject containing the structured data from the XML string.
-     * @throws JSONException
+     * @throws JSONException If something goes wrong.
      */
     public static JSONObject toJSONObject(String string) throws JSONException {
         JSONObject o = new JSONObject();
@@ -313,7 +313,7 @@ public class XML {
      * Convert a JSONObject into a well-formed, element-normal XML string.
      * @param o A JSONObject.
      * @return  A string.
-     * @throws  JSONException
+     * @throws JSONException If something goes wrong.
      */
     public static String toString(Object o) throws JSONException {
         return toString(o, null);
@@ -325,7 +325,7 @@ public class XML {
      * @param o A JSONObject.
      * @param tagName The optional name of the enclosing tag.
      * @return A string.
-     * @throws JSONException
+     * @throws JSONException If something goes wrong.
      */
     public static String toString(Object o, String tagName)
             throws JSONException {

@@ -81,8 +81,11 @@ public class S9apiUtils {
      * in XSLT or XQuery with this sequence as the content expression), and the resulting document is
      * then copied to the destination. If the destination is a serializer this has the effect of serializing
      * the sequence as described in the W3C specifications.
+     * @param runtime The runtime
      * @param values the value to be written
      * @param destination the destination to which the value is to be written
+     * @param baseURI the base URI
+     * @throws SaxonApiException if something goes wrong
      */
 
     public static void writeXdmValue(XProcRuntime runtime, Vector<XdmValue> values, Destination destination, URI baseURI) throws SaxonApiException {

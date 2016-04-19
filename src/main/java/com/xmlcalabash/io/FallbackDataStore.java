@@ -28,7 +28,7 @@ import java.net.URI;
 /**
  * Throws an error with the scheme name in every method.
  * 
- * @author James Leigh <james@3roundstones.com>
+ * @author James Leigh &lt;james@3roundstones.com&gt;
  * 
  */
 public class FallbackDataStore implements DataStore {

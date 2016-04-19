@@ -37,7 +37,7 @@ public class PipelineLibrary extends Step {
     Hashtable<QName,DeclareStep> declaredSteps = new Hashtable<QName,DeclareStep> ();
     Vector<DeclareStep> steps = new Vector<DeclareStep> ();
 
-    /** Creates a new instance of PipelineLibrary */
+    /* Creates a new instance of PipelineLibrary */
     public PipelineLibrary(XProcRuntime xproc, XdmNode node) {
         super(xproc, node, XProcConstants.p_library);
     }

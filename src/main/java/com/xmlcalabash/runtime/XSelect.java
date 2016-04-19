@@ -59,7 +59,7 @@ public class XSelect implements ReadablePipe {
     private Step reader = null;
     private XStep forStep = null;
 
-    /** Creates a new instance of Select */
+    /* Creates a new instance of Select */
     public XSelect(XProcRuntime runtime, XStep forStep, ReadablePipe readFrom, String xpathExpr, XdmNode context) {
         source = readFrom;
         select = xpathExpr;

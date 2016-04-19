@@ -43,7 +43,7 @@ public class JavaProperties extends DefaultStep {
     private static final QName _value = new QName("value");
     private WritablePipe result = null;
 
-    /**
+    /*
      * Creates a new instance of Identity
      */
     public JavaProperties(XProcRuntime runtime, XAtomicStep step) {

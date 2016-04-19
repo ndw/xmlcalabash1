@@ -43,7 +43,7 @@ public class GetCookies extends DefaultStep {
     private static DateFormat iso8601 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
     private WritablePipe result = null;
 
-    /**
+    /*
      * Creates a new instance of Identity
      */
     public GetCookies(XProcRuntime runtime, XAtomicStep step) {

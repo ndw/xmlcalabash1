@@ -52,7 +52,7 @@ public class Load extends DefaultStep {
     private WritablePipe result = null;
     private URI href = null;
 
-    /**
+    /*
      * Creates a new instance of Load
      */
     public Load(XProcRuntime runtime, XAtomicStep step) {

@@ -57,7 +57,7 @@ public class SetAttributes extends DefaultStep implements ProcessMatchingNodes {
     private XdmNode root = null;
     private HashSet<QName> attrs = null;
 
-    /** Creates a new instance of SetAttributes */
+    /* Creates a new instance of SetAttributes */
     public SetAttributes(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

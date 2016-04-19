@@ -72,7 +72,7 @@ public class UnescapeMarkup extends DefaultStep {
     private WritablePipe result = null;
     private String namespace = null;
 
-    /**
+    /*
      * Creates a new instance of UnescapeMarkup
      */
     public UnescapeMarkup(XProcRuntime runtime, XAtomicStep step) {

@@ -91,7 +91,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
     private int readLimit = 1024 * 1000 * 100;
     private Exception mostRecentException = null;
 
-    /**
+    /*
      * Creates a new instance of XInclude
      */
     public XInclude(XProcRuntime runtime, XAtomicStep step) {

@@ -39,7 +39,7 @@ public class Variable extends EndPoint implements ComputableValue {
     private String type = null;
     private Vector<NamespaceBinding> nsBindings = new Vector<NamespaceBinding> ();
 
-    /** Creates a new instance of Variable */
+    /* Creates a new instance of Variable */
     public Variable(XProcRuntime xproc, XdmNode node) {
         super(xproc,node);
     }

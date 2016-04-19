@@ -70,7 +70,7 @@ public class ReadableDocument implements ReadablePipe {
         documents = new DocumentSequence(runtime);
     }
 
-    /** Creates a new instance of ReadableDocument */
+    /* Creates a new instance of ReadableDocument */
     public ReadableDocument(XProcRuntime runtime, XdmNode node, String uri, String base, String mask) {
         this.runtime = runtime;
         this.node = node;

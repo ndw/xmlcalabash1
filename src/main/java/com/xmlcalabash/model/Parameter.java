@@ -41,7 +41,7 @@ public class Parameter extends EndPoint implements ComputableValue {
     private int position = 0;
     private Vector<NamespaceBinding> nsBindings = new Vector<NamespaceBinding> ();
 
-    /** Creates a new instance of Parameter */
+    /* Creates a new instance of Parameter */
     public Parameter(XProcRuntime xproc, XdmNode node) {
         super(xproc, node);
     }

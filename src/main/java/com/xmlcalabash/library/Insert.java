@@ -52,7 +52,7 @@ public class Insert extends DefaultStep implements ProcessMatchingNodes {
     private String position = null;
     private String matchPattern = null;
 
-    /** Creates a new instance of Insert */
+    /* Creates a new instance of Insert */
     public Insert(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

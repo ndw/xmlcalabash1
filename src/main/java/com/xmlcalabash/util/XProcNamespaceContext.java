@@ -35,7 +35,7 @@ import javax.xml.XMLConstants;
 public class XProcNamespaceContext {
     Hashtable<String,String> nshash = new Hashtable<String,String> ();
     
-    /** Creates a new instance of XProcNamespaceContext */
+    /* Creates a new instance of XProcNamespaceContext */
     public XProcNamespaceContext(Hashtable<String,String> bindings) {
         for (String prefix : bindings.keySet()) {
             nshash.put(prefix,bindings.get(prefix));

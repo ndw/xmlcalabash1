@@ -32,7 +32,7 @@ public class PipeNameBinding extends Binding {
     private String step = null;
     private String port = null;
     
-    /**
+    /*
      * Creates a new instance of PipeNameBinding
      */
     public PipeNameBinding(XProcRuntime xproc, XdmNode node) {

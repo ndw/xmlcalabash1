@@ -11,7 +11,7 @@ import java.io.StringWriter;
  */
 public class Test {
 	
-    /**
+    /*
      * Entry point.
      * @param args
      */

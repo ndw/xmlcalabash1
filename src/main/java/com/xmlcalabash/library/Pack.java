@@ -50,7 +50,7 @@ public class Pack extends DefaultStep {
     private ReadablePipe alternate = null;
     private WritablePipe result = null;
 
-    /**
+    /*
      * Creates a new instance of Pack
      */
     public Pack(XProcRuntime runtime, XAtomicStep step) {

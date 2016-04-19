@@ -37,7 +37,7 @@ public class Env extends DefaultStep {
 
     private WritablePipe result = null;
 
-    /**
+    /*
      * Creates a new instance of UriInfo
      */
     public Env(XProcRuntime runtime, XAtomicStep step) {

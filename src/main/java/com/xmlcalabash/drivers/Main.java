@@ -75,7 +75,7 @@ public class Main {
     private boolean debug = false;
     private int chaseMemoryLeaks = 0;
 
-    /**
+    /*
      * @param args the command line arguments
      */
     public static void main(String[] args) throws IOException {
