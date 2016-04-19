@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
  * @author ndw
  */
 public class EmptyBinding extends Binding {
-    /** Creates a new instance of EmptyBinding */
+    /* Creates a new instance of EmptyBinding */
     public EmptyBinding() {
         super(null,null);
         bindingType = EMPTY_BINDING;

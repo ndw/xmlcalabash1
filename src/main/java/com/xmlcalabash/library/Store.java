@@ -68,7 +68,7 @@ public class Store extends DefaultStep {
     // If gzip is true, then href may be null
     protected CompressionMethod method = CompressionMethod.NONE;
 
-    /**
+    /*
      * Creates a new instance of Store
      */
     public Store(XProcRuntime runtime, XAtomicStep step) {

@@ -31,8 +31,8 @@ public class CollectionManager extends DefaultStep {
     private ReadablePipe source = null;
     private WritablePipe result = null;
 
-    /**
-     * Creates a new instance of Identity
+    /*
+     * Creates a new instance of CollectionManager
      */
     public CollectionManager(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);

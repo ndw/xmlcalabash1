@@ -32,7 +32,7 @@ import java.util.HashSet;
 public class ForEach extends DeclareStep {
     private String select = null;
     
-    /** Creates a new instance of ForEach */
+    /* Creates a new instance of ForEach */
     public ForEach(XProcRuntime xproc, XdmNode node, String name) {
         super(xproc, node, name);
         declaration = this;

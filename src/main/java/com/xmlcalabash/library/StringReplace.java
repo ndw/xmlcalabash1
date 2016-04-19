@@ -51,7 +51,7 @@ public class StringReplace extends DefaultStep implements ProcessMatchingNodes {
     private Hashtable<String,String> rns = new Hashtable<String,String> ();
     private static Hashtable<QName,RuntimeValue> atomicStepsGetNoInScopeOptions = new Hashtable<QName,RuntimeValue> ();
 
-    /** Creates a new instance of StringReplace */
+    /* Creates a new instance of StringReplace */
     public StringReplace(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

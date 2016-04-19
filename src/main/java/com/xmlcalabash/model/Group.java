@@ -31,7 +31,7 @@ import java.util.HashSet;
  */
 public class Group extends DeclareStep {
     
-    /** Creates a new instance of Group */
+    /* Creates a new instance of Group */
     public Group(XProcRuntime xproc, XdmNode node, String name) {
         super(xproc, node, name);
         declaration = this;

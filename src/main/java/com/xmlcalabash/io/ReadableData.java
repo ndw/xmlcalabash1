@@ -62,7 +62,7 @@ public class ReadableData implements ReadablePipe {
     private DocumentSequence documents = null;
     private Step reader = null;
 
-    /** Creates a new instance of ReadableDocument */
+    /* Creates a new instance of ReadableDocument */
     public ReadableData(XProcRuntime runtime, QName wrapper, String uri, String contentType) {
         this(runtime, wrapper, uri, null, contentType);
     }

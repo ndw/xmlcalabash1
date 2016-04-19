@@ -33,7 +33,7 @@ public class Pipeline extends CompoundStep {
     private QName declaredType = null;
     private DeclareStep declaration = null;
 
-    /** Creates a new instance of DeclareStep */
+    /* Creates a new instance of DeclareStep */
     public Pipeline(XProcRuntime xproc, XdmNode node, String name) {
         super(xproc, node, XProcConstants.p_pipeline, name);
     }

@@ -60,7 +60,7 @@ public class AddXmlBase extends DefaultStep implements ProcessMatchingNodes {
     private boolean relative = false;
     private Stack<URI> baseURIStack = new Stack<URI> ();
         
-    /** Creates a new instance of AddXmlBase */
+    /* Creates a new instance of AddXmlBase */
     public AddXmlBase(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

@@ -45,7 +45,7 @@ public class Pipe implements ReadablePipe, WritablePipe {
     private String stepName = null;
     private String portName = null;
 
-    /** Creates a new instance of Pipe */
+    /* Creates a new instance of Pipe */
     public Pipe(XProcRuntime xproc) {
         runtime = xproc;
         documents = new DocumentSequence(xproc);

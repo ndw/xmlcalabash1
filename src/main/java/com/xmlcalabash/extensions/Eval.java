@@ -59,7 +59,7 @@ public class Eval extends DefaultStep {
     private Vector<ReadablePipe> options = new Vector<ReadablePipe> ();
     private WritablePipe result = null;
 
-    /**
+    /*
      * Creates a new instance of Eval
      */
     public Eval(XProcRuntime runtime, XAtomicStep step) {

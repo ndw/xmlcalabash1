@@ -45,7 +45,7 @@ public class ReadableInline implements ReadablePipe {
     private int pos = 0;
     private Step reader = null;
 
-    /** Creates a new instance of ReadableInline */
+    /* Creates a new instance of ReadableInline */
     public ReadableInline(XProcRuntime runtime, Vector<XdmValue> nodes, HashSet<String> excludeNS) {
         this.runtime = runtime;
         documents = new DocumentSequence(runtime);

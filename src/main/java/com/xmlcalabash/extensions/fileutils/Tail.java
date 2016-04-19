@@ -45,7 +45,7 @@ public class Tail extends DefaultStep {
 
     private WritablePipe result = null;
 
-    /**
+    /*
      * Creates a new instance of UriInfo
      */
     public Tail(XProcRuntime runtime, XAtomicStep step) {

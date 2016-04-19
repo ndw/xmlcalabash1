@@ -52,7 +52,7 @@ public class ValidateWithSCH extends DefaultStep {
     private boolean schemaAware = false;
 
 
-    /** Creates a new instance of ValidateWithXSD */
+    /* Creates a new instance of ValidateWithXSD */
     public ValidateWithSCH(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

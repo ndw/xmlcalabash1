@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 public class DocumentBinding extends Binding {
     private String href = null;
     
-    /** Creates a new instance of DocumentBinding */
+    /* Creates a new instance of DocumentBinding */
     public DocumentBinding() {
         super(null, null);
         bindingType = DOCUMENT_BINDING;

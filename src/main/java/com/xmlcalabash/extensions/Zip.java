@@ -108,7 +108,7 @@ public class Zip extends DefaultStep {
     private Map<String, FileToZip> zipManifest = new LinkedHashMap<String, FileToZip> ();
     private Map<String, XdmNode> srcManifest = new LinkedHashMap<String, XdmNode> ();
 
-    /** Creates a new instance of Unzip */
+    /* Creates a new instance of Unzip */
     public Zip(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

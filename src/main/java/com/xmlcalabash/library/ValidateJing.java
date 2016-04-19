@@ -76,7 +76,7 @@ public class ValidateJing extends DefaultStep {
     private WritablePipe result = null;
     private URI docBaseURI = null;
 
-    /** Creates a new instance of Delete */
+    /* Creates a new instance of Delete */
     public ValidateJing(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

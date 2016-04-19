@@ -32,7 +32,7 @@ import com.xmlcalabash.core.XProcException;
  * @author ndw
  */
 public class Choose extends DeclareStep {
-    /** Creates a new instance of Choose */
+    /* Creates a new instance of Choose */
     public Choose(XProcRuntime xproc, XdmNode node, String name) {
         super(xproc, node, name);
         declaration = this;

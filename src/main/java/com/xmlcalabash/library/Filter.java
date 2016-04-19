@@ -45,7 +45,7 @@ public class Filter extends DefaultStep {
     private ReadablePipe source = null;
     private WritablePipe result = null;
 
-    /**
+    /*
      * Creates a new instance of Filter
      */
     public Filter(XProcRuntime runtime, XAtomicStep step) {

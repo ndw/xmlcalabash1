@@ -43,7 +43,7 @@ public class Copy extends DefaultStep {
 
     private WritablePipe result = null;
 
-    /**
+    /*
      * Creates a new instance of UriInfo
      */
     public Copy(XProcRuntime runtime, XAtomicStep step) {

@@ -68,7 +68,7 @@ public class Info extends DefaultStep {
 
     private WritablePipe result = null;
 
-    /**
+    /*
      * Creates a new instance of UriInfo
      */
     public Info(XProcRuntime runtime, XAtomicStep step) {

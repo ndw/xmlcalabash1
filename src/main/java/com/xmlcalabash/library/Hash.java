@@ -72,7 +72,7 @@ public class Hash extends DefaultStep implements ProcessMatchingNodes {
     private ProcessMatch matcher = null;
     private String hash = null;
 
-    /**
+    /*
      * Creates a new instance of Hash
      */
     public Hash(XProcRuntime runtime, XAtomicStep step) {

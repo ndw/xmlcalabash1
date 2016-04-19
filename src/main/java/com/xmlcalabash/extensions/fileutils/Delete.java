@@ -41,7 +41,7 @@ public class Delete extends DefaultStep {
 
     private WritablePipe result = null;
 
-    /**
+    /*
      * Creates a new instance of UriInfo
      */
     public Delete(XProcRuntime runtime, XAtomicStep step) {

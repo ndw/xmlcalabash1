@@ -90,7 +90,7 @@ public class ValidateWithXSD extends DefaultStep {
     private URI docBaseURI = null;
     private Throwable validationException = null;
 
-    /** Creates a new instance of ValidateWithXSD */
+    /* Creates a new instance of ValidateWithXSD */
     public ValidateWithXSD(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

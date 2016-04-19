@@ -33,7 +33,7 @@ public class NamespaceDelete extends DefaultStep {
     private ReadablePipe source = null;
     private WritablePipe result = null;
 
-    /**
+    /*
      * Creates a new instance of NamespaceDelete
      */
     public NamespaceDelete(XProcRuntime runtime, XAtomicStep step) {

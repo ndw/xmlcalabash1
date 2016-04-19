@@ -52,7 +52,7 @@ public class WWWFormURLEncode extends DefaultStep implements ProcessMatchingNode
     private ProcessMatch matcher = null;
     private String encoded = "";
 
-    /** Creates a new instance of FormURLEncode.
+    /* Creates a new instance of FormURLEncode.
      */
     public WWWFormURLEncode(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);

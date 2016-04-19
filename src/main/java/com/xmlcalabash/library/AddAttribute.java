@@ -58,7 +58,7 @@ public class AddAttribute extends DefaultStep implements ProcessMatchingNodes {
     private ReadablePipe source = null;
     private WritablePipe result = null;
 
-    /**
+    /*
      * Creates a new instance of AddAttribute
      */
     public AddAttribute(XProcRuntime runtime, XAtomicStep step) {

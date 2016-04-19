@@ -29,7 +29,7 @@ import com.xmlcalabash.core.XProcConstants;
  */
 public class Catch extends DeclareStep {
     
-    /** Creates a new instance of Catch */
+    /* Creates a new instance of Catch */
     public Catch(XProcRuntime xproc, XdmNode node, String name) {
         super(xproc, node, name);
         declaration = this;

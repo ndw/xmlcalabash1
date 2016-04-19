@@ -38,7 +38,7 @@ public abstract class SourceArtifact {
     protected XProcRuntime runtime = null;
     protected Hashtable<QName,String> extnAttrs = null;
 
-    /** Creates a new instance of SourceArtifact */
+    /* Creates a new instance of SourceArtifact */
     public SourceArtifact(XProcRuntime runtime, XdmNode node) {
         logger = LoggerFactory.getLogger(this.getClass());
         this.runtime = runtime;

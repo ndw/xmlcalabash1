@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
  * @author ndw
  */
 public class ErrorBinding extends Binding {
-    /** Creates a new instance of EmptyBinding */
+    /* Creates a new instance of EmptyBinding */
     public ErrorBinding() {
         super(null,null);
         bindingType = ERROR_BINDING;

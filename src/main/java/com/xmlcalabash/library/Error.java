@@ -50,7 +50,7 @@ public class Error extends DefaultStep {
     private static final QName _type = new QName("type");
     private ReadablePipe source = null;
 
-    /** Creates a new instance of Delete */
+    /* Creates a new instance of Delete */
     public Error(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

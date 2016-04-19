@@ -32,7 +32,7 @@ public class Output extends Port {
     private EndPoint reader = null;
     private Serialization serialization = null;
     
-    /** Creates a new instance of Output */
+    /* Creates a new instance of Output */
     public Output(XProcRuntime xproc, XdmNode node) {
         super(xproc, node);
     }

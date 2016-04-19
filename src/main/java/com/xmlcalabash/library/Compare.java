@@ -57,7 +57,7 @@ public class Compare extends DefaultStep {
     private ReadablePipe alternate = null;
     private WritablePipe result = null;
 
-    /**
+    /*
      * Creates a new instance of Compare
      */
     public Compare(XProcRuntime runtime, XAtomicStep step) {

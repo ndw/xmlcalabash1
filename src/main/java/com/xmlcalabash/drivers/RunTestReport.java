@@ -96,7 +96,7 @@ public class RunTestReport {
     protected Logger logger = LoggerFactory.getLogger(RunTestReport.class);
 
 
-    /** Creates a new instance of RunTest */
+    /* Creates a new instance of RunTest */
     public RunTestReport(XProcRuntime runtime, TestReporter reporter) {
         this.runtime = runtime;
         this.reporter = reporter;

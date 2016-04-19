@@ -38,7 +38,7 @@ public class DataBinding extends Binding {
     private QName wrapper = XProcConstants.c_data;
     private String contentType = null;
 
-    /** Creates a new instance of DocumentBinding */
+    /* Creates a new instance of DocumentBinding */
     public DataBinding() {
         super(null, null);
         bindingType = DATA_BINDING;

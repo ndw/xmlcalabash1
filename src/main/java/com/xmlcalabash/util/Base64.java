@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
  *   Base64.InputStream class to encode and decode on the fly which uses
  *   less memory than encoding/decoding an entire file into memory before writing.</li>
  *  <li>v2.2.1 - Fixed bug using URL_SAFE and ORDERED encodings. Fixed bug
- *   when using very small files (~< 40 bytes).</li>
+ *   when using very small files (~&lt; 40 bytes).</li>
  *  <li>v2.2 - Added some helper methods for encoding/decoding directly from
  *   one file to the next. Also added a main() method to support command line
  *   encoding/decoding from one file to the next. Also added these Base64 dialects:
@@ -611,6 +611,7 @@ public class Base64
      * Does not GZip-compress data.
      *
      * @param source The data to convert
+     * @return the encoded bytes
      * @since 1.4
      */
     public static String encodeBytes( byte[] source )
@@ -636,6 +637,7 @@ public class Base64
      *
      * @param source The data to convert
      * @param options Specified options
+     * @return the encoded bytes.
      * @see Base64#GZIP
      * @see Base64#DONT_BREAK_LINES
      * @since 2.0
@@ -653,6 +655,7 @@ public class Base64
      * @param source The data to convert
      * @param off Offset in array where conversion should begin
      * @param len Length of data to convert
+     * @return the encoded bytes.
      * @since 1.4
      */
     public static String encodeBytes( byte[] source, int off, int len )
@@ -680,6 +683,7 @@ public class Base64
      * @param off Offset in array where conversion should begin
      * @param len Length of data to convert
      * @param options Specified options; alphabet type is pulled from this (standard, url-safe, ordered)
+     * @return the encoded bytes
      * @see Base64#GZIP
      * @see Base64#DONT_BREAK_LINES
      * @since 2.0
@@ -890,6 +894,7 @@ public class Base64
      * @param source The Base64 encoded data
      * @param off    The offset of where to begin decoding
      * @param len    The length of characters to decode
+     * @param options The options
      * @return decoded data
      * @since 1.3
      */
@@ -1756,10 +1761,10 @@ public class Base64
         }   // end write
 
 
-
         /**
          * Method added by PHIL. [Thanks, PHIL. -Rob]
          * This pads the buffer without closing the stream.
+         * @throws java.io.IOException If the bytes aren't padded correctly
          */
         public void flushBase64() throws java.io.IOException
         {
@@ -1804,6 +1809,7 @@ public class Base64
          * May be helpful if you need to embed a piece of
          * base640-encoded data in a stream.
          *
+         * @throws java.io.IOException if there's an I/O exception
          * @since 1.5.1
          */
         public void suspendEncoding() throws java.io.IOException

@@ -49,7 +49,7 @@ public class EscapeMarkup extends DefaultStep {
     private ReadablePipe source = null;
     private WritablePipe result = null;
 
-    /** Creates a new instance of EscapeMarkup */
+    /* Creates a new instance of EscapeMarkup */
     public EscapeMarkup(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

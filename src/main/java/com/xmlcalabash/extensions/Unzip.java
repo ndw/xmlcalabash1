@@ -65,7 +65,7 @@ public class Unzip extends DefaultStep {
     private String contentType = "application/xml";
     private String charset = null;
 
-    /** Creates a new instance of Unzip */
+    /* Creates a new instance of Unzip */
     public Unzip(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

@@ -59,7 +59,7 @@ import org.apache.http.protocol.HttpContext;
  * If the server response with a Location in the response header, that is
  * assumed to be the URI of the created document.
  * 
- * @author James Leigh <james@3roundstones.com>
+ * @author James Leigh &lt;james@3roundstones.com&gt;
  * 
  */
 public class HttpClientDataStore implements DataStore {

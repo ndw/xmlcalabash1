@@ -62,7 +62,7 @@ public class NamespaceRename extends DefaultStep implements ProcessMatchingNodes
     private String to = null;
     private String applyTo = null;
 
-    /** Creates a new instance of NamespaceRename */
+    /* Creates a new instance of NamespaceRename */
     public NamespaceRename(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

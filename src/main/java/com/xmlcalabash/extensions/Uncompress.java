@@ -54,7 +54,7 @@ public class Uncompress extends DefaultStep {
     private ReadablePipe source = null;
     private WritablePipe result = null;
 
-    /**
+    /*
      * Creates a new instance of Load
      */
     public Uncompress(XProcRuntime runtime, XAtomicStep step) {

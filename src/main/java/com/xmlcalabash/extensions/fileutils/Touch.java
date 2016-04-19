@@ -39,7 +39,7 @@ public class Touch extends DefaultStep {
 
     private WritablePipe result = null;
 
-    /**
+    /*
      * Creates a new instance of UriInfo
      */
     public Touch(XProcRuntime runtime, XAtomicStep step) {

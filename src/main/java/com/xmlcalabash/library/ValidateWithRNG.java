@@ -59,7 +59,7 @@ public class ValidateWithRNG extends DefaultStep {
     private WritablePipe result = null;
     private URI docBaseURI = null;
 
-    /** Creates a new instance of Delete */
+    /* Creates a new instance of Delete */
     public ValidateWithRNG(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

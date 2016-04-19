@@ -49,7 +49,7 @@ import java.util.Hashtable;
         type = "{http://www.w3.org/ns/xproc}in-scope-names")
 
 public class InScopeNames extends Parameters {
-    /** Creates a new instance of Count */
+    /* Creates a new instance of Count */
     public InScopeNames(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

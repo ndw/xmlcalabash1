@@ -41,7 +41,7 @@ public class CompoundStep extends Step {
     private Vector<Variable> variables = new Vector<Variable> (); // Order matters!!!
     private boolean augmented = false;
     
-    /** Creates a new instance of CompoundStep */
+    /* Creates a new instance of CompoundStep */
     public CompoundStep(XProcRuntime xproc, XdmNode node, QName type, String name) {
         super(xproc, node, type, name);
     }

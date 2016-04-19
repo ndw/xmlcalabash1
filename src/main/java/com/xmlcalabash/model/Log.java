@@ -31,7 +31,7 @@ public class Log extends SourceArtifact {
     private String port = null;
     private URI href = null;
     
-    /** Creates a new instance of Journal */
+    /* Creates a new instance of Journal */
     public Log(XProcRuntime xproc, XdmNode node) {
         super(xproc, node);
     }

@@ -37,7 +37,7 @@ public class InlineBinding extends Binding {
     Vector<XdmValue> nodes = null;
     HashSet<String> excludeNS = null;
     
-    /** Creates a new instance of InlineBinding */
+    /* Creates a new instance of InlineBinding */
     public InlineBinding(XProcRuntime xproc, XdmNode node) {
         super(xproc, node);
         bindingType = INLINE_BINDING;

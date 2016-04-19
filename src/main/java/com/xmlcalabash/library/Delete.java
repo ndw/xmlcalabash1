@@ -49,7 +49,7 @@ public class Delete extends DefaultStep implements ProcessMatchingNodes {
     private Map<QName, RuntimeValue> inScopeOptions = null;
     private String matchPattern = null;
 
-    /** Creates a new instance of Delete */
+    /* Creates a new instance of Delete */
     public Delete(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

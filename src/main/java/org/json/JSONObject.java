@@ -76,7 +76,7 @@ import java.util.TreeSet;
  *     <code>{ } [ ] / \ : , = ; #</code> and if they do not look like numbers
  *     and if they are not the reserved words <code>true</code>,
  *     <code>false</code>, or <code>null</code>.</li>
- * <li>Keys can be followed by <code>=</code> or <code>=></code> as well as
+ * <li>Keys can be followed by <code>=</code> or <code>=&gt;</code> as well as
  *     by <code>:</code>.</li>
  * <li>Values can be followed by <code>;</code> <small>(semicolon)</small> as
  *     well as by <code>,</code> <small>(comma)</small>.</li>
@@ -154,8 +154,6 @@ public class JSONObject {
      * Missing keys are ignored.
      * @param jo A JSONObject.
      * @param names An array of strings.
-     * @throws JSONException 
-     * @exception JSONException If a value is a non-finite number or if a name is duplicated.
      */
     public JSONObject(JSONObject jo, String[] names) {
         this();
@@ -234,7 +232,6 @@ public class JSONObject {
      *
      * @param map A map object that can be used to initialize the contents of
      *  the JSONObject.
-     * @throws JSONException 
      */
     public JSONObject(Map<String, ?> map) {
         this.map = new HashMap<String, Object>();
@@ -532,6 +529,7 @@ public class JSONObject {
     /**
      * Get an array of field names from a JSONObject.
      *
+     * @param jo The JSON object.
      * @return An array of field names, or null if there are no names.
      */
     public static String[] getNames(JSONObject jo) {
@@ -553,6 +551,7 @@ public class JSONObject {
     /**
      * Get an array of field names from an Object.
      *
+     * @param object The object.
      * @return An array of field names, or null if there are no names.
      */
     public static String[] getNames(Object object) {
@@ -963,7 +962,7 @@ public class JSONObject {
      * @param key   A key string.
      * @param value A Collection value.
      * @return      this.
-     * @throws JSONException
+     * @throws JSONException If something goes wrong.
      */
     public JSONObject put(String key, Collection<?> value) throws JSONException {
         put(key, new JSONArray(value));
@@ -1019,7 +1018,7 @@ public class JSONObject {
      * @param key   A key string.
      * @param value A Map value.
      * @return      this.
-     * @throws JSONException
+     * @throws JSONException If something goes wrong.
      */
     public JSONObject put(String key, Map<String, ?> value) throws JSONException {
         put(key, new JSONObject(value));
@@ -1056,9 +1055,9 @@ public class JSONObject {
      * Put a key/value pair in the JSONObject, but only if the key and the
      * value are both non-null, and only if there is not already a member
      * with that name.
-     * @param key
-     * @param value
-     * @return his.
+     * @param key The key.
+     * @param value The value.
+     * @return this.
      * @throws JSONException if the key is a duplicate
      */
     public JSONObject putOnce(String key, Object value) throws JSONException {
@@ -1092,7 +1091,7 @@ public class JSONObject {
 
     /**
      * Produce a string in double quotes with backslash sequences in all the
-     * right places. A backslash will be inserted within </, allowing JSON
+     * right places. A backslash will be inserted within &lt;/, allowing JSON
      * text to be delivered in HTML. In JSON text, a string cannot contain a
      * control character or an unescaped quote or backslash.
      * @param string A String
@@ -1547,8 +1546,9 @@ public class JSONObject {
       * <p>
       * Warning: This method assumes that the data structure is acyclical.
       *
+      * @param writer The writer.
       * @return The writer.
-      * @throws JSONException
+      * @throws JSONException If something goes wrong.
       */
      public Writer write(Writer writer) throws JSONException {
         try {

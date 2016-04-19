@@ -31,7 +31,7 @@ public class EndPoint extends SourceArtifact {
     protected Step step = null;
     protected Vector<Binding> bindings = new Vector<Binding> ();
     
-    /** Creates a new instance of EndPoint */
+    /* Creates a new instance of EndPoint */
     public EndPoint(XProcRuntime xproc, XdmNode node) {
         super(xproc, node);
     }

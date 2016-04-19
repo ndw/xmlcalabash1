@@ -12,8 +12,7 @@ public final class Closer {
     private Closer() {
     }
 
-    
-    /** 
+    /*
      * Closes the given Closeable, protecting against nulls.
      */
     public static void close(Closeable c) throws IOException {

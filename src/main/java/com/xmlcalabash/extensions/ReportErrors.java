@@ -37,8 +37,8 @@ public class ReportErrors extends DefaultStep {
     private ReadablePipe report = null;
     private WritablePipe result = null;
 
-    /**
-     * Creates a new instance of Identity
+    /*
+     * Creates a new instance of ReportErrors
      */
     public ReportErrors(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);

@@ -33,7 +33,7 @@ public class Message extends DefaultStep {
     private ReadablePipe source = null;
     private WritablePipe result = null;
 
-    /**
+    /*
      * Creates a new instance of Identity
      */
     public Message(XProcRuntime runtime, XAtomicStep step) {

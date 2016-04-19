@@ -50,7 +50,7 @@ public class Unwrap extends DefaultStep implements ProcessMatchingNodes {
     private Map<QName, RuntimeValue> inScopeOptions = null;
     private ProcessMatch matcher = null;
 
-    /** Creates a new instance of Unwrap */
+    /* Creates a new instance of Unwrap */
     public Unwrap(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

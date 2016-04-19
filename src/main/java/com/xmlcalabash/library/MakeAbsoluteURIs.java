@@ -54,7 +54,7 @@ public class MakeAbsoluteURIs extends DefaultStep implements ProcessMatchingNode
     private ProcessMatch matcher = null;
     private URI setBaseURI = null;
 
-    /** Creates a new instance of MakeAbsoluteURIs */
+    /* Creates a new instance of MakeAbsoluteURIs */
     public MakeAbsoluteURIs(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

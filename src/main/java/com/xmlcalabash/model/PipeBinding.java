@@ -34,7 +34,7 @@ public class PipeBinding extends Binding {
     private static int idcounter = 0;
     private int id = -1;
     
-    /** Creates a new instance of PipeBinding */
+    /* Creates a new instance of PipeBinding */
     public PipeBinding(XProcRuntime xproc, XdmNode node) {
         super(xproc, node);
         bindingType = PIPE_BINDING;

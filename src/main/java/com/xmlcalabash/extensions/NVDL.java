@@ -47,7 +47,7 @@ public class NVDL extends DefaultStep {
     private ReadablePipe schemaSource = null;
     private WritablePipe result = null;
 
-    /** Creates a new instance of Delete */
+    /* Creates a new instance of Delete */
     public NVDL(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

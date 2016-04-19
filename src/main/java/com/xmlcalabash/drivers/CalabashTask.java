@@ -58,7 +58,7 @@ import static java.util.Arrays.asList;
 /**
  * Ant task to run Calabash.
  *
- * <p>Owes a lot to Ant's &lt;xslt> task, but this task can't become
+ * <p>Owes a lot to Ant's &lt;xslt&gt; task, but this task can't become
  * part of Ant because this task relies on Calabash, which is licensed
  * under LGPL.
  *
@@ -302,7 +302,7 @@ public class CalabashTask extends MatchingTask {
         }
     }
 
-    /**
+    /*
      * Whether the build should fail if the nested resource collection is empty.
      */
     public void setFailOnNoResources(boolean b) {
@@ -310,7 +310,7 @@ public class CalabashTask extends MatchingTask {
     }
 
     /**
-     * Set the pipeline. optional, nested &lt;pipeline> will be used if not set.
+     * Set the pipeline. optional, nested &lt;pipeline&gt; will be used if not set.
      *
      * @param pipeline pipeline location
      */
@@ -379,7 +379,7 @@ public class CalabashTask extends MatchingTask {
     }
 
     /**
-     * Work with an instance of an <output> element already configured by Ant.
+     * Work with an instance of an &lt;output&gt; element already configured by Ant.
      *
      * @param o the configured Port
      */
@@ -438,7 +438,7 @@ public class CalabashTask extends MatchingTask {
         isTargetExtensionSet = true;
     }
 
-    /**
+    /*
      * Whether any errors should make the build fail.
      */
     public void setFailOnError(boolean b) {
@@ -510,14 +510,14 @@ public class CalabashTask extends MatchingTask {
         this.force = force;
     }
 
-    /**
+    /*
      * A system property to set during transformation.
      */
     public void addSysproperty(Environment.Variable sysp) {
         sysProperties.addVariable(sysp);
     }
 
-    /**
+    /*
      * A set of system properties to set during transformation.
      */
     public void addSyspropertyset(PropertySet sysp) {
@@ -525,7 +525,7 @@ public class CalabashTask extends MatchingTask {
     }
 
     /**
-     * Work with an instance of a <binding> element already configured by Ant.
+     * Work with an instance of a &lt;binding&gt; element already configured by Ant.
      *
      * @param namespace the configured Namespace
      */
@@ -555,7 +555,7 @@ public class CalabashTask extends MatchingTask {
     }
 
     /**
-     * Work with an instance of a <option> element already configured by Ant.
+     * Work with an instance of a &lt;option&gt; element already configured by Ant.
      *
      * @param option the configured Option
      */
@@ -587,7 +587,7 @@ public class CalabashTask extends MatchingTask {
     }
 
     /**
-     * Work with an instance of a <parameter> element already configured by Ant.
+     * Work with an instance of a &lt;parameter&gt; element already configured by Ant.
      *
      * @param parameter the configured Parameter
      */
@@ -1344,7 +1344,7 @@ public class CalabashTask extends MatchingTask {
         }
     }
 
-    /**
+    /*
      * Throws an exception with the given message if failOnError is
      * true, otherwise logs the message using the WARN level.
      */
@@ -1355,7 +1355,7 @@ public class CalabashTask extends MatchingTask {
         log(msg, Project.MSG_WARN);
     }
 
-    /**
+    /*
      * Throws an exception with the given nested exception if
      * failOnError is true, otherwise logs the message using the WARN level.
      */

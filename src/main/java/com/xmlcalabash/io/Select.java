@@ -52,8 +52,7 @@ public class Select implements ReadablePipe {
     private Step reader = null;
     private Logger logger = LoggerFactory.getLogger(Select.class);
 
-            /** Creates a new instance of Select */
-
+    /* Creates a new instance of Select */
     public Select(XProcRuntime runtime, ReadablePipe readFrom, String xpathExpr, XdmNode xpathContext) {
         source = readFrom;
         select = xpathExpr;

@@ -32,7 +32,7 @@ import java.util.HashSet;
 public class Viewport extends DeclareStep {
     RuntimeValue match = null;
     
-    /** Creates a new instance of Viewport */
+    /* Creates a new instance of Viewport */
     public Viewport(XProcRuntime xproc, XdmNode node, String name) {
         super(xproc, node, name);
         declaration = this;

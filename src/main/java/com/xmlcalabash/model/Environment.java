@@ -33,7 +33,7 @@ public class Environment {
 
     // ignored namespaces are only used at parse time
     
-    /** Creates a new instance of Environment */
+    /* Creates a new instance of Environment */
     public Environment(Step pipeline) {
         this.pipeline = pipeline;
         visibleSteps.add(pipeline);

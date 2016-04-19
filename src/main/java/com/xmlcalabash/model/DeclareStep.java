@@ -54,7 +54,7 @@ public class DeclareStep extends CompoundStep {
     // FIXME: Maybe this should be managed by the parser not the DeclareStep?
     private boolean bodyParsed = false;
 
-    /** Creates a new instance of DeclareStep */
+    /* Creates a new instance of DeclareStep */
     public DeclareStep(XProcRuntime xproc, XdmNode node, String name) {
         super(xproc, node, XProcConstants.p_declare_step, name);
     }

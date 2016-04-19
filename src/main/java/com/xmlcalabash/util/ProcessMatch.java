@@ -59,7 +59,7 @@ public class ProcessMatch extends TreeWriter {
     private Configuration saxonConfig = null;
     private int count;
 
-    /**
+    /*
      * Creates a new instance of ProcessMatch
      */
     public ProcessMatch(XProcRuntime runtime, ProcessMatchingNodes processor) {

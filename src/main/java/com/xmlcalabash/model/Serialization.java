@@ -49,7 +49,7 @@ public class Serialization extends SourceArtifact {
     boolean undeclarePrefixes;
     String version;
 
-    /** Creates a new instance of Serialization */
+    /* Creates a new instance of Serialization */
     public Serialization(XProcRuntime xproc, XdmNode node) {
         super(xproc,node);
 

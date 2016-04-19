@@ -46,7 +46,7 @@ public class CssFormatter extends DefaultStep {
     private WritablePipe result = null;
     private Properties options = new Properties();
 
-    /** Creates a new instance of Unzip */
+    /* Creates a new instance of Unzip */
     public CssFormatter(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }

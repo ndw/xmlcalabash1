@@ -35,7 +35,7 @@ import net.sf.saxon.s9api.XdmNode;
 public class UntilUnchanged extends DeclareStep {
     private Output output = null;
 
-    /** Creates a new instance of UntilUnchanged */
+    /* Creates a new instance of UntilUnchanged */
     public UntilUnchanged(XProcRuntime xproc, XdmNode node, String name) {
         super(xproc, node, name);
         declaration = this;

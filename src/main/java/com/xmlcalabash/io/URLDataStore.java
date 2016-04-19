@@ -33,7 +33,7 @@ import java.net.URLConnection;
 /**
  * Uses {@link URLConnection} to implement the interface.
  * 
- * @author James Leigh <james@3roundstones.com>
+ * @author James Leigh &lt;james@3roundstones.com&gt;
  * 
  */
 public class URLDataStore implements DataStore {

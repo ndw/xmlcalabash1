@@ -35,7 +35,7 @@ public class Input extends Port {
     private boolean parameterInput = false;
     private int position = 0;
 
-    /** Creates a new instance of Input */
+    /* Creates a new instance of Input */
     public Input(XProcRuntime xproc, XdmNode node) {
         super(xproc, node);
     }
