@@ -38,7 +38,6 @@ public class PipeLogger {
     private File baseDir = null;
     private int outputCount = 1;
 
-
     public PipeLogger(XProcRuntime xproc, Log log) {
         runtime = xproc;
         this.log = log;
@@ -76,6 +75,17 @@ public class PipeLogger {
         serializer.setOutputProperty(Serializer.Property.METHOD, "xml");
         serializer.setOutputProperty(Serializer.Property.ENCODING, "utf-8");
         serializer.setOutputProperty(Serializer.Property.OMIT_XML_DECLARATION, "yes");
+    }
+
+    private String dateTime() {
+        GregorianCalendar cal = new GregorianCalendar();
+        String rfc822tz = String.format("%1$tz", cal);
+        // I assume it's either -0500 or +0100 or something like that...
+        return String.format("%1$tFT%1$tT", cal) + rfc822tz.substring(0,3) + ":" + rfc822tz.substring(3);
+    }
+
+    public void startLogging() {
+        String dt = dateTime();
 
         switch (logstyle) {
             case PLAIN:
@@ -140,17 +150,6 @@ public class PipeLogger {
         }
 
         serializer.setOutputStream(stream);
-    }
-
-    private String dateTime() {
-        GregorianCalendar cal = new GregorianCalendar();
-        String rfc822tz = String.format("%1$tz", cal);
-        // I assume it's either -0500 or +0100 or something like that...
-        return String.format("%1$tFT%1$tT", cal) + rfc822tz.substring(0,3) + ":" + rfc822tz.substring(3);
-    }
-
-    public void startLogging() {
-        String dt = dateTime();
 
         if (logstyle == LogOptions.OFF) {
             return;
