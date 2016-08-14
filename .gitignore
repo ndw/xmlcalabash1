@@ -4,3 +4,5 @@
 /build/
 /target/
 /src/main/resources/etc/version.properties
+/test/errors.txt
+/test/report.xml
