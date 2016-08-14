@@ -1,5 +1,7 @@
 package com.xmlcalabash.util;
 
+import com.xmlcalabash.core.XProcConfiguration;
+import com.xmlcalabash.core.XProcRuntime;
 import junit.framework.TestCase;
 
 /**
@@ -10,6 +12,8 @@ import junit.framework.TestCase;
  * To change this template use File | Settings | File Templates.
  */
 public class XPointerTest extends TestCase {
+    XProcRuntime runtime = null;
+
     public XPointerTest(String testName) {
         super(testName);
     }
@@ -23,6 +27,8 @@ public class XPointerTest extends TestCase {
 
     protected void setUp() throws Exception {
         super.setUp();
+        XProcConfiguration config = new XProcConfiguration();
+        runtime = new XProcRuntime(config);
     }
 
     protected void tearDown() throws Exception {
@@ -48,21 +54,21 @@ public class XPointerTest extends TestCase {
     */
 
     public void testXmlns() {
-        XPointer xp = new XPointer(null, "xmlns(a=http://example.com/a) xmlns(b=http://example.com/b)", 1024000);
+        XPointer xp = new XPointer(runtime, "xmlns(a=http://example.com/a) xmlns(b=http://example.com/b)", 1024000);
         assertNotNull(xp);
 
-        xp = new XPointer(null, "xmlns(a=http://example.com/a)xmlns(b=http://example.com/b)", 1024000);
+        xp = new XPointer(runtime, "xmlns(a=http://example.com/a)xmlns(b=http://example.com/b)", 1024000);
         assertNotNull(xp);
 
-        xp = new XPointer(null, "xmlns(a=http://example.com/^(a^))xmlns(b=http://example.com/b)", 1024000);
+        xp = new XPointer(runtime, "xmlns(a=http://example.com/^(a^))xmlns(b=http://example.com/b)", 1024000);
         assertNotNull(xp);
     }
 
     public void testSchemes() {
-        XPointer xp = new XPointer(null, "xmlns(a=http://example.com/a) a:unk(a=^^b)", 1024000);
+        XPointer xp = new XPointer(runtime, "xmlns(a=http://example.com/a) a:unk(a=^^b)", 1024000);
         assertNotNull(xp);
 
-        xp = new XPointer(null, "xmlns(a=http://example.com/a)xmlns(b=http://example.com/b) a:unk(a) b:unk(b)", 1024000);
+        xp = new XPointer(runtime, "xmlns(a=http://example.com/a)xmlns(b=http://example.com/b) a:unk(a) b:unk(b)", 1024000);
         assertNotNull(xp);
 
         /*
