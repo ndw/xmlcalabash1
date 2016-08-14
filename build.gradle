@@ -155,7 +155,6 @@ jar {
     instruction 'Implementation-Title', 'XML Calabash'
     instruction 'Implementation-Version', project.ext.distVersion
     instruction 'Main-Class', 'com.xmlcalabash.drivers.Main'
-    instruction 'Bundle-SymbolicName', 'com.xmlcalabash'
     instruction 'Bundle-RequiredExecutionEnvironment', 'J2SE-1.6'
     instruction 'Export-Package', '*, etc'
     instruction 'Import-Package', 'net.sf.saxon.*;version=' + project.ext.saxonRelease + ',\
@@ -167,6 +166,7 @@ jar {
     instruction 'DynamicImport-Package', '*'
     instruction 'Class-Path', project.ext.runtimeClasspath + " lib"
   }
+  manifest.attributes('Bundle-SymbolicName': 'com.xmlcalabash')
 }
 
 izpack {
