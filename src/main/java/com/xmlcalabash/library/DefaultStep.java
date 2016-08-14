@@ -45,6 +45,7 @@ public class DefaultStep implements XProcStep {
     public static final QName _standalone = new QName("", "standalone");
     public static final QName _undeclare_prefixes = new QName("", "undeclare-prefixes");
     public static final QName _version = new QName("", "version");
+    public static final QName cx_message = new QName(XProcConstants.NS_CALABASH_EX, "message");
 
     protected Logger logger = null;
     private Hashtable<QName,RuntimeValue> options = null;
@@ -166,6 +167,10 @@ public class DefaultStep implements XProcStep {
             type = step.getType().getClarkName();
         }
         logger.debug("Running " + type + " " + step.getName() + addnLog);
+        String msg = step.getExtensionAttribute(cx_message);
+        if (msg != null) {
+            System.err.println("Message: " + msg);
+        }
     }
 
     public Serializer makeSerializer() {
