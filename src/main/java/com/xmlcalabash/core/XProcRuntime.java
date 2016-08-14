@@ -335,8 +335,10 @@ public class XProcRuntime {
         HttpClientUtils.closeQuietly(httpClient);
         httpClient = null;
 
-        for (XProcExtensionFunctionDefinition xf : exFuncs) {
-            xf.close();
+        if (exFuncs != null) {
+            for (XProcExtensionFunctionDefinition xf : exFuncs) {
+                xf.close();
+            }
         }
         exFuncs = null;
     }
