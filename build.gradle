@@ -407,7 +407,7 @@ gradle.taskGraph.whenReady { taskGraph ->
             label(text: "Please enter key passphrase:")
             input = passwordField()
             button(defaultButton: true, text: 'OK', actionPerformed: {
-              pass = input.password;
+              pass = new String(input.password);
               dispose();
             })
           }
