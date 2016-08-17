@@ -1,12 +1,7 @@
 package com.xmlcalabash.extensions;
 
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -581,7 +576,12 @@ public class Zip extends DefaultStep {
     }
 
     public void storeJSON(FileToZip file, XdmNode doc, OutputStream out) {
-        PrintWriter writer = new PrintWriter(out);
+        PrintWriter writer = null;
+        try {
+            writer = new PrintWriter(new OutputStreamWriter(out, "UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            // This can't happen
+        }
         try {
             String json = XMLtoJSON.convert(doc);
             writer.print(json);
