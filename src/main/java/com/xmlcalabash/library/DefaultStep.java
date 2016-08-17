@@ -176,6 +176,9 @@ public class DefaultStep implements XProcStep {
     public Serializer makeSerializer() {
         Serializer serializer = runtime.getProcessor().newSerializer();
 
+        // This is XML; default to UTF-8
+        serializer.setOutputProperty(Serializer.Property.ENCODING, "UTF-8");
+
         if (options == null) {
             return serializer;
         }

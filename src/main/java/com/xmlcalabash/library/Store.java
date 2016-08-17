@@ -19,11 +19,7 @@
 
 package com.xmlcalabash.library;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.URI;
 import java.util.zip.GZIPOutputStream;
 
@@ -303,8 +299,7 @@ public class Store extends DefaultStep {
         }
     }
 
-    private URI storeJSON(final XdmNode doc, String href, String base,
-            String media) throws SaxonApiException {
+    private URI storeJSON(final XdmNode doc, String href, String base, String media) throws SaxonApiException {
         if (media == null) {
             media = "application/json";
         }
@@ -322,7 +317,7 @@ public class Store extends DefaultStep {
                         outstr = gzout;
                     }
 
-                    PrintWriter writer = new PrintWriter(outstr);
+                    PrintWriter writer = new PrintWriter(new OutputStreamWriter(outstr, "UTF-8"));
                     String json = XMLtoJSON.convert(doc);
                     writer.print(json);
                 } finally {
@@ -341,7 +336,7 @@ public class Store extends DefaultStep {
                             outstr = gzout;
                         }
 
-                        PrintWriter writer = new PrintWriter(outstr);
+                        PrintWriter writer = new PrintWriter(new OutputStreamWriter(outstr, "UTF-8"));
                         String json = XMLtoJSON.convert(doc);
                         writer.print(json);
                         // No need to close writer here - the underlying 
