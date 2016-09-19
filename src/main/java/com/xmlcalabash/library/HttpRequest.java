@@ -1093,16 +1093,6 @@ public class HttpRequest extends DefaultStep {
         return content;
     }
 
-    private String decodeBase64(XdmNode doc, String charset) {
-        String content = extractText(doc);
-        byte[] decoded = Base64.decode(content);
-        try {
-            return new String(decoded, charset);
-        } catch (UnsupportedEncodingException uee) {
-            throw XProcException.stepError(10, uee);
-        }
-    }
-
     private void doFile(String href, String base) {
         try {
             DataStore store = runtime.getDataStore();
