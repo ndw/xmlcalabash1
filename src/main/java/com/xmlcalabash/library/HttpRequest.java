@@ -47,6 +47,7 @@ import net.sf.saxon.s9api.XdmSequenceIterator;
 import org.apache.http.Consts;
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
@@ -70,6 +71,7 @@ import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentType;
+import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.BasicCredentialsProvider;
@@ -561,14 +563,13 @@ public class HttpRequest extends DefaultStep {
         if (encoding != null && !"base64".equals(encoding)) {
             throw XProcException.stepError(52);
         }
+        
+        HttpEntity requestEntity = null;
 
         try {
             if ("base64".equals(encoding)) {
-                String charset = body.getAttributeValue(_charset);
-                // FIXME: is utf-8 the right default?
-                if (charset == null) { charset = "utf-8"; }
-
-                // Make sure it's all characters
+                // Content is binary, and must be serialized as an array of bytes
+                // Make sure it's all characters (no markup)
                 XdmSequenceIterator iter = body.axisIterator(Axis.CHILD);
                 while (iter.hasNext()) {
                     XdmNode node = (XdmNode) iter.next();
@@ -576,13 +577,11 @@ public class HttpRequest extends DefaultStep {
                         throw XProcException.stepError(28);
                     }
                 }
-
-                String escapedContent = decodeBase64(body, charset);
-                StringWriter writer = new StringWriter();
-                writer.write(escapedContent);
-                writer.close();
-                postContent = writer.toString();
+                String content = extractText(body);
+                byte[] decoded = Base64.decode(content);
+                requestEntity = new ByteArrayEntity(decoded, ContentType.create(contentType));
             } else {
+                // content is textual; either JSON, XML, or plain text, and can be serialized as a String
                 if (jsonContentType(contentType)) {
                     postContent = XMLtoJSON.convert(body);
                 } else if (xmlContentType(contentType)) {
@@ -620,9 +619,9 @@ public class HttpRequest extends DefaultStep {
                     writer.close();
                     postContent = writer.toString();
                 }
+                requestEntity = new StringEntity(postContent, ContentType.create(contentType, "UTF-8"));
             }
 
-            StringEntity requestEntity = new StringEntity(postContent, ContentType.create(contentType, "UTF-8"));
             method.setEntity(requestEntity);
 
         } catch (IOException ioe) {
