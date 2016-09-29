@@ -176,6 +176,10 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
             String accept = node.getAttributeValue(_accept);
             String accept_lang = node.getAttributeValue(_accept_language);
 
+            if (href == null) {
+                href = "";
+            }
+
             if (accept != null && accept.matches(".*[^\u0020-\u007e].*")) {
                 throw new XProcException("Invalid characters in accept value");
             }
@@ -250,9 +254,15 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
 
             if (xptr != null) {
                 /* HACK */
-                if ("text".equals(parse) && !xptr.trim().startsWith("text(")) {
-                    xptr = "text(" + xptr + ")";
-                }
+                if ("text".equals(parse)) {
+                    String xtrim = xptr.trim();
+                    // What about spaces around the "=" !
+                    if (xtrim.startsWith("line=") || xtrim.startsWith("char=")) {
+                        xptr = "text(" + xptr + ")";
+                    } else if (xtrim.startsWith("search=")) {
+                        xptr = "search(" + xptr + ")";
+                    }
+               }
                 xpointer = new XPointer(runtime, xptr, readLimit);
             }
 
