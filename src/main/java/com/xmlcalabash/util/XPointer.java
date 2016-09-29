@@ -27,6 +27,7 @@ public class XPointer {
     private static final QName _element = new QName("", "element");
     private static final QName _xpath = new QName("", "xpath");
     private static final QName _text = new QName("", "text");
+    private static final QName _search = new QName("", "search");
 
     private Vector<XPointerScheme> parts = new Vector<XPointerScheme> ();
     private int readLimit = 0;
@@ -82,7 +83,11 @@ public class XPointer {
             String select = scheme.textEquivalent();
             if (result == null && select != null) {
                 try {
-                    result = scheme.selectText(stream, contentLength);
+                    if (select.startsWith("search=")) {
+                        result = scheme.selectSearchText(stream, contentLength);
+                    } else {
+                        result = scheme.selectText(stream, contentLength);
+                    }
                 } catch (IllegalArgumentException iae) {
                     // in this case we will never have started reading the file, so we're good to go
                     except = iae;
@@ -142,6 +147,8 @@ public class XPointer {
                     parts.add(new XPointerXPathScheme(name, data, readLimit));
                 } else if (_text.equals(name)) {
                     parts.add(new XPointerTextScheme(name, data, readLimit));
+                } else if (_search.equals(name)) {
+                    parts.add(new XPointerTextSearchScheme(name, data, readLimit));
                 } else {
                     parts.add(new XPointerScheme(name, data, readLimit));
                 }
@@ -304,6 +311,16 @@ public class XPointer {
 
     private class XPointerTextScheme extends XPointerScheme {
         public XPointerTextScheme(QName name, String data, int readLimit) {
+            super(name,data,readLimit);
+        }
+
+        public String textEquivalent() {
+            return schemeData;
+        }
+    }
+
+    private class XPointerTextSearchScheme extends XPointerScheme {
+        public XPointerTextSearchScheme(QName name, String data, int readLimit) {
             super(name,data,readLimit);
         }
 
