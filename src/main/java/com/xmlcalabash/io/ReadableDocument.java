@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ReadableDocument implements ReadablePipe {
     private static final String ACCEPT_XML = "application/xml, text/xml, application/xml-external-parsed-entity, text/xml-external-parsed-entity";
-    private static final String ACCPET_JSON = "application/json, application/javascript, text/javascript, text/*, */*";
+    private static final String ACCEPT_JSON = "application/json, application/javascript, text/javascript, text/*, */*";
     private Logger logger = LoggerFactory.getLogger(ReadableDocument.class);
     protected DocumentSequence documents = null;
     protected String uri = null;
@@ -91,7 +91,7 @@ public class ReadableDocument implements ReadablePipe {
     public boolean readSequence() {
         return false;
     }
-    
+
     public void resetReader() {
         pos = 0;
         // 6 Feb 2009: removed "readDoc = false;" because we don't want to re-read the document
@@ -186,7 +186,7 @@ public class ReadableDocument implements ReadablePipe {
                         if (runtime.transparentJSON()) {
                             try {
                                 DataStore store = runtime.getDataStore();
-                                store.readEntry(uri, base, ACCPET_JSON, null, new DataReader() {
+                                store.readEntry(uri, base, ACCEPT_JSON, null, new DataReader() {
                                     public void load(URI id, String media, InputStream content, long len)
                                             throws IOException {
                                         String cs = HttpUtils.getCharset(media);
