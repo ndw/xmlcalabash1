@@ -51,6 +51,7 @@ import org.xml.sax.InputSource;
 import static com.xmlcalabash.util.URIUtils.encode;
 import static java.lang.String.format;
 import static java.lang.System.getProperty;
+import net.sf.saxon.Version;
 
 /**
  * Created by IntelliJ IDEA.
@@ -173,7 +174,7 @@ public class XProcConfiguration {
         // If we got a schema aware processor, make sure it's reflected in our config
         // FIXME: are there other things that should be reflected this way?
         this.schemaAware = cfgProcessor.isSchemaAware();
-        saxonProcessor = Configuration.softwareEdition.toLowerCase();
+        saxonProcessor = Version.softwareEdition.toLowerCase();
 
         if (saxoncfg != null) {
             // If there was a Saxon configuration, then it wins
@@ -199,7 +200,7 @@ public class XProcConfiguration {
             // If we got a schema aware processor, make sure it's reflected in our config
             // FIXME: are there other things that should be reflected this way?
             this.schemaAware = cfgProcessor.isSchemaAware();
-            saxonProcessor = Configuration.softwareEdition.toLowerCase();
+            saxonProcessor = Version.softwareEdition.toLowerCase();
         }
     }
 
@@ -207,7 +208,7 @@ public class XProcConfiguration {
         // If we got a schema aware processor, make sure it's reflected in our config
         // FIXME: are there other things that should be reflected this way?
         this.schemaAware = cfgProcessor.isSchemaAware();
-        saxonProcessor = Configuration.softwareEdition.toLowerCase();
+        saxonProcessor = Version.softwareEdition.toLowerCase();
         findStepClasses();
         findExtensionFunctions();
 
@@ -264,7 +265,7 @@ public class XProcConfiguration {
         cfgProcessor.getUnderlyingConfiguration().setStripsAllWhiteSpace(false);
         cfgProcessor.getUnderlyingConfiguration().setStripsWhiteSpace(Whitespace.NONE);
 
-        String actualtype = Configuration.softwareEdition;
+        String actualtype = Version.softwareEdition;
         if ((proctype != null) && !"he".equals(proctype) && (!actualtype.toLowerCase().equals(proctype))) {
             System.err.println("Failed to obtain " + proctype.toUpperCase() + " processor; using " + actualtype + " instead.");
         }
