@@ -163,7 +163,7 @@ public class NamespaceRename extends DefaultStep implements ProcessMatchingNodes
 
             // Careful, we're messing with the namespace bindings
             // Make sure the nameCode is right...
-            NodeName nameCode = new NameOfNode(inode);
+            NodeName nameCode = NameOfNode.makeName(inode);
             String pfx = nameCode.getPrefix();
             String uri = nameCode.getURI();
 
@@ -183,7 +183,7 @@ public class NamespaceRename extends DefaultStep implements ProcessMatchingNodes
             while (iter.hasNext()) {
                 XdmNode attr = (XdmNode) iter.next();
                 inode = attr.getUnderlyingNode();
-                NodeName nameCode = new NameOfNode(inode);
+                NodeName nameCode = NameOfNode.makeName(inode);
                 String pfx = nameCode.getPrefix();
                 String uri = nameCode.getURI();
 

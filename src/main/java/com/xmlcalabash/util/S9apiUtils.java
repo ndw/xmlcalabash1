@@ -355,7 +355,7 @@ public class S9apiUtils {
                 newNS = onlyNewNS;
             }
 
-            NodeName newName = new NameOfNode(inode);
+            NodeName newName = NameOfNode.makeName(inode);
             if (!preserveUsed) {
                 NamespaceBinding binding = newName.getNamespaceBinding();
                 if (excludeNS.contains(binding.getURI())) {
