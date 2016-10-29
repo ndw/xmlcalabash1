@@ -129,7 +129,7 @@ public class NamespaceRename extends DefaultStep implements ProcessMatchingNodes
         NamespaceBinding newNS[] = null;
 
         if ("attributes".equals(applyTo)) {
-            matcher.addStartElement(new NameOfNode(inode), inode.getSchemaType(), inscopeNS);
+            matcher.addStartElement(NameOfNode.makeName(inode), inode.getSchemaType(), inscopeNS);
         } else {
             if (inscopeNS.length > 0) {
                 int countNS = 0;
