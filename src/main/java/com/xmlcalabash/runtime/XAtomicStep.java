@@ -618,7 +618,7 @@ public class XAtomicStep extends XStep {
                     // FIXME: Surely there's a better way to do this?
                     Hashtable<String,String> lclnsBindings = new Hashtable<String, String>();
                     NodeInfo inode = nsbinding.getNode().getUnderlyingNode();
-                    NamePool pool = inode.getNamePool();
+                    NamePool pool = inode.getConfiguration().getNamePool();
                     InscopeNamespaceResolver inscopeNS = new InscopeNamespaceResolver(inode);
                     Iterator<?> pfxiter = inscopeNS.iteratePrefixes();
                     while (pfxiter.hasNext()) {
