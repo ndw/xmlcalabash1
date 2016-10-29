@@ -108,7 +108,7 @@ public class S9apiUtils {
             tree.startDocument(0);
             for (XdmValue value : values) {
                 for (XdmItem item : (Iterable<XdmItem>) value) {
-                    tree.append((Item) item.getUnderlyingValue(), 0,
+                    tree.append((Item) item.getUnderlyingValue(), VoidLocation.instance(),
                             NodeInfo.ALL_NAMESPACES);
                 }
             }
@@ -134,7 +134,8 @@ public class S9apiUtils {
             }
             tree.open();
             tree.startDocument(0);
-            tree.append((Item) node.getUnderlyingValue(), 0, NodeInfo.ALL_NAMESPACES);
+            tree.append((Item) node.getUnderlyingValue(), VoidLocation.instance(),
+                    NodeInfo.ALL_NAMESPACES);
             tree.endDocument();
             tree.close();
         } catch (XPathException err) {

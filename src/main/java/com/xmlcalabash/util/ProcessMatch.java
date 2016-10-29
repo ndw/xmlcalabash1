@@ -84,7 +84,6 @@ public class ProcessMatch extends TreeWriter {
             receiver = destination.getReceiver(saxonConfig);
             receiver = new NamespaceReducer(receiver);
             PipelineConfiguration pipe = controller.makePipelineConfiguration();
-            pipe.setLocationProvider(xLocationProvider);
 
             receiver.setPipelineConfiguration(pipe);
             receiver.setSystemId(doc.getBaseURI().toASCIIString());
