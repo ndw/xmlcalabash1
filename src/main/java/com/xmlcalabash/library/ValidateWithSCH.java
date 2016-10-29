@@ -90,7 +90,7 @@ public class ValidateWithSCH extends DefaultStep {
         XdmNode sourceXML = source.read();
 
         // If we're dealing with a typed document, we must compile the XSLT in schema-aware mode
-        schemaAware = (sourceXML.getUnderlyingNode().getTypeAnnotation() != StandardNames.XS_UNTYPED);
+        schemaAware = (sourceXML.getUnderlyingNode().getSchemaType() != null);
 
         XdmNode schemaXML = schema.read();
 
