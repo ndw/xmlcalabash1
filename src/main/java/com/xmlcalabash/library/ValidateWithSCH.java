@@ -27,6 +27,8 @@ import java.io.InputStream;
 import java.util.Vector;
 import java.util.Hashtable;
 import java.util.Iterator;
+import net.sf.saxon.om.StructuredQName;
+import net.sf.saxon.type.SchemaType;
 
 /**
  * Created by IntelliJ IDEA.
@@ -41,6 +43,7 @@ import java.util.Iterator;
         type = "{http://www.w3.org/ns/xproc}validate-with-schematron")
 
 public class ValidateWithSCH extends DefaultStep {
+    private static final StructuredQName _untyped = StructuredQName.fromClarkName("{http://www.w3.org/2001/XMLSchema}untyped");
     private static final QName _assert_valid = new QName("", "assert-valid");
     private static final QName _phase = new QName("", "phase");
     private InputStream  skeleton = null;
@@ -90,7 +93,8 @@ public class ValidateWithSCH extends DefaultStep {
         XdmNode sourceXML = source.read();
 
         // If we're dealing with a typed document, we must compile the XSLT in schema-aware mode
-        schemaAware = (sourceXML.getUnderlyingNode().getSchemaType() != null);
+        SchemaType type = sourceXML.getUnderlyingNode().getSchemaType();
+        schemaAware = ! ( type == null || type.getStructuredQName().equals(_untyped) );
 
         XdmNode schemaXML = schema.read();
 
