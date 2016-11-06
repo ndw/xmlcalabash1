@@ -197,6 +197,7 @@ public class XSLT extends DefaultStep {
         UnparsedTextURIResolver unparsedTextURIResolver = runtime.getResolver();
 
         config.setOutputURIResolver(new OutputResolver());
+        config.setDefaultCollection(CollectionResolver.DEFAULT);
         config.setCollectionURIResolver(new CollectionResolver(runtime, defaultCollection, collectionResolver));
 
         XdmDestination result = null;

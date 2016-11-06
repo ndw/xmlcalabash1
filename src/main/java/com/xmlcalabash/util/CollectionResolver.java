@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
  * To change this template use File | Settings | File Templates.
  */
 public class CollectionResolver implements CollectionURIResolver {
+    public static final String DEFAULT = "http://xmlcalabash.com/saxon-default-collection";
     protected Logger logger = LoggerFactory.getLogger(CollectionResolver.class);
 
     XProcRuntime runtime = null;
@@ -40,7 +41,7 @@ public class CollectionResolver implements CollectionURIResolver {
 
     public SequenceIterator resolve(String href, String base, XPathContext context) throws XPathException {
         logger.trace("Collection: " + href + " (" + base + ")");
-        if (href == null) {
+        if (href == null || href.equals(DEFAULT)) {
             Item[] array = new Item[docs.size()];
             for (int pos = 0; pos < docs.size(); pos++) {
                 array[pos] = docs.get(pos).getUnderlyingNode();

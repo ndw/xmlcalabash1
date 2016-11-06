@@ -115,6 +115,7 @@ public class XQuery extends DefaultStep {
 
         CollectionURIResolver collectionResolver = config.getCollectionURIResolver();
 
+        config.setDefaultCollection(CollectionResolver.DEFAULT);
         config.setCollectionURIResolver(new CollectionResolver(runtime, defaultCollection, collectionResolver));
 
         try {
