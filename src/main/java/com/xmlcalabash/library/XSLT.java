@@ -57,12 +57,18 @@ import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XsltCompiler;
 import net.sf.saxon.s9api.XsltExecutable;
 import net.sf.saxon.s9api.XsltTransformer;
-import net.sf.saxon.s9api.XdmAtomicValue;
 import net.sf.saxon.s9api.MessageListener;
 import net.sf.saxon.s9api.ValidationMode;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.event.Receiver;
 import com.xmlcalabash.runtime.XAtomicStep;
+import net.sf.saxon.event.PipelineConfiguration;
+import net.sf.saxon.expr.parser.Location;
+import net.sf.saxon.om.NamespaceBinding;
+import net.sf.saxon.om.NodeName;
+import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.type.SchemaType;
+import net.sf.saxon.type.SimpleType;
 import org.xml.sax.InputSource;
 
 /**
@@ -362,8 +368,7 @@ public class XSLT extends DefaultStep {
                 XdmDestination xdmResult = new XdmDestination();
                 secondaryResults.put(baseURI.toASCIIString(), xdmResult);
                 Receiver receiver = xdmResult.getReceiver(runtime.getProcessor().getUnderlyingConfiguration());
-                receiver.setSystemId(baseURI.toASCIIString());
-                return receiver;
+                return new FixedSysidReceiver(receiver, baseURI.toASCIIString());
             } catch (SaxonApiException sae) {
                 throw new XProcException(sae);
             }
@@ -415,6 +420,110 @@ public class XSLT extends DefaultStep {
 
             step.reportError(treeWriter.getResult());
             step.info(step.getNode(), content.toString());
+        }
+    }
+
+    private static class FixedSysidReceiver
+            implements Receiver
+    {
+        private final String   mySysid;
+        private final Receiver myWrapped;
+
+        public FixedSysidReceiver(Receiver wrapped, String sysid) {
+            mySysid   = sysid;
+            myWrapped = wrapped;
+            myWrapped.setSystemId(sysid);
+        }
+
+        @Override
+        public void open() throws XPathException {
+            myWrapped.open();
+        }
+
+        @Override
+        public void setUnparsedEntity(String name, String sysid, String pubid) throws XPathException {
+            myWrapped.setUnparsedEntity(name, sysid, pubid);
+        }
+
+        @Override
+        public String getSystemId() {
+            return mySysid;
+        }
+
+        @Override
+        public void setSystemId(String sysid) {
+            // propagate it to the wrapped receiver, but do not take it into account here...
+            myWrapped.setSystemId(sysid);
+        }
+
+        @Override
+        public void setPipelineConfiguration(PipelineConfiguration conf) {
+            myWrapped.setPipelineConfiguration(conf);
+        }
+
+        @Override
+        public void startDocument(int i) throws XPathException {
+            myWrapped.startDocument(i);
+        }
+
+        @Override
+        public void endDocument() throws XPathException {
+            myWrapped.endDocument();
+        }
+
+        @Override
+        public void startElement(NodeName name, SchemaType st, Location loc, int i) throws XPathException {
+            myWrapped.startElement(name, st, loc, i);
+        }
+
+        @Override
+        public void namespace(NamespaceBinding ns, int i) throws XPathException {
+            myWrapped.namespace(ns, i);
+        }
+
+        @Override
+        public void attribute(NodeName name, SimpleType st, CharSequence cs, Location loc, int i) throws XPathException {
+            myWrapped.attribute(name, st, cs, loc, i);
+        }
+
+        @Override
+        public void startContent() throws XPathException {
+            myWrapped.startContent();
+        }
+
+        @Override
+        public void endElement() throws XPathException {
+            myWrapped.endElement();
+        }
+
+        @Override
+        public void characters(CharSequence cs, Location loc, int i) throws XPathException {
+            myWrapped.characters(cs, loc, i);
+        }
+
+        @Override
+        public void processingInstruction(String string, CharSequence cs, Location loc, int i) throws XPathException {
+            myWrapped.processingInstruction(string, cs, loc, i);
+        }
+
+        @Override
+        public void comment(CharSequence cs, Location loc, int i) throws XPathException {
+            myWrapped.comment(cs, loc, i);
+        }
+
+        @Override
+        public void close() throws XPathException {
+            myWrapped.close();
+        }
+
+        @Override
+        public boolean usesTypeAnnotations() {
+            return myWrapped.usesTypeAnnotations();
+        }
+
+        @Override
+        public PipelineConfiguration getPipelineConfiguration() {
+            return myWrapped.getPipelineConfiguration();
         }
     }
 }
