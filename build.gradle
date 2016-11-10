@@ -294,6 +294,14 @@ task testSuite(dependsOn: [makeDist, testSuiteMessages], type: JavaExec) {
   errorOutput = new FileOutputStream(new File(testsErrors))
 }
 
+task testSuiteClassPath {
+  doLast {
+    configurations.reportruntime.each { println it }
+    configurations.runtime.each { println it }
+    sourceSets.main.output.each { println it }
+  }
+}
+
 task htmlReport(dependsOn: testSuite, type: JavaExec) {
   classpath = configurations.reportruntime + configurations.runtime + sourceSets.main.output
   main = 'net.sf.saxon.Transform'
