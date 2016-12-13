@@ -20,16 +20,6 @@
 
 package com.xmlcalabash.io;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -42,19 +32,25 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.params.ClientPNames;
+import org.apache.http.client.utils.DateUtils;
 import org.apache.http.entity.AbstractHttpEntity;
-import org.apache.http.impl.cookie.DateParseException;
-import org.apache.http.impl.cookie.DateUtils;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.ExecutionContext;
 import org.apache.http.protocol.HttpContext;
+import org.apache.http.protocol.HttpCoreContext;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
- * Uses {@link HttpClient} to implement the interface. HTTP redirects are
- * followed transparently, unless disabled by {@link #setHttpParams(HttpParams)}.
+ * Uses {@link HttpClient} to implement the interface. It is the responsibility
+ * of the caller to assure that the client will follow redirects.
  * When writing documents, the document is sent to the target URI via HTTP POST.
  * If the server response with a Location in the response header, that is
  * assumed to be the URI of the created document.
@@ -65,7 +61,6 @@ import org.apache.http.protocol.HttpContext;
 public class HttpClientDataStore implements DataStore {
 	private final DataStore fallback;
 	private HttpClient client;
-	private HttpParams params;
 
 	public HttpClientDataStore(HttpClient client, DataStore fallback) {
 		super();
@@ -73,24 +68,8 @@ public class HttpClientDataStore implements DataStore {
 		this.fallback = fallback;
 	}
 
-	public synchronized HttpClient getHttpClient() {
+	private synchronized HttpClient getHttpClient() {
 		return client;
-	}
-
-	public synchronized void setHttpClient(HttpClient client) {
-		this.client = client;
-	}
-
-	public synchronized HttpParams getHttpParams() {
-		if (params == null) {
-			params = new BasicHttpParams();
-			params.setBooleanParameter(ClientPNames.HANDLE_REDIRECTS, true);
-		}
-		return params;
-	}
-
-	public synchronized void setHttpParams(HttpParams params) {
-		this.params = params;
 	}
 
 	public URI writeEntry(String href, String base, final String media,
@@ -183,8 +162,6 @@ public class HttpClientDataStore implements DataStore {
 						handler.list(contentId, type, lm);
 					} catch (NumberFormatException e) {
 						throw new IOException(e);
-					} catch (DateParseException e) {
-						throw new IOException(e);
 					}
 					return null;
 				}
@@ -223,8 +200,7 @@ public class HttpClientDataStore implements DataStore {
 		}
 	}
 
-	private long getLastModified(HttpResponse response)
-			throws DateParseException {
+	private long getLastModified(HttpResponse response) {
 		Header last = response.getLastHeader("Last-Modified");
 		if (last == null) {
 			return -1;
@@ -262,7 +238,6 @@ public class HttpClientDataStore implements DataStore {
 	private <T> T execute(final HttpUriRequest request,
 			final ResponseHandler<? extends T> handler, HttpContext context)
 			throws IOException, ClientProtocolException {
-		request.setParams(getHttpParams());
 		return getHttpClient().execute(request, new ResponseHandler<T>() {
 			public T handleResponse(HttpResponse response) throws IOException {
 				int respCode = response.getStatusLine().getStatusCode();
@@ -298,9 +273,9 @@ public class HttpClientDataStore implements DataStore {
 
 	private URI getContentId(HttpContext localContext) {
 		HttpHost host = (HttpHost) localContext
-				.getAttribute(ExecutionContext.HTTP_TARGET_HOST);
+				.getAttribute(HttpCoreContext.HTTP_TARGET_HOST);
 		HttpUriRequest req = (HttpUriRequest) localContext
-				.getAttribute(ExecutionContext.HTTP_REQUEST);
+				.getAttribute(HttpCoreContext.HTTP_REQUEST);
 		try {
 			URI root = new URI(host.getSchemeName(), null, host.getHostName(),
 					host.getPort(), "/", null, null);

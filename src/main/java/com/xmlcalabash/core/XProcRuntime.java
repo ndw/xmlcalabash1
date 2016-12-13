@@ -20,61 +20,7 @@
 
 package com.xmlcalabash.core;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Stack;
-import java.util.Vector;
-
-import javax.xml.transform.URIResolver;
-import javax.xml.transform.sax.SAXSource;
-
 import com.nwalsh.annotations.SaxonExtensionFunction;
-import com.xmlcalabash.util.Input;
-import com.xmlcalabash.util.Output;
-import net.sf.saxon.Configuration;
-import net.sf.saxon.lib.ExtensionFunctionDefinition;
-import net.sf.saxon.s9api.ExtensionFunction;
-import net.sf.saxon.s9api.Processor;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.Serializer;
-import net.sf.saxon.s9api.XdmDestination;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XsltCompiler;
-import net.sf.saxon.s9api.XsltExecutable;
-import net.sf.saxon.s9api.XsltTransformer;
-
-import org.apache.http.client.CookieStore;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.utils.HttpClientUtils;
-import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
-import org.apache.http.impl.client.SystemDefaultHttpClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xml.sax.EntityResolver;
-import org.xml.sax.InputSource;
-
 import com.xmlcalabash.config.XProcConfigurer;
 import com.xmlcalabash.functions.BaseURI;
 import com.xmlcalabash.functions.Cwd;
@@ -103,12 +49,63 @@ import com.xmlcalabash.runtime.XRootStep;
 import com.xmlcalabash.runtime.XStep;
 import com.xmlcalabash.util.DefaultXProcConfigurer;
 import com.xmlcalabash.util.DefaultXProcMessageListener;
+import com.xmlcalabash.util.Input;
 import com.xmlcalabash.util.JSONtoXML;
+import com.xmlcalabash.util.Output;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.StepErrorListener;
 import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.util.URIUtils;
 import com.xmlcalabash.util.XProcURIResolver;
+import net.sf.saxon.Configuration;
+import net.sf.saxon.lib.ExtensionFunctionDefinition;
+import net.sf.saxon.s9api.ExtensionFunction;
+import net.sf.saxon.s9api.Processor;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.Serializer;
+import net.sf.saxon.s9api.XdmDestination;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XsltCompiler;
+import net.sf.saxon.s9api.XsltExecutable;
+import net.sf.saxon.s9api.XsltTransformer;
+import org.apache.http.client.CookieStore;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.utils.HttpClientUtils;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
+
+import javax.xml.transform.URIResolver;
+import javax.xml.transform.sax.SAXSource;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Stack;
+import java.util.Vector;
 
 import static java.lang.String.format;
 
@@ -927,10 +924,10 @@ public class XProcRuntime {
 
     public synchronized HttpClient getHttpClient() {
     	if (this.httpClient == null) {
-            SystemDefaultHttpClient httpClient = new SystemDefaultHttpClient();
+    	    HttpClientBuilder builder = HttpClientBuilder.create();
             // Provide custom retry handler is necessary
-            httpClient.setHttpRequestRetryHandler(new StandardHttpRequestRetryHandler(3, false));
-            return this.httpClient = httpClient;
+            builder.setRetryHandler(new StandardHttpRequestRetryHandler(3, false));
+            return this.httpClient = builder.build();
     	} else {
     		return httpClient;
     	}

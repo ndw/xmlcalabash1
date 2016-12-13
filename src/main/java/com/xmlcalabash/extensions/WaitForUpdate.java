@@ -14,13 +14,13 @@ import net.sf.saxon.s9api.SaxonApiException;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.utils.DateUtils;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
-import org.apache.http.impl.client.SystemDefaultHttpClient;
-import org.apache.http.impl.cookie.DateParseException;
-import org.apache.http.impl.cookie.DateUtils;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 
@@ -161,8 +161,9 @@ public class WaitForUpdate extends DefaultStep {
     }
 
     private String waitForHttp(URI uri) {
-        SystemDefaultHttpClient client = new SystemDefaultHttpClient();
-        client.setHttpRequestRetryHandler(new StandardHttpRequestRetryHandler(3, false));
+        HttpClientBuilder builder = HttpClientBuilder.create();
+        builder.setRetryHandler(new StandardHttpRequestRetryHandler(3, false));
+        CloseableHttpClient client = builder.build();
         HttpContext localContext = new BasicHttpContext();
         HttpUriRequest httpRequest = new HttpHead(uri);
         HttpResponse httpResponse = null;
@@ -223,17 +224,11 @@ public class WaitForUpdate extends DefaultStep {
             date = getHeader(httpResponse, "Date", null);
         }
 
-        try {
-            Date dt = DateUtils.parseDate(date);
-            return dt.getTime();
-        } catch (DateParseException dpe) {
-            // ignore
-        }
-
-        return GregorianCalendar.getInstance().getTimeInMillis();
+        Date dt = DateUtils.parseDate(date);
+        return dt.getTime();
     }
 
-    private HttpResponse head(SystemDefaultHttpClient client, HttpUriRequest httpRequest, HttpContext localContext) {
+    private HttpResponse head(HttpClient client, HttpUriRequest httpRequest, HttpContext localContext) {
         try {
             return client.execute(httpRequest, localContext);
         } catch (ClientProtocolException cpe) {
