@@ -65,8 +65,8 @@ dependencies {
     [group: 'com.ibm.icu', name: 'icu4j', version: '49.1'],
     [group: 'nu.validator.htmlparser', name: 'htmlparser', version: '1.4'],
     [group: 'org.apache.ant', name: 'ant', version: '1.9.4'],
-    [group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.2.5'],
-    [group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.2.5'],
+    [group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.2'],
+    [group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.4.5'],
     [group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.1'],
     [group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.1'],
     [group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.1'],
@@ -219,10 +219,12 @@ task copyXpl(type: Copy) {
 }
 
 // Just depend on something that will create build/dist
-task copyVERSION(dependsOn: copyXpl) << {
-  def outputFile = new File("$buildDir/dist", "VERSION")
-  outputFile.withPrintWriter { writer ->
-    writer.println project.ext.distVersion
+task copyVERSION(dependsOn: copyXpl) {
+  doLast {
+    def outputFile = new File("$buildDir/dist", "VERSION")
+    outputFile.withPrintWriter { writer ->
+      writer.println project.ext.distVersion
+    }
   }
 }
 
@@ -253,8 +255,10 @@ task copyJavaDoc(dependsOn: javadoc, type: Copy) {
   into "build/dist/docs"
 }
 
-task makeDist(dependsOn: [ build, copyJar, copyLib ]) << {
-  println "Created distribution in build/dist"
+task makeDist(dependsOn: [ build, copyJar, copyLib ]) {
+  doLast {
+    println "Created distribution in build/dist"
+  }
 }
 
 task zipDist(dependsOn: makeDist, type: Zip) {
@@ -272,9 +276,11 @@ task dist(dependsOn: [zipDist, izPackDist]) {
   // nop
 }
 
-task testSuiteMessages << {
-  println "Running test-suite...this may take a few minutes..."
-  println "  Sending report to " + testsReport + "; errors to " + testsErrors
+task testSuiteMessages {
+  doLast {
+    println "Running test-suite...this may take a few minutes..."
+    println "  Sending report to " + testsReport + "; errors to " + testsErrors
+  }
 }
 
 task testSuite(dependsOn: [makeDist, testSuiteMessages], type: JavaExec) {
@@ -333,17 +339,19 @@ task report(dependsOn: [htmlReport,aDocReport,aDocErrReport]) {
 }
 
 // Just depend on something that will create build/dist
-task makeIZPackShell(dependsOn: copyVERSION) << {
-  def shell = new File("$buildDir/dist", "calabash")
-  shell.withPrintWriter { writer ->
-    writer.println '#!/bin/bash'
-    writer.println 'java -Xmx1024m -cp %INSTALL_PATH/xmlcalabash-' + version + '.jar com.xmlcalabash.drivers.Main "$@"'
-  }
-  shell.setExecutable(true)
+task makeIZPackShell(dependsOn: copyVERSION) {
+  doLast {
+    def shell = new File("$buildDir/dist", "calabash")
+    shell.withPrintWriter { writer ->
+      writer.println '#!/bin/bash'
+      writer.println 'java -Xmx1024m -cp %INSTALL_PATH/xmlcalabash-' + version + '.jar com.xmlcalabash.drivers.Main "$@"'
+    }
+    shell.setExecutable(true)
 
-  def batch = new File("$buildDir/dist", "calabash.bat")
-  batch.withPrintWriter { writer ->
-    writer.println 'java -Xmx1024m -cp %INSTALL_PATH/xmlcalabash-' + version + '.jar com.xmlcalabash.drivers.Main %*'
+    def batch = new File("$buildDir/dist", "calabash.bat")
+    batch.withPrintWriter { writer ->
+      writer.println 'java -Xmx1024m -cp %INSTALL_PATH/xmlcalabash-' + version + '.jar com.xmlcalabash.drivers.Main %*'
+    }
   }
 }
 
