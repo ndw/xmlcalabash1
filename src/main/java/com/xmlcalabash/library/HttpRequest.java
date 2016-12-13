@@ -19,6 +19,67 @@ package com.xmlcalabash.library;
  * Notice in each file and include the License file at docs/CDDL+GPL.txt.
  */
 
+import com.xmlcalabash.core.XMLCalabash;
+import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.io.DataStore;
+import com.xmlcalabash.io.DataStore.DataReader;
+import com.xmlcalabash.io.ReadablePipe;
+import com.xmlcalabash.io.WritablePipe;
+import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.util.AxisNodes;
+import com.xmlcalabash.util.Base64;
+import com.xmlcalabash.util.HttpUtils;
+import com.xmlcalabash.util.JSONtoXML;
+import com.xmlcalabash.util.MIMEReader;
+import com.xmlcalabash.util.S9apiUtils;
+import com.xmlcalabash.util.TreeWriter;
+import com.xmlcalabash.util.XMLtoJSON;
+import net.sf.saxon.s9api.Axis;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.Serializer;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmNodeKind;
+import net.sf.saxon.s9api.XdmSequenceIterator;
+import org.apache.http.Consts;
+import org.apache.http.Header;
+import org.apache.http.HeaderElement;
+import org.apache.http.HttpEntityEnclosingRequest;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CookieStore;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.AuthSchemes;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
+import org.apache.http.message.BasicHeader;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.protocol.HttpCoreContext;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONTokener;
+import org.xml.sax.InputSource;
+
+import javax.xml.XMLConstants;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -31,67 +92,6 @@ import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
-
-import javax.xml.XMLConstants;
-
-import com.xmlcalabash.core.XMLCalabash;
-import com.xmlcalabash.util.*;
-import net.sf.saxon.s9api.Axis;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.Serializer;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmNodeKind;
-import net.sf.saxon.s9api.XdmSequenceIterator;
-
-import org.apache.http.Consts;
-import org.apache.http.Header;
-import org.apache.http.HeaderElement;
-import org.apache.http.HttpEntityEnclosingRequest;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.auth.params.AuthPNames;
-import org.apache.http.client.CookieStore;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpHead;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.params.AuthPolicy;
-import org.apache.http.client.params.ClientPNames;
-import org.apache.http.client.params.CookiePolicy;
-import org.apache.http.client.protocol.ClientContext;
-import org.apache.http.cookie.Cookie;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.CoreConnectionPNames;
-import org.apache.http.params.HttpParams;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.ExecutionContext;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.util.EntityUtils;
-import org.json.JSONTokener;
-import org.xml.sax.InputSource;
-
-import com.xmlcalabash.core.XProcConstants;
-import com.xmlcalabash.core.XProcException;
-import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.io.DataStore;
-import com.xmlcalabash.io.DataStore.DataReader;
-import com.xmlcalabash.io.ReadablePipe;
-import com.xmlcalabash.io.WritablePipe;
-import com.xmlcalabash.runtime.XAtomicStep;
 
 
 @XMLCalabash(
@@ -135,6 +135,7 @@ public class HttpRequest extends DefaultStep {
     private String overrideContentType = null;
     private String headerContentType = null;
     private boolean encodeBinary = false;
+    private HttpClientBuilder builder = null;
 
     private ReadablePipe source = null;
     private WritablePipe result = null;
@@ -142,6 +143,7 @@ public class HttpRequest extends DefaultStep {
     /* Creates a new instance of HttpRequest */
     public HttpRequest(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
+        builder = HttpClientBuilder.create();
     }
 
     public void setInput(String port, ReadablePipe pipe) {
@@ -155,6 +157,7 @@ public class HttpRequest extends DefaultStep {
     public void reset() {
         source.resetReader();
         result.resetWriter();
+        builder = HttpClientBuilder.create();
     }
 
     public void run() throws SaxonApiException {
@@ -213,11 +216,10 @@ public class HttpRequest extends DefaultStep {
             return;
         }
 
-        HttpParams params = new BasicHttpParams();
-        HttpContext localContext = new BasicHttpContext();
+        RequestConfig.Builder rqbuilder = RequestConfig.custom();
+        rqbuilder.setCookieSpec(CookieSpecs.DEFAULT);
 
-        // The p:http-request step should follow redirect requests if they are returned by the server.
-        params.setBooleanParameter(ClientPNames.HANDLE_REDIRECTS, true);
+        HttpContext localContext = new BasicHttpContext();
 
         // What about cookies
         String saveCookieKey = step.getExtensionAttribute(cx_save_cookies);
@@ -243,14 +245,13 @@ public class HttpRequest extends DefaultStep {
                 cookieStore.addCookie(cookie);
             }
         }
-        localContext.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
-        // FIXME: Is browser compatability the right thing? It's the right thing for my unit test...
-        params.setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.BROWSER_COMPATIBILITY);
+        builder.setDefaultCookieStore(cookieStore);
 
         String timeOutStr = step.getExtensionAttribute(cx_timeout);
         if (timeOutStr != null) {
-            params.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, Integer.parseInt(timeOutStr));
+            rqbuilder.setSocketTimeout(Integer.parseInt(timeOutStr));
         }
+        builder.setDefaultRequestConfig(rqbuilder.build());
 
         if (start.getAttributeValue(_username) != null) {
             String user = start.getAttributeValue(_username);
@@ -259,9 +260,9 @@ public class HttpRequest extends DefaultStep {
 
             List<String> authpref;
             if ("basic".equalsIgnoreCase(meth)) {
-                authpref = Collections.singletonList(AuthPolicy.BASIC);
+                authpref = Collections.singletonList(AuthSchemes.BASIC);
             } else if ("digest".equalsIgnoreCase(meth)) {
-                authpref = Collections.singletonList(AuthPolicy.DIGEST);
+                authpref = Collections.singletonList(AuthSchemes.DIGEST);
             } else {
                 throw XProcException.stepError(3, "Unsupported auth-method: " + meth);
             }
@@ -270,13 +271,10 @@ public class HttpRequest extends DefaultStep {
             int port = requestURI.getPort();
             AuthScope scope = new AuthScope(host,port);
 
-            UsernamePasswordCredentials cred = new UsernamePasswordCredentials(user, pass);
-
-            CredentialsProvider credsProvider = new BasicCredentialsProvider();
-            credsProvider.setCredentials(scope, cred);
-            localContext.setAttribute(ClientContext.CREDS_PROVIDER, credsProvider);
-            params.setBooleanParameter(ClientPNames.HANDLE_AUTHENTICATION, true);
-            params.setParameter(AuthPNames.TARGET_AUTH_PREF, authpref);
+            BasicCredentialsProvider bCredsProvider = new BasicCredentialsProvider();
+            bCredsProvider.setCredentials(new AuthScope(null, AuthScope.ANY_PORT),
+                    new UsernamePasswordCredentials(user, pass));
+            builder.setDefaultCredentialsProvider(bCredsProvider);
         }
 
         iter = start.axisIterator(Axis.CHILD);
@@ -336,15 +334,16 @@ public class HttpRequest extends DefaultStep {
 
         try {
             // Execute the method.
-            HttpClient httpClient = runtime.getHttpClient();
+            builder.setRetryHandler(new StandardHttpRequestRetryHandler(3, false));
+            HttpClient httpClient = builder.build();
             if (httpClient == null) {
                 throw new XProcException("HTTP requests have been disabled");
             }
-            httpRequest.setParams(params);
+
             httpResult = httpClient.execute(httpRequest, localContext);
             int statusCode = httpResult.getStatusLine().getStatusCode();
-            HttpHost host = (HttpHost) localContext.getAttribute(ExecutionContext.HTTP_TARGET_HOST);
-            HttpUriRequest req = (HttpUriRequest) localContext.getAttribute(ExecutionContext.HTTP_REQUEST);
+            HttpHost host = (HttpHost) localContext.getAttribute(HttpCoreContext.HTTP_TARGET_HOST);
+            HttpUriRequest req = (HttpUriRequest) localContext.getAttribute(HttpCoreContext.HTTP_REQUEST);
             URI root = new URI(host.getSchemeName(), null, host.getHostName(), host.getPort(), "/", null, null);
             tree.startDocument(root.resolve(req.getURI()));
 
