@@ -28,11 +28,11 @@ import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.util.Base64;
-import com.xmlcalabash.util.CollectionResolver;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TreeWriter;
+import com.xmlcalabash.util.XProcCollectionFinder;
 import net.sf.saxon.Configuration;
-import net.sf.saxon.lib.CollectionURIResolver;
+import net.sf.saxon.lib.CollectionFinder;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -121,10 +121,10 @@ public class XQuery extends DefaultStep {
 
         runtime.getConfigurer().getSaxonConfigurer().configXQuery(config);
 
-        CollectionURIResolver collectionResolver = config.getCollectionURIResolver();
+        CollectionFinder collectionFinder = config.getCollectionFinder();
 
-        config.setDefaultCollection(CollectionResolver.DEFAULT);
-        config.setCollectionURIResolver(new CollectionResolver(runtime, defaultCollection, collectionResolver));
+        config.setDefaultCollection(XProcCollectionFinder.DEFAULT);
+        config.setCollectionFinder(new XProcCollectionFinder(runtime, defaultCollection, collectionFinder));
 
         try {
             Processor qtproc = runtime.getProcessor();
@@ -209,7 +209,7 @@ public class XQuery extends DefaultStep {
                 result.write(node);
             }
         } finally {
-            config.setCollectionURIResolver(collectionResolver);
+            config.setCollectionFinder(collectionFinder);
         }
     }
 }

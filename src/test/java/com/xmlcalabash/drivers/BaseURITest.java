@@ -1,30 +1,22 @@
 package com.xmlcalabash.drivers;
 
+import net.sf.saxon.Configuration;
+import net.sf.saxon.s9api.Axis;
+import net.sf.saxon.s9api.DocumentBuilder;
+import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XdmDestination;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XsltCompiler;
 import net.sf.saxon.s9api.XsltExecutable;
 import net.sf.saxon.s9api.XsltTransformer;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.XdmAtomicValue;
-import net.sf.saxon.s9api.XdmDestination;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.Processor;
-import net.sf.saxon.s9api.DocumentBuilder;
-import net.sf.saxon.s9api.Axis;
-import net.sf.saxon.s9api.XdmSequenceIterator;
-import net.sf.saxon.Configuration;
-import net.sf.saxon.lib.OutputURIResolver;
-import net.sf.saxon.lib.CollectionURIResolver;
-
-import java.io.IOException;
-import java.io.StringReader;
-import java.net.URISyntaxException;
-
-import com.xmlcalabash.util.CollectionResolver;
-import com.xmlcalabash.model.RuntimeValue;
 import org.xml.sax.InputSource;
 
 import javax.xml.transform.sax.SAXSource;
+import java.io.IOException;
+import java.io.StringReader;
+import java.net.URISyntaxException;
 
 /**
  * Created by IntelliJ IDEA.

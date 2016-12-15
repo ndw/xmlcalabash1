@@ -19,11 +19,44 @@
 
 package com.xmlcalabash.library;
 
-import java.io.ByteArrayOutputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Hashtable;
-import java.util.Vector;
+import com.xmlcalabash.core.XMLCalabash;
+import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.io.ReadablePipe;
+import com.xmlcalabash.io.WritablePipe;
+import com.xmlcalabash.model.RuntimeValue;
+import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.util.MessageFormatter;
+import com.xmlcalabash.util.S9apiUtils;
+import com.xmlcalabash.util.TreeWriter;
+import com.xmlcalabash.util.XProcCollectionFinder;
+import net.sf.saxon.Configuration;
+import net.sf.saxon.event.PipelineConfiguration;
+import net.sf.saxon.event.Receiver;
+import net.sf.saxon.expr.parser.Location;
+import net.sf.saxon.lib.CollectionFinder;
+import net.sf.saxon.lib.OutputURIResolver;
+import net.sf.saxon.lib.UnparsedTextURIResolver;
+import net.sf.saxon.om.NamespaceBinding;
+import net.sf.saxon.om.NodeName;
+import net.sf.saxon.s9api.DocumentBuilder;
+import net.sf.saxon.s9api.MessageListener;
+import net.sf.saxon.s9api.Processor;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.Serializer;
+import net.sf.saxon.s9api.ValidationMode;
+import net.sf.saxon.s9api.XdmDestination;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XsltCompiler;
+import net.sf.saxon.s9api.XsltExecutable;
+import net.sf.saxon.s9api.XsltTransformer;
+import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.type.SchemaType;
+import net.sf.saxon.type.SimpleType;
+import org.xml.sax.InputSource;
+
 import javax.xml.transform.Result;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
@@ -32,44 +65,11 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMResult;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.sax.SAXSource;
-
-import com.xmlcalabash.core.XMLCalabash;
-import com.xmlcalabash.core.XProcException;
-import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.core.XProcConstants;
-import com.xmlcalabash.io.ReadablePipe;
-import com.xmlcalabash.io.WritablePipe;
-import com.xmlcalabash.model.RuntimeValue;
-import com.xmlcalabash.util.MessageFormatter;
-import com.xmlcalabash.util.TreeWriter;
-import com.xmlcalabash.util.CollectionResolver;
-import com.xmlcalabash.util.S9apiUtils;
-import net.sf.saxon.Configuration;
-import net.sf.saxon.lib.CollectionURIResolver;
-import net.sf.saxon.lib.OutputURIResolver;
-import net.sf.saxon.lib.UnparsedTextURIResolver;
-import net.sf.saxon.s9api.DocumentBuilder;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.Serializer;
-import net.sf.saxon.s9api.XdmDestination;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XsltCompiler;
-import net.sf.saxon.s9api.XsltExecutable;
-import net.sf.saxon.s9api.XsltTransformer;
-import net.sf.saxon.s9api.MessageListener;
-import net.sf.saxon.s9api.ValidationMode;
-import net.sf.saxon.s9api.Processor;
-import net.sf.saxon.event.Receiver;
-import com.xmlcalabash.runtime.XAtomicStep;
-import net.sf.saxon.event.PipelineConfiguration;
-import net.sf.saxon.expr.parser.Location;
-import net.sf.saxon.om.NamespaceBinding;
-import net.sf.saxon.om.NodeName;
-import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.type.SchemaType;
-import net.sf.saxon.type.SimpleType;
-import org.xml.sax.InputSource;
+import java.io.ByteArrayOutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Hashtable;
+import java.util.Vector;
 
 /**
  *
@@ -199,12 +199,12 @@ public class XSLT extends DefaultStep {
         runtime.getConfigurer().getSaxonConfigurer().configXSLT(config);
 
         OutputURIResolver uriResolver = config.getOutputURIResolver();
-        CollectionURIResolver collectionResolver = config.getCollectionURIResolver();
+        CollectionFinder collectionFinder = config.getCollectionFinder();
         UnparsedTextURIResolver unparsedTextURIResolver = runtime.getResolver();
 
         config.setOutputURIResolver(new OutputResolver());
-        config.setDefaultCollection(CollectionResolver.DEFAULT);
-        config.setCollectionURIResolver(new CollectionResolver(runtime, defaultCollection, collectionResolver));
+        config.setDefaultCollection(XProcCollectionFinder.DEFAULT);
+        config.setCollectionFinder(new XProcCollectionFinder(runtime, defaultCollection, collectionFinder));
 
         XdmDestination result = null;
         try {
@@ -252,7 +252,7 @@ public class XSLT extends DefaultStep {
             transformer.transform();
         } finally {
             config.setOutputURIResolver(uriResolver);
-            config.setCollectionURIResolver(collectionResolver);
+            config.setCollectionFinder(collectionFinder);
         }
 
         XdmNode xformed = result.getXdmNode();
