@@ -312,7 +312,7 @@ public class XProcRuntime {
     }
 
     private void initializeSteps() {
-        for (Class klass : config.implementations.values()) {
+        for (Class<?> klass : config.implementations.values()) {
             try {
                 Method config = klass.getMethod("configureStep", XProcRuntime.class);
                 config.invoke(null, this);
