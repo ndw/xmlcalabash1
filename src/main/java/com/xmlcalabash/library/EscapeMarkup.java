@@ -21,20 +21,19 @@ package com.xmlcalabash.library;
 
 import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.io.ReadablePipe;
+import com.xmlcalabash.io.WritablePipe;
+import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.util.AxisNodes;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TreeWriter;
-import com.xmlcalabash.io.ReadablePipe;
-import com.xmlcalabash.io.WritablePipe;
-import net.sf.saxon.s9api.Serializer;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.Axis;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.Serializer;
+import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 
-import java.io.ByteArrayOutputStream;
-
-import com.xmlcalabash.runtime.XAtomicStep;
+import java.io.StringWriter;
 
 /**
  *
@@ -90,10 +89,10 @@ public class EscapeMarkup extends DefaultStep {
 
                 // Serialize the *whole* thing, then strip off the start and end tags, because
                 // otherwise namespace fixup messes with the namespace bindings
-                ByteArrayOutputStream outstr = new ByteArrayOutputStream();
-                serializer.setOutputStream(outstr);
+                StringWriter sw = new StringWriter();
+                serializer.setOutputWriter(sw);
                 S9apiUtils.serialize(runtime, child, serializer);
-                String data = outstr.toString();
+                String data = sw.toString();
 
                 data = data.replaceAll("^<.*?>",""); // Strip off the start tag...
                 data = data.replaceAll("<[^<>]*?>$",""); // Strip off the end tag
