@@ -46,6 +46,7 @@ import net.sf.saxon.s9api.XdmSequenceIterator;
 import org.apache.http.Consts;
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
@@ -126,12 +127,9 @@ public class HttpRequest extends DefaultStep {
 
     private static final int bufSize = 912 * 8; // A multiple of 3, 4, and 75 for base64 line breaking
 
-    private boolean statusOnly = false;
     private boolean detailed = false;
-    private String method = null;
     private URI requestURI = null;
     private Vector<Header> headers = new Vector<Header> ();
-    private String contentType = null;
     private String overrideContentType = null;
     private String headerContentType = null;
     private boolean encodeBinary = false;
@@ -191,8 +189,8 @@ public class HttpRequest extends DefaultStep {
         String send = step.getExtensionAttribute(cx_send_binary);
         encodeBinary = !"true".equals(send);
 
-        method = start.getAttributeValue(_method);
-        statusOnly = "true".equals(start.getAttributeValue(_status_only));
+        boolean statusOnly = "true".equals(start.getAttributeValue(_status_only));
+        String method = start.getAttributeValue(_method);
         detailed = "true".equals(start.getAttributeValue(_detailed));
         overrideContentType = start.getAttributeValue(_override_content_type);
 
@@ -267,13 +265,15 @@ public class HttpRequest extends DefaultStep {
                 throw XProcException.stepError(3, "Unsupported auth-method: " + meth);
             }
 
+            rqbuilder.setProxyPreferredAuthSchemes(authpref);
+
             String host = requestURI.getHost();
             int port = requestURI.getPort();
             AuthScope scope = new AuthScope(host,port);
+            // Or this? new AuthScope(null, AuthScope.ANY_PORT)
 
             BasicCredentialsProvider bCredsProvider = new BasicCredentialsProvider();
-            bCredsProvider.setCredentials(new AuthScope(null, AuthScope.ANY_PORT),
-                    new UsernamePasswordCredentials(user, pass));
+            bCredsProvider.setCredentials(scope, new UsernamePasswordCredentials(user, pass));
             builder.setDefaultCredentialsProvider(bCredsProvider);
         }
 
@@ -484,7 +484,7 @@ public class HttpRequest extends DefaultStep {
         // ATTENTION: This doesn't handle multipart, that's done entirely separately
 
         // Check for consistency of content-type
-        contentType = body.getAttributeValue(_content_type);
+        String contentType = body.getAttributeValue(_content_type);
         if (contentType == null) {
             throw new XProcException(step.getNode(), "Content-type on c:body is required.");
         }
@@ -553,37 +553,49 @@ public class HttpRequest extends DefaultStep {
             method.addHeader(header);
         }
 
-        // FIXME: This sucks rocks. I want to write the data to be posted, not provide some way to read it
-        String postContent = null;
         String encoding = body.getAttributeValue(_encoding);
-
         if (encoding != null && !"base64".equals(encoding)) {
             throw XProcException.stepError(52);
         }
 
+        HttpEntity requestEntity = null;
+
         try {
             if ("base64".equals(encoding)) {
                 String charset = body.getAttributeValue(_charset);
-                // FIXME: is utf-8 the right default?
-                if (charset == null) { charset = "utf-8"; }
 
-                // Make sure it's all characters
-                XdmSequenceIterator iter = body.axisIterator(Axis.CHILD);
-                while (iter.hasNext()) {
-                    XdmNode node = (XdmNode) iter.next();
-                    if (node.getNodeKind() != XdmNodeKind.TEXT) {
-                        throw XProcException.stepError(28);
+                // See also: https://github.com/ndw/xmlcalabash1/pull/241 and
+                // https://github.com/ndw/xmlcalabash1/issues/242
+                //
+                // The PR proposes ignoring the charset and treating the data as binary.
+                // That's clearly necessary for the case where the data *is* binary.
+                // However, if the base64 encoded element *has* a charset parameter,
+                // I think that's an indication that it *should* be encoded. If it isn't
+                // encoded, then the charset would have to be included in the POST and
+                // I'm not sure that's straightforward.
+                //
+                // My solution is to leave the encoding in place when the charset is
+                // explicitly set, but post binary decoded data otherwise. In other
+                // words, the answer to the comment "is utf-8 the right default?" that
+                // used to be here is: No.
+
+                String content = extractText(body);
+                byte[] decoded = Base64.decode(content);
+
+                if (charset == null) {
+                    // Treat as binary
+                    requestEntity = new ByteArrayEntity(decoded, ContentType.create(contentType));
+                } else {
+                    // Treat as encoded characters
+                    try {
+                        requestEntity = new StringEntity(new String(decoded, charset), ContentType.create(contentType, "UTF-8"));
+                    } catch (UnsupportedEncodingException uee) {
+                        throw XProcException.stepError(10, uee);
                     }
                 }
-
-                String escapedContent = decodeBase64(body, charset);
-                StringWriter writer = new StringWriter();
-                writer.write(escapedContent);
-                writer.close();
-                postContent = writer.toString();
             } else {
                 if (jsonContentType(contentType)) {
-                    postContent = XMLtoJSON.convert(body);
+                    requestEntity = new StringEntity(XMLtoJSON.convert(body), ContentType.create(contentType, "UTF-8"));
                 } else if (xmlContentType(contentType)) {
                     Serializer serializer = makeSerializer();
 
@@ -605,23 +617,12 @@ public class HttpRequest extends DefaultStep {
                     serializer.setOutputWriter(writer);
                     S9apiUtils.serialize(runtime, content, serializer);
                     writer.close();
-                    postContent = writer.toString();
+                    requestEntity = new StringEntity(writer.toString(), ContentType.create(contentType, "UTF-8"));
                 } else {
-                    StringWriter writer = new StringWriter();
-                    XdmSequenceIterator iter = body.axisIterator(Axis.CHILD);
-                    while (iter.hasNext()) {
-                        XdmNode node = (XdmNode) iter.next();
-                        if (node.getNodeKind() != XdmNodeKind.TEXT) {
-                            throw XProcException.stepError(28);
-                        }
-                        writer.write(node.getStringValue());
-                    }
-                    writer.close();
-                    postContent = writer.toString();
+                    requestEntity = new StringEntity(extractText(body), ContentType.create(contentType, "UTF-8"));
                 }
             }
 
-            StringEntity requestEntity = new StringEntity(postContent, ContentType.create(contentType, "UTF-8"));
             method.setEntity(requestEntity);
 
         } catch (IOException ioe) {
@@ -636,7 +637,7 @@ public class HttpRequest extends DefaultStep {
         // and build the body ourselves, using the boundaries etc.
 
         // Check for consistency of content-type
-        contentType = multipart.getAttributeValue(_content_type);
+        String contentType = multipart.getAttributeValue(_content_type);
         if (contentType == null) {
             contentType = "multipart/mixed";
         }
@@ -705,35 +706,25 @@ public class HttpRequest extends DefaultStep {
 
             if (bodyCharset != null) {
                 bodyContentType += "; charset=" + bodyCharset;
-            } else {
-                // Is utf-8 the right default? What about the image/ case? 
-                bodyContentType += "; charset=utf-8";
             }
 
-            //postContent += "--" + boundary + "\r\n";
-            //postContent += "Content-Type: " + bodyContentType + "\r\n";
             byteContent.append("--" + boundary + "\r\n");
             byteContent.append("Content-Type: " + bodyContentType + "\r\n");
 
             if (bodyDescription != null) {
-                //postContent += "Content-Description: " + bodyDescription + "\r\n";
                 byteContent.append("Content-Description: " + bodyDescription + "\r\n");
             }
             if (bodyId != null) {
-                //postContent += "Content-ID: " + bodyId + "\r\n";
                 byteContent.append("Content-ID: " + bodyId + "\r\n");
             }
             if (bodyDisposition != null) {
-                //postContent += "Content-Disposition: " + bodyDisposition + "\r\n";
                 byteContent.append("Content-Disposition: " + bodyDisposition + "\r\n");
             }
             if (bodyEncoding != null) {
-                //postContent += "Content-Transfer-Encoding: " + bodyEncoding + "\r\n";
                 if (encodeBinary) {
                     byteContent.append("Content-Transfer-Encoding: " + bodyEncoding + "\r\n");
                 }
             }
-            //postContent += "\r\n";
             byteContent.append("\r\n");
 
             try {
@@ -752,7 +743,6 @@ public class HttpRequest extends DefaultStep {
                     serializer.setOutputWriter(writer);
                     S9apiUtils.serialize(runtime, content, serializer);
                     writer.close();
-                    //postContent += writer.toString();
                     byteContent.append(writer.toString());
                 } else if (jsonContentType(contentType)) {
                     byteContent.append(XMLtoJSON.convert(body));
@@ -760,18 +750,7 @@ public class HttpRequest extends DefaultStep {
                     byte[] decoded = Base64.decode(body.getStringValue());
                     byteContent.append(decoded, decoded.length);
                 } else {
-                    StringWriter writer = new StringWriter();
-                    XdmSequenceIterator iter = body.axisIterator(Axis.CHILD);
-                    while (iter.hasNext()) {
-                        XdmNode node = (XdmNode) iter.next();
-                        if (node.getNodeKind() != XdmNodeKind.TEXT) {
-                            throw XProcException.stepError(28);
-                        }
-                        writer.write(node.getStringValue());
-                    }
-                    writer.close();
-                    //postContent += writer.toString();
-                    byteContent.append(writer.toString());
+                    byteContent.append(extractText(body));
                 }
 
                 //postContent += "\r\n";
@@ -944,7 +923,7 @@ public class HttpRequest extends DefaultStep {
             Header pctype = reader.getHeader("Content-Type");
             Header pclen  = reader.getHeader("Content-Length");
 
-            contentType = getHeaderValue(pctype);
+            String contentType = getHeaderValue(pctype);
 
             String charset = getContentCharset(pctype);
             String partType = getHeaderValue(pctype);
@@ -1083,24 +1062,17 @@ public class HttpRequest extends DefaultStep {
 
     private String extractText(XdmNode doc) {
         String content = "";
+
         XdmSequenceIterator iter = doc.axisIterator(Axis.CHILD);
         while (iter.hasNext()) {
             XdmNode child = (XdmNode) iter.next();
-            if (child.getNodeKind() == XdmNodeKind.ELEMENT || child.getNodeKind() == XdmNodeKind.TEXT) {
-                content += child.getStringValue();
+            if (child.getNodeKind() != XdmNodeKind.TEXT) {
+                throw XProcException.stepError(28);
             }
+            content += child.getStringValue();
         }
-        return content;
-    }
 
-    private String decodeBase64(XdmNode doc, String charset) {
-        String content = extractText(doc);
-        byte[] decoded = Base64.decode(content);
-        try {
-            return new String(decoded, charset);
-        } catch (UnsupportedEncodingException uee) {
-            throw XProcException.stepError(10, uee);
-        }
+        return content;
     }
 
     private void doFile(String href, String base) {
