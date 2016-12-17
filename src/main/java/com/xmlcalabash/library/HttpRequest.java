@@ -570,14 +570,11 @@ public class HttpRequest extends DefaultStep {
                 // The PR proposes ignoring the charset and treating the data as binary.
                 // That's clearly necessary for the case where the data *is* binary.
                 // However, if the base64 encoded element *has* a charset parameter,
-                // I think that's an indication that it *should* be encoded. If it isn't
-                // encoded, then the charset would have to be included in the POST and
-                // I'm not sure that's straightforward.
+                // we must pass that through (because text/html data often winds
+                // up base64 encoded with a charset.
                 //
-                // My solution is to leave the encoding in place when the charset is
-                // explicitly set, but post binary decoded data otherwise. In other
-                // words, the answer to the comment "is utf-8 the right default?" that
-                // used to be here is: No.
+                // In other words, the answer to the comment that used to be here,
+                // "is utf-8 the right default?", is "no."
 
                 String content = extractText(body);
                 byte[] decoded = Base64.decode(content);
@@ -587,11 +584,7 @@ public class HttpRequest extends DefaultStep {
                     requestEntity = new ByteArrayEntity(decoded, ContentType.create(contentType));
                 } else {
                     // Treat as encoded characters
-                    try {
-                        requestEntity = new StringEntity(new String(decoded, charset), ContentType.create(contentType, "UTF-8"));
-                    } catch (UnsupportedEncodingException uee) {
-                        throw XProcException.stepError(10, uee);
-                    }
+                    requestEntity = new ByteArrayEntity(decoded, ContentType.create(contentType, charset));
                 }
             } else {
                 if (jsonContentType(contentType)) {
