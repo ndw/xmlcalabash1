@@ -20,28 +20,28 @@
 
 package com.xmlcalabash.util;
 
-import java.net.URI;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.Vector;
-
-import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.model.RuntimeValue;
+import net.sf.saxon.Configuration;
 import net.sf.saxon.event.NamespaceReducer;
 import net.sf.saxon.event.PipelineConfiguration;
+import net.sf.saxon.om.NamespaceResolver;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
-import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.sxpath.XPathDynamicContext;
 import net.sf.saxon.sxpath.XPathEvaluator;
 import net.sf.saxon.sxpath.XPathExpression;
-import net.sf.saxon.sxpath.XPathDynamicContext;
-import net.sf.saxon.Configuration;
-import net.sf.saxon.om.NamespaceResolver;
+import net.sf.saxon.trans.XPathException;
+
+import java.net.URI;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Vector;
 
 /**
  *
@@ -107,7 +107,7 @@ public class ProcessMatch extends TreeWriter {
             if (e.getMessage() != null && e.getMessage().contains("syntax error")) {
                 throw XProcException.dynamicError(23,node,e,"Syntax error in match pattern: \"" + match.getString() + "\"");
             } else {
-                throw XProcException.dynamicError(23,node,e,"Expression could not be evaluated: " + expr);
+                throw new XProcException(e);
             }
         }
     }
