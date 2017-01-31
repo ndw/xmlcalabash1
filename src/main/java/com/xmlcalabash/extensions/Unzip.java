@@ -7,21 +7,23 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import com.xmlcalabash.core.XMLCalabash;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 
 import org.xml.sax.InputSource;
 
+import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
@@ -116,7 +118,8 @@ public class Unzip extends DefaultStep {
     }
 
     void unzip(DatatypeFactory dfactory, String systemId, InputStream stream) throws IOException {
-        ZipInputStream zipFile = new ZipInputStream(stream);
+        ZipInputStream zipStream = new ZipInputStream(stream);
+        ZipFile zipFile = new ZipFile(zipFn.substring("file:/".length()));
 
         try {
             TreeWriter tree = new TreeWriter(runtime);
@@ -129,8 +132,9 @@ public class Unzip extends DefaultStep {
 
                 GregorianCalendar cal = new GregorianCalendar();
 
-                ZipEntry entry = zipFile.getNextEntry();
-                while (entry != null) {
+                Enumeration<? extends ZipEntry> e = zipFile.entries();
+                while (e.hasMoreElements()) {
+                    ZipEntry entry = e.nextElement();
                     cal.setTimeInMillis(entry.getTime());
                     XMLGregorianCalendar xmlCal = dfactory.newXMLGregorianCalendar(cal);
 
@@ -151,19 +155,18 @@ public class Unzip extends DefaultStep {
                     tree.addAttribute(_date, xmlCal.toXMLFormat());
                     tree.startContent();
                     tree.addEndElement();
-                    entry = zipFile.getNextEntry();
                 }
 
                 tree.addEndElement();
                 tree.endDocument();
                 result.write(tree.getResult());
             } else {
-                ZipEntry entry = zipFile.getNextEntry();
+                ZipEntry entry = zipStream.getNextEntry();
                 while (entry != null) {
                     if (name.equals(entry.getName())) {
                         break;
                     }
-                    entry = zipFile.getNextEntry();
+                    entry = zipStream.getNextEntry();
                 }
 
                 if (entry == null) {
@@ -172,7 +175,7 @@ public class Unzip extends DefaultStep {
 
                 if ("application/xml".equals(contentType) || "text/xml".equals(contentType)
                         || contentType.endsWith("+xml")) {
-                    InputSource isource = new InputSource(zipFile);
+                    InputSource isource = new InputSource(zipStream);
                     XdmNode doc = runtime.parse(isource);
                     result.write(doc);
                 } else {
@@ -192,7 +195,7 @@ public class Unzip extends DefaultStep {
                     tree.startContent();
 
                     if (storeText) {
-                        InputStreamReader reader = new InputStreamReader(zipFile, charset);
+                        InputStreamReader reader = new InputStreamReader(zipStream, charset);
                         try {
                             int maxlen = 4096;
                             char[] chars = new char[maxlen];
@@ -208,7 +211,7 @@ public class Unzip extends DefaultStep {
                             reader.close();
                         }
                     } else {
-                        BufferedInputStream bufstream = new BufferedInputStream(zipFile);
+                        BufferedInputStream bufstream = new BufferedInputStream(zipStream);
                         try {
                             int maxlen = 4096 * 3;
                             byte[] bytes = new byte[maxlen];
@@ -231,6 +234,7 @@ public class Unzip extends DefaultStep {
                 }
             }
         } finally {
+            zipStream.close();
             zipFile.close();
         }
     }
