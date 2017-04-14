@@ -392,57 +392,6 @@ signing {
   sign configurations.archives
 }
 
-// I refuse to put my PGP password in a file.
-//
-// Adapted from
-// https://www.timroes.de/2014/01/19/using-password-prompts-with-gradle-build-files/
-//
-// N.B. This can't work in a CI environment so there's no way to
-// automatically publish the artifacts from, for example, Travis CI.
-//
-gradle.taskGraph.whenReady { taskGraph ->
-  if(taskGraph.hasTask(':uploadArchives')) {
-
-    def pass = ''
-    if(System.console() == null) {
-      new SwingBuilder().edt {
-        dialog(modal: true,
-            title: 'Enter password',
-            alwaysOnTop: true,
-            resizable: false,
-            locationRelativeTo: null,
-            locationByPlatform: true,
-            // On my Linux multi-monitor setup, the dialog "appears" at
-            // the top of the virtual desktop below my desktop. So move
-            // the damned thing somewhere visible. Meh.
-            location: new Point(100,100),
-            pack: true,
-            show: true
-        ) {
-          vbox { //
-            label(text: "Please enter key passphrase:")
-            input = passwordField()
-            button(defaultButton: true, text: 'OK', actionPerformed: {
-              pass = new String(input.password);
-              dispose();
-            })
-          }
-        }
-      }
-    } else {
-      pass = System.console().readPassword("\nPlease enter key passphrase: ")
-      pass = new String(pass)
-    }
-
-    if (pass.size() <= 0) {
-      throw new InvalidUserDataException("You must enter a password to proceed.")
-    }
-
-    allprojects { ext."signing.password" = pass }
-
-  }
-}
-
 def mavenPom = {
   name 'XML Calabash'
   packaging 'jar'
