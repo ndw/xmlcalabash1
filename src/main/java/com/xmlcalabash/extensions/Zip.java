@@ -29,6 +29,7 @@ import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,6 +42,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
@@ -49,6 +51,7 @@ import java.util.Map;
 import java.util.zip.CRC32;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
@@ -186,9 +189,23 @@ public class Zip extends DefaultStep {
             final DatatypeFactory dfactory = DatatypeFactory.newInstance();
             DataStore store = runtime.getDataStore();
             store.readEntry(zipFn, zipFn, "application/zip, */*", null, new DataReader() {
-                public void load(URI id, String media, InputStream stream,
-                        long len) throws IOException {
-                    read(id, stream, dfactory);
+                public void load(URI id, String media, InputStream stream, long len) throws IOException {
+                    TreeWriter tree = new TreeWriter(runtime);
+
+                    tree.startDocument(step.getNode().getBaseURI());
+                    tree.addStartElement(c_zipfile);
+                    tree.addAttribute(_href, id.toASCIIString());
+                    tree.startContent();
+
+                    if (zipFn.startsWith("file:/")) {
+                        readFile(tree, id, zipFn, dfactory);
+                    } else {
+                        readStream(tree, id, stream, dfactory);
+                    }
+
+                    tree.addEndElement();
+                    tree.endDocument();
+                    result.write(tree.getResult());
                 }
             });
         } catch (MalformedURLException mue) {
@@ -200,7 +217,7 @@ public class Zip extends DefaultStep {
         }
     }
 
-    void update(ZipInputStream inZip, final ZipOutputStream outZip) {
+    private void update(ZipInputStream inZip, final ZipOutputStream outZip) {
         String command = getOption(_command).getString();
     
         if ("create".equals(command)) {
@@ -225,52 +242,63 @@ public class Zip extends DefaultStep {
         }
     }
 
-    void read(URI id, InputStream stream, final DatatypeFactory dfactory)
+    private void readFile(TreeWriter tree, URI id, String zipFn, final DatatypeFactory dfactory)
             throws IOException {
-        TreeWriter tree = new TreeWriter(runtime);
-    
-        tree.startDocument(step.getNode().getBaseURI());
-        tree.addStartElement(c_zipfile);
-        tree.addAttribute(_href, id.toASCIIString());
-        tree.startContent();
-    
-        ZipInputStream zipStream = new ZipInputStream(stream);
-    
+        ZipFile zipFile = null;
         try {
-            GregorianCalendar cal = new GregorianCalendar();
+            File uriFile = new File(new URI(zipFn));
+            zipFile = new ZipFile(uriFile);
 
+            Enumeration<? extends ZipEntry> zipEntryEnum = zipFile.entries();
+            while (zipEntryEnum.hasMoreElements()) {
+                ZipEntry entry = zipEntryEnum.nextElement();
+                processEntry(tree, entry, dfactory);
+            }
+        } catch (URISyntaxException e) {
+            throw new XProcException(e);
+        } finally {
+            if (zipFile != null) {
+                zipFile.close();
+            }
+        }
+    }
+
+    private void readStream(TreeWriter tree, URI id, InputStream stream, final DatatypeFactory dfactory)
+            throws IOException {
+        ZipInputStream zipStream = new ZipInputStream(stream);
+
+        try {
             ZipEntry entry = zipStream.getNextEntry();
             while (entry != null) {
-                cal.setTimeInMillis(entry.getTime());
-                XMLGregorianCalendar xmlCal = dfactory.newXMLGregorianCalendar(cal);
-
-                if (entry.isDirectory()) {
-                    tree.addStartElement(c_directory);
-                } else {
-                    tree.addStartElement(c_file);
-
-                    tree.addAttribute(_compressed_size, ""+entry.getCompressedSize());
-                    tree.addAttribute(_size, ""+entry.getSize());
-                }
-
-                if (entry.getComment() != null) {
-                    tree.addAttribute(_comment, entry.getComment());
-                }
-
-                tree.addAttribute(_name, ""+entry.getName());
-                tree.addAttribute(_date, xmlCal.toXMLFormat());
-                tree.startContent();
-                tree.addEndElement();
-                entry = zipStream.getNextEntry();
+                processEntry(tree, entry, dfactory);
             }
-
-            tree.addEndElement();
-            tree.endDocument();
-            result.write(tree.getResult());
-
         } finally {
             zipStream.close();
         }
+   }
+
+    private void processEntry(TreeWriter tree, ZipEntry entry, DatatypeFactory dfactory) {
+        GregorianCalendar cal = new GregorianCalendar();
+        cal.setTimeInMillis(entry.getTime());
+        XMLGregorianCalendar xmlCal = dfactory.newXMLGregorianCalendar(cal);
+
+        if (entry.isDirectory()) {
+            tree.addStartElement(c_directory);
+        } else {
+            tree.addStartElement(c_file);
+
+            tree.addAttribute(_compressed_size, ""+entry.getCompressedSize());
+            tree.addAttribute(_size, ""+entry.getSize());
+        }
+
+        if (entry.getComment() != null) {
+            tree.addAttribute(_comment, entry.getComment());
+        }
+
+        tree.addAttribute(_name, ""+entry.getName());
+        tree.addAttribute(_date, xmlCal.toXMLFormat());
+        tree.startContent();
+        tree.addEndElement();
     }
 
     private void parseManifest(XdmNode man) {
