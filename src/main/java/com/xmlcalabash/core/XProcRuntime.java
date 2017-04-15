@@ -310,6 +310,12 @@ public class XProcRuntime {
 
         initializeSteps();
     }
+    
+    public void resetExtensionFunctions() {
+        for (XProcExtensionFunctionDefinition xf : exFuncs) {
+            processor.registerExtensionFunction(xf);
+        }
+    }
 
     private void initializeSteps() {
         for (Class<?> klass : config.implementations.values()) {

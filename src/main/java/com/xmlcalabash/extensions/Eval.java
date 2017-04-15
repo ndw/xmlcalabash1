@@ -110,6 +110,8 @@ public class Eval extends DefaultStep {
 
         XProcRuntime innerRuntime = new XProcRuntime(runtime);
 
+        try {
+
         QName stepName = getOption(_step, (QName) null);
         XPipeline pipeline = null;
         if (XProcConstants.p_pipeline.equals(piperoot.getNodeName())
@@ -271,6 +273,11 @@ public class Eval extends DefaultStep {
                 tree.endDocument();
                 result.write(tree.getResult());
             }
+        }
+
+        } finally {
+            innerRuntime.close();
+            runtime.resetExtensionFunctions();
         }
     }
 }
