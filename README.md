@@ -1,5 +1,7 @@
 # XML Calabash (1.1.x)
 
+[![Join the chat at https://gitter.im/ndw/xmlcalabash1](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ndw/xmlcalabash1?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 This project contains the "1.1" version of XML Calabash.
 
 [![Build Status](https://travis-ci.org/ndw/xmlcalabash1.svg?branch=saxon96)](https://travis-ci.org/ndw/xmlcalabash1.svg?branch=saxon96)
