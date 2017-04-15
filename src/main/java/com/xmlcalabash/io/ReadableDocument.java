@@ -89,7 +89,7 @@ public class ReadableDocument implements ReadablePipe {
     public boolean readSequence() {
         return false;
     }
-    
+
     public void resetReader() {
         pos = 0;
         // 6 Feb 2009: removed "readDoc = false;" because we don't want to re-read the document
