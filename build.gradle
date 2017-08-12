@@ -1,8 +1,3 @@
-/* Requires gradle 2.x */
-
-import groovy.swing.SwingBuilder
-import java.awt.Point
-
 buildscript {
   repositories {
     mavenCentral()
