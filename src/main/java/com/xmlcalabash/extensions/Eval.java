@@ -110,167 +110,173 @@ public class Eval extends DefaultStep {
 
         XProcRuntime innerRuntime = new XProcRuntime(runtime);
 
-        QName stepName = getOption(_step, (QName) null);
-        XPipeline pipeline = null;
-        if (XProcConstants.p_pipeline.equals(piperoot.getNodeName())
-                || XProcConstants.p_declare_step.equals(piperoot.getNodeName())) {
-            if (stepName != null) {
-                throw new XProcException(step.getNode(), "Step option can only be used when loading a p:library");
-            }
-            pipeline = innerRuntime.use(pipedoc);
-        } else if (XProcConstants.p_library.equals(piperoot.getNodeName())) {
-            XLibrary library = innerRuntime.useLibrary(piperoot);
-            if (stepName == null) {
-                pipeline = library.getFirstPipeline();
-            } else {
-                pipeline = library.getPipeline(stepName);
-            }
-        }
-
-        Set<String> inputports = pipeline.getInputs();
-        Set<String> outputports = pipeline.getOutputs();
-
-        int inputCount = 0;
-        for (String port : inputports) {
-            XInput input = pipeline.getInput(port);
-            if (input.getParameters()) {
-                // nop; it's ok for these to be unbound
-            } else {
-                inputCount++;
-            }
-        }
-
-        boolean detailed = getOption(_detailed, false);
-
-        if (!detailed && (inputCount > 1 || outputports.size() > 1)) {
-            throw new XProcException(step.getNode(), "You must specify detailed='true' to eval pipelines with multiple inputs or outputs");
-        }
-
-        DeclareStep decl = pipeline.getDeclareStep();
-        String primaryin = null;
-        Iterator<String> portiter = inputports.iterator();
-        while (portiter.hasNext()) {
-            String port = portiter.next();
-            Input input = decl.getInput(port);
-            if (!input.getParameterInput() && ((inputports.size() == 1 && !input.getPrimarySet()) || input.getPrimary())) {
-                primaryin = port;
-            }
-        }
-
-        Hashtable<String,Vector<XdmNode>> inputs = new Hashtable<String,Vector<XdmNode>> ();
-        for (ReadablePipe pipe : sources) {
-            while (pipe.moreDocuments()) {
-                String port = primaryin;
-                XdmNode doc = pipe.read();
-                XdmNode root = S9apiUtils.getDocumentElement(doc);
-                if (detailed && cx_document.equals(root.getNodeName())) {
-                    port = root.getAttributeValue(_port);
-                    // FIXME: support exclude-inline-prefixes
-                    boolean seenelem = false;
-                    XdmDestination dest = new XdmDestination();
-                    Vector<XdmValue> nodes = new Vector<XdmValue> ();
-                    XdmSequenceIterator iter = root.axisIterator(Axis.CHILD);
-                    while (iter.hasNext()) {
-                        XdmNode child = (XdmNode) iter.next();
-                        if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
-                            if (seenelem) {
-                                throw new IllegalArgumentException("Not a well-formed inline document");
-                            }
-                            seenelem = true;
-                        }
-                        nodes.add(child);
-                    }
-
-                    S9apiUtils.writeXdmValue(runtime, nodes, dest, root.getBaseURI());
-                    doc = dest.getXdmNode();
+        try {
+            QName stepName = getOption(_step, (QName) null);
+            XPipeline pipeline = null;
+            if (XProcConstants.p_pipeline.equals(piperoot.getNodeName())
+                    || XProcConstants.p_declare_step.equals(piperoot.getNodeName())) {
+                if (stepName != null) {
+                    throw new XProcException(step.getNode(), "Step option can only be used when loading a p:library");
                 }
-
-                if (port == null) {
-                    throw new XProcException(step.getNode(), "You must use cx:document for pipelines with no primary input port");
-                }
-
-                if (!inputs.containsKey(port)) {
-                    inputs.put(port, new Vector<XdmNode> ());
-                }
-
-                inputs.get(port).add(doc);
-            }
-        }
-
-        for (String port : inputs.keySet()) {
-            if (inputports.contains(port)) {
-                pipeline.clearInputs(port);
-                for (XdmNode node : inputs.get(port)) {
-                    pipeline.writeTo(port, node);
-                }
-            } else {
-                throw new XProcException(step.getNode(), "Eval pipeline has no input port named '" + port + "'");
-            }
-        }
-
-        if (params != null) {
-            for (QName name : params.keySet()) {
-                pipeline.setParameter(name, params.get(name));
-            }
-        }
-
-        for (ReadablePipe pipe : options) {
-            while (pipe.moreDocuments()) {
-                XdmNode doc = pipe.read();
-                XdmNode root = S9apiUtils.getDocumentElement(doc);
-
-                if (!cx_options.equals(root.getNodeName())) {
-                    throw new XProcException(step.getNode(), "Options port must be a cx:options document.");
-                }
-
-                
-                for (XdmNode opt : new AxisNodes(runtime, root, Axis.CHILD, AxisNodes.SIGNIFICANT)) {
-                    if (opt.getNodeKind() != XdmNodeKind.ELEMENT || !cx_option.equals(opt.getNodeName())) {
-                        throw new XProcException(step.getNode(), "A cx:options document must only contain cx:option elements");
-                    }
-
-                    String name = opt.getAttributeValue(_name);
-                    QName qname = new QName(name, opt);
-
-                    String value = opt.getAttributeValue(_value);
-
-                    if (name == null || value == null) {
-                        throw new XProcException(step.getNode(), "A cx:option element must have name and value attributes");
-                    }
-
-                    RuntimeValue runtimeValue = new RuntimeValue(value);
-                    pipeline.passOption(qname, runtimeValue);
-                }
-            }
-        }
-
-        pipeline.run();
-
-        portiter = outputports.iterator();
-        while (portiter.hasNext()) {
-            String port = portiter.next();
-            ReadablePipe rpipe = pipeline.readFrom(port);
-            rpipe.canReadSequence(true);
-
-            while (rpipe.moreDocuments()) {
-                XdmNode doc = rpipe.read();
-
-                TreeWriter tree = new TreeWriter(runtime);
-                tree.startDocument(doc.getBaseURI());
-
-                if (detailed) {
-                    tree.addStartElement(cx_document);
-                    tree.addAttribute(_port, port);
-                    tree.startContent();
-                    tree.addSubtree(doc);
-                    tree.addEndElement();
+                pipeline = innerRuntime.use(pipedoc);
+            } else if (XProcConstants.p_library.equals(piperoot.getNodeName())) {
+                XLibrary library = innerRuntime.useLibrary(piperoot);
+                if (stepName == null) {
+                    pipeline = library.getFirstPipeline();
                 } else {
-                    tree.addSubtree(doc);
+                    pipeline = library.getPipeline(stepName);
                 }
-
-                tree.endDocument();
-                result.write(tree.getResult());
             }
+
+            Set<String> inputports = pipeline.getInputs();
+            Set<String> outputports = pipeline.getOutputs();
+
+            int inputCount = 0;
+            for (String port : inputports) {
+                XInput input = pipeline.getInput(port);
+                if (input.getParameters()) {
+                    // nop; it's ok for these to be unbound
+                } else {
+                    inputCount++;
+                }
+            }
+
+            boolean detailed = getOption(_detailed, false);
+
+            if (!detailed && (inputCount > 1 || outputports.size() > 1)) {
+                throw new XProcException(step.getNode(), "You must specify detailed='true' to eval pipelines with multiple inputs or outputs");
+            }
+
+            DeclareStep decl = pipeline.getDeclareStep();
+            String primaryin = null;
+            Iterator<String> portiter = inputports.iterator();
+            while (portiter.hasNext()) {
+                String port = portiter.next();
+                Input input = decl.getInput(port);
+                if (!input.getParameterInput() && ((inputports.size() == 1 && !input.getPrimarySet()) || input.getPrimary())) {
+                    primaryin = port;
+                }
+            }
+
+            Hashtable<String, Vector<XdmNode>> inputs = new Hashtable<String, Vector<XdmNode>>();
+            for (ReadablePipe pipe : sources) {
+                while (pipe.moreDocuments()) {
+                    String port = primaryin;
+                    XdmNode doc = pipe.read();
+                    XdmNode root = S9apiUtils.getDocumentElement(doc);
+                    if (detailed && cx_document.equals(root.getNodeName())) {
+                        port = root.getAttributeValue(_port);
+                        // FIXME: support exclude-inline-prefixes
+                        boolean seenelem = false;
+                        XdmDestination dest = new XdmDestination();
+                        Vector<XdmValue> nodes = new Vector<XdmValue>();
+                        XdmSequenceIterator iter = root.axisIterator(Axis.CHILD);
+                        while (iter.hasNext()) {
+                            XdmNode child = (XdmNode) iter.next();
+                            if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
+                                if (seenelem) {
+                                    throw new IllegalArgumentException("Not a well-formed inline document");
+                                }
+                                seenelem = true;
+                            }
+                            nodes.add(child);
+                        }
+
+                        S9apiUtils.writeXdmValue(runtime, nodes, dest, root.getBaseURI());
+                        doc = dest.getXdmNode();
+                    }
+
+                    if (port == null) {
+                        throw new XProcException(step.getNode(), "You must use cx:document for pipelines with no primary input port");
+                    }
+
+                    if (!inputs.containsKey(port)) {
+                        inputs.put(port, new Vector<XdmNode>());
+                    }
+
+                    inputs.get(port).add(doc);
+                }
+            }
+
+            for (String port : inputs.keySet()) {
+                if (inputports.contains(port)) {
+                    pipeline.clearInputs(port);
+                    for (XdmNode node : inputs.get(port)) {
+                        pipeline.writeTo(port, node);
+                    }
+                } else {
+                    throw new XProcException(step.getNode(), "Eval pipeline has no input port named '" + port + "'");
+                }
+            }
+
+            if (params != null) {
+                for (QName name : params.keySet()) {
+                    pipeline.setParameter(name, params.get(name));
+                }
+            }
+
+            for (ReadablePipe pipe : options) {
+                while (pipe.moreDocuments()) {
+                    XdmNode doc = pipe.read();
+                    XdmNode root = S9apiUtils.getDocumentElement(doc);
+
+                    if (!cx_options.equals(root.getNodeName())) {
+                        throw new XProcException(step.getNode(), "Options port must be a cx:options document.");
+                    }
+
+
+                    for (XdmNode opt : new AxisNodes(runtime, root, Axis.CHILD, AxisNodes.SIGNIFICANT)) {
+                        if (opt.getNodeKind() != XdmNodeKind.ELEMENT || !cx_option.equals(opt.getNodeName())) {
+                            throw new XProcException(step.getNode(), "A cx:options document must only contain cx:option elements");
+                        }
+
+                        String name = opt.getAttributeValue(_name);
+                        QName qname = new QName(name, opt);
+
+                        String value = opt.getAttributeValue(_value);
+
+                        if ((name == null) || (value == null)) {
+                            throw new XProcException(step.getNode(), "A cx:option element must have name and value attributes");
+                        }
+
+                        RuntimeValue runtimeValue = new RuntimeValue(value);
+                        pipeline.passOption(qname, runtimeValue);
+                    }
+                }
+            }
+
+            pipeline.run();
+
+            portiter = outputports.iterator();
+            while (portiter.hasNext()) {
+                String port = portiter.next();
+                ReadablePipe rpipe = pipeline.readFrom(port);
+                rpipe.canReadSequence(true);
+
+                while (rpipe.moreDocuments()) {
+                    XdmNode doc = rpipe.read();
+
+                    TreeWriter tree = new TreeWriter(runtime);
+                    tree.startDocument(doc.getBaseURI());
+
+                    if (detailed) {
+                        tree.addStartElement(cx_document);
+                        tree.addAttribute(_port, port);
+                        tree.startContent();
+                        tree.addSubtree(doc);
+                        tree.addEndElement();
+                    } else {
+                        tree.addSubtree(doc);
+                    }
+
+                    tree.endDocument();
+                    result.write(tree.getResult());
+                }
+            }
+
+        } finally {
+            innerRuntime.close();
+            runtime.resetExtensionFunctions();
         }
     }
 }
