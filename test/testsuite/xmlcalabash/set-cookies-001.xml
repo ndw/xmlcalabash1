@@ -21,7 +21,6 @@
     <p:inline>
       <c:cookies>
         <c:cookie name="One" value="1" domain="tests.xproc.org" path="/"/>
-        <c:cookie name="Two" value="1" domain="tests.xproc.org" path="/"/>
       </c:cookies>
     </p:inline>
   </p:input>
@@ -40,7 +39,6 @@
 
 <t:output port='result'>
 <cookies>
-   <cookie name="Two" value="1" domain="" path="/" expires=""/>
    <cookie name="One" value="1" domain="" path="/" expires=""/>
 </cookies>
 </t:output>
