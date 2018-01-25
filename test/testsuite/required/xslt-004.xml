@@ -48,7 +48,7 @@
 </p:declare-step>
 </t:pipeline>
 
-<t:output port='result'><xsl-version>2.0</xsl-version></t:output>
+<t:output port='result'><xsl-version>3.0</xsl-version></t:output>
 
 </t:test>
 
