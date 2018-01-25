@@ -6,6 +6,7 @@ import net.sf.saxon.lib.CollectionFinder;
 import net.sf.saxon.lib.Resource;
 import net.sf.saxon.lib.ResourceCollection;
 import net.sf.saxon.om.Item;
+import net.sf.saxon.om.SpaceStrippingRule;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.trans.XPathException;
 import org.slf4j.Logger;
@@ -104,6 +105,11 @@ public class XProcCollectionFinder implements CollectionFinder {
         @Override
         public boolean isStable(XPathContext context) {
             return true;
+        }
+
+        @Override
+        public boolean stripWhitespace(SpaceStrippingRule rules) {
+            return false;
         }
     }
 
