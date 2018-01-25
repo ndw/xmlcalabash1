@@ -22,7 +22,18 @@ package com.xmlcalabash.util;
 
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
-import net.sf.saxon.om.*;
+import com.xmlcalabash.core.XProcRuntime;
+import net.sf.saxon.Configuration;
+import net.sf.saxon.event.PipelineConfiguration;
+import net.sf.saxon.event.Receiver;
+import net.sf.saxon.event.TreeReceiver;
+import net.sf.saxon.om.FingerprintedQName;
+import net.sf.saxon.om.InscopeNamespaceResolver;
+import net.sf.saxon.om.Item;
+import net.sf.saxon.om.NameOfNode;
+import net.sf.saxon.om.NamespaceBinding;
+import net.sf.saxon.om.NodeInfo;
+import net.sf.saxon.om.NodeName;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.Destination;
 import net.sf.saxon.s9api.Processor;
@@ -43,12 +54,10 @@ import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XdmValue;
 import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.event.Receiver;
-import net.sf.saxon.event.TreeReceiver;
-import net.sf.saxon.event.NamespaceReducer;
-import net.sf.saxon.event.PipelineConfiguration;
-import net.sf.saxon.Configuration;
-import com.xmlcalabash.core.XProcRuntime;
+import net.sf.saxon.tree.util.NamespaceIterator;
+import nu.validator.htmlparser.sax.HtmlSerializer;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.InputSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -57,15 +66,10 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.Writer;
+import java.net.URI;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Vector;
-import java.util.HashSet;
-import java.net.URI;
-
-import net.sf.saxon.tree.util.NamespaceIterator;
-import nu.validator.htmlparser.sax.HtmlSerializer;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.InputSource;
 
 /**
  *
@@ -98,7 +102,6 @@ public class S9apiUtils {
             PipelineConfiguration pipeConfig = config.makePipelineConfiguration();
 
             Receiver out = destination.getReceiver(config);
-            out = new NamespaceReducer(out);
             TreeReceiver tree = new TreeReceiver(out);
             tree.setPipelineConfiguration(pipeConfig);
             if (baseURI != null) {
@@ -126,7 +129,6 @@ public class S9apiUtils {
             PipelineConfiguration pipeConfig = config.makePipelineConfiguration();
 
             Receiver out = destination.getReceiver(config);
-            out = new NamespaceReducer(out);
             TreeReceiver tree = new TreeReceiver(out);
             tree.setPipelineConfiguration(pipeConfig);
             if (baseURI != null) {

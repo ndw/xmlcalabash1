@@ -20,14 +20,20 @@
 
 package com.xmlcalabash.util;
 
-import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
 import net.sf.saxon.Controller;
-import net.sf.saxon.event.NamespaceReducer;
-import net.sf.saxon.event.Receiver;
 import net.sf.saxon.event.PipelineConfiguration;
+import net.sf.saxon.event.Receiver;
 import net.sf.saxon.expr.instruct.Executable;
-import net.sf.saxon.om.*;
+import net.sf.saxon.expr.parser.Location;
+import net.sf.saxon.om.FingerprintedQName;
+import net.sf.saxon.om.NameOfNode;
+import net.sf.saxon.om.NamePool;
+import net.sf.saxon.om.NamespaceBinding;
+import net.sf.saxon.om.NodeInfo;
+import net.sf.saxon.om.NodeName;
+import net.sf.saxon.om.StandardNames;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
@@ -43,7 +49,6 @@ import net.sf.saxon.type.SimpleType;
 
 import java.net.URI;
 import java.util.Iterator;
-import net.sf.saxon.expr.parser.Location;
 
 /**
  *
@@ -106,8 +111,7 @@ public class TreeWriter {
             exec = new Executable(controller.getConfiguration());
             destination = new XdmDestination();
             receiver = destination.getReceiver(controller.getConfiguration());
-            receiver = new NamespaceReducer(receiver);
-            
+
             PipelineConfiguration pipe = controller.makePipelineConfiguration();
             receiver.setPipelineConfiguration(pipe);
 
