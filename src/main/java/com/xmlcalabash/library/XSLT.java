@@ -38,7 +38,7 @@ import net.sf.saxon.expr.parser.Location;
 import net.sf.saxon.lib.CollectionFinder;
 import net.sf.saxon.lib.OutputURIResolver;
 import net.sf.saxon.lib.UnparsedTextURIResolver;
-import net.sf.saxon.om.NamespaceBinding;
+import net.sf.saxon.om.NamespaceBindingSet;
 import net.sf.saxon.om.NodeName;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.MessageListener;
@@ -259,12 +259,8 @@ public class XSLT extends DefaultStep {
 
         // Can be null when nothing is written to the principle result tree...
         if (xformed != null) {
-            if (document != null
-                && (xformed.getBaseURI() == null
-                    || "".equals(xformed.getBaseURI().toASCIIString()))) {
-                String sysId = document.getBaseURI().toASCIIString();
-                xformed.getUnderlyingNode().setSystemId(sysId);
-            }
+            // There used to be an attempt to set the system identifier of the xformed
+            // document, but that's not allowed in Saxon 9.8.
 
             // If the document isn't well-formed XML, encode it as text
             try {
@@ -327,12 +323,8 @@ public class XSLT extends DefaultStep {
 
             // Can be null when nothing is written to the principle result tree...
             if (xformed != null) {
-                if (document != null
-                        && (xformed.getBaseURI() == null
-                        || "".equals(xformed.getBaseURI().toASCIIString()))) {
-                    String sysId = document.getBaseURI().toASCIIString();
-                    xformed.getUnderlyingNode().setSystemId(sysId);
-                }
+                // There used to be an attempt to set the system identifier of the xformed
+                // document, but that's not allowed in Saxon 9.8.
                 resultPipe.write(xformed);
             }
         } catch (SaxonApiException sae) {
@@ -423,8 +415,7 @@ public class XSLT extends DefaultStep {
         }
     }
 
-    private static class FixedSysidReceiver
-            implements Receiver
+    private static class FixedSysidReceiver implements Receiver
     {
         private final String   mySysid;
         private final Receiver myWrapped;
@@ -477,8 +468,8 @@ public class XSLT extends DefaultStep {
         }
 
         @Override
-        public void namespace(NamespaceBinding ns, int i) throws XPathException {
-            myWrapped.namespace(ns, i);
+        public void namespace(NamespaceBindingSet namespaceBindings, int properties) throws XPathException {
+            myWrapped.namespace(namespaceBindings, properties);
         }
 
         @Override
