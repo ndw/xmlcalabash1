@@ -1,19 +1,13 @@
 package com.xmlcalabash.library;
 
 import com.xmlcalabash.core.XMLCalabash;
-import net.sf.saxon.om.StandardNames;
 import net.sf.saxon.s9api.*;
 import net.sf.saxon.Configuration;
-import net.sf.saxon.sxpath.IndependentContext;
 import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.functions.FunctionLibraryList;
-import net.sf.saxon.functions.SystemFunctionLibrary;
-import net.sf.saxon.functions.ConstructorFunctionLibrary;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
-import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.model.RuntimeValue;
