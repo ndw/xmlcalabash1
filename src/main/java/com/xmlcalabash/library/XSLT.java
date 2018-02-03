@@ -191,6 +191,10 @@ public class XSLT extends DefaultStep {
         opt = getOption(_output_base_uri);
         if (opt != null) {
             outputBaseURI = opt.getString();
+        } else {
+            if (document != null) {
+                outputBaseURI = document.getBaseURI().toASCIIString();
+            }
         }
 
         Processor processor = runtime.getProcessor();
