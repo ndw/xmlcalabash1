@@ -309,8 +309,8 @@ public class HttpRequest extends DefaultStep {
 
         String lcMethod = method.toLowerCase();
 
-        // You can only have a body on PUT or POST
-        if (body != null && !("put".equals(lcMethod) || "post".equals(lcMethod))) {
+        // You can only have a body on PUT or POST or PATCH
+        if (body != null && !("put".equals(lcMethod) || "post".equals(lcMethod) || "patch".equals(lcMethod))) {
             throw XProcException.stepError(5);
         }
 
@@ -322,6 +322,8 @@ public class HttpRequest extends DefaultStep {
             httpRequest = doPost(body);
         } else if ("put".equals(lcMethod)) {
             httpRequest = doPut(body);
+        } else if ("patch".equals(lcMethod)) {
+            httpRequest = doPatch(body);
         } else if ("head".equals(lcMethod)) {
             httpRequest = doHead();
         } else if ("delete".equals(lcMethod)) {
@@ -465,8 +467,13 @@ public class HttpRequest extends DefaultStep {
         return method;
     }
 
-
     private HttpPost doPost(XdmNode body) {
+        HttpPost method = new HttpPost(requestURI);
+        doPutOrPost(method,body);
+        return method;
+    }
+    
+    private HttpPost doPatch(XdmNode body) {
         HttpPost method = new HttpPost(requestURI);
         doPutOrPost(method,body);
         return method;
