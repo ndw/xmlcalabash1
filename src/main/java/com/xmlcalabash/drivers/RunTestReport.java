@@ -682,9 +682,10 @@ public class RunTestReport {
                     } else {
                         // Make sure that we have a document
                         XdmDestination dest = new XdmDestination();
+                        dest.setBaseURI(node.getBaseURI());
                         S9apiUtils.writeXdmValue(runtime, node, dest, node.getBaseURI());
                         XdmNode newNode = dest.getXdmNode();
-                        add(input, port, dest.getXdmNode());
+                        add(input, port, newNode);
                     }
                 }
             }
