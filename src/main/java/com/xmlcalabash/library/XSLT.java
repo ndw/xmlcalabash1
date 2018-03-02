@@ -193,7 +193,9 @@ public class XSLT extends DefaultStep {
             outputBaseURI = opt.getString();
         } else {
             if (document != null) {
-                outputBaseURI = document.getBaseURI().toASCIIString();
+                if (!"".equals(document.getBaseURI().toASCIIString())) { // FIXME: why?
+                    outputBaseURI = document.getBaseURI().toASCIIString();
+                }
             }
         }
 
