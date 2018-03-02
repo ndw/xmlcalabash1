@@ -27,8 +27,8 @@ targetCompatibility = "1.7"
 repositories {
   mavenLocal()
   mavenCentral()
-  maven { url "http://maven.restlet.org" }
-  maven { url "http://developer.marklogic.com/maven2" }
+  maven { url "https://maven.restlet.org" }
+  maven { url "https://developer.marklogic.com/maven2" }
   maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
 }
 
@@ -70,6 +70,7 @@ dependencies {
     [group: 'org.restlet.jee', name: 'org.restlet', version: '2.2.2'],
     [group: 'org.restlet.jee', name: 'org.restlet.ext.fileupload', version: '2.2.2'],
     [group: 'org.restlet.jee', name: 'org.restlet.ext.slf4j', version: '2.2.2'],
+    [group: 'commons-fileupload', name: 'commons-fileupload', version: '1.3.3'],
     [group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.10'],
     [group: 'org.slf4j', name: 'slf4j-api', version: '1.7.10'],
     [group: 'org.xmlresolver', name: 'xmlresolver', version: '0.13.1'],
@@ -402,12 +403,12 @@ def mavenPom = {
   licenses {
     license {
       name 'Common Development and Distribution License (CDDL) version 1.0'
-      url 'http://www.opensource.org/licenses/cddl1.txt'
+      url 'https://opensource.org/licenses/CDDL-1.0'
       distribution 'repo'
     }
     license {
       name 'GNU General Public License version 2'
-      url 'http://www.gnu.org/licenses/gpl-2.0.txt'
+      url 'https://www.gnu.org/licenses/gpl-2.0.txt'
       distribution 'repo'
     }
   }
@@ -422,7 +423,7 @@ def mavenPom = {
   repositories {
     repository {
       id 'restlet'
-      url 'http://maven.restlet.org'
+      url 'https://maven.restlet.org'
     }
   }
 }
