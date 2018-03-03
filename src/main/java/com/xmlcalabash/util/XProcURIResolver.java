@@ -28,17 +28,12 @@ import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcRuntime;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -61,6 +56,7 @@ public class XProcURIResolver implements URIResolver, EntityResolver, ModuleURIR
     private UnparsedTextURIResolver unparsedTextResolver = null;
     private XProcRuntime runtime = null;
     private Hashtable<String,XdmNode> cache = new Hashtable<String,XdmNode> ();
+    private Resolver catalogResolver = null;
     private static boolean useCache = true; // FIXME: this is supposed to be temporary!
 
     public XProcURIResolver(XProcRuntime runtime) {
@@ -69,6 +65,12 @@ public class XProcURIResolver implements URIResolver, EntityResolver, ModuleURIR
 
     public void setUnderlyingURIResolver(URIResolver resolver) {
         uriResolver = resolver;
+        // Resolvers are chained together, but there's no way to traverse the
+        // chain. We want to be able to do catalog resolution, so we cache
+        // the first catalog resolver that we see.
+        if ((catalogResolver == null) && (resolver instanceof org.xmlresolver.Resolver)) {
+            catalogResolver = (Resolver) resolver;
+        }
     }
 
     public URIResolver getUnderlyingURIResolver() {
@@ -100,8 +102,7 @@ public class XProcURIResolver implements URIResolver, EntityResolver, ModuleURIR
     }
 
     public void addCatalogs(List<String> catalogs) {
-        if (uriResolver instanceof org.xmlresolver.Resolver) {
-            Resolver res = (org.xmlresolver.Resolver) uriResolver;
+        if (catalogResolver != null) {
             for (String catalog : catalogs) {
                 logger.debug("Adding catalog to resolver: " + catalog);
                 try {
@@ -110,7 +111,7 @@ public class XProcURIResolver implements URIResolver, EntityResolver, ModuleURIR
                     source.setSystemId(catalog);
 
                     CatalogSource catsource = new CatalogSource.InputSourceCatalogSource(source);
-                    res.getCatalog().addSource(catsource);
+                    catalogResolver.getCatalog().addSource(catsource);
                 } catch (MalformedURLException e) {
                     logger.info("Malformed catalog URI in jar file: " + catalog);
                 } catch (IOException e) {
@@ -118,7 +119,7 @@ public class XProcURIResolver implements URIResolver, EntityResolver, ModuleURIR
                 }
             }
         } else {
-            logger.debug("Not adding catalogs to resolver, uriResolver is not an org.xmlresolver.Resolver");
+            logger.info("Not adding catalogs to resolver, no catalog resolver is known");
         }
     }
 
