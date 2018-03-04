@@ -14,6 +14,7 @@ import com.xmlcalabash.util.AxisNodes;
 import com.xmlcalabash.util.MessageFormatter;
 import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.util.S9apiUtils;
+import com.xmlcalabash.util.URIUtils;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -97,7 +98,7 @@ public class Info extends DefaultStep {
         tree.startDocument(step.getNode().getBaseURI());
 
         if ("file".equals(uri.getScheme())) {
-            File file = new File(uri.getPath());
+            File file = URIUtils.toFile(uri);
 
             if (!file.exists()) {
                 if (failOnError) {
