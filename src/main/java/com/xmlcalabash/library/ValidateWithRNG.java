@@ -59,7 +59,7 @@ public class ValidateWithRNG extends DefaultStep {
     private WritablePipe result = null;
     private URI docBaseURI = null;
 
-    /* Creates a new instance of Delete */
+    /* Creates a new instance of ValidateWithRNG */
     public ValidateWithRNG(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
     }
@@ -102,7 +102,7 @@ public class ValidateWithRNG extends DefaultStep {
             doc = source.read();
             docBaseURI = doc.getBaseURI();
 
-            if (verifier != null && !verifier.verify(S9apiUtils.xdmToInputSource(runtime, doc))) {
+            if (!verifier.verify(S9apiUtils.xdmToInputSource(runtime, doc))) {
                 throw new XProcException(XProcException.err_E0001, "Document is not valid");
             }
 
@@ -113,7 +113,7 @@ public class ValidateWithRNG extends DefaultStep {
         } catch (SAXException sx) {
             // Assume the only error is validity failed?
             if (getOption(_assert_valid,false)) {
-                throw XProcException.stepError(53);
+                throw XProcException.stepError(53, sx);
             }
             result.write(doc);
         } catch (IOException ioe) {
