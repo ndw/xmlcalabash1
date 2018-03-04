@@ -100,4 +100,16 @@ public class URIUtils {
         URI cwd = cwdAsURI();
         return cwd.resolve(encode(localFn));
     }
+
+    public static File toFile(URI uri) {
+        if (!"file".equalsIgnoreCase(uri.getScheme())) {
+            throw new IllegalStateException("Expecting a file URI: " + uri.toASCIIString());
+        }
+
+        if (uri.getAuthority() != null && uri.getAuthority().length() > 0) {
+            return new File("//"+uri.getAuthority()+uri.getPath());
+        } else {
+            return new File(uri.getPath());
+        }
+    }
 }
