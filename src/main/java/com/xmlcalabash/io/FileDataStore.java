@@ -21,6 +21,7 @@
 package com.xmlcalabash.io;
 
 import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.util.URIUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,7 +68,7 @@ public class FileDataStore implements DataStore {
 		URI baseURI = URI.create(base);
 		URI uri = baseURI.resolve(href);
 		if ("file".equalsIgnoreCase(uri.getScheme())) {
-			File file = new File(uri);
+			File file = URIUtils.toFile(uri);
 			String suffix = getFileSuffixFromType(media);
 			if (file.isDirectory() || uri.getPath().endsWith("/")) {
 				if (!file.isDirectory() && !file.mkdirs()) {
@@ -114,7 +115,7 @@ public class FileDataStore implements DataStore {
 		URI baseURI = URI.create(base);
 		URI uri = baseURI.resolve(href);
 		if ("file".equalsIgnoreCase(uri.getScheme())) {
-			File file = new File(uri);
+			File file = URIUtils.toFile(uri);
 			String type = getContentTypeFromName(file.getName());
             if (overrideContentType != null) {
                 type = overrideContentType;
@@ -136,7 +137,7 @@ public class FileDataStore implements DataStore {
 		URI baseURI = URI.create(base);
 		URI uri = baseURI.resolve(href);
 		if ("file".equalsIgnoreCase(uri.getScheme())) {
-			File file = new File(uri);
+			File file = URIUtils.toFile(uri);
 			String type;
 			if (file.isFile()) {
 				type = getContentTypeFromName(file.getName());
@@ -157,7 +158,7 @@ public class FileDataStore implements DataStore {
 		URI baseURI = URI.create(base);
 		URI uri = baseURI.resolve(href);
 		if ("file".equalsIgnoreCase(uri.getScheme())) {
-			File file = new File(uri);
+			File file = URIUtils.toFile(uri);
 
             if (!file.canRead()) {
                 throw XProcException.stepError(12);
@@ -186,7 +187,7 @@ public class FileDataStore implements DataStore {
 		URI baseURI = URI.create(base);
 		URI uri = baseURI.resolve(href);
 		if ("file".equalsIgnoreCase(uri.getScheme())) {
-			File file = new File(uri);
+			File file = URIUtils.toFile(uri);
 			if (file.isDirectory()) {
 				return file.toURI();
 			} else if (file.exists()) {
@@ -209,7 +210,7 @@ public class FileDataStore implements DataStore {
 		URI baseURI = URI.create(base);
 		URI uri = baseURI.resolve(href);
 		if ("file".equalsIgnoreCase(uri.getScheme())) {
-			File file = new File(uri);
+			File file = URIUtils.toFile(uri);
 			if (!file.exists()) {
 				throw new FileNotFoundException(file.toURI().toASCIIString());
 			} else if (!file.delete()) {
