@@ -63,6 +63,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.entity.ByteArrayEntity;
@@ -309,8 +310,8 @@ public class HttpRequest extends DefaultStep {
 
         String lcMethod = method.toLowerCase();
 
-        // You can only have a body on PUT or POST
-        if (body != null && !("put".equals(lcMethod) || "post".equals(lcMethod))) {
+        // You can only have a body on PUT or POST or PATCH
+        if (body != null && !("put".equals(lcMethod) || "post".equals(lcMethod) || "patch".equals(lcMethod))) {
             throw XProcException.stepError(5);
         }
 
@@ -322,6 +323,8 @@ public class HttpRequest extends DefaultStep {
             httpRequest = doPost(body);
         } else if ("put".equals(lcMethod)) {
             httpRequest = doPut(body);
+        } else if ("patch".equals(lcMethod)) {
+            httpRequest = doPatch(body);
         } else if ("head".equals(lcMethod)) {
             httpRequest = doHead();
         } else if ("delete".equals(lcMethod)) {
@@ -465,9 +468,14 @@ public class HttpRequest extends DefaultStep {
         return method;
     }
 
-
     private HttpPost doPost(XdmNode body) {
         HttpPost method = new HttpPost(requestURI);
+        doPutOrPost(method,body);
+        return method;
+    }
+    
+    private HttpPatch doPatch(XdmNode body) {
+        HttpPatch method = new HttpPatch(requestURI);
         doPutOrPost(method,body);
         return method;
     }
