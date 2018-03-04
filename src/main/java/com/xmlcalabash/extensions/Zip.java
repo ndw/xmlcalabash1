@@ -143,6 +143,9 @@ public class Zip extends DefaultStep {
         final String zipFn = getOption(_href).getString();
 
         XdmNode man = S9apiUtils.getDocumentElement(manifest.read());
+        if (man == null) {
+            throw new NullPointerException("XML document " + man.getDocumentURI() + " has no root element.");
+        }
 
         if (!c_zip_manifest.equals(man.getNodeName())) {
             throw new XProcException(step.getNode(), "The cx:zip manifest must be a c:zip-manifest.");
@@ -151,6 +154,9 @@ public class Zip extends DefaultStep {
         while (source.moreDocuments()) {
             XdmNode doc = source.read();
             XdmNode root = S9apiUtils.getDocumentElement(doc);
+            if (root == null) {
+                throw new NullPointerException("XML document " + doc.getDocumentURI() + " has no root element.");
+            }
             srcManifest.put(root.getBaseURI().toASCIIString(), doc);
         }
 
