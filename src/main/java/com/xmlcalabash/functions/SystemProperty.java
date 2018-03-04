@@ -11,6 +11,7 @@ import net.sf.saxon.lib.ExtensionFunctionDefinition;
 import net.sf.saxon.om.Sequence;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.om.StructuredQName;
+import net.sf.saxon.s9api.QName;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.tree.iter.SingletonIterator;
 import net.sf.saxon.value.StringValue;
@@ -25,37 +26,37 @@ import com.xmlcalabash.core.XProcRuntime;
 public class SystemProperty extends XProcExtensionFunctionDefinition {
     private static StructuredQName funcname = new StructuredQName("p", XProcConstants.NS_XPROC, "system-property");
 
-     protected SystemProperty() {
-         // you can't call this one
-     }
+    protected SystemProperty() {
+        // you can't call this one
+    }
 
-     public SystemProperty(XProcRuntime runtime) {
-         registry.registerRuntime(this, runtime);
-     }
+    public SystemProperty(XProcRuntime runtime) {
+        registry.registerRuntime(this, runtime);
+    }
 
-     public StructuredQName getFunctionQName() {
-         return funcname;
-     }
+    public StructuredQName getFunctionQName() {
+        return funcname;
+    }
 
-     public int getMinimumNumberOfArguments() {
-         return 1;
-     }
+    public int getMinimumNumberOfArguments() {
+        return 1;
+    }
 
-     public int getMaximumNumberOfArguments() {
-         return 1;
-     }
+    public int getMaximumNumberOfArguments() {
+        return 1;
+    }
 
-     public SequenceType[] getArgumentTypes() {
-         return new SequenceType[]{SequenceType.SINGLE_STRING};
-     }
+    public SequenceType[] getArgumentTypes() {
+        return new SequenceType[]{SequenceType.SINGLE_STRING};
+    }
 
-     public SequenceType getResultType(SequenceType[] suppliedArgumentTypes) {
-         return SequenceType.SINGLE_STRING;
-     }
+    public SequenceType getResultType(SequenceType[] suppliedArgumentTypes) {
+        return SequenceType.SINGLE_STRING;
+    }
 
-     public ExtensionFunctionCall makeCallExpression() {
-         return new SystemPropertyCall(this);
-     }
+    public ExtensionFunctionCall makeCallExpression() {
+        return new SystemPropertyCall(this);
+    }
 
     private class SystemPropertyCall extends ExtensionFunctionCall {
         private StaticContext staticContext = null;
@@ -65,85 +66,45 @@ public class SystemProperty extends XProcExtensionFunctionDefinition {
             xdef = def;
         }
 
-         public void supplyStaticContext(StaticContext context, int locationId, Expression[] arguments) throws XPathException {
-             staticContext = context;
-         }
+        public void supplyStaticContext(StaticContext context, int locationId, Expression[] arguments) throws XPathException {
+            staticContext = context;
+        }
 
         public Sequence call(XPathContext xPathContext, Sequence[] sequences) throws XPathException {
-             StructuredQName propertyName = null;
+            QName propertyName = null;
 
-             XProcRuntime runtime = registry.getRuntime(xdef);
-             XStep step = runtime.getXProcData().getStep();
-             // FIXME: this can't be the best way to do this...
-             // FIXME: And what, exactly, is this even supposed to be doing!?
-             if (step != null && !(step instanceof XCompoundStep)) {
-                 throw XProcException.dynamicError(23);
-             }
+            XProcRuntime runtime = registry.getRuntime(xdef);
+            XStep step = runtime.getXProcData().getStep();
+            // FIXME: this can't be the best way to do this...
+            // FIXME: And what, exactly, is this even supposed to be doing!?
+            if (step != null && !(step instanceof XCompoundStep)) {
+                throw XProcException.dynamicError(23);
+            }
 
-             try {
-                 String lexicalQName = sequences[0].head().getStringValue();
-                 propertyName = StructuredQName.fromLexicalQName(
-                      lexicalQName,
-                      false,
-                      false,
-                      staticContext.getNamespaceResolver());
-             } catch (XPathException e) {
-                 if (e.getErrorCodeLocalPart()==null || e.getErrorCodeLocalPart().equals("FOCA0002")
-                         || e.getErrorCodeLocalPart().equals("FONS0004")) {
-                     e.setErrorCode("XTDE1390");
-                 }
-                 throw e;
-             }
+            try {
+                String lexicalQName = sequences[0].head().getStringValue();
+                StructuredQName qpropertyName = StructuredQName.fromLexicalQName(
+                        lexicalQName,
+                        false,
+                        false,
+                        staticContext.getNamespaceResolver());
+                propertyName = new QName(qpropertyName);
+            } catch (XPathException e) {
+                if (e.getErrorCodeLocalPart()==null || e.getErrorCodeLocalPart().equals("FOCA0002")
+                        || e.getErrorCodeLocalPart().equals("FONS0004")) {
+                    e.setErrorCode("XTDE1390");
+                }
+                throw e;
+            }
 
-             String uri = propertyName.getURI();
-             String local = propertyName.getLocalPart();
-             String value = "";
+            String value = runtime.getSystemProperty(propertyName);
+            if (value == null) {
+                value = "";
+            }
 
-             if (uri.equals(XProcConstants.NS_XPROC)) {
-                 if ("episode".equals(local)) {
-                     value = runtime.getEpisode();
-                 } else if ("language".equals(local)) {
-                     value = runtime.getLanguage();
-                 } else if ("product-name".equals(local)) {
-                     value = runtime.getProductName();
-                 } else if ("product-version".equals(local)) {
-                     value = runtime.getProductVersion();
-                 } else if ("vendor".equals(local)) {
-                     value = runtime.getVendor();
-                 } else if ("vendor-uri".equals(local)) {
-                     value = runtime.getVendorURI();
-                 } else if ("version".equals(local)) {
-                     value = runtime.getXProcVersion();
-                 } else if ("xpath-version".equals(local)) {
-                     value = runtime.getXPathVersion();
-                 } else if ("psvi-supported".equals(local)) {
-                     value = runtime.getPSVISupported() ? "true" : "false";
-                 }
-             } else if (uri.equals(XProcConstants.NS_CALABASH_EX)) {
-                 if ("transparent-json".equals(local)) {
-                     value = runtime.transparentJSON() ? "true" : "false";
-                 } else if ("json-flavor".equals(local)) {
-                     value = runtime.jsonFlavor();
-                 } else if ("general-values".equals(local)) {
-                     value = runtime.getAllowGeneralExpressions() ? "true" : "false";
-                 } else if ("allow-text-results".equals(local)) {
-                     value = runtime.getAllowTextResults() ? "true" : "false";
-                 } else if ("xpointer-on-text".equals(local)) {
-                     value = runtime.getAllowXPointerOnText() ? "true" : "false";
-                 } else if ("use-xslt-1.0".equals(local) || "use-xslt-10".equals(local)) {
-                     value = runtime.getUseXslt10Processor() ? "true" : "false";
-                 } else if ("html-serializer".equals(local)) {
-                     value = runtime.getHtmlSerializer() ? "true" : "false";
-                 } else if ("saxon-version".equals(local)) {
-                     value = runtime.getConfiguration().getProcessor().getSaxonProductVersion();
-                 } else if ("saxon-edition".equals(local)) {
-                     value = runtime.getConfiguration().saxonProcessor;
-                 }
-             }
-
-             return new StringValue(value);
-         }
-     }
+            return new StringValue(value);
+        }
+    }
 }
 
 //
