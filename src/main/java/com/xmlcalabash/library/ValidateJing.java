@@ -197,6 +197,10 @@ public class ValidateJing extends DefaultStep {
         }
 
         public void error(SAXParseException e) throws SAXException {
+            if (runtime.getShowMessages()) {
+                System.err.println(e.getMessage());
+            }
+
             TreeWriter treeWriter = new TreeWriter(runtime);
             treeWriter.startDocument(docBaseURI);
             treeWriter.addStartElement(XProcConstants.c_error);
@@ -222,8 +226,10 @@ public class ValidateJing extends DefaultStep {
             }
         }
 
-        public void warning( SAXParseException e ) {
-            // ignore warnings
+        public void warning(SAXParseException e) {
+            if (runtime.getShowMessages()) {
+                System.err.println(e.getMessage());
+            }
         }
     }
 }
