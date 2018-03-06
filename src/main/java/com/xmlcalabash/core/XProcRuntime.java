@@ -365,6 +365,10 @@ public class XProcRuntime {
         return config.debug;
     }
 
+    public boolean getShowMessages() {
+        return config.showMessages;
+    }
+
     public Output getProfile() {
         return profile;
     }

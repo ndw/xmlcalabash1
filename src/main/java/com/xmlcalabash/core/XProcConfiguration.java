@@ -81,6 +81,7 @@ public class XProcConfiguration {
     public Input saxonConfig = null;
     public Hashtable<String,String> nsBindings = new Hashtable<String,String> ();
     public boolean debug = false;
+    public boolean showMessages = false;
     public Output profile = null;
     public Hashtable<String,Vector<ReadablePipe>> inputs = new Hashtable<String,Vector<ReadablePipe>> ();
     public ReadablePipe pipeline = null;
@@ -385,6 +386,7 @@ public class XProcConfiguration {
 
         schemaAware = "true".equals(System.getProperty("com.xmlcalabash.schema-aware", ""+schemaAware));
         debug = "true".equals(System.getProperty("com.xmlcalabash.debug", ""+debug));
+        showMessages = "true".equals(System.getProperty("com.xmlcalabash.show-messages", ""+showMessages));
         String profileProperty = System.getProperty("com.xmlcalabash.profile");
         if (profileProperty != null) {
             profile = new Output("file://" + fixUpURI(profileProperty));
@@ -505,6 +507,8 @@ public class XProcConfiguration {
                     parseNamespaceBinding(node);
                 } else if ("debug".equals(localName)) {
                     parseDebug(node);
+                } else if ("show-messages".equals(localName)) {
+                    parseShowMessages(node);
                 } else if ("profile".equals(localName)) {
                     parseProfile(node);
                 } else if ("entity-resolver".equals(localName)) {
@@ -666,6 +670,14 @@ public class XProcConfiguration {
         debug = "true".equals(value);
         if (!"true".equals(value) && !"false".equals(value)) {
             throw new XProcException(node, "Invalid configuration value for debug: "+ value);
+        }
+    }
+
+    private void parseShowMessages(XdmNode node) {
+        String value = node.getStringValue().trim();
+        showMessages = "true".equals(value);
+        if (!"true".equals(value) && !"false".equals(value)) {
+            throw new XProcException(node, "Invalid configuration value for show-messages: "+ value);
         }
     }
 

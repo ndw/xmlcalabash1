@@ -144,9 +144,11 @@ public class XSLT extends DefaultStep {
         String version = null;
         if (getOption(_version) == null) {
             XdmNode ssroot = S9apiUtils.getDocumentElement(stylesheet);
-            version = ssroot.getAttributeValue(new QName("","version"));
-            if (version == null) {
-                version = ssroot.getAttributeValue(new QName("http://www.w3.org/1999/XSL/Transform","version"));
+            if (ssroot != null) {
+                version = ssroot.getAttributeValue(new QName("","version"));
+                if (version == null) {
+                    version = ssroot.getAttributeValue(new QName("http://www.w3.org/1999/XSL/Transform","version"));
+                }
             }
             if (version == null) {
                 version = "2.0"; // WTF?
@@ -402,6 +404,10 @@ public class XSLT extends DefaultStep {
         }
 
         public void message(XdmNode content, boolean terminate, javax.xml.transform.SourceLocator locator) {
+            if (runtime.getShowMessages()) {
+                System.err.println(content.toString());
+            }
+
             TreeWriter treeWriter = new TreeWriter(runtime);
             treeWriter.startDocument(content.getBaseURI());
             treeWriter.addStartElement(XProcConstants.c_error);

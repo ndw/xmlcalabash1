@@ -66,6 +66,7 @@ import static net.sf.saxon.s9api.QName.fromClarkName;
 public class UserArgs {
     protected boolean needsCheck = false;
     protected Boolean debug = null;
+    protected Boolean showMessages = null;
     protected Output profile = null;
     protected boolean showVersion = false;
     protected String saxonProcessor = null;
@@ -96,6 +97,10 @@ public class UserArgs {
 
     public void setDebug(boolean debug) {
         this.debug = debug;
+    }
+
+    public void setShowMessages(boolean show) {
+        showMessages = show;
     }
 
     protected void setProfile(Output profile) {
@@ -590,6 +595,10 @@ public class UserArgs {
 
         if (debug != null) {
             config.debug = debug;
+        }
+
+        if (showMessages != null) {
+            config.showMessages = showMessages;
         }
 
         if (profile != null) {

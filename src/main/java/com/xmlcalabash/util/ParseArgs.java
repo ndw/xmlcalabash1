@@ -47,6 +47,11 @@ public class ParseArgs {
                 continue;
             }
 
+            if (arg.startsWith("--show-messages")) {
+                userArgs.setShowMessages(parseBoolean(null,"show-messages"));
+                continue;
+            }
+
             if (arg.startsWith("--profile")) {
                 userArgs.setProfile(parseString(null, "profile"));
                 continue;
