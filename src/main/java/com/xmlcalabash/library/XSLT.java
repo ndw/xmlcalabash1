@@ -193,12 +193,6 @@ public class XSLT extends DefaultStep {
         opt = getOption(_output_base_uri);
         if (opt != null) {
             outputBaseURI = opt.getString();
-        } else {
-            if (document != null) {
-                if (!"".equals(document.getBaseURI().toASCIIString())) { // FIXME: why?
-                    outputBaseURI = document.getBaseURI().toASCIIString();
-                }
-            }
         }
 
         Processor processor = runtime.getProcessor();
@@ -267,8 +261,18 @@ public class XSLT extends DefaultStep {
 
         // Can be null when nothing is written to the principle result tree...
         if (xformed != null) {
-            // There used to be an attempt to set the system identifier of the xformed
-            // document, but that's not allowed in Saxon 9.8.
+            if (getOption(_output_base_uri) == null && document != null) {
+                // Before Saxon 9.8, it was possible to simply set the base uri of the
+                // output document. That became impossible in Saxon 9.8, but I still
+                // think there might be XProc pipelines that rely on the fact that the
+                // base URI doesn't change when processed by XSLT. So we're doing it
+                // the hard way.
+                TreeWriter fixbase = new TreeWriter(runtime);
+                fixbase.startDocument(document.getBaseURI());
+                fixbase.addSubtree(xformed);
+                fixbase.endDocument();
+                xformed = fixbase.getResult();
+            }
 
             // If the document isn't well-formed XML, encode it as text
             try {
