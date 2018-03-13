@@ -213,9 +213,13 @@ public class XProcConfiguration {
         findStepClasses();
         findExtensionFunctions();
 
+        URI cwd = URIUtils.cwdAsURI();
+
         String classPath = System.getProperty("java.class.path");
         String[] pathElements = classPath.split(System.getProperty("path.separator"));
-        for (String s : pathElements) {
+        for (String path : pathElements) {
+            // Make the path absolute wrt the cwd so that it can be opened later regardless of context
+            String s = cwd.resolve(path).getPath();
             try {
                 JarFile jar = new JarFile(s);
                 ZipEntry catalog = jar.getEntry("catalog.xml");
@@ -227,7 +231,16 @@ public class XProcConfiguration {
                     catalogs.add("jar:file://" + s + "!/META-INF/catalog.xml");
                 }
             } catch (IOException e) {
-                // nevermind
+                // If it's not a jar file, maybe it's a directory with a catalog
+                String catfn = s;
+                if (!catfn.endsWith("/")) {
+                    catfn += "/";
+                }
+                catfn += "catalog.xml";
+                File f = new File(catfn);
+                if (f.exists() && f.isFile()) {
+                    catalogs.add(catfn);
+                }
             }
         }
     }
