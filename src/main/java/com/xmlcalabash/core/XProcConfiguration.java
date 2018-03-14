@@ -107,6 +107,7 @@ public class XProcConfiguration {
     public String mailUser = null;
     public String mailPass = null;
     public Hashtable<String,String> loaders = new Hashtable<String,String> ();
+    public HashSet<String> setSaxonProperties = new HashSet<String>();
 
     public boolean extensionValues = false;
     public boolean xpointerOnText = false;
@@ -225,10 +226,12 @@ public class XProcConfiguration {
                 ZipEntry catalog = jar.getEntry("catalog.xml");
                 if (catalog != null) {
                     catalogs.add("jar:file://" + s + "!/catalog.xml");
+                    logger.debug("Using catalog: jar:file://" + s + "!/catalog.xml");
                 }
                 catalog = jar.getEntry("META-INF/catalog.xml");
                 if (catalog != null) {
                     catalogs.add("jar:file://" + s + "!/META-INF/catalog.xml");
+                    logger.debug("Using catalog: jar:file://" + s + "!/META-INF/catalog.xml");
                 }
             } catch (IOException e) {
                 // If it's not a jar file, maybe it's a directory with a catalog
@@ -240,6 +243,7 @@ public class XProcConfiguration {
                 File f = new File(catfn);
                 if (f.exists() && f.isFile()) {
                     catalogs.add(catfn);
+                    logger.debug("Using catalog: " + catfn);
                 }
             }
         }
@@ -811,6 +815,7 @@ public class XProcConfiguration {
         }
 
         try {
+            setSaxonProperties.add(key);
             cfgProcessor.setConfigurationProperty(key, valueObj);
         } catch (Exception e) {
             throw new XProcException(e);

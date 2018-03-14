@@ -58,8 +58,10 @@ import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.util.URIUtils;
 import com.xmlcalabash.util.XProcSystemPropertySet;
 import com.xmlcalabash.util.XProcURIResolver;
+import com.xmlcalabash.util.XProcURIResolverX;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
+import net.sf.saxon.lib.FeatureKeys;
 import net.sf.saxon.s9api.ExtensionFunction;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
@@ -196,6 +198,19 @@ public class XProcRuntime {
 
         Configuration saxonConfig = processor.getUnderlyingConfiguration();
         uriResolver = new XProcURIResolver(this);
+
+        // Make sure that the Saxon processor uses *our* resolver for everything.
+        // Unless the user has already provided a class of their own, of course.
+        XProcURIResolverX saxonFakeStaticResolver = new XProcURIResolverX();
+        String saxonFakeClassName = saxonFakeStaticResolver.getClass().getName();
+        saxonFakeStaticResolver.setRealResolver(uriResolver);
+        if (!config.setSaxonProperties.contains(FeatureKeys.ENTITY_RESOLVER_CLASS)) {
+            saxonConfig.setConfigurationProperty(FeatureKeys.ENTITY_RESOLVER_CLASS, saxonFakeClassName);
+        }
+        if (!config.setSaxonProperties.contains(FeatureKeys.URI_RESOLVER_CLASS)) {
+            saxonConfig.setConfigurationProperty(FeatureKeys.URI_RESOLVER_CLASS, saxonFakeClassName);
+        }
+
         saxonConfig.setURIResolver(uriResolver);
         staticBaseURI = URIUtils.cwdAsURI();
 
