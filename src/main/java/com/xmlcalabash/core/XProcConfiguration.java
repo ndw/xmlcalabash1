@@ -37,11 +37,13 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -219,6 +221,13 @@ public class XProcConfiguration {
         String classPath = System.getProperty("java.class.path");
         String[] pathElements = classPath.split(System.getProperty("path.separator"));
         for (String path : pathElements) {
+            // Issue #272, make sure the path is UTF-8
+            try {
+                path = URLEncoder.encode(path, "utf-8");
+            } catch (UnsupportedEncodingException uee) {
+                // This can't happen with utf-8!?
+            }
+
             // Make the path absolute wrt the cwd so that it can be opened later regardless of context
             String s = cwd.resolve(path).getPath();
             try {
