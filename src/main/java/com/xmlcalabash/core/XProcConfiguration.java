@@ -1,9 +1,19 @@
 package com.xmlcalabash.core;
 
 import com.nwalsh.annotations.SaxonExtensionFunction;
+import com.xmlcalabash.io.DocumentSequence;
+import com.xmlcalabash.io.ReadablePipe;
+import com.xmlcalabash.model.Step;
 import com.xmlcalabash.piperack.PipelineSource;
-import com.xmlcalabash.util.*;
-import net.sf.saxon.Configuration;
+import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.util.AxisNodes;
+import com.xmlcalabash.util.Input;
+import com.xmlcalabash.util.JSONtoXML;
+import com.xmlcalabash.util.LogOptions;
+import com.xmlcalabash.util.Output;
+import com.xmlcalabash.util.S9apiUtils;
+import com.xmlcalabash.util.URIUtils;
+import net.sf.saxon.Version;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.Processor;
@@ -14,44 +24,36 @@ import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmValue;
 import net.sf.saxon.value.Whitespace;
-
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Vector;
-import java.util.HashSet;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.io.InputStream;
-import java.io.File;
-import java.util.jar.JarFile;
-import java.util.zip.ZipEntry;
-
-import com.xmlcalabash.io.ReadablePipe;
-import com.xmlcalabash.io.DocumentSequence;
-import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.model.Step;
-
-import javax.xml.transform.sax.SAXSource;
-import javax.xml.transform.Source;
-
 import org.atteo.classindex.ClassFilter;
 import org.atteo.classindex.ClassIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 
+import javax.xml.transform.Source;
+import javax.xml.transform.sax.SAXSource;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Vector;
+import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
+
 import static com.xmlcalabash.util.URIUtils.encode;
 import static java.lang.String.format;
 import static java.lang.System.getProperty;
-import net.sf.saxon.Version;
 
 /**
  * Created by IntelliJ IDEA.
@@ -219,6 +221,13 @@ public class XProcConfiguration {
         String classPath = System.getProperty("java.class.path");
         String[] pathElements = classPath.split(System.getProperty("path.separator"));
         for (String path : pathElements) {
+            // Issue #272, make sure the path is UTF-8
+            try {
+                path = URLEncoder.encode(path, "utf-8");
+            } catch (UnsupportedEncodingException uee) {
+                // This can't happen with utf-8!?
+            }
+
             // Make the path absolute wrt the cwd so that it can be opened later regardless of context
             String s = cwd.resolve(path).getPath();
             try {
