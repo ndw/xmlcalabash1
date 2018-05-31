@@ -57,6 +57,31 @@
    <p:option name="cookies" required="true"/>
 </p:declare-step>
 
+<p:declare-step type="cx:hash-document">
+   <p:input port="source"/>
+   <p:output port="result"/>
+   <p:input port="parameters" kind="parameter"/>
+
+   <p:option name="algorithm" required="true"/>
+   <p:option name="hash-version"/>
+
+   <p:option name="byte-order-mark"/>
+   <p:option name="cdata-section-elements" select="''"/>
+   <p:option name="doctype-public"/>
+   <p:option name="doctype-system"/>
+   <p:option name="encoding"/>
+   <p:option name="escape-uri-attributes" select="'false'"/>
+   <p:option name="include-content-type" select="'true'"/>
+   <p:option name="indent" select="'false'"/>
+   <p:option name="media-type"/>
+   <p:option name="method" select="'xml'"/>
+   <p:option name="normalization-form" select="'none'"/>
+   <p:option name="omit-xml-declaration" select="'true'"/>
+   <p:option name="standalone" select="'omit'"/>
+   <p:option name="undeclare-prefixes"/>
+   <p:option name="version" select="'1.0'"/>
+</p:declare-step>
+
 <p:declare-step type="cx:java-properties">
    <p:output port="result"/>
    <p:option name="href" cx:type="xsd:anyURI"/>
