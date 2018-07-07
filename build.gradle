@@ -13,7 +13,6 @@ plugins {
   id "java"
   id "osgi"
   id "maven"
-  id "maven-publish"
   id "signing"
   id "com.bmuschko.izpack" version "2.0"
   id "de.undercouch.download" version "2.0.0"
@@ -92,6 +91,31 @@ dependencies {
     [group: 'com.xmlcalabash', name: 'xmlcalabash1-xcc', version: '1.1.2'],
     [group: 'com.xmlcalabash', name: 'xmlcalabash1-xmlunit', version: '1.1.2']
   )
+}
+
+// Make explicit use of annotationProcessorPath to satisfy Gradle.
+// Maybe it's possible to do better than "configurations.compile", but the
+// implementation uses annotations to find step implementations, so there's
+// going to be a lot of them. Also, set JDK7LIB if you want the warning
+// about "bootstrap class path not set in conjunction with -source 1.7"
+// to go away. (I set it in ~/.gradle/gradle.properties)
+compileJava {
+    options.compilerArgs += ['-Xlint:deprecation']
+    if (project.hasProperty("JDK7LIB")) {
+        options.bootstrapClasspath = fileTree(dir: project.ext.JDK7LIB).include("*.jar")
+    }
+    options.annotationProcessorPath = configurations.compile
+}
+
+compileTestJava {
+    if (project.hasProperty("JDK7LIB")) {
+        options.bootstrapClasspath = fileTree(dir: project.ext.JDK7LIB).include("*.jar")
+    }
+    options.annotationProcessorPath = configurations.compile
+}
+
+test {
+    testLogging.showStandardStreams = false
 }
 
 sourceSets {
@@ -365,22 +389,6 @@ izPackCreateInstaller.dependsOn setupIZPack
 artifacts {
   archives javadocJar
   archives sourcesJar
-}
-
-publishing {
-  publications {
-    mavenJava(MavenPublication) {
-      groupId 'com.xmlcalabash'
-      artifactId 'xmlcalabash'
-      version version
-      from components.java
-    }
-  }
-  repositories {
-    maven {
-      url 'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath
-    }
-  }
 }
 
 signing {
