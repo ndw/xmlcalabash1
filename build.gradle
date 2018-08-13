@@ -122,7 +122,7 @@ sourceSets {
   main {
     java {
       srcDir 'src/main/java'
-      exclude 'com/xmlcalabash/testdrivers/**'
+      exclude "com/xmlcalabash/testdrivers/**"
     }
     resources {
       srcDirs 'src/main/resources'
@@ -313,11 +313,11 @@ task testSuite(dependsOn: [makeDist, testSuiteMessages], type: JavaExec) {
        testsRoot + '/tests/serialization/test-suite.xml',
        testsRoot + '/tests/optional/test-suite.xml',
        testsRoot + '/tests/extension/test-suite.xml',
-       'http://xmlcalabash.com/tests/test-suite.xml')
-  // 'http://localhost:8130/tests/test-suite.xml')
+       "http://xmlcalabash.com/tests/test-suite.xml")
+  // "http://localhost:8130/tests/test-suite.xml")
 
-  standardOutput = new FileOutputStream(new File(testsReport))
-  errorOutput = new FileOutputStream(new File(testsErrors))
+  standardOutput = new FileOutputStream(new File("${projectDir}/${testsReport}"))
+  errorOutput = new FileOutputStream(new File("${projectDir}/${testsErrors}"))
 }
 
 task testSuiteClassPath {
