@@ -181,7 +181,7 @@ public class ValidateWithSCH extends DefaultStep {
     private boolean checkFailedAssert(XdmNode doc) {
         Hashtable<String,String> nsBindings = new Hashtable<String,String> ();
         nsBindings.put("svrl", "http://purl.oclc.org/dsdl/svrl");
-        String xpath = "//svrl:failed-assert";
+        String xpath = "//svrl:failed-assert|//svrl:successful-report";
         Vector<XdmItem> results = new Vector<XdmItem> ();
 
         Configuration config = runtime.getProcessor().getUnderlyingConfiguration();
