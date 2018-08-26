@@ -583,6 +583,15 @@ public class Parser {
         String sequence = node.getAttributeValue(new QName("sequence"));
         String select = node.getAttributeValue(new QName("select"));
 
+        if (!XProcConstants.p_declare_step.equals(parent.node.getNodeName())) {
+            if (kind != null) {
+                throw XProcException.staticError(8, node, "The 'kind' attribute is only allowed on an input declaration");
+            }
+            if (sequence != null) {
+                throw XProcException.staticError(8, node, "The 'sequence' attribute is only allowed on an input declaration");
+            }
+        }
+
         if (port == null && XProcConstants.p_input.equals(node.getNodeName())) {
             throw XProcException.staticError(38, node, "You must specify a port name for all p:input ports.");
         }
