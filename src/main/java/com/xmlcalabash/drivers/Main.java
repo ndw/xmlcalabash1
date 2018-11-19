@@ -178,6 +178,10 @@ public class Main {
 
         XPipeline pipeline = null;
 
+        if (runtime == null) {
+        	runtime = new XProcRuntime(config);
+        }
+        
         if (userArgs.getPipeline() != null) {
             pipeline = runtime.load(userArgs.getPipeline());
         } else if (userArgs.hasImplicitPipeline()) {
