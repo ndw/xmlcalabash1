@@ -175,4 +175,9 @@ public class TestXMLCalabash {
     public void testXInclude001() {
         suiteRunner.runTest(TESTROOT + "xinclude-001.xml");
     }
+
+    @Test
+    public void testSearchText001() {
+        suiteRunner.runTest(TESTROOT + "search-text-001.xml");
+    }
 }

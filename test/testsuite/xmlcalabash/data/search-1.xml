@@ -1,0 +1,20 @@
+<doc xmlns:xi="http://www.w3.org/2001/XInclude">
+<text x="one,five"><xi:include href="test.txt" parse="text"
+                  fragid="search=/one/,/five/"/></text>
+<text x=",five"><xi:include href="test.txt" parse="text"
+                  fragid="search=,/five/"/></text>
+<text x="101,"><xi:include href="test.txt" parse="text"
+                  fragid="search=/one hundred one/,"/></text>
+<text x="one;after,five;before"><xi:include href="test.txt" parse="text"
+                  fragid="search=/one/after,/five/before"/></text>
+<text x="…,…"><xi:include href="test.txt" parse="text"
+                  fragid="search=/…/,/…/"/></text>
+<text x="…;trim,…"><xi:include href="test.txt" parse="text"
+                  fragid="search=/…/trim,/…/"/></text>
+<text x="…,…;trim"><xi:include href="test.txt" parse="text"
+                  fragid="search=/…/,/…/trim"/></text>
+<text x="…;trim,…;trim"><xi:include href="test.txt" parse="text"
+                  fragid="search=/…/trim,/…/trim"/></text>
+<text x="…;trim,…;trim;strip"><xi:include href="test.txt" parse="text"
+                  fragid="search=/…/trim,/…/trim;strip"/></text>
+</doc>
