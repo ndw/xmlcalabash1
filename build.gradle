@@ -1,5 +1,6 @@
 buildscript {
   repositories {
+    mavenLocal()
     mavenCentral()
   }
 
@@ -13,9 +14,10 @@ plugins {
   id "java"
   id "osgi"
   id "maven"
+  //id "maven-publish"
   id "signing"
   id "com.bmuschko.izpack" version "2.0"
-  id "de.undercouch.download" version "2.0.0"
+  id "de.undercouch.download" version "3.4.3"
 }
 
 import de.undercouch.gradle.tasks.download.Download
@@ -27,8 +29,6 @@ repositories {
   mavenLocal()
   mavenCentral()
   maven { url "https://maven.restlet.com" }
-  maven { url "https://developer.marklogic.com/maven2" }
-  maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
 }
 
 configurations {
@@ -38,10 +38,8 @@ configurations {
 }
 
 configurations.all {
-  resolutionStrategy.eachDependency { DependencyResolveDetails details ->
-    if (details.requested.name == 'saxon' && details.requested.version == '8.7') {
-      details.useTarget "net.sf.saxon:Saxon-HE:" + saxonVersion
-    }
+  resolutionStrategy {
+    force 'xml-apis:xml-apis:1.4.01'
   }
 }
 
@@ -51,7 +49,7 @@ dependencies {
   compile fileTree(dir: 'lib').include("*.jar")
   compile (
     [group: 'com.nwalsh', name: 'nwalsh-annotations', version: '1.0.0'],
-    [group: 'com.thaiopensource', name: 'jing', version: '20091111', transitive: false],
+    [group: 'org.relaxng', name: 'jing', version: '20181204' ],
     [group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'],
     [group: 'junit', name: 'junit', version: '4.12'],
     [group: 'net.java.dev.msv', name: 'msv-core', version: '2013.6.1'],
@@ -88,7 +86,7 @@ dependencies {
     [group: 'com.xmlcalabash', name: 'xmlcalabash1-print', version: '1.1.2'],
     [group: 'com.xmlcalabash', name: 'xmlcalabash1-rdf', version: '1.1.2'],
     [group: 'com.xmlcalabash', name: 'xmlcalabash1-sendmail', version: '1.1.2'],
-    [group: 'com.xmlcalabash', name: 'xmlcalabash1-xcc', version: '1.1.2'],
+    [group: 'com.xmlcalabash', name: 'xmlcalabash1-xcc', version: '1.1.4'],
     [group: 'com.xmlcalabash', name: 'xmlcalabash1-xmlunit', version: '1.1.2']
   )
 }
@@ -435,6 +433,19 @@ def mavenPom = {
     }
   }
 }
+
+/*
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        mavenLocal()
+    }
+}
+*/
 
 install {
   repositories {
