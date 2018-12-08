@@ -19,26 +19,7 @@
 
 package com.xmlcalabash.library;
 
-import java.util.Stack;
-import java.util.Hashtable;
-import java.util.Vector;
-import java.util.HashSet;
-import java.net.URI;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.regex.Pattern;
-
 import com.xmlcalabash.core.XMLCalabash;
-import com.xmlcalabash.util.*;
-import net.sf.saxon.s9api.Axis;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmNodeKind;
-import net.sf.saxon.s9api.XdmSequenceIterator;
-
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
@@ -48,6 +29,30 @@ import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.util.AxisNodes;
+import com.xmlcalabash.util.HttpUtils;
+import com.xmlcalabash.util.MessageFormatter;
+import com.xmlcalabash.util.ProcessMatch;
+import com.xmlcalabash.util.ProcessMatchingNodes;
+import com.xmlcalabash.util.TreeWriter;
+import com.xmlcalabash.util.XPointer;
+import net.sf.saxon.s9api.Axis;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmNodeKind;
+import net.sf.saxon.s9api.XdmSequenceIterator;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Stack;
+import java.util.Vector;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -298,40 +303,45 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                     logger.trace(MessageFormatter.nodeMessage(node, "XInclude parse: " + href));
                 }
 
-                Vector<XdmNode> nodes = null;
-                if (xpointer == null) {
-                    nodes = new Vector<XdmNode> ();
+                // Expand the subtree before we attempt to apply an xpointer expression to it
+                TreeWriter subtree = new TreeWriter(runtime);
+                subtree.startDocument(subdoc.getBaseURI());
+                XdmSequenceIterator iter = subdoc.axisIterator(Axis.CHILD);
+                while (iter.hasNext()) {
+                    XdmNode child = (XdmNode) iter.next();
 
-                    // Put all the children of the document in there, so that we can add xml:base to the root(s)...
-                    XdmSequenceIterator iter = subdoc.axisIterator(Axis.CHILD);
-                    while (iter.hasNext()) {
-                        XdmNode child = (XdmNode) iter.next();
-                        nodes.add(child);
+                    if ((fixupBase || fixupLang || copyAttributes) && child.getNodeKind() == XdmNodeKind.ELEMENT) {
+                        Fixup fixup = new Fixup(runtime,node);
+                        child = fixup.fixup(child);
                     }
+
+                    if (child.getNodeKind() == XdmNodeKind.ELEMENT || child.getNodeKind() == XdmNodeKind.DOCUMENT) {
+                        inside.push(iuri);
+                        XdmNode ex = expandXIncludes(child);
+                        subtree.addSubtree(ex);
+                        inside.pop();
+                    } else {
+                        subtree.addSubtree(child);
+                    }
+                }
+                subtree.endDocument();
+
+                if (xpointer == null) {
+                    matcher.addSubtree(subtree.getResult());
                 } else {
                     Hashtable<String,String> nsBindings = xpointer.xpathNamespaces();
-                    nodes = xpointer.selectNodes(runtime,subdoc);
+                    Vector<XdmNode> nodes = xpointer.selectNodes(runtime,subtree.getResult());
                     if (nodes == null) {
                         logger.trace(MessageFormatter.nodeMessage(node, "XInclude parse failed: " + href));
                         fallback(node, href);
-                        setXmlId.pop();
-                        return false;
-                    }
-                }
-
-                for (XdmNode snode : nodes) {
-                    if ((fixupBase || fixupLang || copyAttributes) && snode.getNodeKind() == XdmNodeKind.ELEMENT) {
-                        Fixup fixup = new Fixup(runtime,node);
-                        snode = fixup.fixup(snode);
-                    }
-
-                    if (snode.getNodeKind() == XdmNodeKind.ELEMENT || snode.getNodeKind() == XdmNodeKind.DOCUMENT) {
-                        inside.push(iuri);
-                        XdmNode ex = expandXIncludes(snode);
-                        matcher.addSubtree(ex);
-                        inside.pop();
                     } else {
-                        matcher.addSubtree(snode);
+                        for (XdmNode child : nodes) {
+                            if ((fixupBase || fixupLang || copyAttributes) && child.getNodeKind() == XdmNodeKind.ELEMENT) {
+                                Fixup fixup = new Fixup(runtime,node);
+                                child = fixup.fixup(child);
+                            }
+                            matcher.addSubtree(child);
+                        }
                     }
                 }
 
