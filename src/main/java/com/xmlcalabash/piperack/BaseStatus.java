@@ -8,7 +8,6 @@ import net.sf.saxon.s9api.QName;
 import net.sf.saxon.trans.XPathException;
 import org.restlet.Request;
 import org.restlet.Response;
-import org.restlet.data.*;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
 import org.restlet.service.StatusService;
