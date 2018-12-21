@@ -53,6 +53,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.AuthCache;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.AuthSchemes;
@@ -61,21 +62,22 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
+import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.auth.BasicScheme;
+import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.message.BasicHeader;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpCoreContext;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONTokener;
@@ -129,6 +131,7 @@ public class HttpRequest extends DefaultStep {
     private static final int bufSize = 912 * 8; // A multiple of 3, 4, and 75 for base64 line breaking
 
     private boolean detailed = false;
+    private boolean sendAuthorization = false;
     private URI requestURI = null;
     private Vector<Header> headers = new Vector<Header> ();
     private String overrideContentType = null;
@@ -193,6 +196,7 @@ public class HttpRequest extends DefaultStep {
         boolean statusOnly = "true".equals(start.getAttributeValue(_status_only));
         String method = start.getAttributeValue(_method);
         detailed = "true".equals(start.getAttributeValue(_detailed));
+        sendAuthorization = "true".equals(start.getAttributeValue(_send_authorization));
         overrideContentType = start.getAttributeValue(_override_content_type);
 
         if (method == null) {
@@ -218,7 +222,7 @@ public class HttpRequest extends DefaultStep {
         RequestConfig.Builder rqbuilder = RequestConfig.custom();
         rqbuilder.setCookieSpec(CookieSpecs.DEFAULT);
 
-        HttpContext localContext = new BasicHttpContext();
+        HttpClientContext localContext = HttpClientContext.create();
 
         // What about cookies
         String saveCookieKey = step.getExtensionAttribute(cx_save_cookies);
@@ -257,9 +261,25 @@ public class HttpRequest extends DefaultStep {
             String pass = start.getAttributeValue(_password);
             String meth = start.getAttributeValue(_auth_method);
 
+            String host = requestURI.getHost();
+            int port = requestURI.getPort();
+            AuthScope scope = new AuthScope(host,port); // Or this? new AuthScope(null, AuthScope.ANY_PORT)
+            BasicCredentialsProvider bCredsProvider = new BasicCredentialsProvider();
+            bCredsProvider.setCredentials(scope, new UsernamePasswordCredentials(user, pass));
+
             List<String> authpref;
             if ("basic".equalsIgnoreCase(meth)) {
                 authpref = Collections.singletonList(AuthSchemes.BASIC);
+
+                if (sendAuthorization) {
+                    // See https://stackoverflow.com/questions/20914311/httpclientbuilder-basic-auth
+                    AuthCache authCache = new BasicAuthCache();
+                    BasicScheme basicAuth = new BasicScheme();
+                    authCache.put(new HttpHost(host, port), basicAuth);
+
+                    localContext.setCredentialsProvider(bCredsProvider);
+                    localContext.setAuthCache(authCache);
+                }
             } else if ("digest".equalsIgnoreCase(meth)) {
                 authpref = Collections.singletonList(AuthSchemes.DIGEST);
             } else {
@@ -267,14 +287,6 @@ public class HttpRequest extends DefaultStep {
             }
 
             rqbuilder.setProxyPreferredAuthSchemes(authpref);
-
-            String host = requestURI.getHost();
-            int port = requestURI.getPort();
-            AuthScope scope = new AuthScope(host,port);
-            // Or this? new AuthScope(null, AuthScope.ANY_PORT)
-
-            BasicCredentialsProvider bCredsProvider = new BasicCredentialsProvider();
-            bCredsProvider.setCredentials(scope, new UsernamePasswordCredentials(user, pass));
             builder.setDefaultCredentialsProvider(bCredsProvider);
         }
 
