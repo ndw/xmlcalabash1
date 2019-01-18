@@ -97,8 +97,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -536,19 +534,7 @@ public class XProcRuntime {
 
     public String getEpisode() {
         if (episode == null) {
-            MessageDigest digest = null;
-            GregorianCalendar calendar = new GregorianCalendar();
-            try {
-                digest = MessageDigest.getInstance("MD5");
-            } catch (NoSuchAlgorithmException nsae) {
-                throw XProcException.dynamicError(36);
-            }
-
-            byte[] hash = digest.digest(calendar.toString().getBytes());
-            episode = "CB";
-            for (byte b : hash) {
-                episode = episode + Integer.toHexString(b & 0xff);
-            }
+            episode = "CB-" + java.util.UUID.randomUUID().toString();
         }
 
         return episode;
