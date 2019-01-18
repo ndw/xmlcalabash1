@@ -71,6 +71,7 @@ dependencies {
     [group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.10'],
     [group: 'org.slf4j', name: 'slf4j-api', version: '1.7.10'],
     [group: 'org.xmlresolver', name: 'xmlresolver', version: '0.13.1'],
+    [group: 'com.atlassian.commonmark', name: 'commonmark', version: '0.12.1']
   )
 
   reportruntime (
