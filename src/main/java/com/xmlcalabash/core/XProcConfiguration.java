@@ -714,26 +714,41 @@ public class XProcConfiguration {
 
     private void parseEntityResolver(XdmNode node) {
         String value = node.getAttributeValue(_class_name);
+        if (value == null) {
+            throw new XProcException(node, "Missing required attribute: class-name");
+        }
         entityResolver = value;
     }
 
     private void parseExtensionFunction(XdmNode node) {
         String value = node.getAttributeValue(_class_name);
+        if (value == null) {
+            throw new XProcException(node, "Missing required attribute: class-name");
+        }
         extensionFunctions.put(value, null);
     }
 
     private void parseFoProcessor(XdmNode node) {
         String value = node.getAttributeValue(_class_name);
+        if (value == null) {
+            throw new XProcException(node, "Missing required attribute: class-name");
+        }
         foProcessor = value;
     }
 
     private void parseCssProcessor(XdmNode node) {
         String value = node.getAttributeValue(_class_name);
+        if (value == null) {
+            throw new XProcException(node, "Missing required attribute: class-name");
+        }
         cssProcessor = value;
     }
 
     private void parseXProcConfigurer(XdmNode node) {
         String value = node.getAttributeValue(_class_name);
+        if (value == null) {
+            throw new XProcException(node, "Missing required attribute: class-name");
+        }
         xprocConfigurer = value;
     }
 
