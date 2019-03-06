@@ -47,7 +47,7 @@
    <p:input port="pipeline"/>
    <p:input port="source" sequence="true"/>
    <p:input port="options"/>
-   <p:output port="result"/>
+   <p:output port="result" sequence="true"/>
    <p:option name="step" cx:type="xsd:QName"/>
    <p:option name="detailed" cx:type="xsd:boolean"/>
 </p:declare-step>
