@@ -220,8 +220,8 @@ public class XProcConfiguration {
         for (String path : pathElements) {
             // Make the path absolute wrt the cwd so that it can be opened later regardless of context
             path = new File(path).getAbsolutePath();
-            String jarFileURL = URLDecoder.decode(new File(path).toURI().toString().replace("+", "%2B"));
             try {
+                String jarFileURL = URLDecoder.decode(new File(path).toURI().toString().replace("+", "%2B"), "UTF-8");
                 JarFile jar = new JarFile(path);
                 ZipEntry catalog = jar.getEntry("catalog.xml");
                 if (catalog != null) {
