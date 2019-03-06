@@ -231,7 +231,7 @@ public class XProcConfiguration {
                 catalog = jar.getEntry("META-INF/catalog.xml");
                 if (catalog != null) {
                     catalogs.add("jar:" + jarFileURL + "!/META-INF/catalog.xml");
-                    logger.debug("Using catalog: jar:file://" + jarFileURL + "!/META-INF/catalog.xml");
+                    logger.debug("Using catalog: jar:" + jarFileURL + "!/META-INF/catalog.xml");
                 }
             } catch (IOException e) {
                 // If it's not a jar file, maybe it's a directory with a catalog
