@@ -308,11 +308,12 @@ public class XProcConfiguration {
     }
 
     private void findExtensionFunctions() {
+        logger.debug("XML Calabash searching for Saxon extension functions on the class path");
         Iterable<Class<?>> classes = ClassIndex.getAnnotated(SaxonExtensionFunction.class);
         for (Class<?> klass : classes) {
             String name = klass.getCanonicalName();
             SaxonExtensionFunction annotation = klass.getAnnotation(SaxonExtensionFunction.class);
-            logger.trace("Found Saxon extension function: " + klass.getCanonicalName());
+            logger.debug("Found Saxon extension function: " + klass.getCanonicalName());
             if (extensionFunctions.containsKey(name)) {
                 logger.debug("Duplicate saxon extension function class: " + name);
             }
