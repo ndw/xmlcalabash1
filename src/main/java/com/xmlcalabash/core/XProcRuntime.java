@@ -72,6 +72,7 @@ import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XsltCompiler;
 import net.sf.saxon.s9api.XsltExecutable;
 import net.sf.saxon.s9api.XsltTransformer;
+import net.sf.saxon.serialize.SerializationProperties;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.utils.HttpClientUtils;
@@ -150,6 +151,7 @@ public class XProcRuntime {
     private String htmlParser = null;
     private Vector<XProcExtensionFunctionDefinition> exFuncs = new Vector<XProcExtensionFunctionDefinition>();
     private Vector<XProcSystemPropertySet> systemPropertySets = new Vector<XProcSystemPropertySet>();
+    private SerializationProperties defaultSerializationProperties = new SerializationProperties();
 
     private Output profile = null;
     private Hashtable<XStep,Calendar> profileHash = null;
@@ -363,6 +365,8 @@ public class XProcRuntime {
         }
         exFuncs = null;
     }
+
+    public SerializationProperties getDefaultSerializationProperties() { return defaultSerializationProperties; }
 
     public XProcConfigurer getConfigurer() {
         return configurer;

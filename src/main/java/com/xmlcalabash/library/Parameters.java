@@ -20,6 +20,7 @@
 package com.xmlcalabash.library;
 
 import java.util.Hashtable;
+import java.util.Iterator;
 
 import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcConstants;
@@ -111,9 +112,9 @@ public class Parameters extends DefaultStep {
                     treeWriter.startContent();
                 } else {
                     treeWriter.startContent();
-                    XdmSequenceIterator iter = xdmvalue.iterator();
+                    Iterator iter = xdmvalue.iterator();
                     while (iter.hasNext()) {
-                        XdmItem next = iter.next();
+                        XdmItem next = (XdmItem) iter.next();
                         QName type = next.isAtomicValue() ? ((XdmAtomicValue) next).getPrimitiveTypeName() : null;
 
                         treeWriter.addStartElement(cx_item);

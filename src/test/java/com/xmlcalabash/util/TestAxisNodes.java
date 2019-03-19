@@ -33,6 +33,7 @@ public class TestAxisNodes {
 
         DocumentBuilder builder = processor.newDocumentBuilder();
         root = S9apiUtils.getDocumentElement(builder.build(new SAXSource(new InputSource(new StringReader(xml)))));
+        System.out.println(root);
     }
 
     @Test
@@ -48,7 +49,7 @@ public class TestAxisNodes {
 
         n = an.iterator().next();
         assertEquals(n.getNodeKind(), XdmNodeKind.TEXT);
-        assertEquals(n.toString(), " ");
+        assertEquals(n.getStringValue(), " ");
 
         n = an.iterator().next();
         assertEquals(n.getNodeKind(), XdmNodeKind.ELEMENT);
@@ -56,7 +57,7 @@ public class TestAxisNodes {
 
         n = an.iterator().next();
         assertEquals(n.getNodeKind(), XdmNodeKind.TEXT);
-        assertEquals(n.toString(), " some text ");
+        assertEquals(n.getStringValue(), " some text ");
 
         n = an.iterator().next();
         assertEquals(n.getNodeKind(), XdmNodeKind.ELEMENT);
@@ -86,7 +87,7 @@ public class TestAxisNodes {
 
         n = an.iterator().next();
         assertEquals(n.getNodeKind(), XdmNodeKind.TEXT);
-        assertEquals(n.toString(), " some text ");
+        assertEquals(" some text ", n.toString());
 
         n = an.iterator().next();
         assertEquals(n.getNodeKind(), XdmNodeKind.ELEMENT);

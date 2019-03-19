@@ -12,6 +12,7 @@ import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.tree.iter.SingletonIterator;
+import net.sf.saxon.value.AtomicValue;
 import net.sf.saxon.value.BooleanValue;
 import net.sf.saxon.value.SequenceType;
 import net.sf.saxon.s9api.QName;
@@ -92,7 +93,7 @@ public class ValueAvailable extends XProcExtensionFunctionDefinition {
             staticContext = context;
         }
 
-        public Sequence call(XPathContext xPathContext, Sequence[] sequences) throws XPathException {
+        public AtomicValue call(XPathContext xPathContext, Sequence[] sequences) throws XPathException {
             StructuredQName sVarName = null;
 
             XProcRuntime runtime = registry.getRuntime(xdef);

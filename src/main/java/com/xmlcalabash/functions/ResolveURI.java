@@ -13,6 +13,7 @@ import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.tree.iter.SingletonIterator;
 import net.sf.saxon.tree.tiny.TinyDocumentImpl;
 import net.sf.saxon.value.AnyURIValue;
+import net.sf.saxon.value.AtomicValue;
 import net.sf.saxon.value.SequenceType;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcRuntime;
@@ -89,7 +90,7 @@ public class ResolveURI extends XProcExtensionFunctionDefinition {
             xdef = def;
         }
 
-        public Sequence call(XPathContext xPathContext, Sequence[] sequences) throws XPathException {
+        public AtomicValue call(XPathContext xPathContext, Sequence[] sequences) throws XPathException {
             String relativeURI = sequences[0].head().getStringValue();
 
             XProcRuntime runtime = registry.getRuntime(xdef);

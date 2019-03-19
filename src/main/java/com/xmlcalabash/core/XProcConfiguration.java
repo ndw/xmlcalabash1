@@ -14,6 +14,7 @@ import com.xmlcalabash.util.Output;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.URIUtils;
 import net.sf.saxon.Version;
+import net.sf.saxon.lib.Feature;
 import net.sf.saxon.om.NoElementsSpaceStrippingRule;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.DocumentBuilder;
@@ -127,6 +128,118 @@ public class XProcConfiguration {
     private Processor cfgProcessor = null;
     private boolean firstInput = false;
     private boolean firstOutput = false;
+
+    private static HashMap<String,Feature<Boolean>> bFeatureMap = new HashMap<String,Feature<Boolean>> ();
+    private static HashMap<String,Feature<Integer>> iFeatureMap = new HashMap<String,Feature<Integer>> ();
+    private static HashMap<String,Feature<String>> sFeatureMap = new HashMap<String,Feature<String>> ();
+    static {
+        bFeatureMap.put("http://saxon.sf.net/feature/allow-external-functions", Feature.ALLOW_EXTERNAL_FUNCTIONS);
+        bFeatureMap.put("http://saxon.sf.net/feature/allow-multithreading", Feature.ALLOW_MULTITHREADING);
+        bFeatureMap.put("http://saxon.sf.net/feature/allow-old-java-uri-format", Feature.ALLOW_OLD_JAVA_URI_FORMAT);
+        bFeatureMap.put("http://saxon.sf.net/feature/allowSyntaxExtensions", Feature.ALLOW_SYNTAX_EXTENSIONS);
+        bFeatureMap.put("http://saxon.sf.net/feature/assertionsCanSeeComments", Feature.ASSERTIONS_CAN_SEE_COMMENTS);
+        sFeatureMap.put("http://saxon.sf.net/feature/collation-uri-resolver-class", Feature.COLLATION_URI_RESOLVER_CLASS);
+        sFeatureMap.put("http://saxon.sf.net/feature/collection-finder-class", Feature.COLLECTION_FINDER_CLASS);
+        sFeatureMap.put("http://saxon.sf.net/feature/collection-uri-resolver-class", Feature.COLLECTION_URI_RESOLVER_CLASS);
+        bFeatureMap.put("http://saxon.sf.net/feature/compile-with-tracing", Feature.COMPILE_WITH_TRACING);
+        sFeatureMap.put("http://saxon.sf.net/feature/configuration-file", Feature.CONFIGURATION_FILE);
+        bFeatureMap.put("http://saxon.sf.net/feature/debugByteCode", Feature.DEBUG_BYTE_CODE);
+        sFeatureMap.put("http://saxon.sf.net/feature/debugByteCodeDir", Feature.DEBUG_BYTE_CODE_DIR);
+        sFeatureMap.put("http://saxon.sf.net/feature/defaultCollation", Feature.DEFAULT_COLLATION);
+        sFeatureMap.put("http://saxon.sf.net/feature/defaultCollection", Feature.DEFAULT_COLLECTION);
+        sFeatureMap.put("http://saxon.sf.net/feature/defaultCountry", Feature.DEFAULT_COUNTRY);
+        sFeatureMap.put("http://saxon.sf.net/feature/defaultLanguage", Feature.DEFAULT_LANGUAGE);
+        sFeatureMap.put("http://saxon.sf.net/feature/defaultRegexEngine", Feature.DEFAULT_REGEX_ENGINE);
+        bFeatureMap.put("http://saxon.sf.net/feature/disableXslEvaluate", Feature.DISABLE_XSL_EVALUATE);
+        bFeatureMap.put("http://saxon.sf.net/feature/displayByteCode", Feature.DISPLAY_BYTE_CODE);
+        bFeatureMap.put("http://saxon.sf.net/feature/validation", Feature.DTD_VALIDATION);
+        bFeatureMap.put("http://saxon.sf.net/feature/dtd-validation-recoverable", Feature.DTD_VALIDATION_RECOVERABLE);
+        bFeatureMap.put("http://saxon.sf.net/feature/eagerEvaluation", Feature.EAGER_EVALUATION);
+        sFeatureMap.put("http://saxon.sf.net/feature/entityResolverClass", Feature.ENTITY_RESOLVER_CLASS);
+        sFeatureMap.put("http://saxon.sf.net/feature/environmentVariableResolverClass", Feature.ENVIRONMENT_VARIABLE_RESOLVER_CLASS);
+        sFeatureMap.put("http://saxon.sf.net/feature/errorListenerClass", Feature.ERROR_LISTENER_CLASS);
+        bFeatureMap.put("http://saxon.sf.net/feature/expandAttributeDefaults", Feature.EXPAND_ATTRIBUTE_DEFAULTS);
+        bFeatureMap.put("http://saxon.sf.net/feature/expathFileDeleteTemporaryFiles", Feature.EXPATH_FILE_DELETE_TEMPORARY_FILES);
+        bFeatureMap.put("http://saxon.sf.net/feature/generateByteCode", Feature.GENERATE_BYTE_CODE);
+        bFeatureMap.put("http://saxon.sf.net/feature/ignoreSAXSourceParser", Feature.IGNORE_SAX_SOURCE_PARSER);
+        bFeatureMap.put("http://saxon.sf.net/feature/implicitSchemaImports", Feature.IMPLICIT_SCHEMA_IMPORTS);
+        bFeatureMap.put("http://saxon.sf.net/feature/lazyConstructionMode", Feature.LAZY_CONSTRUCTION_MODE);
+        sFeatureMap.put("http://saxon.sf.net/feature/licenseFileLocation", Feature.LICENSE_FILE_LOCATION);
+        bFeatureMap.put("http://saxon.sf.net/feature/linenumbering", Feature.LINE_NUMBERING);
+        bFeatureMap.put("http://saxon.sf.net/feature/markDefaultedAttributes", Feature.MARK_DEFAULTED_ATTRIBUTES);
+        iFeatureMap.put("http://saxon.sf.net/feature/maxCompiledClasses", Feature.MAX_COMPILED_CLASSES);
+        sFeatureMap.put("http://saxon.sf.net/feature/messageEmitterClass", Feature.MESSAGE_EMITTER_CLASS);
+        sFeatureMap.put("http://saxon.sf.net/feature/moduleURIResolverClass", Feature.MODULE_URI_RESOLVER_CLASS);
+        bFeatureMap.put("http://saxon.sf.net/feature/monitorHotSpotByteCode", Feature.MONITOR_HOT_SPOT_BYTE_CODE);
+        bFeatureMap.put("http://saxon.sf.net/feature/multipleSchemaImports", Feature.MULTIPLE_SCHEMA_IMPORTS);
+        sFeatureMap.put("http://saxon.sf.net/feature/outputURIResolverClass", Feature.OUTPUT_URI_RESOLVER_CLASS);
+        bFeatureMap.put("http://saxon.sf.net/feature/preEvaluateDocFunction", Feature.PRE_EVALUATE_DOC_FUNCTION);
+        bFeatureMap.put("http://saxon.sf.net/feature/preferJaxpParser", Feature.PREFER_JAXP_PARSER);
+        bFeatureMap.put("http://saxon.sf.net/feature/recognize-uri-query-parameters", Feature.RECOGNIZE_URI_QUERY_PARAMETERS);
+        iFeatureMap.put("http://saxon.sf.net/feature/recoveryPolicy", Feature.RECOVERY_POLICY);
+        sFeatureMap.put("http://saxon.sf.net/feature/recoveryPolicyName", Feature.RECOVERY_POLICY_NAME);
+        iFeatureMap.put("http://saxon.sf.net/feature/resultDocumentThreads", Feature.RESULT_DOCUMENT_THREADS);
+        bFeatureMap.put("http://saxon.sf.net/feature/retain-dtd-attribute-types", Feature.RETAIN_DTD_ATTRIBUTE_TYPES);
+        sFeatureMap.put("http://saxon.sf.net/feature/schemaURIResolverClass", Feature.SCHEMA_URI_RESOLVER_CLASS);
+        iFeatureMap.put("http://saxon.sf.net/feature/schema-validation", Feature.SCHEMA_VALIDATION);
+        sFeatureMap.put("http://saxon.sf.net/feature/schema-validation-mode", Feature.SCHEMA_VALIDATION_MODE);
+        sFeatureMap.put("http://saxon.sf.net/feature/serializerFactoryClass", Feature.SERIALIZER_FACTORY_CLASS);
+        sFeatureMap.put("http://saxon.sf.net/feature/sourceParserClass", Feature.SOURCE_PARSER_CLASS);
+        sFeatureMap.put("http://saxon.sf.net/feature/sourceResolverClass", Feature.SOURCE_RESOLVER_CLASS);
+        bFeatureMap.put("http://saxon.sf.net/feature/stableCollectionUri", Feature.STABLE_COLLECTION_URI);
+        bFeatureMap.put("http://saxon.sf.net/feature/stableUnparsedText", Feature.STABLE_UNPARSED_TEXT);
+        sFeatureMap.put("http://saxon.sf.net/feature/standardErrorOutputFile", Feature.STANDARD_ERROR_OUTPUT_FILE);
+        sFeatureMap.put("http://saxon.sf.net/feature/streamability", Feature.STREAMABILITY);
+        bFeatureMap.put("http://saxon.sf.net/feature/strictStreamability", Feature.STRICT_STREAMABILITY);
+        bFeatureMap.put("http://saxon.sf.net/feature/streamingFallback", Feature.STREAMING_FALLBACK);
+        sFeatureMap.put("http://saxon.sf.net/feature/strip-whitespace", Feature.STRIP_WHITESPACE);
+        sFeatureMap.put("http://saxon.sf.net/feature/styleParserClass", Feature.STYLE_PARSER_CLASS);
+        bFeatureMap.put("http://saxon.sf.net/feature/suppressEvaluationExpiryWarning", Feature.SUPPRESS_EVALUATION_EXPIRY_WARNING);
+        bFeatureMap.put("http://saxon.sf.net/feature/suppressXPathWarnings", Feature.SUPPRESS_XPATH_WARNINGS);
+        bFeatureMap.put("http://saxon.sf.net/feature/suppressXsltNamespaceCheck", Feature.SUPPRESS_XSLT_NAMESPACE_CHECK);
+        iFeatureMap.put("http://saxon.sf.net/feature/thresholdForCompilingTypes", Feature.THRESHOLD_FOR_COMPILING_TYPES);
+        bFeatureMap.put("http://saxon.sf.net/feature/timing", Feature.TIMING);
+        bFeatureMap.put("http://saxon.sf.net/feature/trace-external-functions", Feature.TRACE_EXTERNAL_FUNCTIONS);
+        sFeatureMap.put("http://saxon.sf.net/feature/traceListenerClass", Feature.TRACE_LISTENER_CLASS);
+        sFeatureMap.put("http://saxon.sf.net/feature/traceListenerOutputFile", Feature.TRACE_LISTENER_OUTPUT_FILE);
+        bFeatureMap.put("http://saxon.sf.net/feature/trace-optimizer-decisions", Feature.TRACE_OPTIMIZER_DECISIONS);
+        iFeatureMap.put("http://saxon.sf.net/feature/treeModel", Feature.TREE_MODEL);
+        sFeatureMap.put("http://saxon.sf.net/feature/treeModelName", Feature.TREE_MODEL_NAME);
+        sFeatureMap.put("http://saxon.sf.net/feature/unparsedTextURIResolverClass", Feature.UNPARSED_TEXT_URI_RESOLVER_CLASS);
+        sFeatureMap.put("http://saxon.sf.net/feature/uriResolverClass", Feature.URI_RESOLVER_CLASS);
+        bFeatureMap.put("http://saxon.sf.net/feature/use-pi-disable-output-escaping", Feature.USE_PI_DISABLE_OUTPUT_ESCAPING);
+        bFeatureMap.put("http://saxon.sf.net/feature/use-typed-value-cache", Feature.USE_TYPED_VALUE_CACHE);
+        bFeatureMap.put("http://saxon.sf.net/feature/useXsiSchemaLocation", Feature.USE_XSI_SCHEMA_LOCATION);
+        bFeatureMap.put("http://saxon.sf.net/feature/validation-comments", Feature.VALIDATION_COMMENTS);
+        bFeatureMap.put("http://saxon.sf.net/feature/validation-warnings", Feature.VALIDATION_WARNINGS);
+        bFeatureMap.put("http://saxon.sf.net/feature/version-warning", Feature.VERSION_WARNING);
+        bFeatureMap.put("http://saxon.sf.net/feature/xinclude-aware", Feature.XINCLUDE);
+        sFeatureMap.put("http://saxon.sf.net/feature/xml-version", Feature.XML_VERSION);
+        bFeatureMap.put("http://saxon.sf.net/feature/parserFeature?uri=", Feature.XML_PARSER_FEATURE);
+        bFeatureMap.put("http://saxon.sf.net/feature/parserProperty?uri=", Feature.XML_PARSER_PROPERTY);
+        bFeatureMap.put("http://saxon.sf.net/feature/xqueryAllowUpdate", Feature.XQUERY_ALLOW_UPDATE);
+        sFeatureMap.put("http://saxon.sf.net/feature/xqueryConstructionMode", Feature.XQUERY_CONSTRUCTION_MODE);
+        bFeatureMap.put("http://saxon.sf.net/feature/xqueryEmptyLeast", Feature.XQUERY_EMPTY_LEAST);
+        bFeatureMap.put("http://saxon.sf.net/feature/xqueryInheritNamespaces", Feature.XQUERY_INHERIT_NAMESPACES);
+        bFeatureMap.put("http://saxon.sf.net/feature/xqueryMultipleModuleImports", Feature.XQUERY_MULTIPLE_MODULE_IMPORTS);
+        bFeatureMap.put("http://saxon.sf.net/feature/xqueryPreserveBoundarySpace", Feature.XQUERY_PRESERVE_BOUNDARY_SPACE);
+        bFeatureMap.put("http://saxon.sf.net/feature/xqueryPreserveNamespaces", Feature.XQUERY_PRESERVE_NAMESPACES);
+        sFeatureMap.put("http://saxon.sf.net/feature/xqueryRequiredContextItemType", Feature.XQUERY_REQUIRED_CONTEXT_ITEM_TYPE);
+        bFeatureMap.put("http://saxon.sf.net/feature/xquerySchemaAware", Feature.XQUERY_SCHEMA_AWARE);
+        sFeatureMap.put("http://saxon.sf.net/feature/xqueryStaticErrorListenerClass", Feature.XQUERY_STATIC_ERROR_LISTENER_CLASS);
+        sFeatureMap.put("http://saxon.sf.net/feature/xqueryVersion", Feature.XQUERY_VERSION);
+        sFeatureMap.put("http://saxon.sf.net/feature/xsd-version", Feature.XSD_VERSION);
+        bFeatureMap.put("http://saxon.sf.net/feature/enableAssertions", Feature.XSLT_ENABLE_ASSERTIONS);
+        sFeatureMap.put("http://saxon.sf.net/feature/initialMode", Feature.XSLT_INITIAL_MODE);
+        sFeatureMap.put("http://saxon.sf.net/feature/initialTemplate", Feature.XSLT_INITIAL_TEMPLATE);
+        bFeatureMap.put("http://saxon.sf.net/feature/xsltSchemaAware", Feature.XSLT_SCHEMA_AWARE);
+        sFeatureMap.put("http://saxon.sf.net/feature/stylesheetErrorListener", Feature.XSLT_STATIC_ERROR_LISTENER_CLASS);
+        sFeatureMap.put("http://saxon.sf.net/feature/stylesheetURIResolver", Feature.XSLT_STATIC_URI_RESOLVER_CLASS);
+        sFeatureMap.put("http://saxon.sf.net/feature/xsltVersion", Feature.XSLT_VERSION);
+        iFeatureMap.put("http://saxon.sf.net/feature/regexBacktrackingLimit", Feature.REGEX_BACKTRACKING_LIMIT);
+        iFeatureMap.put("http://saxon.sf.net/feature/xpathVersionForXsd", Feature.XPATH_VERSION_FOR_XSD);
+        iFeatureMap.put("http://saxon.sf.net/feature/xpathVersionForXslt", Feature.XPATH_VERSION_FOR_XSLT);
+    }
 
     public XProcConfiguration() {
         logger = LoggerFactory.getLogger(this.getClass());
@@ -811,24 +924,35 @@ public class XProcConfiguration {
         String value = node.getAttributeValue(_value);
         String key = node.getAttributeValue(_key);
         String type = node.getAttributeValue(_type);
-        Object valueObj = null;
         if (key == null || value == null) {
             throw new XProcException("Configuration option 'saxon-configuration-property' cannot have a null key or value");
         }
 
-        if ("boolean".equals(type)) {
-            valueObj = "true".equals(value);
-        } else if ("integer".equals(type)) {
-            valueObj = Integer.parseInt(value);
+        if (bFeatureMap.containsKey(key) || iFeatureMap.containsKey(key) || sFeatureMap.containsKey(key)) {
+            if (type.equals("boolean")) {
+                if (bFeatureMap.containsKey(key)) {
+                    Feature<Boolean> feature = bFeatureMap.get(key);
+                    cfgProcessor.setConfigurationProperty(feature, "true".equals(value));
+                } else {
+                    throw new XProcException("Saxon feature is not boolean: " + key);
+                }
+            } else if (type.equals("integer")) {
+                if (iFeatureMap.containsKey(key)) {
+                    Feature<Integer> feature = iFeatureMap.get(key);
+                    cfgProcessor.setConfigurationProperty(feature, Integer.parseInt(value));
+                } else {
+                    throw new XProcException("Saxon feature is not an integer: " + key);
+                }
+            } else {
+                if (sFeatureMap.containsKey(key)) {
+                    Feature<String> feature = sFeatureMap.get(key);
+                    cfgProcessor.setConfigurationProperty(feature, value);
+                } else {
+                    throw new XProcException("Saxon feature is not a string: " + key);
+                }
+            }
         } else {
-            valueObj = value;
-        }
-
-        try {
-            setSaxonProperties.add(key);
-            cfgProcessor.setConfigurationProperty(key, valueObj);
-        } catch (Exception e) {
-            throw new XProcException(e);
+            throw new XProcException("Unknown Saxon feature: " + key);
         }
     }
 

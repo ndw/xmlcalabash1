@@ -8,6 +8,7 @@ import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.om.Sequence;
 import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.value.AtomicValue;
 import net.sf.saxon.value.SequenceType;
 import net.sf.saxon.value.BooleanValue;
 import net.sf.saxon.value.DoubleValue;
@@ -78,7 +79,7 @@ public class VersionAvailable extends XProcExtensionFunctionDefinition {
             xdef = def;
         }
 
-        public Sequence call(XPathContext xPathContext, Sequence[] sequences) throws XPathException {
+        public AtomicValue call(XPathContext xPathContext, Sequence[] sequences) throws XPathException {
             XProcRuntime runtime = registry.getRuntime(xdef);
             XStep step = runtime.getXProcData().getStep();
             // FIXME: this can't be the best way to do this...

@@ -14,6 +14,7 @@ import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.tree.iter.SingletonIterator;
+import net.sf.saxon.value.AtomicValue;
 import net.sf.saxon.value.StringValue;
 import net.sf.saxon.value.SequenceType;
 import com.xmlcalabash.core.XProcConstants;
@@ -70,7 +71,7 @@ public class SystemProperty extends XProcExtensionFunctionDefinition {
             staticContext = context;
         }
 
-        public Sequence call(XPathContext xPathContext, Sequence[] sequences) throws XPathException {
+        public AtomicValue call(XPathContext xPathContext, Sequence[] sequences) throws XPathException {
             QName propertyName = null;
 
             XProcRuntime runtime = registry.getRuntime(xdef);

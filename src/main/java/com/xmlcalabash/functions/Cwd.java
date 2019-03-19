@@ -9,6 +9,7 @@ import net.sf.saxon.om.Sequence;
 import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.tree.iter.SingletonIterator;
+import net.sf.saxon.value.AtomicValue;
 import net.sf.saxon.value.SequenceType;
 import net.sf.saxon.value.AnyURIValue;
 import net.sf.saxon.expr.XPathContext;
@@ -81,7 +82,7 @@ public class Cwd extends XProcExtensionFunctionDefinition {
             xdef = def;
         }
 
-        public Sequence call(XPathContext xPathContext, Sequence[] sequences) throws XPathException {
+        public AtomicValue call(XPathContext xPathContext, Sequence[] sequences) throws XPathException {
             XProcRuntime runtime = registry.getRuntime(xdef);
             XStep step = runtime.getXProcData().getStep();
             // FIXME: this can't be the best way to do this...

@@ -23,6 +23,7 @@ package com.xmlcalabash.util;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import net.sf.saxon.Controller;
+import net.sf.saxon.event.ComplexContentOutputter;
 import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.expr.instruct.Executable;
@@ -41,6 +42,7 @@ import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
+import net.sf.saxon.serialize.SerializationProperties;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.tree.util.NamespaceIterator;
 import net.sf.saxon.type.BuiltInType;
@@ -110,9 +112,13 @@ public class TreeWriter {
         try {
             exec = new Executable(controller.getConfiguration());
             destination = new XdmDestination();
-            receiver = destination.getReceiver(controller.getConfiguration());
-
             PipelineConfiguration pipe = controller.makePipelineConfiguration();
+            if (runtime == null) {
+                receiver = destination.getReceiver(pipe, new SerializationProperties());
+            } else {
+                receiver = destination.getReceiver(pipe, runtime.getDefaultSerializationProperties());
+            }
+
             receiver.setPipelineConfiguration(pipe);
 
             if (baseURI != null) {
@@ -120,6 +126,8 @@ public class TreeWriter {
             } else {
                 receiver.setSystemId("http://example.com/");
             }
+
+            receiver = new ComplexContentOutputter(receiver);
 
             receiver.open();
             receiver.startDocument(0);

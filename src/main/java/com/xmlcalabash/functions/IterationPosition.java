@@ -14,6 +14,7 @@ import com.xmlcalabash.core.XProcData;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.runtime.XStep;
 import net.sf.saxon.tree.iter.SingletonIterator;
+import net.sf.saxon.value.AtomicValue;
 import net.sf.saxon.value.Int64Value;
 import net.sf.saxon.value.SequenceType;
 
@@ -81,7 +82,7 @@ public class IterationPosition extends XProcExtensionFunctionDefinition {
             xdef = def;
         }
 
-        public Sequence call(XPathContext xPathContext, Sequence[] sequences) throws XPathException {
+        public AtomicValue call(XPathContext xPathContext, Sequence[] sequences) throws XPathException {
             XProcRuntime runtime = registry.getRuntime(xdef);
             XProcData data = runtime.getXProcData();
             XStep step = data.getStep();

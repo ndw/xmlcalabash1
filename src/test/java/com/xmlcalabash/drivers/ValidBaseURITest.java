@@ -18,6 +18,7 @@ import net.sf.saxon.event.PipelineConfiguration;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
+import net.sf.saxon.serialize.SerializationProperties;
 import org.xml.sax.InputSource;
 
 import javax.xml.transform.sax.SAXSource;
@@ -50,10 +51,9 @@ public class ValidBaseURITest {
 
         XdmDestination destination = new XdmDestination();
         Controller controller = new Controller(processor.getUnderlyingConfiguration());
-        Receiver receiver = destination.getReceiver(controller.getConfiguration());
         PipelineConfiguration pipe = controller.makePipelineConfiguration();
+        Receiver receiver = destination.getReceiver(pipe, new SerializationProperties());
         pipe.setRecoverFromValidationErrors(false);
-        receiver.setPipelineConfiguration(pipe);
 
         SchemaValidator validator = manager.newSchemaValidator();
         validator.setDestination(destination);

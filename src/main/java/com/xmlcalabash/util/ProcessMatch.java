@@ -24,6 +24,7 @@ import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.model.RuntimeValue;
 import net.sf.saxon.Configuration;
+import net.sf.saxon.event.ComplexContentOutputter;
 import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.om.NamespaceResolver;
 import net.sf.saxon.s9api.Axis;
@@ -80,11 +81,14 @@ public class ProcessMatch extends TreeWriter {
             matcher = xeval.createPattern(match.getString());
 
             destination = new XdmDestination();
-            receiver = destination.getReceiver(saxonConfig);
             PipelineConfiguration pipe = controller.makePipelineConfiguration();
+            receiver = destination.getReceiver(pipe, runtime.getDefaultSerializationProperties());
 
             receiver.setPipelineConfiguration(pipe);
             receiver.setSystemId(doc.getBaseURI().toASCIIString());
+
+            receiver = new ComplexContentOutputter(receiver);
+
             receiver.open();
 
             // If we start a match at an element, fake a document wrapper so that
