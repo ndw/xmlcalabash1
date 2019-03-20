@@ -850,15 +850,9 @@ public class Parser {
             parent = parent.parent;
         }
 
-        if (parent instanceof DeclareStep) {
-            HashSet<String> excluded = ((DeclareStep) parent).getExcludeInlineNamespaces();
-            if (excluded != null) {
-                for (String uri : excluded) {
-                    excludeURIs.add(uri);
-                }
-            }
-        } else {
-            throw new UnsupportedOperationException("This can't happen: parent of inline is not a step!?");
+        HashSet<String> excluded = ((DeclareStep) parent).getExcludeInlineNamespaces();
+        if (excluded != null) {
+            excludeURIs.addAll(excluded);
         }
 
         checkExtensionAttributes(node, inline);
