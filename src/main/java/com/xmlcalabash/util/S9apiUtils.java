@@ -108,7 +108,7 @@ public class S9apiUtils {
 
             Receiver out = destination.getReceiver(pipeConfig, new SerializationProperties());
             out = new NamespaceReducer(out);
-            out = new ComplexContentOutputter(out);
+            out = new ComplexContentOutputter(new NamespaceReducer(out));
             TreeReceiver tree = new TreeReceiver(out);
             tree.setPipelineConfiguration(pipeConfig);
             if (baseURI != null) {
@@ -137,7 +137,7 @@ public class S9apiUtils {
 
             Receiver out = destination.getReceiver(pipeConfig, new SerializationProperties());
             out = new NamespaceReducer(out);
-            out = new ComplexContentOutputter(out);
+            out = new ComplexContentOutputter(new NamespaceReducer(out));
             TreeReceiver tree = new TreeReceiver(out);
             tree.setPipelineConfiguration(pipeConfig);
             if (baseURI != null) {

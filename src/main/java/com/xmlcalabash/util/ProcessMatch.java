@@ -25,6 +25,7 @@ import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.model.RuntimeValue;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.event.ComplexContentOutputter;
+import net.sf.saxon.event.NamespaceReducer;
 import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.om.NamespaceResolver;
 import net.sf.saxon.s9api.Axis;
@@ -87,7 +88,7 @@ public class ProcessMatch extends TreeWriter {
             receiver.setPipelineConfiguration(pipe);
             receiver.setSystemId(doc.getBaseURI().toASCIIString());
 
-            receiver = new ComplexContentOutputter(receiver);
+            receiver = new ComplexContentOutputter(new NamespaceReducer(receiver));
 
             receiver.open();
 

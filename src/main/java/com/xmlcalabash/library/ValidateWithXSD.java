@@ -31,6 +31,7 @@ import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TreeWriter;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.event.ComplexContentOutputter;
+import net.sf.saxon.event.NamespaceReducer;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -199,7 +200,7 @@ public class ValidateWithXSD extends DefaultStep {
         Controller controller = new Controller(config);
         PipelineConfiguration pipe = controller.makePipelineConfiguration();
         Receiver receiver = destination.getReceiver(pipe, runtime.getDefaultSerializationProperties());
-        receiver = new ComplexContentOutputter(receiver);
+        receiver = new ComplexContentOutputter(new NamespaceReducer(receiver));
         pipe.setRecoverFromValidationErrors(!getOption(_assert_valid,false));
         receiver.setPipelineConfiguration(pipe);
 

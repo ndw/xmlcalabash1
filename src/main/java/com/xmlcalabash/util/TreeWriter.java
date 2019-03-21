@@ -24,6 +24,7 @@ import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import net.sf.saxon.Controller;
 import net.sf.saxon.event.ComplexContentOutputter;
+import net.sf.saxon.event.NamespaceReducer;
 import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.expr.instruct.Executable;
@@ -127,7 +128,7 @@ public class TreeWriter {
                 receiver.setSystemId("http://example.com/");
             }
 
-            receiver = new ComplexContentOutputter(receiver);
+            receiver = new ComplexContentOutputter(new NamespaceReducer(receiver));
 
             receiver.open();
             receiver.startDocument(0);
