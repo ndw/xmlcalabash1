@@ -33,7 +33,6 @@ public class TestAxisNodes {
 
         DocumentBuilder builder = processor.newDocumentBuilder();
         root = S9apiUtils.getDocumentElement(builder.build(new SAXSource(new InputSource(new StringReader(xml)))));
-        System.out.println(root);
     }
 
     @Test

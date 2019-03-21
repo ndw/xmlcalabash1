@@ -90,7 +90,6 @@ public class AddXmlBase extends DefaultStep implements ProcessMatchingNodes {
 
         matcher = new ProcessMatch(runtime, this);
         XdmNode idoc = source.read();
-        System.out.println("base: " + idoc.getBaseURI());
         matcher.match(idoc, new RuntimeValue("*", step.getNode()));
 
         XdmNode doc = matcher.getResult();
