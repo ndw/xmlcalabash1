@@ -362,7 +362,6 @@ public class XSLT extends DefaultStep {
             if (origBase != null && (base == null) || "".equals(base)) {
                 base = origBase;
             }
-            System.out.println("bui: " + node.getLocalPart() + ": " + base);
             return base;
         }
     }
@@ -371,7 +370,6 @@ public class XSLT extends DefaultStep {
         // This is a nop for now
         @Override
         public String apply(NodeInfo node) {
-            System.out.println("sim: " + node + " :" + node.getSystemId());
             return node.getSystemId();
         }
     }
