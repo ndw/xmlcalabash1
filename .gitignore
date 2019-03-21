@@ -4,5 +4,6 @@
 /build/
 /target/
 /src/main/resources/etc/version.properties
+/src/test/java/com/xmlcalabash/drivers/SaxonTest.java
 /test/errors.txt
 /test/report.xml
