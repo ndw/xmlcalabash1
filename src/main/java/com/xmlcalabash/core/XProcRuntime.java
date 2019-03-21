@@ -168,6 +168,12 @@ public class XProcRuntime {
     public XProcRuntime(XProcConfiguration config) {
         this.config = config;
         processor = config.getProcessor();
+        logger.debug(getProductName() + " version " + getProductVersion());
+
+        if (processor.getSaxonProductVersion().startsWith("9.9.0")
+            || "9.9.1.1".equals(processor.getSaxonProductVersion())) {
+            logger.warn(getProductName() + " is not compatible with Saxon version " + processor.getSaxonProductVersion());
+        }
 
         if (config.xprocConfigurer != null) {
             try {
