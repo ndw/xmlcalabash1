@@ -44,11 +44,15 @@ import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.MessageListener;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.RawDestination;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.Serializer;
 import net.sf.saxon.s9api.ValidationMode;
 import net.sf.saxon.s9api.XdmDestination;
+import net.sf.saxon.s9api.XdmEmptySequence;
+import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmValue;
 import net.sf.saxon.s9api.XsltCompiler;
 import net.sf.saxon.s9api.XsltExecutable;
 import net.sf.saxon.s9api.XsltTransformer;
@@ -62,8 +66,8 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.sax.SAXSource;
 import java.io.ByteArrayOutputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Vector;
 import java.util.function.Function;
 
@@ -202,7 +206,7 @@ public class XSLT extends DefaultStep {
         config.setDefaultCollection(XProcCollectionFinder.DEFAULT);
         config.setCollectionFinder(new XProcCollectionFinder(runtime, defaultCollection, collectionFinder));
 
-        XdmDestination result = null;
+        RawDestination result = new RawDestination();
         try {
             XsltCompiler compiler = runtime.getProcessor().newXsltCompiler();
             compiler.setSchemaAware(processor.isSchemaAware());
@@ -223,7 +227,6 @@ public class XSLT extends DefaultStep {
                 transformer.setInitialContextNode(document);
             }
             transformer.setMessageListener(new CatchMessages());
-            result = new XdmDestination();
             transformer.setDestination(result);
 
             if (initialMode != null) {
@@ -236,12 +239,6 @@ public class XSLT extends DefaultStep {
 
             if (outputBaseURI != null) {
                 transformer.setBaseOutputURI(outputBaseURI);
-                // The following hack works around https://saxonica.plan.io/issues/1724
-                try {
-                    result.setBaseURI(new URI(outputBaseURI));
-                } catch (URISyntaxException use) {
-                    // whatever
-                }
             }
 
             transformer.setSchemaValidationMode(ValidationMode.DEFAULT);
@@ -251,7 +248,29 @@ public class XSLT extends DefaultStep {
             config.setCollectionFinder(collectionFinder);
         }
 
-        XdmNode xformed = result.getXdmNode();
+        XdmValue value = result.getXdmValue();
+        XdmNode xformed = null;
+        if (value != null && value != XdmEmptySequence.getInstance()) {
+            // In XProc 1.0, the output from XSLT has to be a document. If we get a node
+            // or a sequence of nodes, then make a document out of it. Otherwise, throw
+            // an exception. Note: The RawDestination doesn't wrap nodes in a document,
+            // so this is always necessary.
+            TreeWriter docout = new TreeWriter(runtime);
+            if (document == null) {
+                docout.startDocument(null);
+            } else {
+                docout.startDocument(document.getBaseURI());
+            }
+            for (XdmValue v : value) {
+                if (v instanceof XdmNode) {
+                    docout.addSubtree((XdmNode) v);
+                } else {
+                    throw new XProcException(step.getStep(), "p:xslt returned non-XML result");
+                }
+            }
+
+            xformed = docout.getResult();
+        }
 
         // Can be null when nothing is written to the principle result tree...
         if (xformed != null) {
@@ -261,6 +280,9 @@ public class XSLT extends DefaultStep {
                 // think there might be XProc pipelines that rely on the fact that the
                 // base URI doesn't change when processed by XSLT. So we're doing it
                 // the hard way.
+                //
+                // In Saxon 9.9, I switched to the RawDestination which doesn't have
+                // a base URI setter, so this is still necessary.
                 BaseURIMapper bmapper = new BaseURIMapper(document.getBaseURI().toASCIIString());
                 SystemIdMapper smapper = new SystemIdMapper();
                 TreeInfo tree = xformed.getUnderlyingNode().getTreeInfo();
