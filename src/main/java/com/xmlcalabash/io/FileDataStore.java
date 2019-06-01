@@ -347,23 +347,16 @@ public class FileDataStore implements DataStore {
 	private void loadContentTypes(Properties contentTypes) {
 		File file = null;
 		try {
-			// First try to load the user-specific table, if it exists
-			String userTablePath = System
-					.getProperty("content.types.user.table");
-			if (userTablePath != null && new File(userTablePath).exists()) {
+			// Try to load the user-specific table, if it exists
+			String userTablePath = System.getProperty("content.types.user.table");
+			if (userTablePath != null) {
 				file = new File(userTablePath);
-			} else {
-				// No user table, try to load the default built-in table.
-				File lib = new File(System.getProperty("java.home"), "lib");
-				file = new File(lib, "content-types.properties");
+				try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
+					contentTypes.load(is);
+				}
 			}
-	
-			InputStream is = new BufferedInputStream(new FileInputStream(file));
-			try {
-				contentTypes.load(is);
-			} finally {
-				is.close();
-			}
+			// We used to try to load a system content-types.properties file here,
+			// but that's been removed in JDK9 so we don't anymore.
 		} catch (IOException e) {
             logger.warn("Failed to load content types: " + file.getAbsolutePath());
             logger.debug(e.getMessage(), e);
