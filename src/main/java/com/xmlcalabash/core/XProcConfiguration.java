@@ -110,6 +110,7 @@ public class XProcConfiguration {
     public String mailPass = null;
     public Hashtable<String,String> loaders = new Hashtable<String,String> ();
     public HashSet<String> setSaxonProperties = new HashSet<String>();
+    public Hashtable<String,String> proxies = new Hashtable<String,String> ();
 
     public boolean extensionValues = false;
     public boolean xpointerOnText = false;
@@ -542,6 +543,14 @@ public class XProcConfiguration {
         mailUser = System.getProperty("com.xmlcalabash.mail-username", mailUser);
         mailPass = System.getProperty("com.xmlcalabash.mail-password", mailPass);
 
+        if ("true".equals(System.getProperty("proxySet"))) {
+            String host = System.getProperty("proxyHost");
+            String port = System.getProperty("proxyPort");
+            if (host != null && port != null) {
+                proxies.put("http", host + ":" + port);
+            }
+        }
+
         if (System.getProperty("com.xmlcalabash.log-style") != null) {
             String s = System.getProperty("com.xmlcalabash.log-style");
             if ("off".equals(s)) {
@@ -684,6 +693,8 @@ public class XProcConfiguration {
                     saxonConfigurationProperty(node);
                 } else if ("log-style".equals(localName)) {
                     logStyle(node);
+                } else if ("proxy".equals(localName)) {
+                    parseProxy(node);
                 } else if ("pipeline-loader".equals(localName)) {
                     pipelineLoader(node);
                 } else if ("piperack-port".equals(localName)) {
@@ -924,6 +935,22 @@ public class XProcConfiguration {
             }
             mailPass = pass;
         }
+    }
+
+    private void parseProxy(XdmNode node) {
+        String host = node.getAttributeValue(new QName("", "host"));
+        String port = node.getAttributeValue(_port);
+        String scheme = node.getAttributeValue(new QName("", "scheme"));
+
+        if (scheme == null) {
+            scheme = "http";
+        }
+
+        if (host == null || port == null) {
+            throw new XProcException("Misconfigured proxy: missing host or port");
+        }
+
+        proxies.put(scheme, host + ":" + port);
     }
 
     private void saxonConfigurationProperty(XdmNode node) {
