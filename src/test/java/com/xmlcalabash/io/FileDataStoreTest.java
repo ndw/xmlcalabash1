@@ -164,7 +164,7 @@ public class FileDataStoreTest extends TestCase {
 	}
 
 	public void testGetFileSuffixFromType() throws IOException {
-		assertEquals(".text", store.getFileSuffixFromType("text/plain"));
+		assertEquals(".txt", store.getFileSuffixFromType("text/plain"));
 		assertEquals(".xml", store.getFileSuffixFromType("application/xml"));
 		assertEquals(".xml", store.getFileSuffixFromType("text/xml"));
 		assertEquals(".xml", store.getFileSuffixFromType("image/svg+xml"));
