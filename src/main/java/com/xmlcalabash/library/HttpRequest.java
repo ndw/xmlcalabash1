@@ -71,6 +71,10 @@ import org.apache.http.cookie.Cookie;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.entity.mime.FormBodyPartBuilder;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.ByteArrayBody;
+import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCookieStore;
@@ -350,6 +354,16 @@ public class HttpRequest extends DefaultStep {
         try {
             // Execute the method.
             builder.setRetryHandler(new StandardHttpRequestRetryHandler(3, false));
+
+            for (String pscheme : runtime.getConfiguration().proxies.keySet()) {
+                String proxy = runtime.getConfiguration().proxies.get(pscheme);
+                int pos = proxy.indexOf(":");
+                String host = proxy.substring(0, pos);
+                int port = Integer.parseInt(proxy.substring(pos+1));
+                HttpHost httpProxy = new HttpHost(host, port, pscheme);
+                builder.setProxy(httpProxy);
+            }
+
             HttpClient httpClient = builder.build();
             if (httpClient == null) {
                 throw new XProcException("HTTP requests have been disabled");
@@ -638,19 +652,14 @@ public class HttpRequest extends DefaultStep {
 
             method.setEntity(requestEntity);
 
-        } catch (IOException ioe) {
+        } catch (IOException | SaxonApiException ioe) {
             throw new XProcException(ioe);
-        } catch (SaxonApiException sae) {
-            throw new XProcException(sae);
         }
     }
 
-    private void doPutOrPostMultipart(HttpEntityEnclosingRequest method, XdmNode multipart) {
-        // The Apache HTTP libraries just don't handle this case...we treat it as a "single part"
-        // and build the body ourselves, using the boundaries etc.
-
+    private void doPutOrPostMultipart(HttpEntityEnclosingRequest method, XdmNode document) {
         // Check for consistency of content-type
-        String contentType = multipart.getAttributeValue(_content_type);
+        String contentType = document.getAttributeValue(_content_type);
         if (contentType == null) {
             contentType = "multipart/mixed";
         }
@@ -667,8 +676,7 @@ public class HttpRequest extends DefaultStep {
             method.addHeader(header);
         }
 
-        String boundary = multipart.getAttributeValue(_boundary);
-
+        String boundary = document.getAttributeValue(_boundary);
         if (boundary == null) {
             throw new XProcException(step.getNode(), "A boundary value must be specified on c:multipart");
         }
@@ -677,21 +685,12 @@ public class HttpRequest extends DefaultStep {
             throw XProcException.stepError(2);
         }
 
-        String q = "\"";
-        if (boundary.contains(q)) {
-            q = "'";
-        }
-        if (boundary.contains(q)) {
-            q = "";
-        }
+        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create();
+        entityBuilder.setBoundary(boundary);
+        entityBuilder.setContentType(ContentType.create(contentType));
+        int partCount = 0;
 
-        String multipartContentType = contentType + "; boundary=" + q + boundary + q;
-
-        // FIXME: This sucks rocks. I want to write the data to be posted, not provide some way to read it
-        MessageBytes byteContent = new MessageBytes();
-        byteContent.append("This is a multipart message.\r\n");
-        //String postContent = "This is a multipart message.\r\n";
-        for (XdmNode body : new AxisNodes(multipart, Axis.CHILD, AxisNodes.SIGNIFICANT)) {
+        for (XdmNode body : new AxisNodes(document, Axis.CHILD, AxisNodes.SIGNIFICANT)) {
             if (!XProcConstants.c_body.equals(body.getNodeName())) {
                 throw new XProcException(step.getNode(), "A c:multipart may only contain c:body elements.");
             }
@@ -701,11 +700,10 @@ public class HttpRequest extends DefaultStep {
                 throw new XProcException(step.getNode(), "Content-type on c:body is required.");
             }
 
+            partCount++;
             String bodyId = body.getAttributeValue(_id);
             String bodyDescription = body.getAttributeValue(_description);
             String bodyDisposition = body.getAttributeValue(_disposition);
-
-            String bodyCharset = HttpUtils.getCharset(bodyContentType);
 
             if (bodyContentType.contains(";")) {
                 int pos = bodyContentType.indexOf(";");
@@ -717,28 +715,29 @@ public class HttpRequest extends DefaultStep {
                 throw new UnsupportedOperationException("The '" + bodyEncoding + "' encoding is not supported");
             }
 
-            if (bodyCharset != null) {
-                bodyContentType += "; charset=" + bodyCharset;
+            String bodyCharset = HttpUtils.getCharset(bodyContentType);
+            if (bodyCharset == null) {
+                bodyCharset = "UTF-8";
             }
 
-            byteContent.append("--" + boundary + "\r\n");
-            byteContent.append("Content-Type: " + bodyContentType + "\r\n");
+            FormBodyPartBuilder part = FormBodyPartBuilder.create();
+            ContentType partCT = ContentType.create(bodyContentType, bodyCharset);
 
+            part.setName("part" + partCount);
             if (bodyDescription != null) {
-                byteContent.append("Content-Description: " + bodyDescription + "\r\n");
+                part = part.addField("Content-Description", bodyDescription);
             }
             if (bodyId != null) {
-                byteContent.append("Content-ID: " + bodyId + "\r\n");
+                part = part.addField("Content-Id", bodyId);
             }
             if (bodyDisposition != null) {
-                byteContent.append("Content-Disposition: " + bodyDisposition + "\r\n");
+                part = part.addField("Content-Disposition", bodyDisposition);
             }
             if (bodyEncoding != null) {
                 if (encodeBinary) {
-                    byteContent.append("Content-Transfer-Encoding: " + bodyEncoding + "\r\n");
+                    part = part.addField("Content-Tranfer-Encoding", bodyEncoding);
                 }
             }
-            byteContent.append("\r\n");
 
             try {
                 if (xmlContentType(bodyContentType)) {
@@ -756,31 +755,26 @@ public class HttpRequest extends DefaultStep {
                     serializer.setOutputWriter(writer);
                     S9apiUtils.serialize(runtime, content, serializer);
                     writer.close();
-                    byteContent.append(writer.toString());
+
+                    part = part.setBody(new StringBody(writer.toString(), partCT));
+                    entityBuilder = entityBuilder.addPart(part.build());
                 } else if (jsonContentType(contentType)) {
-                    byteContent.append(XMLtoJSON.convert(body));
+                    part.setBody(new StringBody(XMLtoJSON.convert(body), partCT));
+                    entityBuilder = entityBuilder.addPart(part.build());
                 } else if (!encodeBinary && "base64".equals(bodyEncoding)) {
                     byte[] decoded = Base64.decode(body.getStringValue());
-                    byteContent.append(decoded, decoded.length);
+                    part.setBody(new ByteArrayBody(decoded, partCT, "fred"));
+                    entityBuilder = entityBuilder.addPart(part.build());
                 } else {
-                    byteContent.append(extractText(body));
+                    part.setBody(new StringBody(extractText(body), partCT));
+                    entityBuilder = entityBuilder.addPart(part.build());
                 }
-
-                //postContent += "\r\n";
-                byteContent.append("\r\n");
-            } catch (IOException ioe) {
+            } catch (IOException | SaxonApiException ioe) {
                 throw new XProcException(ioe);
-            } catch (SaxonApiException sae) {
-                throw new XProcException(sae);
             }
         }
 
-        //postContent += "--" + boundary + "--\r\n";
-        byteContent.append("--" + boundary + "--\r\n");
-
-        ByteArrayEntity requestEntity = new ByteArrayEntity(byteContent.content(), ContentType.create(multipartContentType));
-        //StringRequestEntity requestEntity = new StringRequestEntity(postContent, multipartContentType, null);
-        method.setEntity(requestEntity);
+        method.setEntity(entityBuilder.build());
     }
 
     private String getFullContentType(HttpResponse method) {
