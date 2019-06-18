@@ -60,11 +60,13 @@ import org.apache.http.client.config.AuthSchemes;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.cookie.Cookie;
@@ -326,8 +328,8 @@ public class HttpRequest extends DefaultStep {
 
         String lcMethod = method.toLowerCase();
 
-        // You can only have a body on PUT or POST or PATCH
-        if (body != null && !("put".equals(lcMethod) || "post".equals(lcMethod) || "patch".equals(lcMethod))) {
+        // You cannot have a body on HEAD or DELETE or GET
+        if (body != null && ("head".equals(lcMethod) || "delete".equals(lcMethod) || "get".equals(lcMethod))) {
             throw XProcException.stepError(5);
         }
 
@@ -346,7 +348,12 @@ public class HttpRequest extends DefaultStep {
         } else if ("delete".equals(lcMethod)) {
             httpRequest = doDelete();
         } else {
-            throw new UnsupportedOperationException("Unrecognized http method: " + method);
+            // HTTP method not specifically supported by Apache HTTP library
+            if (body != null) {
+                httpRequest = doGenericMethodWithBody(lcMethod.toUpperCase(), body);
+            } else {
+                httpRequest = doGenericMethod(lcMethod.toUpperCase());
+            }
         }
 
         TreeWriter tree = new TreeWriter(runtime);
@@ -456,6 +463,22 @@ public class HttpRequest extends DefaultStep {
         XdmNode resultNode = tree.getResult();
 
         result.write(resultNode);
+    }
+
+    private HttpGenericMethod doGenericMethod(String methodName) {
+        HttpGenericMethod method = new HttpGenericMethod(methodName, requestURI);
+
+        for (Header header : headers) {
+            method.addHeader(header);
+        }
+
+        return method;
+    }
+
+    private HttpGenericMethodWithBody doGenericMethodWithBody(String methodName, XdmNode body) {
+        HttpGenericMethodWithBody method = new HttpGenericMethodWithBody(methodName, requestURI);
+        doPutOrPost(method,body);
+        return method;
     }
 
     private HttpGet doGet() {
@@ -1124,6 +1147,32 @@ public class HttpRequest extends DefaultStep {
         } catch (IOException ioe) {
             throw new XProcException(ioe);
         }
+    }
+    
+    private class HttpGenericMethod extends HttpEntityEnclosingRequestBase {
+        public HttpGenericMethod(String method, URI requestURI) {
+            super();
+            this.method = method;
+            setURI(requestURI);
+        }
+        @Override
+        public String getMethod() {
+            return method;
+        }
+        private String method;
+    }
+
+    private class HttpGenericMethodWithBody extends HttpEntityEnclosingRequestBase {
+        public HttpGenericMethodWithBody(String method, URI requestURI) {
+            super();
+            this.method = method;
+            setURI(requestURI);
+        }
+        @Override
+        public String getMethod() {
+            return method;
+        }
+        private String method;
     }
 
     private class MessageBytes {

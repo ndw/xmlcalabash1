@@ -1,5 +1,6 @@
 <t:test-suite xmlns:t='http://xproc.org/ns/testsuite'>
 <t:title>Required tests</t:title>
+<t:test href='options-http-request.xml'/>
 <t:test href='add-attribute-001.xml'/>
 <t:test href='add-attribute-002.xml'/>
 <t:test href='add-attribute-003.xml'/>

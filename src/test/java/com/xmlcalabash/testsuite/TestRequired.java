@@ -2344,6 +2344,16 @@ public class TestRequired {
     }
 
     @Test
+    public void testOptionsHttpRequest() {
+        suiteRunner.runTest(TESTROOT + "options-http-request.xml");
+    }
+    
+    @Test
+    public void testOptionsHttpRequestWithBody() {
+        suiteRunner.runTest(TESTROOT + "options-http-request-with-body.xml");
+    }
+    
+    @Test
     public void testOutput001() {
         suiteRunner.runTest(TESTROOT + "output-001.xml");
     }
