@@ -2,7 +2,7 @@
 <?xml-stylesheet type="text/xsl" href="http://tests.xproc.org/style/testcase.xsl"?>
 <t:test xmlns:t="http://xproc.org/ns/testsuite">
 
-	<t:title>Test options-http-request</t:title>
+	<t:title>Test options-http-request-with-body</t:title>
 
 	<t:pipeline>
 		<p:declare-step version="1.0" name="main" xmlns:p="http://www.w3.org/ns/xproc" xmlns:c="http://www.w3.org/ns/xproc-step" xmlns:test="tag:conaltuohy.com,2019:xmlcalabash-test" xmlns:err="http://www.w3.org/ns/xproc-error">
