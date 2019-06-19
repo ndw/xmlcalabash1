@@ -52,6 +52,7 @@ public class ReadableData implements ReadablePipe {
     public static final QName _encoding = new QName("","encoding");
     public static final QName c_encoding = new QName("c",XProcConstants.NS_XPROC_STEP, "encoding");
     private String contentType = null;
+    private String forcedContentType = null;
     private Logger logger = LoggerFactory.getLogger(ReadablePipe.class);
     private int pos = 0;
     private QName wrapper = null;
@@ -64,19 +65,28 @@ public class ReadableData implements ReadablePipe {
 
     /* Creates a new instance of ReadableDocument */
     public ReadableData(XProcRuntime runtime, QName wrapper, String uri, String contentType) {
-        this(runtime, wrapper, uri, null, contentType);
+        this(runtime, wrapper, uri, null, contentType, null);
+    }
+
+    public ReadableData(XProcRuntime runtime, QName wrapper, String uri, String contentType, String forcedContentType) {
+        this(runtime, wrapper, uri, null, contentType, forcedContentType);
     }
 
     public ReadableData(XProcRuntime runtime, QName wrapper, InputStream inputStream, String contentType) {
-        this(runtime, wrapper, null, inputStream, contentType);
+        this(runtime, wrapper, null, inputStream, contentType, null);
     }
 
-    private ReadableData(XProcRuntime runtime, QName wrapper, String uri, InputStream inputStream, String contentType) {
+    public ReadableData(XProcRuntime runtime, QName wrapper, InputStream inputStream, String contentType, String forcedContentType) {
+        this(runtime, wrapper, null, inputStream, contentType, forcedContentType);
+    }
+
+    private ReadableData(XProcRuntime runtime, QName wrapper, String uri, InputStream inputStream, String contentType, String forcedContentType) {
         this.runtime = runtime;
         this.uri = uri;
         this.inputStream = inputStream;
         this.wrapper = wrapper;
         this.contentType = contentType;
+        this.forcedContentType = forcedContentType;
     }
 
     private DocumentSequence ensureDocuments() {
@@ -96,7 +106,7 @@ public class ReadableData implements ReadablePipe {
 			    try {
 			        read(userContentType, null, inputStream, getContentType());
 			    } finally {
-			        // This is the only case where the inputStream should be 
+			        // This is the only case where the inputStream should be
 			        // closed.
 			        inputStream.close();
 			    }
@@ -117,7 +127,7 @@ public class ReadableData implements ReadablePipe {
 								serverContentType);
 					}
 				});
-				// Also no need to close the input stream here, since  
+				// Also no need to close the input stream here, since
 				// DataStore implementations close the input stream when
 				// necessary.
 			}
@@ -127,7 +137,7 @@ public class ReadableData implements ReadablePipe {
         return documents;
     }
 
-    
+
     // This method does NOT close the InputStream; it relies on the caller to close
     // the InputStream, as appropriate.
 	private void read(String userContentType, URI dataURI,
@@ -149,7 +159,10 @@ public class ReadableData implements ReadablePipe {
 
         TreeWriter tree = new TreeWriter(runtime);
         tree.startDocument(dataURI);
-		if (contentType != null && "content/unknown".equals(serverContentType)) {
+		if ((forcedContentType != null) && !"content/unknown".equals(forcedContentType)) {
+		    // pretend...
+		    serverContentType = forcedContentType;
+		} else if ((contentType != null) && "content/unknown".equals(serverContentType)) {
 		    // pretend...
 		    serverContentType = contentType;
 		}

@@ -46,7 +46,7 @@ public class DefaultXMLCalabashConfigurer implements XMLCalabashConfigurer {
     }
 
     public ReadablePipe makeReadableData(XProcRuntime runtime, DataBinding binding) {
-        return new ReadableData(runtime, binding.getWrapper(), binding.getHref(), binding.getContentType());
+        return new ReadableData(runtime, binding.getWrapper(), binding.getHref(), binding.getContentType(), binding.getForcedContentType());
     }
 
     public ReadablePipe makeReadableDocument(XProcRuntime runtime, DocumentBinding binding) {

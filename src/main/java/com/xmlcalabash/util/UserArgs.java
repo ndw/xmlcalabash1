@@ -29,6 +29,7 @@ import net.sf.saxon.s9api.XdmNode;
 import org.xml.sax.InputSource;
 
 import static com.xmlcalabash.core.XProcConstants.NS_XPROC;
+import static com.xmlcalabash.core.XProcConstants.cx_forced_content_type;
 import static com.xmlcalabash.core.XProcConstants.p_data;
 import static com.xmlcalabash.core.XProcConstants.p_declare_step;
 import static com.xmlcalabash.core.XProcConstants.p_document;
@@ -651,14 +652,14 @@ public class UserArgs {
                     InputStream libraryInputStream = library.getInputStream();
                     FileOutputStream fileOutputStream = null;
                     try {
-                        File tempLibrary = createTempFile("calabashLibrary", null);
-                        tempLibrary.deleteOnExit();
+                    File tempLibrary = createTempFile("calabashLibrary", null);
+                    tempLibrary.deleteOnExit();
                         fileOutputStream = new FileOutputStream(tempLibrary);
-                        fileOutputStream.getChannel().transferFrom(newChannel(libraryInputStream), 0, MAX_VALUE);
+                    fileOutputStream.getChannel().transferFrom(newChannel(libraryInputStream), 0, MAX_VALUE);
                         libraries.set(0, new Input(tempLibrary.toURI().toASCIIString()));
                     } finally {
                         Closer.close(fileOutputStream);
-                        libraryInputStream.close();
+                    libraryInputStream.close();
                     }
                 }
 
@@ -718,15 +719,15 @@ public class UserArgs {
                     InputStream libraryInputStream = library.getInputStream();
                     FileOutputStream fileOutputStream = null;
                     try {
-                        File tempLibrary = createTempFile("calabashLibrary", null);
-                        tempLibrary.deleteOnExit();
+                    File tempLibrary = createTempFile("calabashLibrary", null);
+                    tempLibrary.deleteOnExit();
                         fileOutputStream = new FileOutputStream(tempLibrary);
-                        fileOutputStream.getChannel().transferFrom(newChannel(libraryInputStream), 0, MAX_VALUE);
+                    fileOutputStream.getChannel().transferFrom(newChannel(libraryInputStream), 0, MAX_VALUE);
 
-                        tree.addStartElement(p_import);
-                        tree.addAttribute(new QName("href"), tempLibrary.toURI().toASCIIString());
-                        tree.startContent();
-                        tree.addEndElement();
+                    tree.addStartElement(p_import);
+                    tree.addAttribute(new QName("href"), tempLibrary.toURI().toASCIIString());
+                    tree.startContent();
+                    tree.addEndElement();
                     } finally {
                         Closer.close(fileOutputStream);
                         libraryInputStream.close();
@@ -769,8 +770,8 @@ public class UserArgs {
                             } else {
                                 tree.addStartElement(qname);
                                 tree.addAttribute(new QName("href"), uri);
-                                if (input.getType() == DATA) {
-                                    tree.addAttribute(new QName("content-type"), input.getContentType());
+                                if ((input.getType() == DATA) && (input.getContentType() != null)) {
+                                    tree.addAttribute(cx_forced_content_type, input.getContentType());
                                 }
                                 tree.startContent();
                                 tree.addEndElement();
@@ -782,30 +783,30 @@ public class UserArgs {
                             if (System.in.equals(inputStream)) {
                                 tree.addStartElement(qname);
                                 tree.addAttribute(new QName("href"), "-");
-                                if (input.getType() == DATA) {
-                                    tree.addAttribute(new QName("content-type"), input.getContentType());
+                                if ((input.getType() == DATA) && (input.getContentType() != null)) {
+                                    tree.addAttribute(cx_forced_content_type, input.getContentType());
                                 }
                                 tree.startContent();
                                 tree.addEndElement();
                             } else {
                                 FileOutputStream fileOutputStream = null;
                                 try {
-                                    File tempInput = createTempFile("calabashInput", null);
-                                    tempInput.deleteOnExit();
+                                File tempInput = createTempFile("calabashInput", null);
+                                tempInput.deleteOnExit();
                                     fileOutputStream = new FileOutputStream(tempInput);
-                                    fileOutputStream.getChannel().transferFrom(newChannel(inputStream), 0, MAX_VALUE);
+                                fileOutputStream.getChannel().transferFrom(newChannel(inputStream), 0, MAX_VALUE);
 
-                                    tree.addStartElement(qname);
-                                    tree.addAttribute(new QName("href"), tempInput.toURI().toASCIIString());
-                                    if (input.getType() == DATA) {
-                                        tree.addAttribute(new QName("content-type"), input.getContentType());
-                                    }
-                                    tree.startContent();
-                                    tree.addEndElement();
+                                tree.addStartElement(qname);
+                                tree.addAttribute(new QName("href"), tempInput.toURI().toASCIIString());
+                                if ((input.getType() == DATA) && (input.getContentType() != null)) {
+                                    tree.addAttribute(cx_forced_content_type, input.getContentType());
+                                }
+                                tree.startContent();
+                                tree.addEndElement();
                                 } finally {
                                     Closer.close(fileOutputStream);
                                     inputStream.close();
-                                }
+                            }
                             }
                             break;
 

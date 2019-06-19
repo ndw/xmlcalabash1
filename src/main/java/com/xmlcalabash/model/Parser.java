@@ -46,6 +46,8 @@ import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
+import static com.xmlcalabash.core.XProcConstants.cx_forced_content_type;
+
 /**
  *
  * @author ndw
@@ -770,6 +772,7 @@ public class Parser {
         String wrappfx = node.getAttributeValue(new QName("wrapper-prefix"));
         String wrapns  = node.getAttributeValue(new QName("wrapper-namespace"));
         String contentType = node.getAttributeValue(new QName("content-type"));
+        String forcedContentType = node.getAttributeValue(cx_forced_content_type);
 
         if (wrappfx != null && wrapns == null) {
             throw XProcException.dynamicError(34, node, "You cannot specify a prefix without a namespace.");
@@ -802,6 +805,10 @@ public class Parser {
 
         if (contentType != null) {
             doc.setContentType(contentType);
+        }
+
+        if (forcedContentType != null) {
+            doc.setForcedContentType(forcedContentType);
         }
 
         for (XdmNode snode : new AxisNodes(runtime, node, Axis.CHILD, AxisNodes.PIPELINE)) {
