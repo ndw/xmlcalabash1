@@ -7,18 +7,19 @@ buildscript {
   dependencies {
     classpath fileTree(dir: 'lib').include("*.jar")
     classpath group: 'net.sf.saxon', name: 'Saxon-HE', version: saxonVersion
+    classpath group: 'biz.aQute.bnd', name: 'biz.aQute.bnd.gradle', version: '4.2.0'
   }
 }
 
 plugins {
   id "java"
-  id "osgi"
   id "maven"
-  //id "maven-publish"
   id "signing"
   id "com.bmuschko.izpack" version "2.0"
   id "de.undercouch.download" version "3.4.3"
 }
+
+apply plugin: 'biz.aQute.bnd.builder'
 
 import de.undercouch.gradle.tasks.download.Download
 
@@ -71,7 +72,7 @@ dependencies {
     [group: 'commons-fileupload', name: 'commons-fileupload', version: '1.3.3'],
     [group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.10'],
     [group: 'org.slf4j', name: 'slf4j-api', version: '1.7.10'],
-    [group: 'org.xmlresolver', name: 'xmlresolver', version: '1.0.1'],
+    [group: 'org.xmlresolver', name: 'xmlresolver', version: '1.0.4'],
     [group: 'com.atlassian.commonmark', name: 'commonmark', version: '0.12.1']
   )
 
@@ -168,25 +169,15 @@ task copyLib(type: Copy) {
 }
 
 jar {
-  baseName "xmlcalabash"
-  manifest {
-    instruction 'Built-By', builtBy
-    instruction 'Implementation-Vendor', 'Norman Walsh'
-    instruction 'Implementation-Title', 'XML Calabash'
-    instruction 'Implementation-Version', project.ext.distVersion
-    instruction 'Main-Class', 'com.xmlcalabash.drivers.Main'
-    instruction 'Bundle-RequiredExecutionEnvironment', 'J2SE-1.6'
-    instruction 'Export-Package', '*, etc'
-    instruction 'Import-Package', 'net.sf.saxon.*;version=' + project.ext.saxonRelease + ',\
-  javax.crypto.*,\
-  javax.xml.*,\
-  org.apache.commons.httpclient.*,\
-  org.xml.sax.*,\
-  *;resolution:=optional'
-    instruction 'DynamicImport-Package', '*'
-    instruction 'Class-Path', project.ext.runtimeClasspath + " lib"
-  }
-  manifest.attributes('Bundle-SymbolicName': 'com.xmlcalabash')
+  bnd ('Bundle-Vendor': 'Norman Walsh',
+       'Bundle-Description': 'XML Calabash an XProc 1.0 pipeline processor.',
+       'Bundle-Name': 'xmlcalabash1',
+       'Bundle-SymbolicName': 'com.xmlcalabash',
+       'Class-Path': project.ext.runtimeClasspath + " lib",
+       'Implementation-Title': 'XML Calabash',
+       'Implementation-Version': project.ext.distVersion,
+       'Main-Class': 'com.xmlcalabash.drivers.Main'
+  )
 }
 
 izpack {
