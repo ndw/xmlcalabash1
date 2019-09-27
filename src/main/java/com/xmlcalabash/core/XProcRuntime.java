@@ -267,11 +267,21 @@ public class XProcRuntime {
                     warnLevel = annotation.warnLevel().toUpperCase();
                 }
 
-                Object def = Class.forName(className).newInstance();
+                Object def = null;
+
+                try {
+                    def = Class.forName(className).newInstance();
+                } catch (Throwable e) {
+                    logger.trace("Attempting to instantiate " + className + " with processor context");
+                    Class cl = Class.forName(className);
+                    Constructor cons = cl.getConstructor(Processor.class);
+                    def = cons.newInstance(processor);
+                }
+
                 logger.trace("Instantiated: " + className);
-                if (def instanceof ExtensionFunctionDefinition)
+                if (def instanceof ExtensionFunctionDefinition) {
                     processor.registerExtensionFunction((ExtensionFunctionDefinition) def);
-                else if (def instanceof ExtensionFunction)
+                } else if (def instanceof ExtensionFunction)
                     processor.registerExtensionFunction((ExtensionFunction) def);
                 else
                     logger.info("Failed to instantiate extension function " + className + " because that class implements neither ExtensionFunction nor ExtensionFunctionDefinition.");
