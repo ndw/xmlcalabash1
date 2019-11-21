@@ -371,23 +371,35 @@ public class Step extends SourceArtifact {
     
     public Output getDefaultOutput() {
         // See if there's exactly one "ordinary" output
-        int count = 0;
         Output defout = null;
         for (Output output : outputs) {
             if (!output.getPort().startsWith("#")) {
                 if (output.getPrimary()) {
-                    return output;
-                }
-                if (!output.getPort().endsWith("|")) {
-                    count++;
-                    defout = output;
+                    if (!output.getPort().endsWith("|"))
+                        return output;
+                    else
+                        defout = output;
                 }
             }
         }
         
-        if (count == 1 && (defout.getPrimary() || !defout.getPrimarySet())) {
-            return defout;
+        if (defout != null) return defout;
+        
+        int count = 0;
+        for (Output output : outputs) {
+            if (!output.getPort().startsWith("#")) {
+                if (!output.getPort().endsWith("|")) {
+                    if (++count > 1)
+                        return null;
+                    else
+                        defout = output;
+                }
+            }
         }
+        
+        if (defout != null)
+            if (!defout.getPrimarySet())
+                return defout;
         
         return null;
     }
