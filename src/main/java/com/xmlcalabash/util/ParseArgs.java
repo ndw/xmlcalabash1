@@ -160,6 +160,8 @@ public class ParseArgs {
                     userArgs.setUseXslt10(true);
                 } else if ("html-serializer".equals(ext)) {
                     userArgs.setHtmlSerializer(true);
+                } else if ("ignore-invalid-xml-base".equals(ext)) {
+                    userArgs.setIgnoreInvalidXmlBase(true);
                 } else if ("transparent-json".equals(ext)) {
                     userArgs.setTransparentJSON(true);
                 } else if (ext.startsWith("json-flavor=")) {

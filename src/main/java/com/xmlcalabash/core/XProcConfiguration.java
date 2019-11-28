@@ -114,6 +114,7 @@ public class XProcConfiguration {
     public boolean extensionValues = false;
     public boolean xpointerOnText = false;
     public boolean transparentJSON = false;
+    public boolean ignoreInvalidXmlBase = false;
     public String jsonFlavor = JSONtoXML.MARKLOGIC;
     public boolean useXslt10 = false;
     public boolean htmlSerializer = false;
@@ -413,6 +414,7 @@ public class XProcConfiguration {
         extensionValues = "true".equals(System.getProperty("com.xmlcalabash.general-values", ""+extensionValues));
         xpointerOnText = "true".equals(System.getProperty("com.xmlcalabash.xpointer-on-text", ""+xpointerOnText));
         transparentJSON = "true".equals(System.getProperty("com.xmlcalabash.transparent-json", ""+transparentJSON));
+        ignoreInvalidXmlBase = "true".equals(System.getProperty("com.xmlcalabash.ignore-invalid-xml-base", ""+ignoreInvalidXmlBase));
         allowTextResults = "true".equals(System.getProperty("com.xmlcalabash.allow-text-results", ""+allowTextResults));
         safeMode = "true".equals(System.getProperty("com.xmlcalabash.safe-mode", ""+safeMode));
         jsonFlavor = System.getProperty("com.xmlcalabash.json-flavor", jsonFlavor);
@@ -657,7 +659,7 @@ public class XProcConfiguration {
             System.out.print(runtime.getConfiguration().getProcessor().getUnderlyingConfiguration().getEditionCode());
             System.out.println(" edition.");
         }
-        System.out.println("Copyright (c) 2007-2013 Norman Walsh");
+        System.out.println("Copyright (c) 2007-2019 Norman Walsh");
         System.out.println("See docs/notices/NOTICES in the distribution for licensing");
         System.out.println("See also http://xmlcalabash.com/ for more information");
         System.out.println("");
@@ -776,6 +778,8 @@ public class XProcConfiguration {
             extensionValues = "true".equals(value);
         } else if ("xpointer-on-text".equals(name)) {
             xpointerOnText = "true".equals(value);
+        } else if ("ignore-invalid-xml-base".equals(name)) {
+            ignoreInvalidXmlBase = "true".equals(value);
         } else if ("transparent-json".equals(name)) {
             transparentJSON = "true".equals(value);
         } else if ("json-flavor".equals(name)) {
