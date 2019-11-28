@@ -135,6 +135,7 @@ public class XProcRuntime {
     private boolean allowXPointerOnText = true;
     private boolean allowTextResults = true;
     private boolean transparentJSON = false;
+    private boolean ignoreInvalidXmlBase = false;
     private String jsonFlavor = JSONtoXML.MARKLOGIC;
     private boolean useXslt10 = false;
     private boolean htmlSerializer = false;
@@ -248,6 +249,7 @@ public class XProcRuntime {
         allowXPointerOnText = config.xpointerOnText;
         allowTextResults = config.allowTextResults;
         transparentJSON = config.transparentJSON;
+        ignoreInvalidXmlBase = config.ignoreInvalidXmlBase;
         jsonFlavor = config.jsonFlavor;
         useXslt10 = config.useXslt10;
         htmlSerializer = config.htmlSerializer;
@@ -322,6 +324,7 @@ public class XProcRuntime {
         allowGeneralExpressions = runtime.allowGeneralExpressions;
         allowXPointerOnText = runtime.allowXPointerOnText;
         transparentJSON = runtime.transparentJSON;
+        ignoreInvalidXmlBase = runtime.ignoreInvalidXmlBase;
         jsonFlavor = runtime.jsonFlavor;
         profile = runtime.profile;
 
@@ -508,6 +511,10 @@ public class XProcRuntime {
 
     public boolean getAllowTextResults() {
         return allowTextResults;
+    }
+
+    public boolean getIgnoreInvalidXmlBase() {
+        return ignoreInvalidXmlBase;
     }
 
     public boolean transparentJSON() {

@@ -89,6 +89,7 @@ public class UserArgs {
     protected boolean allowTextResults = false;
     protected boolean useXslt10 = false;
     protected boolean htmlSerializer = false;
+    protected boolean ignoreInvalidXmlBase = false;
     protected boolean transparentJSON = false;
     protected String jsonFlavor = null;
     protected Integer piperackPort = null;
@@ -423,6 +424,10 @@ public class UserArgs {
         this.htmlSerializer = htmlSerializer;
     }
 
+    public void setIgnoreInvalidXmlBase(boolean ignore) {
+        this.ignoreInvalidXmlBase = ignore;
+    }
+
     public void setTransparentJSON(boolean transparentJSON) {
         this.transparentJSON = transparentJSON;
     }
@@ -607,6 +612,7 @@ public class UserArgs {
 
         config.extensionValues |= extensionValues;
         config.xpointerOnText |= allowXPointerOnText;
+        config.ignoreInvalidXmlBase |= ignoreInvalidXmlBase;
         config.transparentJSON |= transparentJSON;
         if ((jsonFlavor != null) && !knownFlavor(jsonFlavor)) {
             config.jsonFlavor = jsonFlavor;

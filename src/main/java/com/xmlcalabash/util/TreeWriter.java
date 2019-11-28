@@ -51,6 +51,7 @@ import net.sf.saxon.type.SchemaType;
 import net.sf.saxon.type.SimpleType;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Iterator;
 
 /**
@@ -184,7 +185,15 @@ public class TreeWriter {
     }
 
     public void addStartElement(XdmNode node) {
-        addStartElement(node, node.getNodeName(), node.getBaseURI());
+        try {
+            addStartElement(node, node.getNodeName(), node.getBaseURI());
+        } catch (IllegalStateException e) {
+            if (runtime != null && runtime.getIgnoreInvalidXmlBase()) {
+                addStartElement(node, node.getNodeName(), null);
+            } else {
+                throw e;
+            }
+        }
     }
 
     public void addStartElement(XdmNode node, URI overrideBaseURI) {
@@ -192,7 +201,15 @@ public class TreeWriter {
     }
 
     public void addStartElement(XdmNode node, QName newName) {
-        addStartElement(node, newName, node.getBaseURI());
+        try {
+            addStartElement(node, newName, node.getBaseURI());
+        } catch (IllegalStateException e) {
+            if (runtime != null && runtime.getIgnoreInvalidXmlBase()) {
+                addStartElement(node, node.getNodeName(), null);
+            } else {
+                throw e;
+            }
+        }
     }
 
     public void addStartElement(XdmNode node, QName newName, URI overrideBaseURI) {
@@ -242,7 +259,7 @@ public class TreeWriter {
         }
 
         // Hack. See comment at top of file
-        if (!"".equals(overrideBaseURI.toASCIIString())) {
+        if (overrideBaseURI != null && !"".equals(overrideBaseURI.toASCIIString())) {
             receiver.setSystemId(overrideBaseURI.toASCIIString());
         }
 
