@@ -1,6 +1,6 @@
 dist: trusty
 language: java
-script: gradle dist
+script: "./gradlew dist"
 sudu: false
 
 # Hack dummy values into the gradle properties
