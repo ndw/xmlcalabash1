@@ -41,14 +41,11 @@ import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLDecoder;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Vector;
+import java.net.*;
+import java.util.*;
 import java.util.jar.JarFile;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 
 import static com.xmlcalabash.util.URIUtils.encode;
@@ -329,6 +326,7 @@ public class XProcConfiguration {
         saxonProcessor = Version.softwareEdition.toLowerCase();
         findStepClasses();
         findExtensionFunctions();
+        findImplConfiguration();
 
         String classPath = System.getProperty("java.class.path");
         String[] pathElements = classPath.split(System.getProperty("path.separator"));
@@ -386,9 +384,7 @@ public class XProcConfiguration {
 
                 SAXSource source = new SAXSource(new InputSource(instream));
                 cfgProcessor = new Processor(source);
-            } catch (FileNotFoundException e) {
-                throw new XProcException(e);
-            } catch (SaxonApiException e) {
+            } catch (FileNotFoundException | SaxonApiException e) {
                 throw new XProcException(e);
             }
         } else {
@@ -404,26 +400,30 @@ public class XProcConfiguration {
     }
 
     private void findStepClasses() {
+        logger.debug("Current implementations: " + implementations.size());
+        logger.debug("Searching for implementations:");
         Iterable<Class<?>> classes = ClassFilter.only().from(ClassIndex.getAnnotated(XMLCalabash.class));
         for (Class<?> klass : classes) {
             XMLCalabash annotation = klass.getAnnotation(XMLCalabash.class);
             for (String clarkName: annotation.type().split("\\s+")) {
                 try {
                     QName name = QName.fromClarkName(clarkName);
-                    logger.trace("Found step type annotation: " + clarkName);
+                    logger.debug("Found step type annotation: " + clarkName);
                     if (implementations.containsKey(name)) {
                         logger.debug("Ignoring step type annotation for configured step: " + clarkName);
+                    } else {
+                        implementations.put(name, klass);
                     }
-                    implementations.put(name, klass);
                 } catch (IllegalArgumentException iae) {
                     logger.debug("Failed to parse step annotation type: " + clarkName);
                 }
             }
         }
+        logger.debug("After search: " + implementations.size());
     }
 
     private void findExtensionFunctions() {
-        logger.debug("XML Calabash searching for Saxon extension functions on the class path");
+        logger.debug("Searching for Saxon extension functions on the class path");
         Iterable<Class<?>> classes = ClassIndex.getAnnotated(SaxonExtensionFunction.class);
         for (Class<?> klass : classes) {
             String name = klass.getCanonicalName();
@@ -433,6 +433,81 @@ public class XProcConfiguration {
                 logger.debug("Duplicate saxon extension function class: " + name);
             }
             extensionFunctions.put(name, annotation);
+        }
+    }
+
+    private void findImplConfiguration() {
+        try {
+            Enumeration<URL> uriEnum = this.getClass().getClassLoader().getResources("com.xmlcalabash.properties");
+            while (uriEnum.hasMoreElements()) {
+                URL url = uriEnum.nextElement();
+                logger.debug("Loading properties: " + url);
+
+                URLConnection conn = url.openConnection();
+                InputStream stream = conn.getInputStream();
+                Properties props = new Properties();
+                props.load(stream);
+
+                HashMap<String,String> nsmap = new HashMap<String,String>();
+                Pattern nsPattern = Pattern.compile("namespace\\s+(.+)$");
+                Pattern sPattern = Pattern.compile("step\\s+(.+)$");
+                Pattern qPattern = Pattern.compile("^([^:]+):([^:]+)$");
+
+                // Properties are unordered so find the namespace bindings
+                for (String name : props.stringPropertyNames()) {
+                    String value = (String) props.get(name);
+                    Matcher matcher = nsPattern.matcher(value);
+                    if (matcher.matches()) {
+                        if (nsmap.containsKey(name)) {
+                            throw new XProcException("Cannot redefine namespace bindings in property file");
+                        }
+                        nsmap.put(name, matcher.group(1));
+                    }
+                }
+
+                for (String name : props.stringPropertyNames()) {
+                    String value = (String) props.get(name);
+
+                    Matcher nsMatcher = nsPattern.matcher(value);
+                    Matcher sMatcher = sPattern.matcher(value);
+
+                    if (nsMatcher.matches()) {
+                        // nop
+                    } else if (sMatcher.matches()) {
+                        String qnames = sMatcher.group(1);
+                        for (String lexQName : qnames.split("\\s*,\\s*")) {
+                            Matcher qMatcher = qPattern.matcher(lexQName);
+                            if (qMatcher.matches()) {
+                                String pfx = qMatcher.group(1);
+                                String local = qMatcher.group(2);
+
+                                if (nsmap.containsKey(pfx)) {
+                                    try {
+                                        QName qname = new QName(pfx, nsmap.get(pfx), local);
+                                        if (implementations.containsKey(qname)) {
+                                            logger.debug("Ignoring step property for configured step: " + qname.getClarkName());
+                                        } else {
+                                            Class klass = Class.forName(name);
+                                            logger.debug("Loaded step from property: " + qname.getClarkName());
+                                            implementations.put(qname, klass);
+                                        }
+                                    } catch (ClassNotFoundException cfne) {
+                                        logger.debug("Class not found, ignoring: " + name + " = " + value);
+                                    }
+                                } else {
+                                    logger.debug("No namespace binding for " + pfx + ", ignoring: " + name + "=" + value);
+                                }
+                            } else {
+                                logger.debug("Unparseable step QName: " + lexQName);
+                            }
+                        }
+                    } else {
+                        logger.debug("Unparseable property, ignoring: " + name + " = " + value);
+                    }
+                }
+            }
+        } catch (IOException ex) {
+            logger.debug("Loading properties: " + ex.getMessage());
         }
     }
 
@@ -1219,7 +1294,12 @@ public class XProcConfiguration {
             QName name = new QName(tname,node);
             try {
                 Class<?> klass = Class.forName(value);
-                implementations.put(name, klass);
+                logger.debug("Found step type annotation: " + name.getClarkName());
+                if (implementations.containsKey(name)) {
+                    logger.debug("Ignoring step type annotation for configured step: " + name.getClarkName());
+                } else {
+                    implementations.put(name, klass);
+                }
             } catch (ClassNotFoundException e) {
                 logger.debug("Class not found: " + value);
             } catch (NoClassDefFoundError e) {
