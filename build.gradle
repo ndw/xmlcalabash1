@@ -7,16 +7,16 @@ buildscript {
   dependencies {
     classpath fileTree(dir: 'lib').include("*.jar")
     classpath group: 'net.sf.saxon', name: 'Saxon-HE', version: saxonVersion
-    classpath group: 'biz.aQute.bnd', name: 'biz.aQute.bnd.gradle', version: '4.2.0'
+    classpath group: 'biz.aQute.bnd', name: 'biz.aQute.bnd.gradle', version: '5.0.1'
   }
 }
 
 plugins {
   id "java"
-  id "maven"
+  id "maven-publish"
   id "signing"
   id "com.bmuschko.izpack" version "2.0"
-  id "de.undercouch.download" version "3.4.3"
+  id "de.undercouch.download" version "4.0.4"
 }
 
 apply plugin: 'biz.aQute.bnd.builder'
@@ -33,9 +33,8 @@ repositories {
 }
 
 configurations {
-  reportruntime {
-    extendsFrom runtime
-  }
+  reportruntime.extendsFrom(runtimeOnly)
+  projectRuntimeClasspath.extendsFrom(runtimeOnly)
 }
 
 configurations.all {
@@ -45,10 +44,10 @@ configurations.all {
 }
 
 dependencies {
-  izpack 'org.codehaus.izpack:izpack-standalone-compiler:4.3.4'
+  izpack 'org.codehaus.izpack:izpack-standalone-compiler:4.3.5'
 
-  compile fileTree(dir: 'lib').include("*.jar")
-  compile (
+  implementation fileTree(dir: 'lib').include("*.jar")
+  implementation (
     [group: 'com.nwalsh', name: 'nwalsh-annotations', version: '1.0.0'],
     [group: 'org.relaxng', name: 'jing', version: '20181222' ],
     [group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'],
@@ -101,18 +100,16 @@ dependencies {
 // about "bootstrap class path not set in conjunction with -source 1.7"
 // to go away. (I set it in ~/.gradle/gradle.properties)
 compileJava {
-    options.compilerArgs += ['-Xlint:deprecation']
-    if (project.hasProperty("JDK7LIB")) {
-        options.bootstrapClasspath = fileTree(dir: project.ext.JDK7LIB).include("*.jar")
-    }
-    options.annotationProcessorPath = configurations.compile
+  options.deprecation = true
+  options.compilerArgs += ['-Xlint:deprecation']
+  options.annotationProcessorPath = configurations.compileClasspath
 }
 
 compileTestJava {
     if (project.hasProperty("JDK7LIB")) {
         options.bootstrapClasspath = fileTree(dir: project.ext.JDK7LIB).include("*.jar")
     }
-    options.annotationProcessorPath = configurations.compile
+    options.annotationProcessorPath = configurations.compileClasspath
 }
 
 test {
@@ -122,11 +119,9 @@ test {
 sourceSets {
   main {
     java {
-      srcDir 'src/main/java'
       exclude "com/xmlcalabash/testdrivers/**"
     }
     resources {
-      srcDirs 'src/main/resources'
     }
   }
 }
@@ -134,11 +129,11 @@ sourceSets {
 // Variables
 project.ext.saxonRelease = saxonVersion.substring(0,5)
 project.ext.saxonBranch  = saxonVersion.substring(0,3).replaceAll("\\.", "")
-project.ext.releaseVersion = version
-project.ext.distVersion = version + "-" + saxonBranch + snapshot
+project.ext.releaseVersion = relVersion
+project.ext.distVersion = relVersion + "-" + saxonBranch + snapshot
 project.ext.refDocZip = 'xmlcalabash-ref-' + docsVersion + '.zip'
 
-version = project.ext.distVersion // - gets turned into . in some contexts
+relVersion = project.ext.distVersion // - gets turned into . in some contexts
 group = "com.xmlcalabash"
 
 if (!hasProperty("sonatypeUsername")) {
@@ -155,7 +150,7 @@ versionProps['version'] = releaseVersion
 versionProps.store(versionPropsFile.newWriter(),null)
 
 task copyLib(type: Copy) {
-  FileCollection runtime  = configurations.runtime
+  FileCollection runtime  = configurations.projectRuntimeClasspath
   FileCollection localLib = fileTree(dir: 'lib').include("*.jar")
   FileCollection lib = runtime - localLib
   String path = ""
@@ -184,10 +179,6 @@ izpack {
   baseDir = file("build/dist")
   installFile = file("build/install.xml")
   outputFile = file("build/distributions/xmlcalabash-" + project.ext.distVersion + ".jar")
-}
-
-compileJava {
-  options.deprecation = true
 }
 
 task copyNotices(type: Copy) {
@@ -245,15 +236,15 @@ task copyToDist(dependsOn: [copyLib,copyNotices,copyReferenceDocs,copySchemas,
 jar.dependsOn copyToDist
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
-  baseName = "xmlcalabash"
   classifier = 'javadoc'
+  archiveVersion = relVersion
   from tasks.javadoc.destinationDir
 }
 
 task sourcesJar(type: Jar) {
-  baseName = "xmlcalabash"
-  from sourceSets.main.allSource
   classifier = 'sources'
+  archiveVersion = relVersion
+  from sourceSets.main.allSource
 }
 
 task copyJar(dependsOn: jar, type: Copy) {
@@ -275,8 +266,8 @@ task makeDist(dependsOn: [ build, copyJar, copyLib ]) {
 task zipDist(dependsOn: makeDist, type: Zip) {
   from('build/dist')
   exclude(["calabash", "calabash.bat"])
-  into 'xmlcalabash-' + version
-  archiveName 'xmlcalabash-' + version + ".zip"
+  into 'xmlcalabash-' + relVersion
+  archiveFileName = 'xmlcalabash-' + relVersion + ".zip"
 }
 
 task izPackDist(dependsOn: izPackCreateInstaller) {
@@ -355,13 +346,13 @@ task makeIZPackShell(dependsOn: copyVERSION) {
     def shell = new File("$buildDir/dist", "calabash")
     shell.withPrintWriter { writer ->
       writer.println '#!/bin/bash'
-      writer.println 'java -Xmx1024m -cp %INSTALL_PATH/xmlcalabash-' + version + '.jar com.xmlcalabash.drivers.Main "$@"'
+      writer.println 'java -Xmx1024m -cp %INSTALL_PATH/xmlcalabash-' + relVersion + '.jar com.xmlcalabash.drivers.Main "$@"'
     }
     shell.setExecutable(true)
 
     def batch = new File("$buildDir/dist", "calabash.bat")
     batch.withPrintWriter { writer ->
-      writer.println 'java -Xmx1024m -cp %INSTALL_PATH/xmlcalabash-' + version + '.jar com.xmlcalabash.drivers.Main %*'
+      writer.println 'java -Xmx1024m -cp %INSTALL_PATH/xmlcalabash-' + relVersion + '.jar com.xmlcalabash.drivers.Main %*'
     }
   }
 }
@@ -377,93 +368,67 @@ task setupIZPack(dependsOn: [makeDist, makeIZPackShell], type: JavaExec) {
 }
 izPackCreateInstaller.dependsOn setupIZPack
 
-artifacts {
-  archives javadocJar
-  archives sourcesJar
-}
-
 signing {
-  required { gradle.taskGraph.hasTask("uploadArchives") }
-  sign configurations.archives
+  sign publishing.publications
 }
 
-def mavenPom = {
-  name 'XML Calabash'
-  packaging 'jar'
-  description 'An XProc 1.0 processor'
-  url 'https://github.com/ndw/xmlcalabash1'
-
-  scm {
-    url 'scm:git@github.com:ndw/xmlcalabash1.git'
-    connection 'scm:git@github.com:ndw/xmlcalabash1.git'
-    developerConnection 'scm:git@github.com:ndw/xmlcalabash1.git'
-  }
-
-  licenses {
-    license {
-      name 'Common Development and Distribution License (CDDL) version 1.0'
-      url 'https://opensource.org/licenses/CDDL-1.0'
-      distribution 'repo'
-    }
-    license {
-      name 'GNU General Public License version 2'
-      url 'https://www.gnu.org/licenses/gpl-2.0.txt'
-      distribution 'repo'
-    }
-  }
-
-  developers {
-    developer {
-      id 'ndw'
-      name 'Norman Walsh'
-    }
-  }
-
-  repositories {
-    repository {
-      id 'restlet'
-      url 'https://maven.restlet.com'
-    }
-  }
-}
-
-/*
 publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-        }
-    }
-    repositories {
-        mavenLocal()
-    }
-}
-*/
+  publications {
+    mavenJava(MavenPublication) {
+      pom {
+        name = 'XML Calabash'
+        packaging = 'jar'
+        description = 'An XProc 1.0 processor'
+        url = 'https://github.com/ndw/xmlcalabash1'
 
-install {
-  repositories {
-    mavenInstaller {
-      pom.project(mavenPom)
+        scm {
+          url = 'scm:git@github.com:ndw/xmlcalabash1.git'
+          connection = 'scm:git@github.com:ndw/xmlcalabash1.git'
+          developerConnection = 'scm:git@github.com:ndw/xmlcalabash1.git'
+        }
+
+        licenses {
+          license {
+            name = 'Common Development and Distribution License (CDDL) version 1.0'
+            url = 'https://opensource.org/licenses/CDDL-1.0'
+            distribution = 'repo'
+          }
+          license {
+            name = 'GNU General Public License version 2'
+            url = 'https://www.gnu.org/licenses/gpl-2.0.txt'
+            distribution = 'repo'
+          }
+        }
+
+        developers {
+          developer {
+            id = 'ndw'
+            name = 'Norman Walsh'
+          }
+        }
+      }
+
+      groupId = "com.xmlcalabash"
+      artifactId = "xmlcalabash"
+      version = relVersion
+      from components.java
+      artifact javadocJar
+      artifact sourcesJar
     }
   }
-}
 
-uploadArchives {
   repositories {
-    mavenDeployer {
-      beforeDeployment { MavenDeployment deployment ->
-        signing.signPom(deployment)
+    /*
+    maven {
+      url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+      credentials {
+        username = sonatypeUsername
+        password = sonatypePassword
       }
-
-      repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-        authentication(userName: sonatypeUsername, password: sonatypePassword)
-      }
-
-      snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-        authentication(userName: sonatypeUsername, password: sonatypePassword)
-      }
-
-      pom.project(mavenPom)
+    }
+    */
+    maven {
+      url 'file://tmp/repo'
     }
   }
 }
