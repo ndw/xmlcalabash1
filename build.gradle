@@ -159,7 +159,7 @@ versionProps['version'] = releaseVersion
 versionProps.store(versionPropsFile.newWriter(),null)
 
 task copyLib(type: Copy) {
-  FileCollection runtime  = configurations.projectRuntimeClasspath
+  FileCollection runtime  = configurations.compileClasspath
   FileCollection localLib = fileTree(dir: 'lib').include("*.jar")
   FileCollection lib = runtime - localLib
   String path = ""
@@ -173,6 +173,7 @@ task copyLib(type: Copy) {
 }
 
 jar {
+  archiveBaseName = "xmlcalabash-" + relVersion
   bnd ('Bundle-Vendor': 'Norman Walsh',
        'Bundle-Description': 'XML Calabash an XProc 1.0 pipeline processor.',
        'Bundle-Name': 'xmlcalabash1',
