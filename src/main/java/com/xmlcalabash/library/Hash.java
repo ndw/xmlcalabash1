@@ -23,6 +23,7 @@
 
 package com.xmlcalabash.library;
 
+import java.util.ArrayList;
 import java.util.Hashtable;
 import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.io.ReadablePipe;
@@ -34,10 +35,14 @@ import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.util.HashUtils;
 import com.xmlcalabash.util.ProcessMatchingNodes;
 import com.xmlcalabash.util.ProcessMatch;
+import net.sf.saxon.event.ReceiverOption;
+import net.sf.saxon.om.AttributeInfo;
+import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.QName;
 import com.xmlcalabash.runtime.XAtomicStep;
+import net.sf.saxon.type.BuiltInAtomicType;
 
 /**
  *
@@ -124,37 +129,46 @@ public class Hash extends DefaultStep implements ProcessMatchingNodes {
 
     }
 
-    public boolean processStartDocument(XdmNode node) throws SaxonApiException {
+    public boolean processStartDocument(XdmNode node) {
         return true;
     }
 
-    public void processEndDocument(XdmNode node) throws SaxonApiException {
+    public void processEndDocument(XdmNode node) {
         // nop?
     }
 
-    public boolean processStartElement(XdmNode node) throws SaxonApiException {
+    @Override
+    public AttributeMap processAttributes(XdmNode node, AttributeMap matchingAttributes, AttributeMap nonMatchingAttributes) {
+        ArrayList<AttributeInfo> alist = new ArrayList<>();
+        for (AttributeInfo attr : nonMatchingAttributes) {
+            alist.add(attr);
+        }
+        for (AttributeInfo attr : matchingAttributes) {
+            alist.add(new AttributeInfo(attr.getNodeName(), BuiltInAtomicType.ANY_ATOMIC, hash, attr.getLocation(), ReceiverOption.NONE));
+        }
+        return AttributeMap.fromList(alist);
+    }
+
+    @Override
+    public boolean processStartElement(XdmNode node, AttributeMap attributes) {
         matcher.addText(hash);
         return false;
     }
 
-    public void processEndElement(XdmNode node) throws SaxonApiException {
+    public void processEndElement(XdmNode node) {
         // nop?
     }
 
-    public void processText(XdmNode node) throws SaxonApiException {
+    public void processText(XdmNode node) {
         matcher.addText(hash);
     }
 
-    public void processComment(XdmNode node) throws SaxonApiException {
+    public void processComment(XdmNode node) {
         matcher.addComment(hash);
     }
 
-    public void processPI(XdmNode node) throws SaxonApiException {
+    public void processPI(XdmNode node) {
         matcher.addPI(node.getNodeName().getLocalName(),hash);
-    }
-
-    public void processAttribute(XdmNode node) throws SaxonApiException {
-        matcher.addAttribute(node.getNodeName(), hash);
     }
 }
 

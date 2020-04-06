@@ -19,6 +19,7 @@
  */
 package com.xmlcalabash.util;
 
+import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.SaxonApiException;
 
@@ -30,37 +31,40 @@ import net.sf.saxon.s9api.SaxonApiException;
  * To change this template use File | Settings | File Templates.
  */
 public class DebugProcessMatchingNodes implements ProcessMatchingNodes {
-    public boolean processStartDocument(XdmNode node) throws SaxonApiException {
+    public boolean processStartDocument(XdmNode node) {
         System.err.println("processStartDocument(" + node + ")");
         return true;
     }
 
-    public void processEndDocument(XdmNode node) throws SaxonApiException {
+    public void processEndDocument(XdmNode node) {
         System.err.println("processEndDocument(" + node + ")");
     }
 
-    public boolean processStartElement(XdmNode node) throws SaxonApiException {
+    @Override
+    public AttributeMap processAttributes(XdmNode node, AttributeMap matchingAttributes, AttributeMap nonMatchingAttributes) {
+        System.err.println("processAttributes(" + node + ")");
+        return null;
+    }
+
+    @Override
+    public boolean processStartElement(XdmNode node, AttributeMap attributes) {
         System.err.println("processStartElement(" + node + ")");
         return true;
     }
 
-    public void processEndElement(XdmNode node) throws SaxonApiException {
+    public void processEndElement(XdmNode node) {
         System.err.println("processEndElement(" + node + ")");
     }
 
-    public void processText(XdmNode node) throws SaxonApiException {
+    public void processText(XdmNode node) {
         System.err.println("processText(" + node + ")");
     }
 
-    public void processComment(XdmNode node) throws SaxonApiException {
+    public void processComment(XdmNode node) {
         System.err.println("processComment(" + node + ")");
     }
 
-    public void processPI(XdmNode node) throws SaxonApiException {
+    public void processPI(XdmNode node) {
         System.err.println("processPI(" + node + ")");
-    }
-
-    public void processAttribute(XdmNode node) throws SaxonApiException {
-        System.err.println("processAttribute(" + node + ")");
     }
 }

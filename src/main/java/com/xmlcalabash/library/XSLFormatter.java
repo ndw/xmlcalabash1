@@ -118,20 +118,14 @@ public class XSLFormatter extends DefaultStep {
             URI id = store.writeEntry(href, base, contentType, new DataWriter() {
                 public void store(OutputStream content) throws IOException {
                     OutputStream out = new BufferedOutputStream(content);
-                    try {
-                        processor.format(source.read(),out,contentType);
-                    } catch (SaxonApiException e) {
-                        throw new XProcException(step.getNode(), "Failed to process FO document", e);
-                    } finally {
-                        out.close();
-                    }
+                    processor.format(source.read(),out,contentType);
+                    out.close();
                 }
             });
 
             TreeWriter tree = new TreeWriter(runtime);
             tree.startDocument(step.getNode().getBaseURI());
             tree.addStartElement(XProcConstants.c_result);
-            tree.startContent();
             tree.addText(id.toASCIIString());
             tree.addEndElement();
             tree.endDocument();

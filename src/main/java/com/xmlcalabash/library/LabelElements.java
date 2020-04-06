@@ -19,7 +19,8 @@
 
 package com.xmlcalabash.library;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 
 import com.xmlcalabash.core.XMLCalabash;
@@ -29,6 +30,15 @@ import com.xmlcalabash.util.ProcessMatch;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
+import com.xmlcalabash.util.TypeUtils;
+import net.sf.saxon.event.ReceiverOption;
+import net.sf.saxon.om.AttributeInfo;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.EmptyAttributeMap;
+import net.sf.saxon.om.FingerprintedQName;
+import net.sf.saxon.om.NameOfNode;
+import net.sf.saxon.om.NamespaceMap;
+import net.sf.saxon.om.NodeName;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -43,6 +53,8 @@ import net.sf.saxon.s9api.XdmAtomicValue;
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
+import net.sf.saxon.type.BuiltInAtomicType;
+import org.w3c.dom.Attr;
 
 /**
  *
@@ -74,19 +86,23 @@ public class LabelElements extends DefaultStep implements ProcessMatchingNodes {
         super(runtime,step);
     }
 
+    @Override
     public void setInput(String port, ReadablePipe pipe) {
         source = pipe;
     }
 
+    @Override
     public void setOutput(String port, WritablePipe pipe) {
         result = pipe;
     }
 
+    @Override
     public void reset() {
         source.resetReader();
         result.resetWriter();
     }
 
+    @Override
     public void run() throws SaxonApiException {
         super.run();
 
@@ -123,82 +139,97 @@ public class LabelElements extends DefaultStep implements ProcessMatchingNodes {
         result.write(matcher.getResult());
     }
 
-    public boolean processStartDocument(XdmNode node) throws SaxonApiException {
+    @Override
+    public boolean processStartDocument(XdmNode node) {
         throw XProcException.stepError(24);
     }
 
-    public void processEndDocument(XdmNode node) throws SaxonApiException {
+    @Override
+    public void processEndDocument(XdmNode node) {
         throw XProcException.stepError(24);
     }
 
-    public boolean processStartElement(XdmNode node) throws SaxonApiException {
-        matcher.addStartElement(node);
+    @Override
+    public AttributeMap processAttributes(XdmNode node, AttributeMap matchingAttributes, AttributeMap nonMatchingAttributes) {
+        throw XProcException.stepError(23);
+    }
+
+    @Override
+    public boolean processStartElement(XdmNode node, AttributeMap attributes) {
+        NamespaceMap nsmap = node.getUnderlyingNode().getAllNamespaces();
+        AttributeMap amap = EmptyAttributeMap.getInstance();
+
+        String prefix = prefixFor(nsmap, attribute.getPrefix(), attribute.getNamespaceURI());
+        NodeName aname = new FingerprintedQName(prefix, attribute.getNamespaceURI(), attribute.getLocalName());
 
         boolean found = false;
-        XdmSequenceIterator iter = node.axisIterator(Axis.ATTRIBUTE);
-        while (iter.hasNext()) {
-            XdmNode attr = (XdmNode) iter.next();
-            if (attribute.equals(attr.getNodeName())) {
+        for (AttributeInfo ainfo : attributes) {
+            if (aname.equals(ainfo.getNodeName())) {
                 found = true;
                 if (replace) {
-                    matcher.addAttribute(attr, computedLabel(node));
+                    amap = amap.put(new AttributeInfo(aname, BuiltInAtomicType.UNTYPED_ATOMIC, computedLabel(node), ainfo.getLocation(), ReceiverOption.NONE));
                 } else {
-                    matcher.addAttribute(attr);
+                    amap = amap.put(ainfo);
                 }
             } else {
-                matcher.addAttribute(attr);
+                amap = amap.put(ainfo);
             }
         }
 
         if (!found) {
-            matcher.addAttribute(attribute, computedLabel(node));
+            amap = amap.put(new AttributeInfo(aname, BuiltInAtomicType.UNTYPED_ATOMIC, computedLabel(node), null, ReceiverOption.NONE));
         }
 
+        matcher.addStartElement(node, amap);
         return true;
     }
 
-    public void processEndElement(XdmNode node) throws SaxonApiException {
+    @Override
+    public void processEndElement(XdmNode node) {
         matcher.addEndElement();
     }
 
-    public void processText(XdmNode node) throws SaxonApiException {
+    @Override
+    public void processText(XdmNode node) {
         throw XProcException.stepError(23);
     }
 
-    public void processComment(XdmNode node) throws SaxonApiException {
+    @Override
+    public void processComment(XdmNode node) {
         throw XProcException.stepError(23);
     }
 
-    public void processPI(XdmNode node) throws SaxonApiException {
+    @Override
+    public void processPI(XdmNode node) {
         throw XProcException.stepError(23);
     }
 
-    public void processAttribute(XdmNode node) throws SaxonApiException {
-        throw XProcException.stepError(23);
-    }
+    private String computedLabel(XdmNode node) {
+        try {
+            XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
+            xcomp.setBaseURI(step.getNode().getBaseURI());
 
-    private String computedLabel(XdmNode node) throws SaxonApiException {
-        XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
-        xcomp.setBaseURI(step.getNode().getBaseURI());
+            // Make sure any namespace bindings in-scope for the label are available for the expression
+            for (String prefix : label.getNamespaceBindings().keySet()) {
+                xcomp.declareNamespace(prefix, label.getNamespaceBindings().get(prefix));
+            }
+            xcomp.declareVariable(p_index);
 
-        // Make sure any namespace bindings in-scope for the label are available for the expression
-        for (String prefix : label.getNamespaceBindings().keySet()) {
-            xcomp.declareNamespace(prefix, label.getNamespaceBindings().get(prefix));
+            XPathExecutable xexec = xcomp.compile(label.getString());
+            XPathSelector selector = xexec.load();
+
+            selector.setVariable(p_index,new XdmAtomicValue(count++));
+
+            selector.setContextItem(node);
+
+            Iterator<XdmItem> values = selector.iterator();
+
+            XdmItem item = values.next();
+
+            return item.getStringValue();
+        } catch (SaxonApiException sae) {
+            throw new XProcException(sae);
         }
-        xcomp.declareVariable(p_index);
-
-        XPathExecutable xexec = xcomp.compile(label.getString());
-        XPathSelector selector = xexec.load();
-
-        selector.setVariable(p_index,new XdmAtomicValue(count++));
-
-        selector.setContextItem(node);
-
-        Iterator<XdmItem> values = selector.iterator();
-
-        XdmItem item = values.next();
-
-        return item.getStringValue();
     }
 }
 

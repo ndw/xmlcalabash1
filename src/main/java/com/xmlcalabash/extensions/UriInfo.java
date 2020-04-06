@@ -9,10 +9,9 @@ import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.model.RuntimeValue;
-import com.xmlcalabash.util.AxisNodes;
-import com.xmlcalabash.util.MessageFormatter;
-import com.xmlcalabash.util.TreeWriter;
-import com.xmlcalabash.util.S9apiUtils;
+import com.xmlcalabash.util.*;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.EmptyAttributeMap;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -22,6 +21,7 @@ import java.net.URI;
 import java.io.File;
 import java.util.GregorianCalendar;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.TimeZone;
 
 /**
@@ -90,7 +90,6 @@ public class UriInfo extends DefaultStep {
 
         TreeWriter tree = new TreeWriter(runtime);
         tree.startDocument(step.getNode().getBaseURI());
-        tree.addStartElement(c_uriinfo);
 
         if (uri.getScheme().equals("file")) {
             String fn = href.getString();
@@ -102,18 +101,19 @@ public class UriInfo extends DefaultStep {
             }
 
             File f = new File(fn);
+            AttributeMap attr = EmptyAttributeMap.getInstance();
 
-            tree.addAttribute(_href, href.getString());
-            tree.addAttribute(_exists, f.exists() ? "true" : "false");
-            tree.addAttribute(_readable, f.canRead() ? "true" : "false");
+            attr = attr.put(TypeUtils.attributeInfo(_href, href.getString()));
+            attr = attr.put(TypeUtils.attributeInfo(_exists, f.exists() ? "true" : "false"));
+            attr = attr.put(TypeUtils.attributeInfo(_readable, f.canRead() ? "true" : "false"));
 
             if (f.exists()) {
-                tree.addAttribute(_writable, f.canWrite() ? "true" : "false");
-                tree.addAttribute(_size, "" + f.length());
-                tree.addAttribute(_absolute, f.isAbsolute() ? "true" : "false");
-                tree.addAttribute(_directory, f.isDirectory() ? "true" : "false");
-                tree.addAttribute(_hidden, f.isHidden() ? "true" : "false");
-                tree.addAttribute(_file, f.isFile() ? "true" : "false");
+                attr = attr.put(TypeUtils.attributeInfo(_writable, f.canWrite() ? "true" : "false"));
+                attr = attr.put(TypeUtils.attributeInfo(_size, "" + f.length()));
+                attr = attr.put(TypeUtils.attributeInfo(_absolute, f.isAbsolute() ? "true" : "false"));
+                attr = attr.put(TypeUtils.attributeInfo(_directory, f.isDirectory() ? "true" : "false"));
+                attr = attr.put(TypeUtils.attributeInfo(_hidden, f.isHidden() ? "true" : "false"));
+                attr = attr.put(TypeUtils.attributeInfo(_file, f.isFile() ? "true" : "false"));
 
                 GregorianCalendar cal = new GregorianCalendar();
                 cal.setTimeInMillis(f.lastModified());
@@ -124,27 +124,28 @@ public class UriInfo extends DefaultStep {
                     gmt -= tz.getDSTSavings();
                 }
                 cal.setTimeInMillis(gmt);
-                tree.addAttribute(_last_modified, String.format("%1$04d-%2$02d-%3$02dT%4$02d:%5$02d:%6$02dZ",
+                attr = attr.put(TypeUtils.attributeInfo(_last_modified, String.format("%1$04d-%2$02d-%3$02dT%4$02d:%5$02d:%6$02dZ",
                         cal.get(Calendar.YEAR), cal.get(Calendar.MONTH)+1, cal.get(Calendar.DAY_OF_MONTH),
-                        cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), cal.get(Calendar.SECOND)));
+                        cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), cal.get(Calendar.SECOND))));
             } else {
                 String path = f.getAbsolutePath();
                 int slash = path.lastIndexOf("/");
                 path = path.substring(0,slash);
                 File parent = new File(path);
-                tree.addAttribute(_writable, parent.canWrite() ? "true" : "false");
+                attr = attr.put(TypeUtils.attributeInfo(_writable, parent.canWrite() ? "true" : "false"));
             }
 
-            tree.addAttribute(_absolute_path, f.getAbsolutePath());
-            tree.addAttribute(_uri, f.toURI().toASCIIString());
+            attr = attr.put(TypeUtils.attributeInfo(_absolute_path, f.getAbsolutePath()));
+            attr = attr.put(TypeUtils.attributeInfo(_uri, f.toURI().toASCIIString()));
 
             try {
                 String cp = f.getCanonicalPath();
-                tree.addAttribute(_canonical_path, cp);
+                attr = attr.put(TypeUtils.attributeInfo(_canonical_path, cp));
             } catch (Exception e) {
                 // nevermind
             }
-            tree.startContent();
+
+            tree.addStartElement(c_uriinfo, attr);
             tree.addEndElement();
         } else {
             // Let's try HTTP
@@ -156,18 +157,19 @@ public class UriInfo extends DefaultStep {
 
             TreeWriter req = new TreeWriter(runtime);
             req.startDocument(step.getNode().getBaseURI());
-            req.addStartElement(XProcConstants.c_request);
-            req.addAttribute(_method, "HEAD");
-            req.addAttribute(_href, uri.toASCIIString());
-            req.addAttribute(_status_only, "true");
-            req.addAttribute(_detailed, "true");
+            AttributeMap attr = EmptyAttributeMap.getInstance();
+
+            attr = attr.put(TypeUtils.attributeInfo(_method, "HEAD"));
+            attr = attr.put(TypeUtils.attributeInfo(_href, uri.toASCIIString()));
+            attr = attr.put(TypeUtils.attributeInfo(_status_only, "true"));
+            attr = attr.put(TypeUtils.attributeInfo(_detailed, "true"));
 
             for (QName name : new QName[] {_username, _password, _auth_method, _send_authorization } ) {
                 RuntimeValue v = getOption(name);
-                if (v != null) { req.addAttribute(name, v.getString()); }
+                if (v != null) { attr = attr.put(TypeUtils.attributeInfo(name, v.getString())); }
             }
-            
-            req.startContent();
+
+            req.addStartElement(XProcConstants.c_request, attr);
             req.addEndElement();
             req.endDocument();
 
@@ -176,17 +178,20 @@ public class UriInfo extends DefaultStep {
             httpReq.run();
 
             XdmNode result = S9apiUtils.getDocumentElement(outputPipe.read());
+            assert result != null;
+
             int status = Integer.parseInt(result.getAttributeValue(_status));
-            
-            tree.addAttribute(_href, href.getString());
-            tree.addAttribute(_status, ""+status);
-            tree.addAttribute(_readable, status >= 200 && status < 400 ? "true" : "false");
-            tree.addAttribute(_exists, status >= 400 && status < 500 ? "false" : "true");
-            tree.addAttribute(_uri, uri.toASCIIString());
+
+            attr = EmptyAttributeMap.getInstance();
+            attr = attr.put(TypeUtils.attributeInfo(_href, href.getString()));
+            attr = attr.put(TypeUtils.attributeInfo(_status, ""+status));
+            attr = attr.put(TypeUtils.attributeInfo(_readable, status >= 200 && status < 400 ? "true" : "false"));
+            attr = attr.put(TypeUtils.attributeInfo(_exists, status >= 400 && status < 500 ? "false" : "true"));
+            attr = attr.put(TypeUtils.attributeInfo(_uri, uri.toASCIIString()));
 
             for (XdmNode node : new AxisNodes(result, Axis.CHILD, AxisNodes.SIGNIFICANT)) {
                 if ("Last-Modified".equals(node.getAttributeValue(_name))) {
-                    String months[] = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+                    String[] months = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN",
                                        "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
                     String dateStr = node.getAttributeValue(_value);
                     // dateStr = Fri, 13 Mar 2009 12:12:07 GMT
@@ -208,18 +213,17 @@ public class UriInfo extends DefaultStep {
                         }
                     }
 
-                    tree.addAttribute(_last_modified, String.format("%1$04d-%2$02d-%3$02dT%4$s%5$s",
+                    attr = attr.put(TypeUtils.attributeInfo(_last_modified, String.format("%1$04d-%2$02d-%3$02dT%4$s%5$s",
                             Integer.parseInt(yearStr), month+1, Integer.parseInt(dayStr), timeStr,
-                            "GMT".equals(tzStr) ? "Z" : ""));
+                            "GMT".equals(tzStr) ? "Z" : "")));
                 }
 
                 if ("Content-Length".equals(node.getAttributeValue(_name))) {
-                    tree.addAttribute(_size, node.getAttributeValue(_value));
+                    attr = attr.put(TypeUtils.attributeInfo(_size, node.getAttributeValue(_value)));
                 }
             }
 
-
-            tree.startContent();
+            tree.addStartElement(c_uriinfo, attr);
 
             for (XdmNode node : new AxisNodes(result, Axis.CHILD, AxisNodes.SIGNIFICANT)) {
                 tree.addSubtree(node);

@@ -19,7 +19,7 @@
  */
 package com.xmlcalabash.util;
 
-import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.s9api.XdmNode;
 
 /**
@@ -30,12 +30,12 @@ import net.sf.saxon.s9api.XdmNode;
  * To change this template use File | Settings | File Templates.
  */
 public interface ProcessMatchingNodes {
-    public boolean processStartDocument(XdmNode node) throws SaxonApiException;
-    public void processEndDocument(XdmNode node) throws SaxonApiException;
-    public boolean processStartElement(XdmNode node) throws SaxonApiException;
-    public void processAttribute(XdmNode node) throws SaxonApiException;
-    public void processEndElement(XdmNode node) throws SaxonApiException;
-    public void processText(XdmNode node) throws SaxonApiException;
-    public void processComment(XdmNode node) throws SaxonApiException;
-    public void processPI(XdmNode node) throws SaxonApiException;
+    public boolean processStartDocument(XdmNode node);
+    public void processEndDocument(XdmNode node);
+    public boolean processStartElement(XdmNode node, AttributeMap attributes);
+    public AttributeMap processAttributes(XdmNode node, AttributeMap matchingAttributes, AttributeMap nonMatchingAttributes);
+    public void processEndElement(XdmNode node);
+    public void processText(XdmNode node);
+    public void processComment(XdmNode node);
+    public void processPI(XdmNode node);
 }

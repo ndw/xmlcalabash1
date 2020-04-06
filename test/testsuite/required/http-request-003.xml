@@ -24,7 +24,7 @@
 </p:declare-step>
 </t:pipeline>
 
-<t:output port='result'><c:body content-type='text/plain; charset="utf-8"'>Hello world!
+<t:output port='result'><c:body content-type='text/plain;charset="utf-8"'>Hello world!
 </c:body></t:output>
 
 </t:test>

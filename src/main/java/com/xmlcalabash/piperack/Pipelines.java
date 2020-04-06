@@ -35,20 +35,16 @@ public class Pipelines extends BaseResource {
         TreeWriter tree = new TreeWriter(getGlobalRuntime());
         tree.startDocument(URI.create("http://example.com/"));
         tree.addStartElement(pr_pipelines);
-        tree.startContent();
         for (String id : getPipelines().keySet()) {
             PipelineConfiguration pipeconfig = getPipelines().get(id);
 
             tree.addStartElement(pr_pipeline);
-            tree.startContent();
 
             tree.addStartElement(pr_uri);
-            tree.startContent();
             tree.addText(pipelineUri(id));
             tree.addEndElement();
 
             tree.addStartElement(pr_has_run);
-            tree.startContent();
             tree.addText("" + pipeconfig.ran);
             tree.addEndElement();
 
@@ -123,15 +119,12 @@ public class Pipelines extends BaseResource {
         tree.startDocument(URI.create("http://example.com/"));
 
         tree.addStartElement(pr_response);
-        tree.startContent();
         tree.addStartElement(pr_code);
-        tree.startContent();
         tree.addText("" + Status.SUCCESS_CREATED.getCode());
         tree.addEndElement();
 
         if (expires.getTimeInMillis() != Long.MAX_VALUE) {
             tree.addStartElement(pr_expires);
-            tree.startContent();
             SimpleDateFormat gmtFrmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US);
             gmtFrmt.setTimeZone(TimeZone.getTimeZone("GMT"));
             tree.addText(gmtFrmt.format(expires.getTime()));
@@ -139,12 +132,10 @@ public class Pipelines extends BaseResource {
         }
 
         tree.addStartElement(pr_uri);
-        tree.startContent();
         tree.addText(pipelineUri(id));
         tree.addEndElement();
 
         tree.addStartElement(pr_message);
-        tree.startContent();
         tree.addText("Created " + pipelineUri(id));
         tree.addEndElement();
         tree.addEndElement();

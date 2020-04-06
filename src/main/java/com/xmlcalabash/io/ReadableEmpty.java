@@ -20,8 +20,9 @@ public class ReadableEmpty implements ReadablePipe {
         return false;
     }
 
-    public XdmNode read() throws SaxonApiException {
-        return null;    }
+    public XdmNode read() {
+        return null;
+    }
 
     public void setReader(Step step) {
         // nop

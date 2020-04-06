@@ -29,9 +29,12 @@ import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.util.MessageFormatter;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TreeWriter;
+import com.xmlcalabash.util.TypeUtils;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.event.ComplexContentOutputter;
 import net.sf.saxon.event.NamespaceReducer;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.EmptyAttributeMap;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -64,6 +67,7 @@ import javax.xml.XMLConstants;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.util.HashMap;
 import java.util.Vector;
 import java.io.IOException;
 
@@ -293,17 +297,18 @@ public class ValidateWithXSD extends DefaultStep {
 
             TreeWriter treeWriter = new TreeWriter(runtime);
             treeWriter.startDocument(docBaseURI);
-            treeWriter.addStartElement(XProcConstants.c_error);
 
+            AttributeMap attr = EmptyAttributeMap.getInstance();
+            
             if (e.getLineNumber()!=-1) {
-                treeWriter.addAttribute(_line, ""+e.getLineNumber());
+                attr = attr.put(TypeUtils.attributeInfo(_line, ""+e.getLineNumber()));
             }
 
             if (e.getColumnNumber()!=-1) {
-                treeWriter.addAttribute(_column, ""+e.getColumnNumber());
+                attr = attr.put(TypeUtils.attributeInfo(_column, ""+e.getColumnNumber()));
             }
 
-            treeWriter.startContent();
+            treeWriter.addStartElement(XProcConstants.c_error, attr);
 
             treeWriter.addText(e.toString());
 
@@ -340,20 +345,21 @@ public class ValidateWithXSD extends DefaultStep {
 
             TreeWriter treeWriter = new TreeWriter(runtime);
             treeWriter.startDocument(docBaseURI);
-            treeWriter.addStartElement(XProcConstants.c_error);
+
+            AttributeMap attr = EmptyAttributeMap.getInstance();
 
             SourceLocator loc = e.getLocator();
             if (loc != null) {
                 if (loc.getLineNumber() != -1) {
-                    treeWriter.addAttribute(_line, ""+loc.getLineNumber());
+                    attr = attr.put(TypeUtils.attributeInfo(_line, ""+loc.getLineNumber()));
                 }
 
                 if (loc.getColumnNumber() != -1) {
-                    treeWriter.addAttribute(_column, ""+loc.getColumnNumber());
+                    attr = attr.put(TypeUtils.attributeInfo(_column, ""+loc.getColumnNumber()));
                 }
             }
 
-            treeWriter.startContent();
+            treeWriter.addStartElement(XProcConstants.c_error, attr);
 
             treeWriter.addText(e.toString());
 

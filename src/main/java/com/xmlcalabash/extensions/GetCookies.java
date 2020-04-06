@@ -5,6 +5,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import com.xmlcalabash.core.XMLCalabash;
+import com.xmlcalabash.util.TypeUtils;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.EmptyAttributeMap;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 
@@ -67,27 +70,23 @@ public class GetCookies extends DefaultStep {
 
         tree.startDocument(step.getNode().getBaseURI());
         tree.addStartElement(c_cookies);
-        tree.startContent();
 
         for (Cookie cookie : runtime.getCookieStore(cookieKey).getCookies()) {
-            tree.addStartElement(c_cookie);
-            tree.addAttribute(_name, cookie.getName());
-            tree.addAttribute(_value, cookie.getValue());
-            tree.addAttribute(_domain, cookie.getDomain());
-            tree.addAttribute(_path, cookie.getPath());
-            //tree.addAttribute(_secure, cookie.getSecure() ? "true" : "false");
-            //tree.addAttribute(_version, ""+cookie.getVersion());
+            AttributeMap amap = EmptyAttributeMap.getInstance();
+            amap = amap.put(TypeUtils.attributeInfo(_name, cookie.getName()));
+            amap = amap.put(TypeUtils.attributeInfo(_value, cookie.getValue()));
+            amap = amap.put(TypeUtils.attributeInfo(_domain, cookie.getDomain()));
+            amap = amap.put(TypeUtils.attributeInfo(_path, cookie.getPath()));
+            //amap = amap.put(TypeUtils.attributeInfo(_secure, cookie.getSecure() ? "true" : "false"));
+            //amap = amap.put(TypeUtils.attributeInfo(_version, ""+cookie.getVersion()));
             Date date = cookie.getExpiryDate();
             if (date != null) {
                 String iso = iso8601.format(date);
                 // Insert the damn colon in the timezone
                 iso = iso.substring(0,22) + ":" + iso.substring(22);
-                tree.addAttribute(_expires, iso);
-
-                Date today = new Date();
-                
+                amap = amap.put(TypeUtils.attributeInfo(_expires, iso));
             }
-            tree.startContent();
+            tree.addStartElement(c_cookie, amap);
             String comment = cookie.getComment();
             if (comment != null) {
                 tree.addText(comment);

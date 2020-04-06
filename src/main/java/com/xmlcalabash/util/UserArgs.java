@@ -22,6 +22,10 @@ import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.runtime.XLibrary;
 import com.xmlcalabash.util.Input.Type;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.EmptyAttributeMap;
+import net.sf.saxon.om.NamespaceMap;
+import net.sf.saxon.om.SingletonAttributeMap;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -78,10 +82,10 @@ public class UserArgs {
     protected String entityResolverClass = null;
     protected String uriResolverClass = null;
     protected Input pipeline = null;
-    protected List<Input> libraries = new ArrayList<Input>();
-    protected Map<String, Output> outputs = new HashMap<String, Output>();
-    protected Map<String, String> bindings = new HashMap<String, String>();
-    protected List<StepArgs> steps = new ArrayList<StepArgs>();
+    protected List<Input> libraries = new ArrayList<>();
+    protected Map<String, Output> outputs = new HashMap<>();
+    protected Map<String, String> bindings = new HashMap<>();
+    protected List<StepArgs> steps = new ArrayList<>();
     protected StepArgs curStep = new StepArgs();
     protected StepArgs lastStep = null;
     protected boolean extensionValues = false;
@@ -94,7 +98,7 @@ public class UserArgs {
     protected String jsonFlavor = null;
     protected Integer piperackPort = null;
     protected Integer piperackExpires = null;
-    protected Map<String,String> serParams = new HashMap<String, String> ();
+    protected Map<String,String> serParams = new HashMap<>();
 
     public void setDebug(boolean debug) {
         this.debug = debug;
@@ -464,19 +468,11 @@ public class UserArgs {
     }
 
     public String getSerializationParameter(String port, String param) {
-        if (serParams.containsKey(port + ":" + param)) {
-            return serParams.get(port + ":" + param);
-        } else {
-            return null;
-        }
+        return serParams.getOrDefault(port + ":" + param, null);
     }
 
     public String getSerializationParameter(String param) {
-        if (serParams.containsKey("*:" + param)) {
-            return serParams.get("*:" + param);
-        } else {
-            return null;
-        }
+        return serParams.getOrDefault("*:" + param, null);
     }
 
     /**
@@ -520,7 +516,7 @@ public class UserArgs {
         }
     }
 
-    public XProcConfiguration createConfiguration() throws SaxonApiException {
+    public XProcConfiguration createConfiguration() {
         checkArgs();
         XProcConfiguration config = null;
 
@@ -575,14 +571,19 @@ public class UserArgs {
         }
 
         if (logStyle != null) {
-            if (logStyle.equals("off")) {
-                config.logOpt = OFF;
-            } else if (logStyle.equals("plain")) {
-                config.logOpt = PLAIN;
-            } else if (logStyle.equals("directory")) {
-                config.logOpt = DIRECTORY;
-            } else {
-                config.logOpt = WRAPPED;
+            switch (logStyle) {
+                case "off":
+                    config.logOpt = OFF;
+                    break;
+                case "plain":
+                    config.logOpt = PLAIN;
+                    break;
+                case "directory":
+                    config.logOpt = DIRECTORY;
+                    break;
+                default:
+                    config.logOpt = WRAPPED;
+                    break;
             }
         }
 
@@ -679,14 +680,12 @@ public class UserArgs {
 
         TreeWriter tree = new TreeWriter(runtime);
         tree.startDocument(runtime.getStaticBaseURI());
-        tree.addStartElement(p_declare_step);
-        tree.addAttribute(new QName("version"), "1.0");
-        tree.startContent();
+        tree.addStartElement(p_declare_step, SingletonAttributeMap.of(TypeUtils.attributeInfo(new QName("version"), "1.0")));
 
-        tree.addStartElement(p_input);
-        tree.addAttribute(new QName("port"), "parameters");
-        tree.addAttribute(new QName("kind"), "parameter");
-        tree.startContent();
+        AttributeMap attr = EmptyAttributeMap.getInstance();
+        attr = attr.put(TypeUtils.attributeInfo(new QName("port"), "parameters"));
+        attr = attr.put(TypeUtils.attributeInfo(new QName("kind"), "parameter"));
+        tree.addStartElement(p_input, attr);
         tree.addEndElement();
 
         // This is a hack too. If there are no outputs, fake one.
@@ -700,13 +699,13 @@ public class UserArgs {
             if (port == null) {
                 port = "result";
             }
-            tree.addStartElement(p_output);
-            tree.addAttribute(new QName("port"), port);
-            tree.startContent();
-            tree.addStartElement(p_pipe);
-            tree.addAttribute(new QName("step"), lastStepName);
-            tree.addAttribute(new QName("port"), port);
-            tree.startContent();
+            tree.addStartElement(p_output, SingletonAttributeMap.of(TypeUtils.attributeInfo(new QName("port"), port)));
+
+            attr = EmptyAttributeMap.getInstance();
+            attr = attr.put(TypeUtils.attributeInfo(new QName("step"), lastStepName));
+            attr = attr.put(TypeUtils.attributeInfo(new QName("port"), port));
+            tree.addStartElement(p_pipe, attr);
+
             tree.addEndElement();
             tree.addEndElement();
         }
@@ -714,9 +713,7 @@ public class UserArgs {
         for (Input library : libraries) {
             switch (library.getKind()) {
                 case URI:
-                    tree.addStartElement(p_import);
-                    tree.addAttribute(new QName("href"), library.getUri());
-                    tree.startContent();
+                    tree.addStartElement(p_import, SingletonAttributeMap.of(TypeUtils.attributeInfo(new QName("href"), library.getUri())));
                     tree.addEndElement();
                     break;
 
@@ -729,9 +726,7 @@ public class UserArgs {
                         fileOutputStream = new FileOutputStream(tempLibrary);
                         fileOutputStream.getChannel().transferFrom(newChannel(libraryInputStream), 0, MAX_VALUE);
 
-                        tree.addStartElement(p_import);
-                        tree.addAttribute(new QName("href"), tempLibrary.toURI().toASCIIString());
-                        tree.startContent();
+                        tree.addStartElement(p_import, SingletonAttributeMap.of(TypeUtils.attributeInfo(new QName("href"), tempLibrary.toURI().toASCIIString())));
                         tree.addEndElement();
                     } finally {
                         Closer.close(fileOutputStream);
@@ -748,50 +743,43 @@ public class UserArgs {
         for (StepArgs step : steps) {
             stepNum ++;
 
-            tree.addStartElement(step.stepName);
-            tree.addAttribute(new QName("name"), "cmdlineStep" + stepNum);
-
+            attr = EmptyAttributeMap.getInstance();
+            attr = attr.put(TypeUtils.attributeInfo(new QName("name"), "cmdlineStep" + stepNum));
             for (QName optname : step.options.keySet()) {
-                tree.addAttribute(optname, step.options.get(optname));
+                attr = attr.put(TypeUtils.attributeInfo(optname, step.options.get(optname)));
             }
-
-            tree.startContent();
+            tree.addStartElement(step.stepName, attr);
 
             for (String port : step.inputs.keySet()) {
-                tree.addStartElement(p_input);
-                tree.addAttribute(new QName("port"), (port == null) ? "source" : port);
-                tree.startContent();
+                tree.addStartElement(p_input, SingletonAttributeMap.of(TypeUtils.attributeInfo(new QName("port"), (port == null) ? "source" : port)));
 
                 for (Input input : step.inputs.get(port)) {
                     QName qname = (input.getType() == DATA) ? p_data : p_document;
                     switch (input.getKind()) {
                         case URI:
                             String uri = input.getUri();
-
                             if ("p:empty".equals(uri)) {
                                 tree.addStartElement(p_empty);
-                                tree.startContent();
-                                tree.addEndElement();
                             } else {
-                                tree.addStartElement(qname);
-                                tree.addAttribute(new QName("href"), uri);
+                                attr = EmptyAttributeMap.getInstance();
+                                attr = attr.put(TypeUtils.attributeInfo(new QName("href"), uri));
                                 if (input.getType() == DATA) {
-                                    tree.addAttribute(new QName("content-type"), input.getContentType());
+                                    attr = attr.put(TypeUtils.attributeInfo(new QName("content-type"), input.getContentType()));
                                 }
-                                tree.startContent();
-                                tree.addEndElement();
+                                tree.addStartElement(qname, attr);
                             }
+                            tree.addEndElement();
                             break;
 
                         case INPUT_STREAM:
                             InputStream inputStream = input.getInputStream();
                             if (System.in.equals(inputStream)) {
-                                tree.addStartElement(qname);
-                                tree.addAttribute(new QName("href"), "-");
+                                attr = EmptyAttributeMap.getInstance();
+                                attr = attr.put(TypeUtils.attributeInfo(new QName("href"), "-"));
                                 if (input.getType() == DATA) {
-                                    tree.addAttribute(new QName("content-type"), input.getContentType());
+                                    attr = attr.put(TypeUtils.attributeInfo(new QName("content-type"), input.getContentType()));
                                 }
-                                tree.startContent();
+                                tree.addStartElement(qname, attr);
                                 tree.addEndElement();
                             } else {
                                 FileOutputStream fileOutputStream = null;
@@ -801,12 +789,12 @@ public class UserArgs {
                                     fileOutputStream = new FileOutputStream(tempInput);
                                     fileOutputStream.getChannel().transferFrom(newChannel(inputStream), 0, MAX_VALUE);
 
-                                    tree.addStartElement(qname);
-                                    tree.addAttribute(new QName("href"), tempInput.toURI().toASCIIString());
+                                    attr = EmptyAttributeMap.getInstance();
+                                    attr = attr.put(TypeUtils.attributeInfo(new QName("href"), tempInput.toURI().toASCIIString()));
                                     if (input.getType() == DATA) {
-                                        tree.addAttribute(new QName("content-type"), input.getContentType());
+                                        attr = attr.put(TypeUtils.attributeInfo(new QName("content-type"), input.getContentType()));
                                     }
-                                    tree.startContent();
+                                    tree.addStartElement(qname, attr);
                                     tree.addEndElement();
                                 } finally {
                                     Closer.close(fileOutputStream);
@@ -828,16 +816,18 @@ public class UserArgs {
                     // Double single quotes to escape them between the enclosing single quotes
                     value = "'" + value.replace("'", "''") + "'";
 
-                    tree.addStartElement(p_with_param);
+                    NamespaceMap nsmap = NamespaceMap.emptyMap();
+                    attr = EmptyAttributeMap.getInstance();
+                    attr = attr.put(TypeUtils.attributeInfo(new QName("name"), pname.toString()));
+                    attr = attr.put(TypeUtils.attributeInfo(new QName("select"), value));
                     if (!"*".equals(port)) {
-                        tree.addAttribute(new QName("port"), port);
+                        attr = attr.put(TypeUtils.attributeInfo(new QName("port"), port));
                     }
                     if (!pname.getPrefix().isEmpty() || !pname.getNamespaceURI().isEmpty()) {
-                        tree.addNamespace(pname.getPrefix(), pname.getNamespaceURI());
+                        nsmap = nsmap.put(pname.getPrefix(), pname.getNamespaceURI());
                     }
-                    tree.addAttribute(new QName("name"), pname.toString());
-                    tree.addAttribute(new QName("select"), value);
-                    tree.startContent();
+
+                    tree.addStartElement(p_with_param, attr, nsmap);
                     tree.addEndElement();
                 }
             }
@@ -864,11 +854,11 @@ public class UserArgs {
     private class StepArgs {
         public String plainStepName = null;
         public QName stepName = null;
-        public Map<String, List<Input>> inputs = new HashMap<String, List<Input>>();
-        public Map<String, Map<String, String>> plainParams = new HashMap<String, Map<String, String>>();
-        public Map<String, Map<QName, String>> params = new HashMap<String, Map<QName, String>>();
-        public Map<String, String> plainOptions = new HashMap<String, String>();
-        public Map<QName, String> options = new HashMap<QName, String>();
+        public Map<String, List<Input>> inputs = new HashMap<>();
+        public Map<String, Map<String, String>> plainParams = new HashMap<>();
+        public Map<String, Map<QName, String>> params = new HashMap<>();
+        public Map<String, String> plainOptions = new HashMap<>();
+        public Map<QName, String> options = new HashMap<>();
 
         public void setName(String name) {
             needsCheck = true;
@@ -877,7 +867,7 @@ public class UserArgs {
 
         public void addInput(String port, String uri, Type type, String contentType) {
             if (!inputs.containsKey(port)) {
-                inputs.put(port, new ArrayList<Input>());
+                inputs.put(port, new ArrayList<>());
             }
 
             inputs.get(port).add(new Input(uri, type, contentType));
@@ -885,7 +875,7 @@ public class UserArgs {
 
         public void addInput(String port, InputStream inputStream, String uri, Type type, String contentType) {
             if (!inputs.containsKey(port)) {
-                inputs.put(port, new ArrayList<Input>());
+                inputs.put(port, new ArrayList<>());
             }
 
             inputs.get(port).add(new Input(inputStream, uri, type, contentType));
@@ -904,7 +894,7 @@ public class UserArgs {
             needsCheck = true;
             Map<String, String> portParams;
             if (!plainParams.containsKey(port)) {
-                portParams = new HashMap<String, String>();
+                portParams = new HashMap<>();
             } else {
                 portParams = plainParams.get(port);
             }
@@ -967,7 +957,7 @@ public class UserArgs {
 
             params.clear();
             for (Entry<String, Map<String, String>> plainParam : plainParams.entrySet()) {
-                Map<QName, String> portParams = new HashMap<QName, String>();
+                Map<QName, String> portParams = new HashMap<>();
                 for (Entry<String, String> portParam : plainParam.getValue().entrySet()) {
                     QName name = makeQName(portParam.getKey());
                     if (portParams.containsKey(name)) {

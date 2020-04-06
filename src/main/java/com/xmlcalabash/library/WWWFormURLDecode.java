@@ -26,12 +26,15 @@ import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.util.TypeUtils;
 import com.xmlcalabash.io.WritablePipe;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.EmptyAttributeMap;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.QName;
 import com.xmlcalabash.runtime.XAtomicStep;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.util.HashMap;
 
 /**
  *
@@ -76,7 +79,6 @@ public class WWWFormURLDecode extends DefaultStep {
         TreeWriter tree = new TreeWriter(runtime);
         tree.startDocument(step.getNode().getBaseURI());
         tree.addStartElement(c_paramset);
-        tree.startContent();
 
         if (!"".equals(value)) {
             String[] params = value.split("&");
@@ -99,10 +101,10 @@ public class WWWFormURLDecode extends DefaultStep {
                         throw XProcException.stepError(61);
                     }
 
-                    tree.addStartElement(c_param);
-                    tree.addAttribute(_name, name);
-                    tree.addAttribute(_value, val);
-                    tree.startContent();
+                    AttributeMap attr = EmptyAttributeMap.getInstance();
+                    attr = attr.put(TypeUtils.attributeInfo(_name, name));
+                    attr = attr.put(TypeUtils.attributeInfo(_value, val));
+                    tree.addStartElement(c_param, attr);
                     tree.addEndElement();
                 } else {
                     throw new XProcException(step.getNode(), "Badly formatted parameters");

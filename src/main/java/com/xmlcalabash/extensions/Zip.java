@@ -12,12 +12,11 @@ import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.library.DefaultStep;
 import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.util.AxisNodes;
+import com.xmlcalabash.util.*;
 import com.xmlcalabash.util.Base64;
-import com.xmlcalabash.util.JSONtoXML;
-import com.xmlcalabash.util.S9apiUtils;
-import com.xmlcalabash.util.TreeWriter;
-import com.xmlcalabash.util.XMLtoJSON;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.EmptyAttributeMap;
+import net.sf.saxon.om.SingletonAttributeMap;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -40,14 +39,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.GregorianCalendar;
-import java.util.Hashtable;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.zip.CRC32;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
@@ -144,7 +137,7 @@ public class Zip extends DefaultStep {
 
         XdmNode man = S9apiUtils.getDocumentElement(manifest.read());
         if (man == null) {
-            throw new NullPointerException("XML document " + man.getDocumentURI() + " has no root element.");
+            throw new NullPointerException("XML document " +zipFn + " has no root element.");
         }
 
         if (!c_zip_manifest.equals(man.getNodeName())) {
@@ -172,11 +165,8 @@ public class Zip extends DefaultStep {
                         store.readEntry(zipFn, base, "application/zip", null, new DataStore.DataReader() {
                             public void load(URI id, String media, InputStream content, long len)
                                     throws IOException {
-                                ZipInputStream inZip = new ZipInputStream(content);
-                                try {
+                                try (ZipInputStream inZip = new ZipInputStream(content)) {
                                     update(inZip, outZip);
-                                } finally {
-                                    inZip.close();
                                 }
                             }
                         });
@@ -199,9 +189,7 @@ public class Zip extends DefaultStep {
                     TreeWriter tree = new TreeWriter(runtime);
 
                     tree.startDocument(step.getNode().getBaseURI());
-                    tree.addStartElement(c_zipfile);
-                    tree.addAttribute(_href, id.toASCIIString());
-                    tree.startContent();
+                    tree.addStartElement(c_zipfile, SingletonAttributeMap.of(TypeUtils.attributeInfo(_href, id.toASCIIString())));
 
                     if (zipFn.startsWith("file:/")) {
                         readFile(tree, id, zipFn, dfactory);
@@ -214,12 +202,8 @@ public class Zip extends DefaultStep {
                     result.write(tree.getResult());
                 }
             });
-        } catch (MalformedURLException mue) {
+        } catch (IOException | DatatypeConfigurationException mue) {
             throw new XProcException(XProcException.err_E0001, mue);
-        } catch (IOException ioe) {
-            throw new XProcException(XProcException.err_E0001, ioe);
-        } catch (DatatypeConfigurationException dce) {
-            throw new XProcException(XProcException.err_E0001, dce);
         }
     }
 
@@ -287,23 +271,25 @@ public class Zip extends DefaultStep {
         GregorianCalendar cal = new GregorianCalendar();
         cal.setTimeInMillis(entry.getTime());
         XMLGregorianCalendar xmlCal = dfactory.newXMLGregorianCalendar(cal);
+        AttributeMap attr = EmptyAttributeMap.getInstance();
 
-        if (entry.isDirectory()) {
-            tree.addStartElement(c_directory);
-        } else {
-            tree.addStartElement(c_file);
-
-            tree.addAttribute(_compressed_size, ""+entry.getCompressedSize());
-            tree.addAttribute(_size, ""+entry.getSize());
+        if (!entry.isDirectory()) {
+            attr = attr.put(TypeUtils.attributeInfo(_compressed_size, ""+entry.getCompressedSize()));
+            attr = attr.put(TypeUtils.attributeInfo(_size, ""+entry.getSize()));
         }
 
         if (entry.getComment() != null) {
-            tree.addAttribute(_comment, entry.getComment());
+            attr = attr.put(TypeUtils.attributeInfo(_comment, entry.getComment()));
         }
 
-        tree.addAttribute(_name, ""+entry.getName());
-        tree.addAttribute(_date, xmlCal.toXMLFormat());
-        tree.startContent();
+        attr = attr.put(TypeUtils.attributeInfo(_name, ""+entry.getName()));
+        attr = attr.put(TypeUtils.attributeInfo(_date, xmlCal.toXMLFormat()));
+
+        if (entry.isDirectory()) {
+            tree.addStartElement(c_directory, attr);
+        } else {
+            tree.addStartElement(c_file, attr);
+        }
         tree.addEndElement();
     }
 
@@ -429,7 +415,7 @@ public class Zip extends DefaultStep {
                     byte[] bytes =  baos.toByteArray();
                     ze.setSize(bytes.length);
                     crc.reset();
-                    crc.update(bytes);
+                    crc.update(bytes, 0, bytes.length);
                     ze.setCrc(crc.getValue());
                 }
 
@@ -455,10 +441,8 @@ public class Zip extends DefaultStep {
 
                 outZip.closeEntry();
             }
-        } catch (IOException ioe) {
+        } catch (IOException | SaxonApiException ioe) {
             throw new XProcException(ioe);
-        } catch (SaxonApiException sae) {
-            throw new XProcException(sae);
         }
     }
 
@@ -586,6 +570,7 @@ public class Zip extends DefaultStep {
 
     protected void store(FileToZip file, XdmNode doc, OutputStream out) throws SaxonApiException, IOException {
         XdmNode root = S9apiUtils.getDocumentElement(doc);
+        assert root != null;
 
         if (((XProcConstants.NS_XPROC_STEP.equals(root.getNodeName().getNamespaceURI())
                 && "base64".equals(root.getAttributeValue(_encoding)))
@@ -621,11 +606,7 @@ public class Zip extends DefaultStep {
 
     public void storeJSON(FileToZip file, XdmNode doc, OutputStream out) {
         PrintWriter writer = null;
-        try {
-            writer = new PrintWriter(new OutputStreamWriter(out, "UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            // This can't happen
-        }
+        writer = new PrintWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8));
         try {
             String json = XMLtoJSON.convert(doc);
             writer.print(json);
@@ -657,13 +638,13 @@ public class Zip extends DefaultStep {
             // FIXME: Why is list="" sometimes?
             if (!"".equals(list)) {
                 String[] names = list.split("\\s+");
-                list = "";
+                StringBuilder cdataList = new StringBuilder();
                 for (String name : names) {
                     QName q = new QName(name, step.getNode());
-                    list += q.getClarkName() + " ";
+                    cdataList.append(q.getClarkName()).append(" ");
                 }
 
-                serializer.setOutputProperty(Serializer.Property.CDATA_SECTION_ELEMENTS, list);
+                serializer.setOutputProperty(Serializer.Property.CDATA_SECTION_ELEMENTS, cdataList.toString());
             }
         }
 

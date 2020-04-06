@@ -52,9 +52,6 @@ public class WaitForUpdate extends DefaultStep {
     private static final long FILESYSTEM_WAIT = 100;
     private static final long HTTP_WAIT = 1000;
     private WritablePipe result = null;
-    private URI uri = null;
-    private long pauseBefore = 0;
-    private long pauseAfter = 0;
 
     /*
      * Creates a new instance of Identity
@@ -78,8 +75,8 @@ public class WaitForUpdate extends DefaultStep {
         URI baseURI = getOption(_href).getBaseURI();
         URI uri = baseURI.resolve(href);
 
-        pauseBefore = getOption(_pause_before, (long) 0) * 1000;
-        pauseAfter = getOption(_pause_after, (long) 0) * 1000;
+        long pauseBefore = getOption(_pause_before, (long) 0) * 1000;
+        long pauseAfter = getOption(_pause_after, (long) 0) * 1000;
 
         if (pauseBefore > 0) {
             try {
@@ -109,7 +106,6 @@ public class WaitForUpdate extends DefaultStep {
         TreeWriter tree = new TreeWriter(runtime);
         tree.startDocument(step.getNode().getBaseURI());
         tree.addStartElement(XProcConstants.c_result);
-        tree.startContent();
         tree.addText(changed);
         tree.addEndElement();
         tree.endDocument();
@@ -231,19 +227,13 @@ public class WaitForUpdate extends DefaultStep {
     private HttpResponse head(HttpClient client, HttpUriRequest httpRequest, HttpContext localContext) {
         try {
             return client.execute(httpRequest, localContext);
-        } catch (ClientProtocolException cpe) {
+        } catch (IOException cpe) {
             throw new XProcException(cpe);
-        } catch (IOException ioe) {
-            throw new XProcException(ioe);
         }
     }
 
     private String getHeader(HttpResponse resp, String name, String def) {
         Header[] headers = resp.getHeaders(name);
-
-        if (headers == null) {
-            return def;
-        }
 
         if (headers == null || headers.length == 0) {
             // This should never happen

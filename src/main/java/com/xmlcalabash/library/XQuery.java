@@ -27,12 +27,11 @@ import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.util.Base64;
-import com.xmlcalabash.util.S9apiUtils;
-import com.xmlcalabash.util.TreeWriter;
-import com.xmlcalabash.util.XProcCollectionFinder;
+import com.xmlcalabash.util.*;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.lib.CollectionFinder;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.EmptyAttributeMap;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -42,7 +41,9 @@ import net.sf.saxon.s9api.XQueryExecutable;
 import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Vector;
@@ -106,6 +107,8 @@ public class XQuery extends DefaultStep {
         }
 
         XdmNode root = S9apiUtils.getDocumentElement(query.read());
+        assert root != null;
+
         String queryString = null;
 
         if ((XProcConstants.c_data.equals(root.getNodeName())
@@ -160,10 +163,12 @@ public class XQuery extends DefaultStep {
                     if (runtime.getAllowTextResults()) {
                         TreeWriter tree = new TreeWriter(runtime);
                         tree.startDocument(step.getNode().getBaseURI());
-                        tree.addStartElement(XProcConstants.c_result);
-                        tree.addAttribute(_content_type, "text/plain");
-                        tree.addAttribute(cx_decode,"true");
-                        tree.startContent();
+
+                        AttributeMap attr = EmptyAttributeMap.getInstance();
+                        attr = attr.put(TypeUtils.attributeInfo(_content_type, "text/plain"));
+                        attr = attr.put(TypeUtils.attributeInfo(cx_decode,"true"));
+                        tree.addStartElement(XProcConstants.c_result, attr);
+
                         tree.addText(item.getStringValue());
                         tree.addEndElement();
                         tree.endDocument();
@@ -183,10 +188,12 @@ public class XQuery extends DefaultStep {
                             // Document is apparently not well-formed XML.
                             TreeWriter tree = new TreeWriter(runtime);
                             tree.startDocument(step.getNode().getBaseURI());
-                            tree.addStartElement(XProcConstants.c_result);
-                            tree.addAttribute(_content_type, "text/plain");
-                            tree.addAttribute(cx_decode,"true");
-                            tree.startContent();
+
+                            AttributeMap attr = EmptyAttributeMap.getInstance();
+                            attr = attr.put(TypeUtils.attributeInfo(_content_type, "text/plain"));
+                            attr = attr.put(TypeUtils.attributeInfo(cx_decode,"true"));
+                            tree.addStartElement(XProcConstants.c_result, attr);
+
                             tree.addText(node.toString());
                             tree.addEndElement();
                             tree.endDocument();

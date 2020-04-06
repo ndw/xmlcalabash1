@@ -7,14 +7,21 @@ import com.xmlcalabash.util.MessageFormatter;
 import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.*;
+import com.xmlcalabash.util.TypeUtils;
+import net.sf.saxon.event.ReceiverOption;
+import net.sf.saxon.om.AttributeInfo;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.NamespaceMap;
 import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.type.BuiltInAtomicType;
 
 import javax.xml.transform.SourceLocator;
 import javax.xml.transform.TransformerException;
+import java.util.ArrayList;
 import java.util.Vector;
 
 /**
@@ -73,7 +80,6 @@ public class XTry extends XCompoundStep {
     }
 
     public void run() throws SaxonApiException {
-
         inScopeOptions = parent.getInScopeOptions();
         for (Variable var : step.getVariables()) {
             RuntimeValue value = computeValue(var);
@@ -100,7 +106,6 @@ public class XTry extends XCompoundStep {
             TreeWriter treeWriter = new TreeWriter(runtime);
             treeWriter.startDocument(step.getNode().getBaseURI());
             treeWriter.addStartElement(c_errors);
-            treeWriter.startContent();
 
             boolean reported = false;
             for (XdmNode doc : runtime.getXProcData().errors()) {
@@ -115,10 +120,10 @@ public class XTry extends XCompoundStep {
 
             if (!reported) {
                 // Hey, no one reported this exception. We better do it.
-                treeWriter.addStartElement(c_error);
-
                 StructuredQName qCode = null;
                 String message = xe.getMessage();
+                ArrayList<AttributeInfo> alist = new ArrayList<>();
+                NamespaceMap nsmap = NamespaceMap.emptyMap();
 
                 if (xe instanceof XPathException) {
                     XPathException xxx = (XPathException) xe;
@@ -144,21 +149,21 @@ public class XTry extends XCompoundStep {
                 }
 
                 if (qCode != null) {
-                    treeWriter.addNamespace(qCode.getPrefix(), qCode.getNamespaceBinding().getURI());
-                    treeWriter.addAttribute(_code, qCode.getDisplayName());
+                    nsmap = nsmap.put(qCode.getPrefix(), qCode.getNamespaceBinding().getURI());
+                    alist.add(new AttributeInfo(TypeUtils.fqName(_code), BuiltInAtomicType.ANY_ATOMIC, qCode.getDisplayName(), null, ReceiverOption.NONE));
                 }
 
                 XStep step = runtime.runningStep();
                 if (step != null && step.getNode() != null) {
                     XdmNode node = step.getNode();
                     if (node.getBaseURI() != null) {
-                        treeWriter.addAttribute(_href, node.getBaseURI().toString());
+                        alist.add(new AttributeInfo(TypeUtils.fqName(_href), BuiltInAtomicType.ANY_ATOMIC, node.getBaseURI().toString(), null, ReceiverOption.NONE));
                     }
                     if (node.getLineNumber() > 0) {
-                        treeWriter.addAttribute(_line, ""+node.getLineNumber());
+                        alist.add(new AttributeInfo(TypeUtils.fqName(_line), BuiltInAtomicType.ANY_ATOMIC, ""+node.getLineNumber(), null, ReceiverOption.NONE));
                     }
                     if (node.getColumnNumber() > 0) {
-                        treeWriter.addAttribute(_column, ""+node.getColumnNumber());
+                        alist.add(new AttributeInfo(TypeUtils.fqName(_column), BuiltInAtomicType.ANY_ATOMIC, ""+node.getColumnNumber(), null, ReceiverOption.NONE));
                     }
                 }
 
@@ -166,7 +171,8 @@ public class XTry extends XCompoundStep {
                     message = "";
                 }
 
-                treeWriter.startContent();
+                treeWriter.addStartElement(c_error, AttributeMap.fromList(alist), nsmap);
+
                 treeWriter.addText(message);
                 treeWriter.addEndElement();
             }

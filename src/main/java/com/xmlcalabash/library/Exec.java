@@ -85,18 +85,10 @@ public class Exec extends DefaultStep {
     private WritablePipe result = null;
     private WritablePipe errors = null;
     private WritablePipe status = null;
-    private String command = null;
-    private String args = null;
-    private String cwd = null;
-    private boolean wrapResultLines = false;
-    private boolean wrapErrorLines = false;
     private String pathSeparator = null;
     private boolean failureThreshold = false;
     private int failureThresholdValue = 0;
     private String argSeparator = null;
-    private boolean sourceIsXML = false;
-    private boolean resultIsXML = false;
-    private boolean errorsIsXML = false;
 
     public Exec(XProcRuntime runtime, XAtomicStep step) {
         super(runtime,step);
@@ -130,14 +122,14 @@ public class Exec extends DefaultStep {
             throw XProcException.dynamicError(21);
         }
 
-        command = getOption(_command).getString();
-        args = getOption(_args, (String) null);
-        cwd = getOption(_cwd, (String) null);
-        sourceIsXML = getOption(_source_is_xml, false);
-        resultIsXML = getOption(_result_is_xml, false);
-        errorsIsXML = getOption(_errors_is_xml, false);
-        wrapResultLines = getOption(_wrap_result_lines, false);
-        wrapErrorLines = getOption(_wrap_error_lines, false);
+        String command = getOption(_command).getString();
+        String args = getOption(_args, (String) null);
+        String cwd = getOption(_cwd, (String) null);
+        boolean sourceIsXML = getOption(_source_is_xml, false);
+        boolean resultIsXML = getOption(_result_is_xml, false);
+        boolean errorsIsXML = getOption(_errors_is_xml, false);
+        boolean wrapResultLines = getOption(_wrap_result_lines, false);
+        boolean wrapErrorLines = getOption(_wrap_error_lines, false);
         if (getOption(_path_separator) != null) {
             pathSeparator = getOption(_path_separator).getString();
             if (pathSeparator.length() != 1) {
@@ -169,19 +161,20 @@ public class Exec extends DefaultStep {
             command = command.replaceAll(Pattern.quote(pathSeparator), slash);
         }
 
-        String showCmd = "";
+        StringBuilder showCmd = new StringBuilder();
         try {
-            List<String> command_line = new ArrayList<String>();
+            List<String> command_line = new ArrayList<>();
             command_line.add(command);
-            showCmd += command;
+            showCmd.append(command);
             if (args != null && !"".equals(args)) {
                 if (pathSeparator != null) {
                     args = args.replaceAll(Pattern.quote(pathSeparator), slash);
                 }
+                // Note: IDE warning about "\\" in the line below is spurious
                 String[] arglist = args.split("\\" + argSeparator);
                 for (String arg : arglist) {
                     command_line.add(arg);
-                    showCmd += " " + arg;
+                    showCmd.append(" ").append(arg);
                 }
             }
 
@@ -194,7 +187,7 @@ public class Exec extends DefaultStep {
                 builder.directory(new File(cwd));
             }
 
-            logger.trace(MessageFormatter.nodeMessage(step.getNode(), "Exec: " + showCmd));
+            logger.trace(MessageFormatter.nodeMessage(step.getNode(), "Exec: " + showCmd.toString()));
 
             Process process = builder.start();
 
@@ -205,9 +198,7 @@ public class Exec extends DefaultStep {
                     throw XProcException.dynamicError(6, "Reading source on " + getStep().getName());
                 }
 
-                OutputStream os = process.getOutputStream();
-
-                try {
+                try (OutputStream os = process.getOutputStream()) {
                     Serializer serializer = makeSerializer();
 
                     // FIXME: there must be a better way to print text descendants
@@ -230,8 +221,6 @@ public class Exec extends DefaultStep {
                     serializer.setOutputStream(os);
                     xqeval.setDestination(serializer);
                     xqeval.run();
-                } finally {
-                    os.close();
                 }
             } else {
                 OutputStream os = process.getOutputStream();
@@ -264,7 +253,6 @@ public class Exec extends DefaultStep {
             TreeWriter tree = new TreeWriter(runtime);
             tree.startDocument(step.getNode().getBaseURI());
             tree.addStartElement(c_result);
-            tree.startContent();
             tree.addText("" + rc);
             tree.addEndElement();
             tree.endDocument();
@@ -278,58 +266,6 @@ public class Exec extends DefaultStep {
             errors.write(execResult);
         } catch (IOException ex) {
             throw new XProcException(ex);
-        }
-    }
-
-    private static class ParseArgs {
-        private static final String dq = "\uE000";
-        private static final String sq = "\uE001";
-        private static final Pattern squoted = Pattern.compile("(^.*?)'(.*?)'(.*)$");
-        private static final Pattern dquoted = Pattern.compile("(^.*?)\"(.*?)\"(.*)$");
-
-        protected ParseArgs() {
-        }
-
-        public static String[] parse(String argstring) {
-            Vector<String> args = new Vector<String> ();
-
-            argstring = argstring.replaceAll("\"\"", dq).replaceAll("\'\'", sq);
-
-            Matcher qs = dquoted.matcher(argstring);
-            if (qs.matches()) {
-                String[] pre = parse(qs.group(1).trim());
-                String quoted = qs.group(2);
-                String[] post = parse(qs.group(3).trim());
-                for (String a : pre) {
-                    args.add(fixup(a));
-                }
-                args.add(fixup(quoted));
-                for (String a : post) {
-                    args.add(fixup(a));
-                }
-                return args.toArray(new String[] { " " });
-            }
-
-            qs = squoted.matcher(argstring);
-            if (qs.matches()) {
-                String[] pre = parse(qs.group(1));
-                String quoted = qs.group(2);
-                String[] post = parse(qs.group(3));
-                for (String a : pre) {
-                    args.add(fixup(a));
-                }
-                args.add(fixup(quoted));
-                for (String a : post) {
-                    args.add(fixup(a));
-                }
-                return args.toArray(new String[] { " " });
-            }
-
-            return fixup(argstring).split("\\s+");
-        }
-
-        private static String fixup(String s) {
-            return s.replaceAll(dq, "\"").replaceAll(sq,"\'");
         }
     }
 
@@ -357,7 +293,6 @@ public class Exec extends DefaultStep {
             tree.startDocument(step.getNode().getBaseURI());
 
             tree.addStartElement(c_result);
-            tree.startContent();
 
             if (asXML) {
                 XdmNode doc = runtime.parse(new InputSource(is));
@@ -374,7 +309,6 @@ public class Exec extends DefaultStep {
                                 System.err.println(line);
                             }
                             tree.addStartElement(c_line);
-                            tree.startContent();
                             tree.addText(line);
                             tree.addEndElement();
                             tree.addText("\n");

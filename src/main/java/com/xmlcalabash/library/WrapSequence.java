@@ -104,11 +104,10 @@ public class WrapSequence extends DefaultStep {
         }
     }
 
-    private void runSimple() throws SaxonApiException {
+    private void runSimple() {
         TreeWriter treeWriter = new TreeWriter(runtime);
         treeWriter.startDocument(step.getNode().getBaseURI());
         treeWriter.addStartElement(wrapper);
-        treeWriter.startContent();
 
         while (source.moreDocuments()) {
             XdmNode node = source.read();
@@ -225,7 +224,6 @@ public class WrapSequence extends DefaultStep {
                 treeWriter = new TreeWriter(runtime);
                 treeWriter.startDocument(step.getNode().getBaseURI());
                 treeWriter.addStartElement(wrapper);
-                treeWriter.startContent();
                 treeWriter.addSubtree(node);
             }
         }

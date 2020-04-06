@@ -26,10 +26,16 @@ import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.util.ProcessMatchingNodes;
 import com.xmlcalabash.util.ProcessMatch;
+import net.sf.saxon.event.ReceiverOption;
+import net.sf.saxon.om.AttributeInfo;
+import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.QName;
 import com.xmlcalabash.runtime.XAtomicStep;
+import net.sf.saxon.type.BuiltInAtomicType;
+
+import java.util.ArrayList;
 
 /**
  *
@@ -95,37 +101,46 @@ public class UUID extends DefaultStep implements ProcessMatchingNodes {
 
     }
 
-    public boolean processStartDocument(XdmNode node) throws SaxonApiException {
+    public boolean processStartDocument(XdmNode node) {
         return true;
     }
 
-    public void processEndDocument(XdmNode node) throws SaxonApiException {
+    public void processEndDocument(XdmNode node) {
         // nop?
     }
 
-    public boolean processStartElement(XdmNode node) throws SaxonApiException {
+    @Override
+    public AttributeMap processAttributes(XdmNode node, AttributeMap matchingAttributes, AttributeMap nonMatchingAttributes) {
+        ArrayList<AttributeInfo> alist = new ArrayList<>();
+        for (AttributeInfo attr : nonMatchingAttributes) {
+            alist.add(attr);
+        }
+        for (AttributeInfo attr : matchingAttributes) {
+            alist.add(new AttributeInfo(attr.getNodeName(), BuiltInAtomicType.ANY_ATOMIC, uuid, attr.getLocation(), ReceiverOption.NONE));
+        }
+        return AttributeMap.fromList(alist);
+    }
+
+    @Override
+    public boolean processStartElement(XdmNode node, AttributeMap attributes) {
         matcher.addText(uuid);
         return false;
     }
 
-    public void processEndElement(XdmNode node) throws SaxonApiException {
+    public void processEndElement(XdmNode node) {
         // nop?
     }
 
-    public void processText(XdmNode node) throws SaxonApiException {
+    public void processText(XdmNode node) {
         matcher.addText(uuid);
     }
 
-    public void processComment(XdmNode node) throws SaxonApiException {
+    public void processComment(XdmNode node) {
         matcher.addComment(uuid);
     }
 
-    public void processPI(XdmNode node) throws SaxonApiException {
+    public void processPI(XdmNode node) {
         matcher.addPI(node.getNodeName().getLocalName(),uuid);
-    }
-
-    public void processAttribute(XdmNode node) throws SaxonApiException {
-        matcher.addAttribute(node.getNodeName(), uuid);
     }
 }
 

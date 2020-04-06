@@ -1,6 +1,8 @@
 package com.xmlcalabash.piperack;
 
 import com.xmlcalabash.util.TreeWriter;
+import com.xmlcalabash.util.TypeUtils;
+import net.sf.saxon.om.SingletonAttributeMap;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
 import org.restlet.representation.Variant;
@@ -20,7 +22,6 @@ public class Help extends BaseResource {
         tree.startDocument(URI.create("http://example.com/"));
 
         tree.addStartElement(pr_help);
-        tree.startContent();
 
         describe("/pipelines", "GET", "Print list of available pipelines.");
         describe("/pipelines", "POST", "Add a pipeline to the server; suggest id with name parameter.");
@@ -48,16 +49,12 @@ public class Help extends BaseResource {
 
     protected void describe(String uri, String method, String description) {
         tree.addStartElement(pr_endpoint);
-        tree.startContent();
 
-        tree.addStartElement(pr_uri);
-        tree.addAttribute(_method, method);
-        tree.startContent();
+        tree.addStartElement(pr_uri, SingletonAttributeMap.of(TypeUtils.attributeInfo(_method, method)));
         tree.addText(uri);
         tree.addEndElement();
 
         tree.addStartElement(pr_description);
-        tree.startContent();
         tree.addText(description);
         tree.addEndElement();
         tree.addEndElement();

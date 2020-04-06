@@ -87,7 +87,6 @@ public class Count extends DefaultStep {
         TreeWriter tree = new TreeWriter(runtime);
         tree.startDocument(step.getNode().getBaseURI());
         tree.addStartElement(c_result);
-        tree.startContent();
         tree.addText("" + count);
         tree.addEndElement();
         tree.endDocument();

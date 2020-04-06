@@ -116,19 +116,14 @@ public class CssFormatter extends DefaultStep {
         try {
             DataStore store = runtime.getDataStore();
             URI id = store.writeEntry(href, base, contentType, new DataWriter() {
-                public void store(OutputStream out) throws IOException {
-                    try {
-                        provider.format(source.read(),out,contentType);
-                    } catch(SaxonApiException e) {
-                        throw new IOException(e);
-                    }
+                public void store(OutputStream out) {
+                    provider.format(source.read(),out,contentType);
                 }
             });
 
             TreeWriter tree = new TreeWriter(runtime);
             tree.startDocument(step.getNode().getBaseURI());
             tree.addStartElement(XProcConstants.c_result);
-            tree.startContent();
             tree.addText(id.toASCIIString());
             tree.addEndElement();
             tree.endDocument();

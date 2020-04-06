@@ -1,5 +1,9 @@
 package com.xmlcalabash.util;
 
+import net.sf.saxon.event.ReceiverOption;
+import net.sf.saxon.om.AttributeInfo;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.NamespaceMap;
 import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.QName;
@@ -11,8 +15,10 @@ import javax.xml.transform.ErrorListener;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcConstants;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.type.BuiltInAtomicType;
 
 import java.net.URI;
+import java.util.ArrayList;
 
 /**
  * Created by IntelliJ IDEA.
@@ -73,7 +79,6 @@ public class StepErrorListener implements ErrorListener {
         TreeWriter writer = new TreeWriter(runtime);
 
         writer.startDocument(baseURI);
-        writer.addStartElement(c_error);
 
         String message = exception.toString();
         StructuredQName qCode = null;
@@ -90,15 +95,20 @@ public class StepErrorListener implements ErrorListener {
                 message = underlying.toString();
             }
         }
+
         if (qCode == null && exception.getException() instanceof XPathException) {
             qCode = ((XPathException) exception.getException()).getErrorCodeQName();
         }
+
+        ArrayList<AttributeInfo> alist = new ArrayList<>();
+        NamespaceMap nsmap = NamespaceMap.emptyMap();
+
         if (qCode != null) {
-            writer.addNamespace(qCode.getPrefix(), qCode.getNamespaceBinding().getURI());
-            writer.addAttribute(_code, qCode.getDisplayName());
+            nsmap = nsmap.put(qCode.getPrefix(), qCode.getNamespaceBinding().getURI());
+            alist.add(new AttributeInfo(TypeUtils.fqName(_code), BuiltInAtomicType.ANY_ATOMIC, qCode.getDisplayName(), null, ReceiverOption.NONE));
         }
 
-        writer.addAttribute(_type, type);
+        alist.add(new AttributeInfo(TypeUtils.fqName(_type), BuiltInAtomicType.ANY_ATOMIC, type, null, ReceiverOption.NONE));
 
         if (exception.getLocator() != null) {
             SourceLocator loc = exception.getLocator();
@@ -117,21 +127,21 @@ public class StepErrorListener implements ErrorListener {
 
             if (loc != null) {
                 if (loc.getSystemId() != null && !"".equals(loc.getSystemId())) {
-                    writer.addAttribute(_href, loc.getSystemId());
+                    alist.add(new AttributeInfo(TypeUtils.fqName(_href), BuiltInAtomicType.ANY_ATOMIC, loc.getSystemId(), null, ReceiverOption.NONE));
                 }
 
                 if (loc.getLineNumber() != -1) {
-                    writer.addAttribute(_line, ""+loc.getLineNumber());
+                    alist.add(new AttributeInfo(TypeUtils.fqName(_line), BuiltInAtomicType.ANY_ATOMIC, ""+loc.getLineNumber(), null, ReceiverOption.NONE));
                 }
 
                 if (loc.getColumnNumber() != -1) {
-                    writer.addAttribute(_column, ""+loc.getColumnNumber());
+                    alist.add(new AttributeInfo(TypeUtils.fqName(_type), BuiltInAtomicType.ANY_ATOMIC, ""+loc.getColumnNumber(), null, ReceiverOption.NONE));
                 }
             }
         }
 
+        writer.addStartElement(c_error, AttributeMap.fromList(alist),nsmap);
 
-        writer.startContent();
         writer.addText(message);
         writer.addEndElement();
         writer.endDocument();

@@ -137,7 +137,7 @@ public class ReadableInline implements ReadablePipe {
         // nop;
     }
 
-    public XdmNode read() throws SaxonApiException {
+    public XdmNode read() {
         XdmNode doc = documents.get(pos++);
 
         if (reader != null) {

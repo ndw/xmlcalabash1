@@ -107,7 +107,7 @@ public class ValidateWithRNG extends DefaultStep {
             }
 
             result.write(doc);
-        } catch (VerifierConfigurationException ex) {
+        } catch (VerifierConfigurationException | IOException ex) {
             logger.debug(ex.getMessage(), ex);
             throw new XProcException(ex);
         } catch (SAXException sx) {
@@ -116,9 +116,6 @@ public class ValidateWithRNG extends DefaultStep {
                 throw XProcException.stepError(53, sx);
             }
             result.write(doc);
-        } catch (IOException ioe) {
-            logger.debug(ioe.getMessage(), ioe);
-            throw new XProcException(ioe);
         }
     }
 
@@ -131,7 +128,6 @@ public class ValidateWithRNG extends DefaultStep {
             TreeWriter treeWriter = new TreeWriter(runtime);
             treeWriter.startDocument(docBaseURI);
             treeWriter.addStartElement(XProcConstants.c_error);
-            treeWriter.startContent();
 
             treeWriter.addText(e.toString());
 

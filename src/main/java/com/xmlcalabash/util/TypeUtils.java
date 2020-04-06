@@ -24,9 +24,17 @@ import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Hashtable;
 
+import net.sf.saxon.event.ReceiverOption;
+import net.sf.saxon.om.AttributeInfo;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.FingerprintedQName;
+import net.sf.saxon.om.SingletonAttributeMap;
 import net.sf.saxon.s9api.*;
+import net.sf.saxon.type.BuiltInAtomicType;
 
 /**
  * Created by IntelliJ IDEA.
@@ -106,5 +114,17 @@ public class TypeUtils {
         } catch (SaxonApiException sae) {
             throw new XProcException(error, sae);
         }
-    }    
+    }
+
+    public static FingerprintedQName fqName(QName name) {
+        return new FingerprintedQName(name.getPrefix(), name.getNamespaceURI(), name.getLocalName());
+    }
+
+    public static AttributeInfo attributeInfo(QName name, String value) {
+        return TypeUtils.attributeInfo(name, value, null);
+    }
+
+    public static AttributeInfo attributeInfo(QName name, String value, Location location) {
+        return new AttributeInfo(TypeUtils.fqName(name), BuiltInAtomicType.ANY_ATOMIC, value, location, ReceiverOption.NONE);
+    }
 }

@@ -8,6 +8,9 @@ import com.xmlcalabash.core.XProcStep;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XStep;
+import net.sf.saxon.lib.NamespaceConstant;
+import net.sf.saxon.om.NamespaceBinding;
+import net.sf.saxon.om.NamespaceMap;
 import net.sf.saxon.s9api.*;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.trans.XPathException;
@@ -171,6 +174,44 @@ public class DefaultStep implements XProcStep {
         if (msg != null) {
             System.err.println("Message: " + msg);
         }
+    }
+
+    protected String prefixFor(NamespaceMap nsmap, String preferredPrefix, String uri) {
+        if (preferredPrefix == null) {
+            return prefixFor(nsmap, uri);
+        }
+
+        if (NamespaceConstant.XML.equals(uri)) {
+            return "xml";
+        }
+
+        String curMapping = nsmap.getURI(preferredPrefix);
+        if (curMapping == null || uri.equals(curMapping)) {
+            return preferredPrefix;
+        } else {
+            return prefixFor(nsmap, uri);
+        }
+    }
+
+    protected String prefixFor(NamespaceMap nsmap, String uri) {
+        if (NamespaceConstant.XML.equals(uri)) {
+            return "xml";
+        }
+
+        int count = 0;
+        String base = "_";
+        String prefix = null;
+        boolean found = true;
+        while (found) {
+            count += 1;
+            prefix = base + count;
+            found = false;
+            for (NamespaceBinding binding : nsmap) {
+                found = found || prefix.equals(binding.getPrefix());
+            }
+        }
+
+        return prefix;
     }
 
     public Serializer makeSerializer() {

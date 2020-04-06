@@ -27,10 +27,16 @@ import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.io.ReadablePipe;
+import com.xmlcalabash.util.TypeUtils;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.EmptyAttributeMap;
+import net.sf.saxon.om.NamespaceMap;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 import com.xmlcalabash.runtime.XAtomicStep;
+
+import java.util.HashMap;
 
 /**
  *
@@ -106,13 +112,17 @@ public class Error extends DefaultStep {
 
         TreeWriter treeWriter = new TreeWriter(runtime);
         treeWriter.startDocument(step.getNode().getBaseURI());
-        treeWriter.addStartElement(c_error);
-        treeWriter.addNamespace(cpfx, cns);
 
-        treeWriter.addAttribute(_name, step.getName());
-        treeWriter.addAttribute(_type, "p:error");
-        treeWriter.addAttribute(_code, errorCode.toString());
-        treeWriter.startContent();
+        AttributeMap attr = EmptyAttributeMap.getInstance();
+        NamespaceMap nsmap = NamespaceMap.emptyMap();
+
+        nsmap = nsmap.put(cpfx, cns);
+
+        attr = attr.put(TypeUtils.attributeInfo(_name, step.getName()));
+        attr = attr.put(TypeUtils.attributeInfo(_type, "p:error"));
+        attr = attr.put(TypeUtils.attributeInfo(_code, errorCode.toString()));
+
+        treeWriter.addStartElement(c_error, attr, nsmap);
         if (doc != null) {
             treeWriter.addSubtree(doc);
         }

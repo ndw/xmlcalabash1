@@ -26,8 +26,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 
 import com.xmlcalabash.util.*;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.EmptyAttributeMap;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -174,30 +177,30 @@ public class ReadableData implements ReadablePipe {
 		    XdmNode jsonDoc = JSONtoXML.convert(runtime.getProcessor(), jt, runtime.jsonFlavor());
 		    tree.addSubtree(jsonDoc);
 		} else {
-		    tree.addStartElement(wrapper);
+            AttributeMap attr = EmptyAttributeMap.getInstance();
+
 		    if (XProcConstants.c_data.equals(wrapper)) {
 		        if ("content/unknown".equals(contentType)) {
-		            tree.addAttribute(_contentType, "application/octet-stream");
+		            attr = attr.put(TypeUtils.attributeInfo(_contentType, "application/octet-stream"));
 		        } else {
-		            tree.addAttribute(_contentType, contentType);
+		            attr = attr.put(TypeUtils.attributeInfo(_contentType, contentType));
 		        }
 		        if (!isText(contentType, charset)) {
-		            tree.addAttribute(_encoding, "base64");
+		            attr = attr.put(TypeUtils.attributeInfo(_encoding, "base64"));
 		        }
 		    } else {
 		        if ("content/unknown".equals(contentType)) {
-		            tree.addAttribute(c_contentType, "application/octet-stream");
+		            attr = attr.put(TypeUtils.attributeInfo(c_contentType, "application/octet-stream"));
 		        } else {
-		            tree.addAttribute(c_contentType, contentType);
+		            attr = attr.put(TypeUtils.attributeInfo(c_contentType, contentType));
 		        }
 		        if (!isText(contentType, charset)) {
-		            tree.addAttribute(c_encoding, "base64");
+		            attr = attr.put(TypeUtils.attributeInfo(c_encoding, "base64"));
 		        }
 		    }
-		    tree.startContent();
+            tree.addStartElement(wrapper, attr);
 
 		    if (isText(contentType, charset)) {
-		        BufferedReader bufread;
 		        if (charset == null) {
 		            // FIXME: Is this right? I think it is...
 		            charset = "UTF-8";
@@ -285,7 +288,7 @@ public class ReadableData implements ReadablePipe {
         return ensureDocuments();
     }
 
-    public XdmNode read() throws SaxonApiException {
+    public XdmNode read() {
         DocumentSequence docs = ensureDocuments();
         XdmNode doc = docs.get(pos++);
         if (reader != null) {
@@ -325,8 +328,7 @@ public class ReadableData implements ReadablePipe {
 
         int pos = contentType.indexOf(";");
         if (pos > 0) {
-            String type = contentType.substring(0,pos).trim();
-            return type;
+            return contentType.substring(0,pos).trim();
         } else {
             return contentType;
         }

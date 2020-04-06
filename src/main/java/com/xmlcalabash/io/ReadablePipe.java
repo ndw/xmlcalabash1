@@ -30,7 +30,7 @@ import com.xmlcalabash.model.Step;
 public interface ReadablePipe {
     public void canReadSequence(boolean sequence);
     public boolean readSequence();
-    public XdmNode read() throws SaxonApiException;
+    public XdmNode read();
     public void setReader(Step step);
     public void setNames(String stepName, String portName);
     public void resetReader();

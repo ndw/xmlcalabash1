@@ -9,6 +9,11 @@ import com.xmlcalabash.model.DeclareStep;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XPipeline;
 import com.xmlcalabash.util.TreeWriter;
+import com.xmlcalabash.util.TypeUtils;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.EmptyAttributeMap;
+import net.sf.saxon.om.NamespaceMap;
+import net.sf.saxon.om.SingletonAttributeMap;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmNode;
 import org.restlet.data.MediaType;
@@ -40,28 +45,25 @@ public class Pipeline extends BaseResource {
         PipelineConfiguration pipeconfig = getPipelines().get(id);
 
         tree.addStartElement(pr_pipeline);
-        tree.startContent();
 
         tree.addStartElement(pr_uri);
-        tree.startContent();
         tree.addText(pipelineUri(id));
         tree.addEndElement();
 
         formatExpires(tree, pipeconfig.expires);
 
         tree.addStartElement(pr_has_run);
-        tree.startContent();
         tree.addText("" + pipeconfig.ran);
         tree.addEndElement();
 
         if (pipeconfig.ran) {
             for (String port : pipeconfig.outputPorts) {
-                tree.addStartElement(pr_output);
+                AttributeMap attr = EmptyAttributeMap.getInstance();
                 if (port.equals(pipeconfig.defoutput)) {
-                    tree.addAttribute(_primary, "true");
+                    attr = attr.put(TypeUtils.attributeInfo(_primary, "true"));
                 }
-                tree.addAttribute(_documents, "" + pipeconfig.outputs.get(port).size());
-                tree.startContent();
+                attr = attr.put(TypeUtils.attributeInfo(_documents, "" + pipeconfig.outputs.get(port).size()));
+                tree.addStartElement(pr_output, attr);
                 tree.addText(port);
                 tree.addEndElement();
             }
@@ -70,62 +72,61 @@ public class Pipeline extends BaseResource {
             DeclareStep pipeline = xpipeline.getDeclareStep();
 
             for (String port : pipeconfig.inputPorts) {
-                tree.addStartElement(pr_input);
+                AttributeMap attr = EmptyAttributeMap.getInstance();
                 if (port.equals(pipeconfig.definput)) {
-                    tree.addAttribute(_primary, "true");
+                    attr = attr.put(TypeUtils.attributeInfo(_primary, "true"));
                 }
-                tree.addAttribute(_documents, "" + pipeconfig.documentCount(port));
-                tree.startContent();
+                attr = attr.put(TypeUtils.attributeInfo(_documents, "" + pipeconfig.documentCount(port)));
+                tree.addStartElement(pr_input, attr);
                 tree.addText(port);
                 tree.addEndElement();
             }
 
             for (QName name : pipeline.getOptions()) {
                 tree.addStartElement(pr_option);
-                tree.startContent();
 
-                tree.addStartElement(pr_name);
-
+                NamespaceMap nsmap = NamespaceMap.emptyMap();
                 if (!"".equals(name.getPrefix())) {
-                    tree.addNamespace(name.getPrefix(), name.getNamespaceURI());
+                    nsmap = nsmap.put(name.getPrefix(), name.getNamespaceURI());
                 }
 
-                tree.startContent();
+                tree.addStartElement(pr_name, EmptyAttributeMap.getInstance(), nsmap);
+
                 tree.addText(name.toString());
                 tree.addEndElement();
 
-                tree.addStartElement(pr_value);
+                AttributeMap attr = EmptyAttributeMap.getInstance();
                 if (pipeconfig.options.containsKey(name)) {
-                    tree.startContent();
-                    tree.addText(pipeconfig.options.get(name));
+                    // nop
                 } else if (pipeconfig.gvOptions.contains(name)) {
-                    tree.addAttribute(_initialized, "true");
-                    tree.startContent();
+                    attr = attr.put(TypeUtils.attributeInfo(_initialized, "true"));
                 } else {
-                    tree.addAttribute(_default, "true");
-                    tree.startContent();
+                    attr = attr.put(TypeUtils.attributeInfo(_default, "true"));
+                }
+
+                tree.addStartElement(pr_value, attr);
+
+                if (pipeconfig.options.containsKey(name)) {
+                    tree.addText(pipeconfig.options.get(name));
                 }
                 tree.addEndElement();
-
                 tree.addEndElement();
             }
 
             for (QName name : pipeconfig.parameters.keySet()) {
                 tree.addStartElement(pr_parameter);
-                tree.startContent();
 
-                tree.addStartElement(pr_name);
-
+                NamespaceMap nsmap = NamespaceMap.emptyMap();
                 if (!"".equals(name.getPrefix())) {
-                    tree.addNamespace(name.getPrefix(), name.getNamespaceURI());
+                    nsmap = nsmap.put(name.getPrefix(), name.getNamespaceURI());
                 }
 
-                tree.startContent();
+                tree.addStartElement(pr_name, EmptyAttributeMap.getInstance(), nsmap);
+
                 tree.addText(name.toString());
                 tree.addEndElement();
 
                 tree.addStartElement(pr_value);
-                tree.startContent();
                 tree.addText(pipeconfig.parameters.get(name));
                 tree.addEndElement();
 
@@ -134,16 +135,12 @@ public class Pipeline extends BaseResource {
 
             for (QName name : pipeconfig.gvParameters) {
                 tree.addStartElement(pr_parameter);
-                tree.startContent();
 
                 tree.addStartElement(pr_name);
-                tree.startContent();
                 tree.addText(name.toString());
                 tree.addEndElement();
 
-                tree.addStartElement(pr_value);
-                tree.addAttribute(_initialized, "true");
-                tree.startContent();
+                tree.addStartElement(pr_value, SingletonAttributeMap.of(TypeUtils.attributeInfo(_initialized, "true")));
                 tree.addEndElement();
 
                 tree.addEndElement();

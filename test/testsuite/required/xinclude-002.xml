@@ -12,9 +12,7 @@
   
   <t:pipeline>
     <p:pipeline version='1.0'>
-      <p:xinclude fixup-xml-base="true">
-	<p:log port="result" href="file:///tmp/out.xml"/>
-      </p:xinclude>
+      <p:xinclude fixup-xml-base="true"/>
 
       <p:choose>
         <p:when test="/document/para[2][contains(@xml:base, 'doc/xinclude/para.xml')]">

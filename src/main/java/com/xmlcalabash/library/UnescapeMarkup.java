@@ -19,40 +19,28 @@
 
 package com.xmlcalabash.library;
 
-import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
-import java.util.Iterator;
-
 import com.xmlcalabash.core.XMLCalabash;
+import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
-import com.xmlcalabash.util.HttpUtils;
-import com.xmlcalabash.util.JSONtoXML;
-import com.xmlcalabash.util.TreeWriter;
-import com.xmlcalabash.util.Base64;
-import com.xmlcalabash.util.S9apiUtils;
-import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.core.XProcException;
-import net.sf.saxon.om.*;
-import net.sf.saxon.s9api.Axis;
-import net.sf.saxon.s9api.DocumentBuilder;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmNodeKind;
-import net.sf.saxon.s9api.XdmSequenceIterator;
-import net.sf.saxon.tree.util.NamespaceIterator;
+import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.util.*;
+import net.sf.saxon.om.FingerprintedQName;
+import net.sf.saxon.om.NamespaceMap;
+import net.sf.saxon.om.NodeInfo;
+import net.sf.saxon.s9api.*;
 import nu.validator.htmlparser.common.XmlViolationPolicy;
 import nu.validator.htmlparser.dom.HtmlDocumentBuilder;
+import org.ccil.cowan.tagsoup.Parser;
 import org.json.JSONTokener;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
-import org.ccil.cowan.tagsoup.Parser;
 
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.sax.SAXSource;
-
-import com.xmlcalabash.runtime.XAtomicStep;
+import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 
 /**
  *
@@ -132,15 +120,13 @@ public class UnescapeMarkup extends DefaultStep {
         TreeWriter tree = new TreeWriter(runtime);
         tree.startDocument(doc.getBaseURI());
 
-        XdmSequenceIterator iter = doc.axisIterator(Axis.CHILD);
-        XdmNode child = (XdmNode) iter.next();
+        XdmSequenceIterator<XdmNode> iter = doc.axisIterator(Axis.CHILD);
+        XdmNode child = iter.next();
         while (child.getNodeKind() != XdmNodeKind.ELEMENT) {
             tree.addSubtree(child);
-            child = (XdmNode) iter.next();
+            child = iter.next();
         }
         tree.addStartElement(child);
-        tree.addAttributes(child);
-        tree.startContent();
 
         if ("text/html".equals(contentType)) {
             XdmNode tagDoc = null;
@@ -174,9 +160,10 @@ public class UnescapeMarkup extends DefaultStep {
 
             // Now ignore the wrapper that we added...
             XdmNode dummyWrapper = S9apiUtils.getDocumentElement(unesc);
-            XdmSequenceIterator realNodes = dummyWrapper.axisIterator(Axis.CHILD);
+            assert dummyWrapper != null;
+            XdmSequenceIterator<XdmNode> realNodes = dummyWrapper.axisIterator(Axis.CHILD);
             while (realNodes.hasNext()) {
-                unesc = (XdmNode) realNodes.next();
+                unesc = realNodes.next();
                 if (namespace == null) {
                     tree.addSubtree(unesc);
                 } else {
@@ -193,61 +180,17 @@ public class UnescapeMarkup extends DefaultStep {
     private void remapDefaultNamespace(TreeWriter tree, XdmNode unescnode) {
         if (unescnode.getNodeKind() == XdmNodeKind.ELEMENT) {
             NodeInfo inode = unescnode.getUnderlyingNode();
-            int nscount = 0;
-            Iterator<NamespaceBinding> nsiter = NamespaceIterator.iterateNamespaces(inode);
-            while (nsiter.hasNext()) {
-                nscount++;
-                nsiter.next();
+            NamespaceMap nsmap = inode.getAllNamespaces();
+            if (!"".equals(nsmap.getDefaultNamespace())) {
+                nsmap = nsmap.put("", namespace);
             }
-            
-            boolean replaced = false;
-            NamespaceBinding newNS[] = null;
-            if (nscount > 0) {
-                NamespaceBinding inscopeNS[] = new NamespaceBinding[nscount];
-                newNS = new NamespaceBinding[nscount+1];
-                for (int pos = 0; pos < inscopeNS.length; pos++) {
-                    NamespaceBinding ns = inscopeNS[pos];
-                    String pfx = ns.getPrefix();
-
-                    if ("".equals(pfx)) {
-                        NamespaceBinding newns = new NamespaceBinding(pfx, namespace);
-                        newNS[pos] = newns;
-                        replaced = true;
-                    } else {
-                        newNS[pos] = ns;
-                    }
-                }
-                if (!replaced) {
-                    NamespaceBinding newns = new NamespaceBinding("",namespace);
-                    newNS[newNS.length-1] = newns;
-                }
-            }
-
-            // Careful, we're messing with the namespace bindings
-            // Make sure the nameCode is right...
-            /* Not sure what to do here in 9.4. Nothing?
-            int nameCode = inode.getNameCode();
-            int typeCode = inode.getTypeAnnotation() & NamePool.FP_MASK;
-            String pfx = pool.getPrefix(nameCode);
-            String uri = pool.getURI(nameCode);
-
-            if ("".equals(pfx) && !namespace.equals(uri)) {
-                nameCode = pool.allocate(pfx,namespace,unescnode.getNodeName().getLocalName());
-            }
-            */
 
             FingerprintedQName newName = new FingerprintedQName("", namespace, inode.getLocalPart());
-            tree.addStartElement(newName, inode.getSchemaType(), newNS);
+            tree.addStartElement(newName, inode.attributes(), inode.getSchemaType(), nsmap);
 
-            XdmSequenceIterator iter = unescnode.axisIterator(Axis.ATTRIBUTE);
-            while (iter.hasNext()) {
-                XdmNode child = (XdmNode) iter.next();
-                tree.addAttribute(child);
-            }
-
-            XdmSequenceIterator childNodes = unescnode.axisIterator(Axis.CHILD);
+            XdmSequenceIterator<XdmNode> childNodes = unescnode.axisIterator(Axis.CHILD);
             while (childNodes.hasNext()) {
-                XdmNode child = (XdmNode) childNodes.next();
+                XdmNode child = childNodes.next();
                 remapDefaultNamespace(tree, child);
             }
             
@@ -258,15 +201,15 @@ public class UnescapeMarkup extends DefaultStep {
     }
 
     private String extractText(XdmNode doc) {
-        String content = "";
-        XdmSequenceIterator iter = doc.axisIterator(Axis.CHILD);
+        StringBuilder content = new StringBuilder();
+        XdmSequenceIterator<XdmNode> iter = doc.axisIterator(Axis.CHILD);
         while (iter.hasNext()) {
-            XdmNode child = (XdmNode) iter.next();
+            XdmNode child = iter.next();
             if (child.getNodeKind() == XdmNodeKind.ELEMENT || child.getNodeKind() == XdmNodeKind.TEXT) {
-                content += child.getStringValue();
+                content.append(child.getStringValue());
             }
         }
-        return content;
+        return content.toString();
     }
 
     private String decodeBase64(XdmNode doc, String charset) {
@@ -287,8 +230,7 @@ public class UnescapeMarkup extends DefaultStep {
         SAXSource saxSource = new SAXSource(parser, source);
         DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
         try {
-            XdmNode doc = builder.build(saxSource);
-            return doc;
+            return builder.build(saxSource);
         } catch (Exception e) {
             throw new XProcException(e);
         }
@@ -301,8 +243,7 @@ public class UnescapeMarkup extends DefaultStep {
             InputSource src = new InputSource(new StringReader(text));
             Document html = htmlBuilder.parse(src);
             DocumentBuilder builder = runtime.getProcessor().newDocumentBuilder();
-            XdmNode doc = builder.build(new DOMSource(html));
-            return doc;
+            return builder.build(new DOMSource(html));
         } catch (Exception e) {
             throw new XProcException(e);
         }

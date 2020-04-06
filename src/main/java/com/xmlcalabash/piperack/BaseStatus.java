@@ -31,13 +31,10 @@ public class BaseStatus extends StatusService {
         TreeWriter tree = new TreeWriter(globalRuntime);
         tree.startDocument(URI.create("http://example.com/"));
         tree.addStartElement(BaseResource.pr_error);
-        tree.startContent();
         tree.addStartElement(BaseResource.pr_code);
-        tree.startContent();
         tree.addText("" + status.getCode());
         tree.addEndElement();
         tree.addStartElement(BaseResource.pr_message);
-        tree.startContent();
         tree.addText("Bad request: " + exceptionMessage(status.getThrowable()));
         tree.addEndElement();
         tree.addEndElement();

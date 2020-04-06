@@ -27,7 +27,7 @@ import net.sf.saxon.Configuration;
 import net.sf.saxon.event.ComplexContentOutputter;
 import net.sf.saxon.event.NamespaceReducer;
 import net.sf.saxon.event.PipelineConfiguration;
-import net.sf.saxon.om.NamespaceResolver;
+import net.sf.saxon.om.*;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmDestination;
@@ -40,6 +40,7 @@ import net.sf.saxon.sxpath.XPathExpression;
 import net.sf.saxon.trans.XPathException;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Vector;
@@ -72,7 +73,6 @@ public class ProcessMatch extends TreeWriter {
 
     public void match(XdmNode doc, RuntimeValue match) {
         XdmNode node = match.getNode();
-        String expr = match.getString();
 
         try {
             XPathEvaluator xeval = new XPathEvaluator(saxonConfig);
@@ -187,9 +187,9 @@ public class ProcessMatch extends TreeWriter {
             }
 
             if (!match || processChildren) {
-                XdmSequenceIterator iter = node.axisIterator(Axis.CHILD);
+                XdmSequenceIterator<XdmNode> iter = node.axisIterator(Axis.CHILD);
                 while (iter.hasNext()) {
-                    XdmNode child = (XdmNode) iter.next();
+                    XdmNode child = iter.next();
                     traverse(child);
                 }
             }
@@ -200,41 +200,42 @@ public class ProcessMatch extends TreeWriter {
                 endDocument();
             }
         } else if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
-            if (match) {
-                processChildren = processor.processStartElement(node);
-                saw = 0;
-            } else {
-                addStartElement(node);
+            AttributeMap allAttributes = node.getUnderlyingNode().attributes();
+            ArrayList<AttributeInfo> matchingAttributes = new ArrayList<>();
+            ArrayList<AttributeInfo> nonMatchingAttributes = new ArrayList<>();
+
+            XdmSequenceIterator<XdmNode> iter = node.axisIterator(Axis.ATTRIBUTE);
+            while (iter.hasNext()) {
+                XdmNode child = iter.next();
+                NodeName name = NameOfNode.makeName(child.getUnderlyingNode());
+                AttributeInfo attr = allAttributes.get(name);
+                if (matches(child)) {
+                    matchingAttributes.add(attr);
+                } else {
+                    nonMatchingAttributes.add(attr);
+                }
             }
 
-            if (!match) {
-                XdmSequenceIterator iter = node.axisIterator(Axis.ATTRIBUTE);
-
-                // Walk through the attributes twice, processing all the *NON* matches first.
-                // That way if a matching node renames an attribute, it can replace any non-matching
-                // attribute with the same name.
-                while (iter.hasNext()) {
-                    XdmNode child = (XdmNode) iter.next();
-                    if (!matches(child)) {
-                        traverse(child);
-                    }
+            if (!matchingAttributes.isEmpty()) {
+                AttributeMap processed = processor.processAttributes(node,
+                        AttributeMap.fromList(matchingAttributes),
+                        AttributeMap.fromList(nonMatchingAttributes));
+                if (processed != null) {
+                    allAttributes = processed;
                 }
+            }
 
-                iter = node.axisIterator(Axis.ATTRIBUTE);
-                while (iter.hasNext()) {
-                    XdmNode child = (XdmNode) iter.next();
-                    if (matches(child)) {
-                        traverse(child);
-                    }
-                }
-
-                receiver.startContent();
+            if (match) {
+                processChildren = processor.processStartElement(node, allAttributes);
+                saw = 0;
+            } else {
+                addStartElement(node, allAttributes);
             }
 
             if (!match || processChildren) {
-                XdmSequenceIterator iter = node.axisIterator(Axis.CHILD);
+                iter = node.axisIterator(Axis.CHILD);
                 while (iter.hasNext()) {
-                    XdmNode child = (XdmNode) iter.next();
+                    XdmNode child = iter.next();
                     traverse(child);
                 }
             }
@@ -243,14 +244,6 @@ public class ProcessMatch extends TreeWriter {
                 processor.processEndElement(node);
             } else {
                 addEndElement();
-            }
-        } else if (node.getNodeKind() == XdmNodeKind.ATTRIBUTE) {
-            // FIXME: What about changing the name of the attribute?
-            if (match) {
-                processor.processAttribute(node);
-                saw = 0;
-            } else {
-                addAttribute(node.getNodeName(), node.getStringValue());
             }
         } else if (node.getNodeKind() == XdmNodeKind.COMMENT) {
             if (match) {
@@ -278,7 +271,7 @@ public class ProcessMatch extends TreeWriter {
         }
     }
 
-    private void traverse(XdmNode node, boolean deep) throws SaxonApiException, XPathException {
+    private void traverse(XdmNode node, boolean deep) {
         boolean match = matches(node);
 
         if (match) {
@@ -287,22 +280,22 @@ public class ProcessMatch extends TreeWriter {
 
         if (node.getNodeKind() == XdmNodeKind.DOCUMENT) {
             if (!match || deep) {
-                XdmSequenceIterator iter = node.axisIterator(Axis.CHILD);
+                XdmSequenceIterator<XdmNode> iter = node.axisIterator(Axis.CHILD);
                 while (iter.hasNext()) {
-                    XdmNode child = (XdmNode) iter.next();
+                    XdmNode child = iter.next();
                     traverse(child, deep);
                 }
             }
         } else if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
             if (!match || deep) {
-                XdmSequenceIterator iter = node.axisIterator(Axis.ATTRIBUTE);
+                XdmSequenceIterator<XdmNode> iter = node.axisIterator(Axis.ATTRIBUTE);
                 while (iter.hasNext()) {
-                    XdmNode child = (XdmNode) iter.next();
+                    XdmNode child = iter.next();
                     traverse(child, deep);
                 }
                 iter = node.axisIterator(Axis.CHILD);
                 while (iter.hasNext()) {
-                    XdmNode child = (XdmNode) iter.next();
+                    XdmNode child = iter.next();
                     traverse(child, deep);
                 }
             }
@@ -311,7 +304,7 @@ public class ProcessMatch extends TreeWriter {
         }
     }
 
-    private class MatchingNamespaceResolver implements NamespaceResolver {
+    private static class MatchingNamespaceResolver implements NamespaceResolver {
         private Hashtable<String,String> ns = new Hashtable<String,String> ();
 
         public MatchingNamespaceResolver(Hashtable<String,String> bindings) {
@@ -328,9 +321,7 @@ public class ProcessMatch extends TreeWriter {
 
         public Iterator<String> iteratePrefixes() {
             Vector<String> p = new Vector<String> ();
-            for (String pfx : ns.keySet()) {
-                p.add(pfx);
-            }
+            p.addAll(ns.keySet());
             return p.iterator();
         }
     }

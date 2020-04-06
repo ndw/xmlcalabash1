@@ -19,21 +19,26 @@
 
 package com.xmlcalabash.library;
 
-import java.io.UnsupportedEncodingException;
-import java.util.Vector;
-
 import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.io.ReadablePipe;
+import com.xmlcalabash.io.WritablePipe;
+import com.xmlcalabash.model.RuntimeValue;
+import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.util.ProcessMatch;
 import com.xmlcalabash.util.ProcessMatchingNodes;
-import com.xmlcalabash.io.WritablePipe;
-import com.xmlcalabash.io.ReadablePipe;
-import com.xmlcalabash.model.RuntimeValue;
+import net.sf.saxon.event.ReceiverOption;
+import net.sf.saxon.om.AttributeInfo;
+import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
-import com.xmlcalabash.runtime.XAtomicStep;
+import net.sf.saxon.type.BuiltInAtomicType;
+
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Vector;
 
 /**
  *
@@ -47,7 +52,7 @@ import com.xmlcalabash.runtime.XAtomicStep;
 public class WWWFormURLEncode extends DefaultStep implements ProcessMatchingNodes {
     private ReadablePipe source = null;
     private WritablePipe result = null;
-    private Vector<Tuple> params = new Vector<Tuple> ();
+    private Vector<Tuple> params = new Vector<>();
     private static final QName _match = new QName("", "match");
     private ProcessMatch matcher = null;
     private String encoded = "";
@@ -108,37 +113,46 @@ public class WWWFormURLEncode extends DefaultStep implements ProcessMatchingNode
         result.write(matcher.getResult());
     }
     
-    public boolean processStartDocument(XdmNode node) throws SaxonApiException {
+    public boolean processStartDocument(XdmNode node) {
         return true;
     }
 
-    public void processEndDocument(XdmNode node) throws SaxonApiException {
+    public void processEndDocument(XdmNode node) {
         // nop?
     }
 
-    public boolean processStartElement(XdmNode node) throws SaxonApiException {
+    @Override
+    public AttributeMap processAttributes(XdmNode node, AttributeMap matchingAttributes, AttributeMap nonMatchingAttributes) {
+        ArrayList<AttributeInfo> alist = new ArrayList<>();
+        for (AttributeInfo attr : nonMatchingAttributes) {
+            alist.add(attr);
+        }
+        for (AttributeInfo attr : matchingAttributes) {
+            alist.add(new AttributeInfo(attr.getNodeName(), BuiltInAtomicType.ANY_ATOMIC, encoded, attr.getLocation(), ReceiverOption.NONE));
+        }
+        return AttributeMap.fromList(alist);
+    }
+
+    @Override
+    public boolean processStartElement(XdmNode node, AttributeMap attributes) {
         matcher.addText(encoded);
         return false;
     }
 
-    public void processEndElement(XdmNode node) throws SaxonApiException {
+    public void processEndElement(XdmNode node) {
         // nop?
     }
 
-    public void processText(XdmNode node) throws SaxonApiException {
+    public void processText(XdmNode node) {
         matcher.addText(encoded);
     }
 
-    public void processComment(XdmNode node) throws SaxonApiException {
+    public void processComment(XdmNode node) {
         matcher.addComment(encoded);
     }
 
-    public void processPI(XdmNode node) throws SaxonApiException {
+    public void processPI(XdmNode node) {
         matcher.addPI(node.getNodeName().getLocalName(),encoded);
-    }
-
-    public void processAttribute(XdmNode node) throws SaxonApiException {
-        matcher.addAttribute(node.getNodeName(), encoded);
     }
 
     private String encode(String src) {
@@ -147,29 +161,24 @@ public class WWWFormURLEncode extends DefaultStep implements ProcessMatchingNode
         String unreserved = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-._~";
         String okChars = genDelims + subDelims + unreserved;
 
-        String encoded = "";
-        
-        try {
-            byte[] bytes = src.getBytes("UTF-8");
-            for (int pos = 0; pos < bytes.length; pos++) {
-                if (okChars.indexOf(bytes[pos]) >= 0) {
-                    encoded += (char) bytes[pos];
+        StringBuilder encoded = new StringBuilder();
+        byte[] bytes = src.getBytes(StandardCharsets.UTF_8);
+        for (byte aByte : bytes) {
+            if (okChars.indexOf(aByte) >= 0) {
+                encoded.append((char) aByte);
+            } else {
+                if (aByte == ' ') {
+                    encoded.append("+");
                 } else {
-                    if (bytes[pos] == ' ') {
-                        encoded += "+";
-                    } else {
-                        encoded += String.format("%%%02X", bytes[pos]);
-                    }
+                    encoded.append(String.format("%%%02X", aByte));
                 }
             }
-        } catch (UnsupportedEncodingException uee) {
-            // This can't happen for UTF-8!
         }
 
-        return encoded;
+        return encoded.toString();
     }
 
-    private class Tuple {
+    private static class Tuple {
         public QName name;
         public RuntimeValue value;
         public Tuple(QName name, RuntimeValue value) {

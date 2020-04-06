@@ -28,29 +28,12 @@ import com.xmlcalabash.io.DataStore.DataReader;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.util.AxisNodes;
-import com.xmlcalabash.util.Base64;
-import com.xmlcalabash.util.HttpUtils;
-import com.xmlcalabash.util.JSONtoXML;
-import com.xmlcalabash.util.MIMEReader;
-import com.xmlcalabash.util.S9apiUtils;
-import com.xmlcalabash.util.TreeWriter;
-import com.xmlcalabash.util.XMLtoJSON;
-import net.sf.saxon.s9api.Axis;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.Serializer;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmNodeKind;
-import net.sf.saxon.s9api.XdmSequenceIterator;
-import org.apache.http.Consts;
-import org.apache.http.Header;
-import org.apache.http.HeaderElement;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpEntityEnclosingRequest;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
+import com.xmlcalabash.util.*;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.EmptyAttributeMap;
+import net.sf.saxon.om.SingletonAttributeMap;
+import net.sf.saxon.s9api.*;
+import org.apache.http.*;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.AuthCache;
@@ -59,13 +42,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.AuthSchemes;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpHead;
-import org.apache.http.client.methods.HttpPatch;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.methods.*;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.entity.ByteArrayEntity;
@@ -76,11 +53,7 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.ByteArrayBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.client.BasicAuthCache;
-import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
+import org.apache.http.impl.client.*;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.protocol.HttpCoreContext;
 import org.apache.http.util.EntityUtils;
@@ -88,16 +61,11 @@ import org.json.JSONTokener;
 import org.xml.sax.InputSource;
 
 import javax.xml.XMLConstants;
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 
@@ -171,16 +139,17 @@ public class HttpRequest extends DefaultStep {
 
         XdmNode requestDoc = source.read();
         XdmNode start = S9apiUtils.getDocumentElement(requestDoc);
+        assert start != null;
 
         if (!c_request.equals(start.getNodeName())) {
             throw XProcException.stepError(40);
         }
 
         // Check for valid attributes
-        XdmSequenceIterator iter = start.axisIterator(Axis.ATTRIBUTE);
+        XdmSequenceIterator<XdmNode> iter = start.axisIterator(Axis.ATTRIBUTE);
         boolean ok = true;
         while (iter.hasNext()) {
-            XdmNode attr = (XdmNode) iter.next();
+            XdmNode attr = iter.next();
             QName name = attr.getNodeName();
             if (_method.equals(name) || _href.equals(name) || _detailed.equals(name)
                     || _status_only.equals(name) || _username.equals(name) || _password.equals(name)
@@ -333,20 +302,27 @@ public class HttpRequest extends DefaultStep {
 
         HttpUriRequest httpRequest;
         HttpResponse httpResult = null;
-        if ("get".equals(lcMethod)) {
-            httpRequest = doGet();
-        } else if ("post".equals(lcMethod)) {
-            httpRequest = doPost(body);
-        } else if ("put".equals(lcMethod)) {
-            httpRequest = doPut(body);
-        } else if ("patch".equals(lcMethod)) {
-            httpRequest = doPatch(body);
-        } else if ("head".equals(lcMethod)) {
-            httpRequest = doHead();
-        } else if ("delete".equals(lcMethod)) {
-            httpRequest = doDelete();
-        } else {
-            throw new UnsupportedOperationException("Unrecognized http method: " + method);
+        switch (lcMethod) {
+            case "get":
+                httpRequest = doGet();
+                break;
+            case "post":
+                httpRequest = doPost(body);
+                break;
+            case "put":
+                httpRequest = doPut(body);
+                break;
+            case "patch":
+                httpRequest = doPatch(body);
+                break;
+            case "head":
+                httpRequest = doHead();
+                break;
+            case "delete":
+                httpRequest = doDelete();
+                break;
+            default:
+                throw new UnsupportedOperationException("Unrecognized http method: " + method);
         }
 
         TreeWriter tree = new TreeWriter(runtime);
@@ -397,9 +373,7 @@ public class HttpRequest extends DefaultStep {
             }
 
             if (detailed) {
-                tree.addStartElement(XProcConstants.c_response);
-                tree.addAttribute(_status, "" + statusCode);
-                tree.startContent();
+                tree.addStartElement(XProcConstants.c_response, SingletonAttributeMap.of(TypeUtils.attributeInfo(_status, ""+statusCode)));
 
                 for (Header header : httpResult.getAllHeaders()) {
                     // I don't understand why/how HeaderElement parsing works. I get very weird results.
@@ -408,11 +382,11 @@ public class HttpRequest extends DefaultStep {
                     int cp = h.indexOf(":");
                     String name = header.getName();
                     String value = h.substring(cp+1).trim();
+                    AttributeMap attr = EmptyAttributeMap.getInstance();
 
-                    tree.addStartElement(XProcConstants.c_header);
-                    tree.addAttribute(_name, name);
-                    tree.addAttribute(_value, value);
-                    tree.startContent();
+                    attr = attr.put(TypeUtils.attributeInfo(_name, name));
+                    attr = attr.put(TypeUtils.attributeInfo(_value, value));
+                    tree.addStartElement(XProcConstants.c_header, attr);
                     tree.addEndElement();
                 }
 
@@ -633,9 +607,9 @@ public class HttpRequest extends DefaultStep {
                     }
 
                     Vector<XdmNode> content = new Vector<XdmNode> ();
-                    XdmSequenceIterator iter = body.axisIterator(Axis.CHILD);
+                    XdmSequenceIterator<XdmNode> iter = body.axisIterator(Axis.CHILD);
                     while (iter.hasNext()) {
-                        XdmNode node = (XdmNode) iter.next();
+                        XdmNode node = iter.next();
                         content.add(node);
                     }
 
@@ -743,10 +717,10 @@ public class HttpRequest extends DefaultStep {
                 if (xmlContentType(bodyContentType)) {
                     Serializer serializer = makeSerializer();
 
-                    Vector<XdmNode> content = new Vector<XdmNode> ();
-                    XdmSequenceIterator iter = body.axisIterator(Axis.CHILD);
+                    Vector<XdmNode> content = new Vector<> ();
+                    XdmSequenceIterator<XdmNode> iter = body.axisIterator(Axis.CHILD);
                     while (iter.hasNext()) {
-                        XdmNode node = (XdmNode) iter.next();
+                        XdmNode node = iter.next();
                         content.add(node);
                     }
 
@@ -794,15 +768,15 @@ public class HttpRequest extends DefaultStep {
             return null;
         }
 
-        String ctype = contentTypes[0].getName();
+        StringBuilder ctype = new StringBuilder(contentTypes[0].getName());
         NameValuePair[] params = contentTypes[0].getParameters();
         if (params != null) {
             for (NameValuePair pair : params) {
-                ctype = ctype + "; " + pair.getName() + "=\"" + pair.getValue() + "\"";
+                ctype.append(";").append(pair.getName()).append("=\"").append(pair.getValue()).append("\"");
             }
         }
 
-        return ctype;
+        return ctype.toString();
     }
 
     private String getHeaderValue(Header header) {
@@ -899,11 +873,11 @@ public class HttpRequest extends DefaultStep {
         }
 
         if (contentType.startsWith("multipart/")) {
-            tree.addStartElement(XProcConstants.c_multipart);
-            tree.addAttribute(_content_type, contentType);
-            tree.addAttribute(_boundary, boundary);
-            tree.startContent();
-            
+            AttributeMap attr = EmptyAttributeMap.getInstance();
+            attr = attr.put(TypeUtils.attributeInfo(_content_type, contentType));
+            attr = attr.put(TypeUtils.attributeInfo(_boundary, boundary));
+            tree.addStartElement(XProcConstants.c_multipart, attr);
+
             readMultipartContent(tree, bodyStream, boundary);
 
             tree.addEndElement();
@@ -911,12 +885,13 @@ public class HttpRequest extends DefaultStep {
             if (!detailed && (xmlContentType(contentType) || jsonContentType(contentType))) {
                 readBodyContentPart(tree, bodyStream, contentType, charset);
             } else {
-                tree.addStartElement(XProcConstants.c_body);
-                tree.addAttribute(_content_type, contentType);
+                AttributeMap attr = EmptyAttributeMap.getInstance();
+                attr = attr.put(TypeUtils.attributeInfo(_content_type, contentType));
                 if (!xmlContentType(contentType) && !textContentType(contentType) && !jsonContentType(contentType)) {
-                    tree.addAttribute(_encoding, "base64");
+                    attr = attr.put(TypeUtils.attributeInfo(_encoding, "base64"));
                 }
-                tree.startContent();
+
+                tree.addStartElement(XProcConstants.c_body, attr);
                 readBodyContentPart(tree, bodyStream, contentType, charset);
                 tree.addEndElement();
             }
@@ -943,12 +918,13 @@ public class HttpRequest extends DefaultStep {
                 partStream = reader.readBodyPart();
             }
 
-            tree.addStartElement(XProcConstants.c_body);
-            tree.addAttribute(_content_type, contentType);
+            AttributeMap attr = EmptyAttributeMap.getInstance();
+            attr = attr.put(TypeUtils.attributeInfo(_content_type, contentType));
             if (!xmlContentType(contentType) && !textContentType(contentType)) {
-                tree.addAttribute(_encoding, "base64");
+                attr = attr.put(TypeUtils.attributeInfo(_encoding, "base64"));
             }
-            tree.startContent();
+
+            tree.addStartElement(XProcConstants.c_body, attr);
 
             if (xmlContentType(partType)) {
                 BufferedReader preader = new BufferedReader(new InputStreamReader(partStream, charset));
@@ -957,14 +933,14 @@ public class HttpRequest extends DefaultStep {
             } else if (textContentType(partType)) {
                 BufferedReader preader = new BufferedReader(new InputStreamReader(partStream, charset));
                 // Read it as text
-                char buf[] = new char[bufSize];
+                char[] buf = new char[bufSize];
                 int len = preader.read(buf, 0, bufSize);
                 while (len >= 0) {
                     // I'm unsure about this. If I'm reading text and injecting it into XML,
                     // I think I need to change CR/LF pairs (and CR not followed by LF) into
                     // plain LFs.
 
-                    char fbuf[] = new char[bufSize];
+                    char[] fbuf = new char[bufSize];
                     char flen = 0;
                     for (int pos = 0; pos < len; pos++) {
                         if (buf[pos] == '\r') {
@@ -988,7 +964,7 @@ public class HttpRequest extends DefaultStep {
                 }
             } else {
                 // Read it as binary
-                byte bytes[] = new byte[bufSize];
+                byte[] bytes = new byte[bufSize];
                 int pos = 0;
                 int readLen = bufSize;
                 int len = partStream.read(bytes, 0, bufSize);
@@ -1005,7 +981,7 @@ public class HttpRequest extends DefaultStep {
                 }
 
                 if (pos > 0) {
-                    byte lastBytes[] = new byte[pos];
+                    byte[] lastBytes = new byte[pos];
                     System.arraycopy(bytes, 0, lastBytes, 0, pos);
                     tree.addText(Base64.encodeBytes(lastBytes));
                 }
@@ -1026,7 +1002,7 @@ public class HttpRequest extends DefaultStep {
 
             InputStreamReader reader = new InputStreamReader(bodyStream, charset);
 
-            char buf[] = new char[bufSize];
+            char[] buf = new char[bufSize];
             int len = reader.read(buf, 0, bufSize);
             while (len >= 0) {
                 String s = new String(buf,0,len);
@@ -1040,7 +1016,7 @@ public class HttpRequest extends DefaultStep {
             tree.addSubtree(jsonDoc);
         } else {
             // Read it as binary
-            byte bytes[] = new byte[bufSize];
+            byte[] bytes = new byte[bufSize];
             int pos = 0;
             int readLen = bufSize;
             int len = bodyStream.read(bytes, 0, bufSize);
@@ -1058,7 +1034,7 @@ public class HttpRequest extends DefaultStep {
             }
 
             if (pos > 0) {
-                byte lastBytes[] = new byte[pos];
+                byte[] lastBytes = new byte[pos];
                 System.arraycopy(bytes, 0, lastBytes, 0, pos);
                 tree.addText(Base64.encodeBytes(lastBytes));
             }
@@ -1068,18 +1044,18 @@ public class HttpRequest extends DefaultStep {
     }
 
     private String extractText(XdmNode doc) {
-        String content = "";
+        StringBuilder content = new StringBuilder();
 
-        XdmSequenceIterator iter = doc.axisIterator(Axis.CHILD);
+        XdmSequenceIterator<XdmNode> iter = doc.axisIterator(Axis.CHILD);
         while (iter.hasNext()) {
-            XdmNode child = (XdmNode) iter.next();
+            XdmNode child = iter.next();
             if (child.getNodeKind() != XdmNodeKind.TEXT) {
                 throw XProcException.stepError(28);
             }
-            content += child.getStringValue();
+            content.append(child.getStringValue());
         }
 
-        return content;
+        return content.toString();
     }
 
     private void doFile(String href, String base) {
@@ -1100,12 +1076,13 @@ public class HttpRequest extends DefaultStep {
                         if (xmlContentType(contentType)) {
                             readBodyContentPart(tree, bodyStream, contentType, charset);
                         } else {
-                            tree.addStartElement(XProcConstants.c_body);
-                            tree.addAttribute(_content_type, contentType);
+                            AttributeMap attr = EmptyAttributeMap.getInstance();
+                            attr = attr.put(TypeUtils.attributeInfo(_content_type, contentType));
                             if (!xmlContentType(contentType) && !textContentType(contentType)) {
-                                tree.addAttribute(_encoding, "base64");
+                                attr = attr.put(TypeUtils.attributeInfo(_encoding, "base64"));
                             }
-                            tree.startContent();
+
+                            tree.addStartElement(XProcConstants.c_body, attr);
                             readBodyContentPart(tree, bodyStream, contentType, charset);
                             tree.addEndElement();
                         }
@@ -1119,45 +1096,8 @@ public class HttpRequest extends DefaultStep {
                     }
                 }
             });
-        } catch (FileNotFoundException fnfe) {
+        } catch (IOException fnfe) {
             throw new XProcException(fnfe);
-        } catch (IOException ioe) {
-            throw new XProcException(ioe);
-        }
-    }
-
-    private class MessageBytes {
-        int chunkSize = 8192;
-        byte[] byteContent = new byte[chunkSize];
-        int pos = 0;
-
-        public MessageBytes() {
-        }
-
-        public void append(String string) {
-            try {
-                byte[] bytes = string.getBytes("US-ASCII");
-                append(bytes, bytes.length);
-            } catch (UnsupportedEncodingException uee) {
-                // This never happens!
-                throw new XProcException(uee);
-            }
-        }
-
-        public void append(byte[] bytes, int size) {
-            if (pos + bytes.length > byteContent.length) {
-                byte[] newBytes = new byte[byteContent.length + bytes.length + chunkSize];
-                System.arraycopy(byteContent, 0, newBytes, 0, byteContent.length);
-                byteContent = newBytes;
-            }
-            System.arraycopy(bytes, 0, byteContent, pos, bytes.length);
-            pos += bytes.length;
-        }
-
-        public byte[] content() {
-            byte[] bytes = new byte[pos];
-            System.arraycopy(byteContent, 0, bytes, 0, pos);
-            return bytes;
         }
     }
 }

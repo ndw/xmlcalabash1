@@ -83,9 +83,7 @@ public class EscapeMarkup extends DefaultStep {
             } else if (child.getNodeKind() == XdmNodeKind.TEXT) {
                 tree.addText(child.getStringValue());
             } else {
-                tree.addStartElement(child);
-                tree.addAttributes(child);
-                tree.startContent();
+                tree.addStartElement(child, child.getUnderlyingNode().attributes());
 
                 // Serialize the *whole* thing, then strip off the start and end tags, because
                 // otherwise namespace fixup messes with the namespace bindings

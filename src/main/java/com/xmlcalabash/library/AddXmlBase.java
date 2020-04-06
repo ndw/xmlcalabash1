@@ -20,6 +20,7 @@
 package com.xmlcalabash.library;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Stack;
 
 import com.xmlcalabash.core.XMLCalabash;
@@ -30,6 +31,11 @@ import com.xmlcalabash.util.ProcessMatchingNodes;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
+import com.xmlcalabash.util.TypeUtils;
+import net.sf.saxon.event.ReceiverOption;
+import net.sf.saxon.om.AttributeInfo;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.FingerprintedQName;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -39,6 +45,8 @@ import net.sf.saxon.s9api.Axis;
 import javax.xml.XMLConstants;
 
 import com.xmlcalabash.runtime.XAtomicStep;
+import net.sf.saxon.type.BuiltInAtomicType;
+import org.w3c.dom.Attr;
 
 /**
  *
@@ -104,7 +112,13 @@ public class AddXmlBase extends DefaultStep implements ProcessMatchingNodes {
         // nop
     }
 
-    public boolean processStartElement(XdmNode node) throws SaxonApiException {
+    @Override
+    public AttributeMap processAttributes(XdmNode node, AttributeMap matchingAttributes, AttributeMap nonMatchingAttributes) {
+        throw new UnsupportedOperationException("This can't happen");
+    }
+
+    @Override
+    public boolean processStartElement(XdmNode node, AttributeMap attributes) {
         String xmlBase = node.getBaseURI().normalize().toASCIIString();
         boolean addXmlBase = all || baseURIStack.size() == 0;
         if (!addXmlBase) {
@@ -130,10 +144,10 @@ public class AddXmlBase extends DefaultStep implements ProcessMatchingNodes {
             }
 
             if (commonancestor) {
-                String walkUp = "";
+                StringBuilder walkUp = new StringBuilder();
                 i1 = p1.indexOf("/");
                 while (i1 >= 0) {
-                    walkUp += "../";
+                    walkUp.append("../");
                     p1 = p1.substring(i1+1);
                     i1 = p1.indexOf("/");
                 }
@@ -146,48 +160,42 @@ public class AddXmlBase extends DefaultStep implements ProcessMatchingNodes {
 
         baseURIStack.push(node.getBaseURI());
 
-        matcher.addStartElement(node);
-
+        ArrayList<AttributeInfo> alist = new ArrayList<>();
+        FingerprintedQName fq_xml_base = TypeUtils.fqName(xml_base);
         boolean found = false;
-        XdmSequenceIterator iter = node.axisIterator(Axis.ATTRIBUTE);
-        while (iter.hasNext()) {
-            XdmNode child = (XdmNode) iter.next();
-            if (child.getNodeName().equals(xml_base)) {
+        for (AttributeInfo ainfo : attributes) {
+            if (ainfo.getNodeName().equals(fq_xml_base)) {
                 found = true;
-                if ((all || addXmlBase || !node.getAttributeValue(xml_base).equals(xmlBase))
-                    && !"".equals(xmlBase)) {
-                    matcher.addAttribute(child, xmlBase);
+                if ((all || addXmlBase || !ainfo.getValue().equals(xmlBase)) && !"".equals(xmlBase)) {
+                    alist.add(new AttributeInfo(fq_xml_base, BuiltInAtomicType.ANY_ATOMIC, xmlBase, null, ReceiverOption.NONE));
                 }
             } else {
-                matcher.addAttribute(child, child.getStringValue());
+                alist.add(ainfo);
             }
         }
 
         if (!found && addXmlBase) {
-            matcher.addAttribute(xml_base, xmlBase);
+            alist.add(new AttributeInfo(fq_xml_base, BuiltInAtomicType.ANY_ATOMIC, xmlBase, null, ReceiverOption.NONE));
         }
-        
+
+        matcher.addStartElement(node, AttributeMap.fromList(alist));
         return true;
     }
 
-    public void processEndElement(XdmNode node) throws SaxonApiException {
+    public void processEndElement(XdmNode node) {
         matcher.addEndElement();
         baseURIStack.pop();
     }
 
-    public void processText(XdmNode node) throws SaxonApiException {
+    public void processText(XdmNode node) {
         throw new UnsupportedOperationException("This can't happen");
     }
 
-    public void processComment(XdmNode node) throws SaxonApiException {
+    public void processComment(XdmNode node) {
         throw new UnsupportedOperationException("This can't happen");
     }
 
-    public void processPI(XdmNode node) throws SaxonApiException {
-        throw new UnsupportedOperationException("This can't happen");
-    }
-
-    public void processAttribute(XdmNode node) throws SaxonApiException {
+    public void processPI(XdmNode node) {
         throw new UnsupportedOperationException("This can't happen");
     }
 }

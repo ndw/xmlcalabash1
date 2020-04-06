@@ -132,7 +132,6 @@ public class BaseResource extends ServerResource {
     protected void formatExpires(TreeWriter tree, Calendar expires) {
         if (expires.getTimeInMillis() != Long.MAX_VALUE) {
             tree.addStartElement(pr_expires);
-            tree.startContent();
             SimpleDateFormat gmtFrmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US);
             gmtFrmt.setTimeZone(TimeZone.getTimeZone("GMT"));
             tree.addText(gmtFrmt.format(expires.getTime()));
@@ -235,13 +234,10 @@ public class BaseResource extends ServerResource {
         TreeWriter tree = new TreeWriter(getGlobalRuntime());
         tree.startDocument(URI.create("http://example.com/"));
         tree.addStartElement(pr_error);
-        tree.startContent();
         tree.addStartElement(pr_code);
-        tree.startContent();
         tree.addText("" + status.getCode());
         tree.addEndElement();
         tree.addStartElement(pr_message);
-        tree.startContent();
         tree.addText("Bad request: " + msg);
         tree.addEndElement();
         tree.addEndElement();
@@ -258,13 +254,10 @@ public class BaseResource extends ServerResource {
         TreeWriter tree = new TreeWriter(getGlobalRuntime());
         tree.startDocument(URI.create("http://example.com/"));
         tree.addStartElement(pr_response);
-        tree.startContent();
         tree.addStartElement(pr_code);
-        tree.startContent();
         tree.addText("" + status.getCode());
         tree.addEndElement();
         tree.addStartElement(pr_message);
-        tree.startContent();
         tree.addText(msg);
         tree.addEndElement();
         tree.addEndElement();

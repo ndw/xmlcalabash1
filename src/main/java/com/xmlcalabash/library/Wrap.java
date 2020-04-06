@@ -33,6 +33,7 @@ import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
+import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.om.FingerprintedQName;
 import net.sf.saxon.om.NodeName;
 import net.sf.saxon.s9api.Axis;
@@ -66,7 +67,6 @@ public class Wrap extends DefaultStep implements ProcessMatchingNodes {
     private WritablePipe result = null;
     private ProcessMatch matcher = null;
     private Map<QName, RuntimeValue> inScopeOptions = null;
-    private QName wrapper = null;
     private NodeName wrapperCode = null;
     private RuntimeValue groupAdjacent = null;
     private Stack<Boolean> inGroup = new Stack<Boolean> ();
@@ -105,6 +105,7 @@ public class Wrap extends DefaultStep implements ProcessMatchingNodes {
             throw XProcException.dynamicError(34, step.getNode(), "You can't specify a namespace if the wrapper name contains a colon");
         }
 
+        QName wrapper = null;
         if (wrapperNameStr.contains(":")) {
             wrapper = new QName(wrapperNameStr, wrapperNameValue.getNode());
         } else {
@@ -116,7 +117,7 @@ public class Wrap extends DefaultStep implements ProcessMatchingNodes {
         inGroup.push(false);
 
         XdmNode doc = source.read();
-        wrapperCode = new FingerprintedQName(wrapper.getPrefix(),wrapper.getNamespaceURI(),wrapper.getLocalName());
+        wrapperCode = new FingerprintedQName(wrapper.getPrefix(), wrapper.getNamespaceURI(), wrapper.getLocalName());
 
         matcher = new ProcessMatch(runtime, this);
         matcher.match(doc,getOption(_match));
@@ -128,10 +129,9 @@ public class Wrap extends DefaultStep implements ProcessMatchingNodes {
         result.write(matcher.getResult());
     }
 
-    public boolean processStartDocument(XdmNode node) throws SaxonApiException {
+    public boolean processStartDocument(XdmNode node) {
         matcher.startDocument(node.getBaseURI());
-        matcher.addStartElement(wrapperCode, Untyped.getInstance(), null);
-        matcher.startContent();
+        matcher.addStartElement(wrapperCode, Untyped.getInstance());
         matcher.addSubtree(node);
         matcher.addEndElement();
         matcher.endDocument();
@@ -139,13 +139,19 @@ public class Wrap extends DefaultStep implements ProcessMatchingNodes {
 
     }
 
-    public void processEndDocument(XdmNode node) throws SaxonApiException {
+    public void processEndDocument(XdmNode node) {
         // nop
     }
 
-    public boolean processStartElement(XdmNode node) throws SaxonApiException {
+    @Override
+    public AttributeMap processAttributes(XdmNode node, AttributeMap matchingAttributes, AttributeMap nonMatchingAttributes) {
+        throw XProcException.stepError(23);
+    }
+
+    @Override
+    public boolean processStartElement(XdmNode node, AttributeMap attributes) {
         if (!inGroup.peek()) {
-            matcher.addStartElement(wrapperCode, Untyped.getInstance(), null);
+            matcher.addStartElement(wrapperCode, Untyped.getInstance());
         }
 
         if (groupAdjacent != null && nextMatches(node)) {
@@ -156,18 +162,13 @@ public class Wrap extends DefaultStep implements ProcessMatchingNodes {
             inGroup.push(false);
         }
 
-        matcher.addStartElement(node);
-        matcher.addAttributes(node);
+        matcher.addStartElement(node, attributes);
 
         inGroup.push(false); // processEndElement will pop it! Value doesn't matter!
         return true;
     }
 
-    public void processAttribute(XdmNode node) throws SaxonApiException {
-        throw XProcException.stepError(23);
-    }
-
-    public void processEndElement(XdmNode node) throws SaxonApiException {
+    public void processEndElement(XdmNode node) {
         matcher.addEndElement();
         inGroup.pop();
         if (!inGroup.peek()) {
@@ -175,9 +176,9 @@ public class Wrap extends DefaultStep implements ProcessMatchingNodes {
         }
     }
 
-    public void processText(XdmNode node) throws SaxonApiException {
+    public void processText(XdmNode node) {
         if (!inGroup.peek()) {
-            matcher.addStartElement(wrapperCode, Untyped.getInstance(), null);
+            matcher.addStartElement(wrapperCode, Untyped.getInstance());
         }
 
         matcher.addText(node.getStringValue());
@@ -192,9 +193,9 @@ public class Wrap extends DefaultStep implements ProcessMatchingNodes {
         }
     }
 
-    public void processComment(XdmNode node) throws SaxonApiException {
+    public void processComment(XdmNode node) {
         if (!inGroup.peek()) {
-            matcher.addStartElement(wrapperCode, Untyped.getInstance(), null);
+            matcher.addStartElement(wrapperCode, Untyped.getInstance());
         }
 
         matcher.addComment(node.getStringValue());
@@ -209,9 +210,9 @@ public class Wrap extends DefaultStep implements ProcessMatchingNodes {
         }
     }
 
-    public void processPI(XdmNode node) throws SaxonApiException {
+    public void processPI(XdmNode node) {
         if (!inGroup.peek()) {
-            matcher.addStartElement(wrapperCode, Untyped.getInstance(), null);
+            matcher.addStartElement(wrapperCode, Untyped.getInstance());
         }
 
         matcher.addPI(node.getNodeName().getLocalName(),node.getStringValue());
@@ -233,10 +234,10 @@ public class Wrap extends DefaultStep implements ProcessMatchingNodes {
             return false;
         }
 
-        XdmSequenceIterator iter = node.axisIterator(Axis.FOLLOWING_SIBLING);
+        XdmSequenceIterator<XdmNode> iter = node.axisIterator(Axis.FOLLOWING_SIBLING);
 
         while (iter.hasNext()) {
-            XdmNode chk = (XdmNode) iter.next();
+            XdmNode chk = iter.next();
 
             boolean skippable
                     = (chk.getNodeKind() == XdmNodeKind.COMMENT
@@ -250,8 +251,7 @@ public class Wrap extends DefaultStep implements ProcessMatchingNodes {
 
             if (matcher.matches(chk)) {
                 XdmItem nextValue = computeGroup(chk);
-                boolean same = S9apiUtils.xpathEqual(runtime.getProcessor(), nodeValue, nextValue);
-                return same;
+                return S9apiUtils.xpathEqual(runtime.getProcessor(), nodeValue, nextValue);
             }
 
             if (!skippable) {

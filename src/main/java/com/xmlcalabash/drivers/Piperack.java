@@ -6,7 +6,6 @@ import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.piperack.PiperackApplication;
 import com.xmlcalabash.util.ParseArgs;
 import com.xmlcalabash.util.UserArgs;
-import net.sf.saxon.s9api.SaxonApiException;
 import org.restlet.Component;
 import org.restlet.data.Protocol;
 
@@ -27,13 +26,8 @@ public class Piperack {
         XProcConfiguration config = null;
         XProcRuntime runtime = null;
 
-        try {
-            config = userArgs.createConfiguration();
-            runtime = new XProcRuntime(config);
-        } catch (SaxonApiException e) {
-            System.err.println(e.getMessage());
-            System.exit(-1);
-        }
+        config = userArgs.createConfiguration();
+        runtime = new XProcRuntime(config);
 
         if (userArgs.isShowVersion()) {
             System.out.println("Piperack, a web server for running XProc pipelines.");

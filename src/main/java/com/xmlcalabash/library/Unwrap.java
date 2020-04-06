@@ -29,6 +29,7 @@ import com.xmlcalabash.util.ProcessMatch;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
+import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -77,35 +78,37 @@ public class Unwrap extends DefaultStep implements ProcessMatchingNodes {
         result.write(matcher.getResult());
     }
 
-    public boolean processStartDocument(XdmNode node) throws SaxonApiException {
+    public boolean processStartDocument(XdmNode node) {
         return true;
     }
 
-    public void processEndDocument(XdmNode node) throws SaxonApiException {
+    public void processEndDocument(XdmNode node) {
         // nop
     }
 
-    public boolean processStartElement(XdmNode node) throws SaxonApiException {
+    @Override
+    public AttributeMap processAttributes(XdmNode node, AttributeMap matchingAttributes, AttributeMap nonMatchingAttributes) {
+        throw XProcException.stepError(23);
+    }
+
+    @Override
+    public boolean processStartElement(XdmNode node, AttributeMap attributes) {
         return true;
     }
 
-    public void processEndElement(XdmNode node) throws SaxonApiException {
+    public void processEndElement(XdmNode node) {
         // nop
     }
 
-    public void processText(XdmNode node) throws SaxonApiException {
+    public void processText(XdmNode node) {
         throw XProcException.stepError(23);
     }
 
-    public void processComment(XdmNode node) throws SaxonApiException {
+    public void processComment(XdmNode node) {
         throw XProcException.stepError(23);
     }
 
-    public void processPI(XdmNode node) throws SaxonApiException {
-        throw XProcException.stepError(23);
-    }
-
-    public void processAttribute(XdmNode node) throws SaxonApiException {
+    public void processPI(XdmNode node) {
         throw XProcException.stepError(23);
     }
 }

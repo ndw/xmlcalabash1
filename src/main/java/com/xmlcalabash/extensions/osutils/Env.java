@@ -9,12 +9,16 @@ import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.util.TreeWriter;
+import com.xmlcalabash.util.TypeUtils;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.EmptyAttributeMap;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 
 import java.net.URI;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -58,14 +62,15 @@ public class Env extends DefaultStep {
         TreeWriter tree = new TreeWriter(runtime);
         tree.startDocument(step.getNode().getBaseURI());
         tree.addStartElement(XProcConstants.c_result);
-        tree.startContent();
 
         Map<String,String> env = System.getenv();
+        AttributeMap attr = EmptyAttributeMap.getInstance();
+
+
         for (String key : env.keySet()) {
-            tree.addStartElement(c_env);
-            tree.addAttribute(_name, key);
-            tree.addAttribute(_value, env.get(key));
-            tree.startContent();
+            attr = attr.put(TypeUtils.attributeInfo(_name, key));
+            attr = attr.put(TypeUtils.attributeInfo(_value, env.get(key)));
+            tree.addStartElement(c_env, attr);
             tree.addEndElement();
         }
         

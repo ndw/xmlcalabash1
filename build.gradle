@@ -19,9 +19,27 @@ plugins {
   id "de.undercouch.download" version "4.0.4"
 }
 
+import java.util.regex.Pattern
+import java.util.regex.Matcher
+import de.undercouch.gradle.tasks.download.Download
+
 apply plugin: 'biz.aQute.bnd.builder'
 
-import de.undercouch.gradle.tasks.download.Download
+/*
+// Version strings
+def saxonVersionMatcher = (saxonVersion =~ /^(\d+)\.(\d+)(\.(\d+))?$/)
+if (saxonVersionMatcher.size() != 1) {
+  throw new RuntimeException("Regex fail: " + saxonVersion + " (" + saxonVersionMatcher.size() + ")")
+}
+
+def sMajor   = saxonVersionMatcher[0][1]
+def sMinor   = saxonVersionMatcher[0][2]
+def sRelease = saxonVersionMatcher[0][4]
+*/
+
+project.ext.releaseVersion = relVersion
+project.ext.distVersion = relVersion
+project.ext.refDocZip = 'xmlcalabash-ref-' + docsVersion + '.zip'
 
 sourceCompatibility = "1.8"
 targetCompatibility = "1.8"
@@ -48,6 +66,7 @@ dependencies {
 
   implementation fileTree(dir: 'lib').include("*.jar")
   implementation (
+    [group: 'org.jetbrains', name: 'annotations', version: '18.0.0'],
     [group: 'com.nwalsh', name: 'nwalsh-annotations', version: '1.0.0'],
     [group: 'org.relaxng', name: 'jing', version: '20181222' ],
     [group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'],
@@ -125,16 +144,6 @@ sourceSets {
     }
   }
 }
-
-// Variables
-project.ext.saxonRelease = saxonVersion.substring(0,5)
-project.ext.saxonBranch  = saxonVersion.substring(0,3).replaceAll("\\.", "")
-project.ext.releaseVersion = relVersion
-project.ext.distVersion = relVersion + "-" + saxonBranch + snapshot
-project.ext.refDocZip = 'xmlcalabash-ref-' + docsVersion + '.zip'
-
-relVersion = project.ext.distVersion // - gets turned into . in some contexts
-group = "com.xmlcalabash"
 
 if (!hasProperty("sonatypeUsername")) {
   ext.sonatypeUsername=""
@@ -237,13 +246,13 @@ jar.dependsOn copyToDist
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
   classifier = 'javadoc'
-  archiveVersion = relVersion
+  archiveVersion = releaseVersion
   from tasks.javadoc.destinationDir
 }
 
 task sourcesJar(type: Jar) {
   classifier = 'sources'
-  archiveVersion = relVersion
+  archiveVersion = releaseVersion
   from sourceSets.main.allSource
 }
 
@@ -266,8 +275,8 @@ task makeDist(dependsOn: [ build, copyJar, copyLib ]) {
 task zipDist(dependsOn: makeDist, type: Zip) {
   from('build/dist')
   exclude(["calabash", "calabash.bat"])
-  into 'xmlcalabash-' + relVersion
-  archiveFileName = 'xmlcalabash-' + relVersion + ".zip"
+  into 'xmlcalabash-' + releaseVersion
+  archiveFileName = 'xmlcalabash-' + releaseVersion + ".zip"
 }
 
 task izPackDist(dependsOn: izPackCreateInstaller) {
@@ -346,13 +355,13 @@ task makeIZPackShell(dependsOn: copyVERSION) {
     def shell = new File("$buildDir/dist", "calabash")
     shell.withPrintWriter { writer ->
       writer.println '#!/bin/bash'
-      writer.println 'java -Xmx1024m -cp %INSTALL_PATH/xmlcalabash-' + relVersion + '.jar com.xmlcalabash.drivers.Main "$@"'
+      writer.println 'java -Xmx1024m -cp %INSTALL_PATH/xmlcalabash-' + releaseVersion + '.jar com.xmlcalabash.drivers.Main "$@"'
     }
     shell.setExecutable(true)
 
     def batch = new File("$buildDir/dist", "calabash.bat")
     batch.withPrintWriter { writer ->
-      writer.println 'java -Xmx1024m -cp %INSTALL_PATH/xmlcalabash-' + relVersion + '.jar com.xmlcalabash.drivers.Main %*'
+      writer.println 'java -Xmx1024m -cp %INSTALL_PATH/xmlcalabash-' + releaseVersion + '.jar com.xmlcalabash.drivers.Main %*'
     }
   }
 }
@@ -410,7 +419,7 @@ publishing {
 
       groupId = "com.xmlcalabash"
       artifactId = "xmlcalabash"
-      version = relVersion
+      version = releaseVersion
       from components.java
       artifact javadocJar
       artifact sourcesJar

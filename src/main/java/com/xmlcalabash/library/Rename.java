@@ -19,6 +19,7 @@
 
 package com.xmlcalabash.library;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 import com.xmlcalabash.core.XMLCalabash;
@@ -29,6 +30,11 @@ import com.xmlcalabash.util.ProcessMatch;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
+import com.xmlcalabash.util.TypeUtils;
+import net.sf.saxon.om.AttributeInfo;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.FingerprintedQName;
+import net.sf.saxon.om.NamespaceMap;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -59,19 +65,23 @@ public class Rename extends DefaultStep implements ProcessMatchingNodes {
         super(runtime,step);
     }
 
+    @Override
     public void setInput(String port, ReadablePipe pipe) {
         source = pipe;
     }
 
+    @Override
     public void setOutput(String port, WritablePipe pipe) {
         result = pipe;
     }
 
+    @Override
     public void reset() {
         source.resetReader();
         result.resetWriter();
     }
 
+    @Override
     public void run() throws SaxonApiException {
         super.run();
 
@@ -104,41 +114,90 @@ public class Rename extends DefaultStep implements ProcessMatchingNodes {
         result.write(matcher.getResult());
     }
 
-    public boolean processStartDocument(XdmNode node) throws SaxonApiException {
+    @Override
+    public boolean processStartDocument(XdmNode node) {
         return true;
     }
 
-    public void processEndDocument(XdmNode node) throws SaxonApiException {
+    @Override
+    public void processEndDocument(XdmNode node) {
         // nop
     }
 
-    public boolean processStartElement(XdmNode node) throws SaxonApiException {
-        matcher.addStartElement(node, newName);
-        matcher.addAttributes(node);
+    @Override
+    public AttributeMap processAttributes(XdmNode node, AttributeMap matchingAttributes, AttributeMap nonMatchingAttributes) {
+        ArrayList<AttributeInfo> alist = new ArrayList<>();
+        for (AttributeInfo attr : nonMatchingAttributes) {
+            alist.add(attr);
+        }
+
+        if (matchingAttributes.size() > 1) {
+            throw new XProcException("Cannot rename multiple attributes to the same name.");
+        }
+
+        // Make sure we construct a unique prefix/URI mapping for the attribute
+        // if the prefix is already in the namespace map with a different URI.
+        NamespaceMap nsmap = node.getUnderlyingNode().getAllNamespaces();
+        for (AttributeInfo attr : matchingAttributes) {
+            String prefix = newName.getPrefix();
+            String uri = newName.getNamespaceURI();
+            String localName = newName.getLocalName();
+
+            if (uri == null || "".equals(uri)) {
+                FingerprintedQName fqName = new FingerprintedQName("", "", localName);
+                AttributeInfo ainfo = new AttributeInfo(fqName, attr.getType(), attr.getValue(), attr.getLocation(), attr.getProperties());
+                alist.add(ainfo);
+            } else {
+                if (prefix == null || "".equals(prefix)) {
+                    prefix = "_";
+                }
+
+                int count = 1;
+                String checkPrefix = prefix;
+                String nsURI = nsmap.getURI(checkPrefix);
+                while (nsURI != null && !nsURI.equals(uri)) {
+                    count += 1;
+                    checkPrefix = prefix + count;
+                    nsURI = nsmap.getURI(checkPrefix);
+                }
+
+                prefix = checkPrefix;
+                FingerprintedQName fqName = new FingerprintedQName(prefix, uri, localName);
+                AttributeInfo ainfo = new AttributeInfo(fqName, attr.getType(), attr.getValue(), attr.getLocation(), attr.getProperties());
+                alist.add(ainfo);
+            }
+        }
+
+        return AttributeMap.fromList(alist);
+    }
+
+    @Override
+    public boolean processStartElement(XdmNode node, AttributeMap attributes) {
+        matcher.addStartElement(node, newName, node.getBaseURI(), attributes);
         return true;
     }
 
-    public void processEndElement(XdmNode node) throws SaxonApiException {
+    @Override
+    public void processEndElement(XdmNode node) {
         matcher.addEndElement();
     }
 
-    public void processText(XdmNode node) throws SaxonApiException {
+    @Override
+    public void processText(XdmNode node) {
         throw XProcException.stepError(23);
     }
 
-    public void processComment(XdmNode node) throws SaxonApiException {
+    @Override
+    public void processComment(XdmNode node) {
         throw XProcException.stepError(23);
     }
 
-    public void processPI(XdmNode node) throws SaxonApiException {
+    @Override
+    public void processPI(XdmNode node) {
         if (!"".equals(newName.getNamespaceURI())) {
             throw XProcException.stepError(13);
         }
         matcher.addPI(newName.getLocalName(), node.getStringValue());
-    }
-
-    public void processAttribute(XdmNode node) throws SaxonApiException {
-        matcher.addAttribute(newName, node.getStringValue());
     }
 }
 

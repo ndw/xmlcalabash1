@@ -20,6 +20,7 @@
 package com.xmlcalabash.library;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Map;
 
 import com.xmlcalabash.core.XMLCalabash;
@@ -32,10 +33,14 @@ import com.xmlcalabash.util.URIUtils;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
+import net.sf.saxon.event.ReceiverOption;
+import net.sf.saxon.om.AttributeInfo;
+import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 import com.xmlcalabash.runtime.XAtomicStep;
+import net.sf.saxon.type.BuiltInAtomicType;
 
 /**
  *
@@ -93,17 +98,35 @@ public class MakeAbsoluteURIs extends DefaultStep implements ProcessMatchingNode
         result.write(matcher.getResult());
     }
 
-    public boolean processStartDocument(XdmNode node) throws SaxonApiException {
+    public boolean processStartDocument(XdmNode node) {
         return true;
     }
 
-    public void processEndDocument(XdmNode node) throws SaxonApiException {
+    public void processEndDocument(XdmNode node) {
         // nop
     }
 
-    public boolean processStartElement(XdmNode node) throws SaxonApiException {
-        matcher.addStartElement(node);
-        matcher.addAttributes(node);
+    @Override
+    public AttributeMap processAttributes(XdmNode node, AttributeMap matchingAttributes, AttributeMap nonMatchingAttributes) {
+        ArrayList<AttributeInfo> alist = new ArrayList<>();
+        for (AttributeInfo attr : nonMatchingAttributes) {
+            alist.add(attr);
+        }
+
+        for (AttributeInfo attr : matchingAttributes) {
+            String value = attr.getValue();
+            value = URIUtils.encode(value);
+            URI baseURI = setBaseURI == null ? node.getBaseURI() : setBaseURI;
+            String resolved = baseURI.resolve(value).toString();
+            alist.add(new AttributeInfo(attr.getNodeName(), BuiltInAtomicType.ANY_ATOMIC, resolved, attr.getLocation(), ReceiverOption.NONE));
+        }
+
+        return AttributeMap.fromList(alist);
+    }
+
+    @Override
+    public boolean processStartElement(XdmNode node, AttributeMap attributes) {
+        matcher.addStartElement(node, attributes);
 
         String value = node.getStringValue();
         value = URIUtils.encode(value);
@@ -115,29 +138,19 @@ public class MakeAbsoluteURIs extends DefaultStep implements ProcessMatchingNode
         return false;
     }
 
-    public void processEndElement(XdmNode node) throws SaxonApiException {
+    public void processEndElement(XdmNode node) {
         matcher.addEndElement();
     }
 
-    public void processText(XdmNode node) throws SaxonApiException {
+    public void processText(XdmNode node) {
         throw XProcException.stepError(23);
     }
 
-    public void processComment(XdmNode node) throws SaxonApiException {
+    public void processComment(XdmNode node) {
         throw XProcException.stepError(23);
     }
 
-    public void processPI(XdmNode node) throws SaxonApiException {
+    public void processPI(XdmNode node) {
         throw XProcException.stepError(23);
-    }
-
-    public void processAttribute(XdmNode node) throws SaxonApiException {
-        String value = node.getStringValue();
-        value = URIUtils.encode(value);
-
-        URI baseURI = setBaseURI == null ? node.getBaseURI() : setBaseURI;
-
-        String resolved = baseURI.resolve(value).toString();
-        matcher.addAttribute(node, resolved);
     }
 }

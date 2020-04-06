@@ -53,8 +53,8 @@ import com.xmlcalabash.util.Input;
 import com.xmlcalabash.util.JSONtoXML;
 import com.xmlcalabash.util.Output;
 import com.xmlcalabash.util.S9apiUtils;
-import com.xmlcalabash.util.StepErrorListener;
 import com.xmlcalabash.util.TreeWriter;
+import com.xmlcalabash.util.TypeUtils;
 import com.xmlcalabash.util.URIUtils;
 import com.xmlcalabash.util.XProcSystemPropertySet;
 import com.xmlcalabash.util.XProcURIResolver;
@@ -62,6 +62,8 @@ import com.xmlcalabash.util.XProcURIResolverX;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
 import net.sf.saxon.lib.FeatureKeys;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.EmptyAttributeMap;
 import net.sf.saxon.s9api.ExtensionFunction;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
@@ -73,6 +75,8 @@ import net.sf.saxon.s9api.XsltCompiler;
 import net.sf.saxon.s9api.XsltExecutable;
 import net.sf.saxon.s9api.XsltTransformer;
 import net.sf.saxon.serialize.SerializationProperties;
+import net.sf.saxon.type.BuiltInAtomicType;
+import net.sf.saxon.type.Untyped;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.utils.HttpClientUtils;
@@ -124,7 +128,7 @@ public class XProcRuntime {
     private QName errorCode = null;
     private XdmNode errorNode = null;
     private String errorMessage = null;
-    private Hashtable<QName, DeclareStep> declaredSteps = new Hashtable<QName,DeclareStep> ();
+    private Hashtable<QName, DeclareStep> declaredSteps = new Hashtable<>();
     private DeclareStep pipeline = null;
     private XPipeline xpipeline = null;
     private static String episode = null;
@@ -148,8 +152,8 @@ public class XProcRuntime {
     private DataStore dataStore;
     private XProcConfigurer configurer = null;
     private String htmlParser = null;
-    private Vector<XProcExtensionFunctionDefinition> exFuncs = new Vector<XProcExtensionFunctionDefinition>();
-    private Vector<XProcSystemPropertySet> systemPropertySets = new Vector<XProcSystemPropertySet>();
+    private Vector<XProcExtensionFunctionDefinition> exFuncs = new Vector<>();
+    private final Vector<XProcSystemPropertySet> systemPropertySets = new Vector<>();
     private SerializationProperties defaultSerializationProperties = new SerializationProperties();
 
     private Output profile = null;
@@ -242,8 +246,9 @@ public class XProcRuntime {
             uriResolver.addCatalogs(config.catalogs);
         }
 
-        StepErrorListener errListener = new StepErrorListener(this);
-        saxonConfig.setErrorListener(errListener);
+        // FIXME: s10
+        // StepErrorListener errListener = new StepErrorListener(this);
+        // saxonConfig.setErrorListener(errListener);
 
         allowGeneralExpressions = config.extensionValues;
         allowXPointerOnText = config.xpointerOnText;
@@ -275,8 +280,8 @@ public class XProcRuntime {
                     def = Class.forName(className).newInstance();
                 } catch (Throwable e) {
                     logger.trace("Attempting to instantiate " + className + " with processor context");
-                    Class cl = Class.forName(className);
-                    Constructor cons = cl.getConstructor(Processor.class);
+                    Class<?> cl = Class.forName(className);
+                    Constructor<?> cons = cl.getConstructor(Processor.class);
                     def = cons.newInstance(processor);
                 }
 
@@ -359,11 +364,7 @@ public class XProcRuntime {
             try {
                 Method config = klass.getMethod("configureStep", XProcRuntime.class);
                 config.invoke(null, this);
-            } catch (NoSuchMethodException e) {
-                // nevermind
-            } catch (IllegalAccessException e) {
-                // nevermind
-            } catch (InvocationTargetException e) {
+            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                 // nevermind
             } catch (Exception e) {
                 System.err.println("Caught: " + e);
@@ -866,12 +867,9 @@ public class XProcRuntime {
 
         try {
             loader = _load(new Input(loaderURI));
-        } catch (SaxonApiException sae) {
+        } catch (SaxonApiException | XProcException sae) {
             error(sae);
             throw sae;
-        } catch (XProcException xe) {
-            error(xe);
-            throw xe;
         } catch (IOException ioe) {
             error(ioe);
             throw new XProcException(ioe);
@@ -1032,37 +1030,39 @@ public class XProcRuntime {
 
         Calendar start = GregorianCalendar.getInstance();
         profileHash.put(step, start);
-        profileWriter.addStartElement(profileProfile);
+        
+        AttributeMap profileAttr = EmptyAttributeMap.getInstance();
 
         if (first) {
             DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-            profileWriter.addAttribute(new QName("", "timestamp"), df.format(new Date()));
-            profileWriter.addAttribute(new QName("", "episode"), getEpisode());
-            profileWriter.addAttribute(new QName("", "language"), getLanguage());
-            profileWriter.addAttribute(new QName("", "product-name"), getProductName());
-            profileWriter.addAttribute(new QName("", "product-version"), getProductVersion());
-            profileWriter.addAttribute(new QName("", "product-vendor"), getVendor());
-            profileWriter.addAttribute(new QName("", "product-vendor-uri"), getVendorURI());
-            profileWriter.addAttribute(new QName("", "xproc-version"), getXProcVersion());
-            profileWriter.addAttribute(new QName("", "xpath-version"), getXPathVersion());
-            profileWriter.addAttribute(new QName("", "psvi-supported"), ""+getPSVISupported());
+            profileAttr = profileAttr.put(TypeUtils.attributeInfo(new QName("", "timestamp"), df.format(new Date())));
+            profileAttr = profileAttr.put(TypeUtils.attributeInfo(new QName("", "episode"), getEpisode()));
+            profileAttr = profileAttr.put(TypeUtils.attributeInfo(new QName("", "language"), getLanguage()));
+            profileAttr = profileAttr.put(TypeUtils.attributeInfo(new QName("", "product-name"), getProductName()));
+            profileAttr = profileAttr.put(TypeUtils.attributeInfo(new QName("", "product-version"), getProductVersion()));
+            profileAttr = profileAttr.put(TypeUtils.attributeInfo(new QName("", "product-vendor"), getVendor()));
+            profileAttr = profileAttr.put(TypeUtils.attributeInfo(new QName("", "product-vendor-uri"), getVendorURI()));
+            profileAttr = profileAttr.put(TypeUtils.attributeInfo(new QName("", "xproc-version"), getXProcVersion()));
+            profileAttr = profileAttr.put(TypeUtils.attributeInfo(new QName("", "xpath-version"), getXPathVersion()));
+            profileAttr = profileAttr.put(TypeUtils.attributeInfo(new QName("", "psvi-supported"), ""+getPSVISupported()));
         }
 
         String name = step.getType().getClarkName();
         if ((p_declare_step_clark.equals(name) || p_pipeline_clark.equals(name))
                 && step.getType() != null
                 && step.getStep().getDeclaredType() != null) {
-            profileWriter.addAttribute(profileType, step.getStep().getDeclaredType().getClarkName());
+            profileAttr = profileAttr.put(TypeUtils.attributeInfo(profileType, step.getStep().getDeclaredType().getClarkName()));
         } else {
-            profileWriter.addAttribute(profileType, name);
+            profileAttr = profileAttr.put(TypeUtils.attributeInfo(profileType, name));
         }
 
-        profileWriter.addAttribute(profileName, step.getStep().getName());
+        profileAttr = profileAttr.put(TypeUtils.attributeInfo(profileName, step.getStep().getName()));
         if (step.getStep().getNode() != null) {
-            profileWriter.addAttribute(profileHref, step.getStep().xplFile());
-            profileWriter.addAttribute(profileLine, ""+step.getStep().xplLine());
+            profileAttr = profileAttr.put(TypeUtils.attributeInfo(profileHref, step.getStep().xplFile()));
+            profileAttr = profileAttr.put(TypeUtils.attributeInfo(profileLine, ""+step.getStep().xplLine()));
         }
-        profileWriter.startContent();
+
+        profileWriter.addStartElement(profileProfile, profileAttr);
     }
 
     public XStep runningStep() {
@@ -1080,8 +1080,7 @@ public class XProcRuntime {
         long time = GregorianCalendar.getInstance().getTimeInMillis() - start.getTimeInMillis();
         profileHash.remove(step);
 
-        profileWriter.addStartElement(profileTime);
-        profileWriter.startContent();
+        profileWriter.addStartElement(TypeUtils.fqName(profileTime), Untyped.INSTANCE);
         profileWriter.addText("" + time);
         profileWriter.addEndElement();
         profileWriter.addEndElement();
@@ -1127,19 +1126,15 @@ public class XProcRuntime {
                     serializer.setOutputStream(outstr);
                     S9apiUtils.serialize(this, result.getXdmNode(), serializer);
                 } finally {
-                    if (!System.out.equals(outstr) && !System.err.equals(outstr)) {
+                    if (outstr != null && !System.out.equals(outstr) && !System.err.equals(outstr)) {
                         outstr.close();
                     }
                 }
 
                 profileWriter = new TreeWriter(this);
                 profileWriter.startDocument(URI.create("http://xmlcalabash.com/output/profile.xml"));
-            } catch (SaxonApiException sae) {
+            } catch (SaxonApiException | IOException sae) {
                 throw new XProcException(sae);
-            } catch (FileNotFoundException fnfe) {
-                throw new XProcException(fnfe);
-            } catch (IOException ioe) {
-                throw new XProcException(ioe);
             }
         }
     }

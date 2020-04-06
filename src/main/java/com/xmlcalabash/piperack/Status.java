@@ -19,35 +19,28 @@ public class Status extends BaseResource {
         tree.startDocument(URI.create("http://example.com/"));
 
         tree.addStartElement(pr_status);
-        tree.startContent();
 
         tree.addStartElement(pr_version);
-        tree.startContent();
         tree.addText(XProcConstants.XPROC_VERSION);
         tree.addEndElement();
 
         tree.addStartElement(pr_saxon_version);
-        tree.startContent();
         tree.addText(getConfiguration().getProcessor().getSaxonProductVersion());
         tree.addEndElement();
 
         tree.addStartElement(pr_saxon_edition);
-        tree.startContent();
         tree.addText(getConfiguration().getProcessor().getUnderlyingConfiguration().getEditionCode());
         tree.addEndElement();
 
         tree.addStartElement(pr_copyright);
-        tree.startContent();
-        tree.addText("© 2007-2013 Norman Walsh");
+        tree.addText("© 2007-2020 Norman Walsh");
         tree.addEndElement();
 
         tree.addStartElement(pr_message);
-        tree.startContent();
         tree.addText("See docs/notices/NOTICES in the distribution for licensing.");
         tree.addEndElement();
 
         tree.addStartElement(pr_message);
-        tree.startContent();
         tree.addText("See also http://xmlcalabash.com/ for more information.");
         tree.addEndElement();
 

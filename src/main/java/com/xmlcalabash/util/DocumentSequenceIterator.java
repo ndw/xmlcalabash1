@@ -13,16 +13,16 @@ import net.sf.saxon.trans.XPathException;
  * Time: 4:35:36 PM
  * To change this template use File | Settings | File Templates.
  */
-public class DocumentSequenceIterator<T extends Item<?>> implements FocusIterator<T>, LastPositionFinder {
+public class DocumentSequenceIterator implements FocusIterator, LastPositionFinder {
     int position = 0;
     int last = 0;
-    T item = null;
+    Item item = null;
 
     public void setPosition(int position) {
         this.position = position;
     }
 
-    public void setItem(T item) {
+    public void setItem(Item item) {
         this.item = item;
     }
 
@@ -30,11 +30,11 @@ public class DocumentSequenceIterator<T extends Item<?>> implements FocusIterato
         this.last = last;
     }
 
-    public T next() throws XPathException {
+    public Item next() {
         throw new UnsupportedOperationException("Don't know what to do for next() on DocumentSequenceIterator");
     }
 
-    public T current() {
+    public Item current() {
         return item;
     }
 
@@ -46,16 +46,8 @@ public class DocumentSequenceIterator<T extends Item<?>> implements FocusIterato
         // ???
     }
 
-    public FocusIterator getAnother() throws XPathException {
-        throw new UnsupportedOperationException("Don't know what to do for getAnother() on DocumentSequenceIterator");
-    }
-
-    public int getProperties() {
-        return SequenceIterator.LAST_POSITION_FINDER;
-    }
-
     @Override
-    public int getLength() throws XPathException {
+    public int getLength() {
         return last;
     }
 }

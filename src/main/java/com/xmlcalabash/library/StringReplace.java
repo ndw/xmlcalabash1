@@ -19,18 +19,28 @@
 
 package com.xmlcalabash.library;
 
+import java.util.ArrayList;
 import java.util.Vector;
 import java.util.Hashtable;
 
 import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.util.AxisNodes;
 import com.xmlcalabash.util.ProcessMatchingNodes;
 import com.xmlcalabash.util.ProcessMatch;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
+import com.xmlcalabash.util.S9apiUtils;
+import com.xmlcalabash.util.TypeUtils;
+import net.sf.saxon.event.ReceiverOption;
+import net.sf.saxon.om.AttributeInfo;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.FingerprintedQName;
+import net.sf.saxon.om.NodeName;
 import net.sf.saxon.s9api.*;
 import com.xmlcalabash.runtime.XAtomicStep;
+import net.sf.saxon.type.BuiltInAtomicType;
 
 /**
  *
@@ -48,8 +58,8 @@ public class StringReplace extends DefaultStep implements ProcessMatchingNodes {
     private WritablePipe result = null;
     private ProcessMatch matcher = null;
     private RuntimeValue replace = null;
-    private Hashtable<String,String> rns = new Hashtable<String,String> ();
-    private static Hashtable<QName,RuntimeValue> atomicStepsGetNoInScopeOptions = new Hashtable<QName,RuntimeValue> ();
+    private Hashtable<String,String> rns = new Hashtable<>();
+    private static Hashtable<QName,RuntimeValue> atomicStepsGetNoInScopeOptions = new Hashtable<>();
 
     /* Creates a new instance of StringReplace */
     public StringReplace(XProcRuntime runtime, XAtomicStep step) {
@@ -85,51 +95,69 @@ public class StringReplace extends DefaultStep implements ProcessMatchingNodes {
         result.write(matcher.getResult());
     }
 
-    public boolean processStartDocument(XdmNode node) throws SaxonApiException {
+    public boolean processStartDocument(XdmNode node) {
         return true;
     }
 
-    public void processEndDocument(XdmNode node) throws SaxonApiException {
+    public void processEndDocument(XdmNode node) {
         // nop?
     }
 
-    public boolean processStartElement(XdmNode node) throws SaxonApiException {
+    @Override
+    public AttributeMap processAttributes(XdmNode node, AttributeMap matchingAttributes, AttributeMap nonMatchingAttributes) {
+        ArrayList<AttributeInfo> alist = new ArrayList<>();
+        for (AttributeInfo attr : nonMatchingAttributes) {
+            alist.add(attr);
+        }
+
+        for (AttributeInfo attr : matchingAttributes) {
+            // This is kind of ugly; I need the XdmNode for the attribute
+            XdmNode attrNode = null;
+            for (XdmNode anode : new AxisNodes(node, Axis.ATTRIBUTE)) {
+                NodeName aname = TypeUtils.fqName(anode.getNodeName());
+                if (aname.equals(attr.getNodeName())) {
+                    attrNode = anode;
+                }
+            }
+            alist.add(new AttributeInfo(attr.getNodeName(), BuiltInAtomicType.UNTYPED_ATOMIC, computeReplacement(attrNode), attr.getLocation(), ReceiverOption.NONE));
+        }
+
+        return AttributeMap.fromList(alist);
+    }
+
+    @Override
+    public boolean processStartElement(XdmNode node, AttributeMap attributes) {
         String newValue = computeReplacement(node);
         matcher.addText(newValue);
         return false;
     }
 
-    public void processEndElement(XdmNode node) throws SaxonApiException {
+    public void processEndElement(XdmNode node) {
         // nop?
     }
 
-    public void processText(XdmNode node) throws SaxonApiException {
+    public void processText(XdmNode node) {
         String newValue = computeReplacement(node);
         matcher.addText(newValue);
     }
 
-    public void processComment(XdmNode node) throws SaxonApiException {
+    public void processComment(XdmNode node) {
         String newValue = computeReplacement(node);
         matcher.addText(newValue);
     }
 
-    public void processPI(XdmNode node) throws SaxonApiException {
+    public void processPI(XdmNode node) {
         String newValue = computeReplacement(node);
         matcher.addText(newValue);
-    }
-
-    public void processAttribute(XdmNode node) throws SaxonApiException {
-        String newValue = computeReplacement(node);
-        matcher.addAttribute(node, newValue);
     }
 
     private String computeReplacement(XdmNode node) {
         Vector<XdmItem> values = evaluateXPath(node, rns, replace.getString(), atomicStepsGetNoInScopeOptions);
-        String newValue = "";
+        StringBuilder newValue = new StringBuilder();
         for (XdmItem item : values) {
-            newValue += item.getStringValue();
+            newValue.append(item.getStringValue());
         }
-        return newValue;
+        return newValue.toString();
     }
 
 }

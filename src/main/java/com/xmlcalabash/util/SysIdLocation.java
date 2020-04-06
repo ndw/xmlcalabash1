@@ -1,6 +1,6 @@
 package com.xmlcalabash.util;
 
-import net.sf.saxon.expr.parser.Location;
+import net.sf.saxon.s9api.Location;
 
 /**
  * Implementation of {@link Location} with only System ID.

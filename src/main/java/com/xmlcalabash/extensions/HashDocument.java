@@ -19,6 +19,7 @@
 
 package com.xmlcalabash.extensions;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Hashtable;
 
 import com.xmlcalabash.core.XMLCalabash;
@@ -105,6 +106,7 @@ public class HashDocument extends DefaultStep {
         }
 
         XdmNode root = S9apiUtils.getDocumentElement(doc);
+        assert root != null;
 
         String decode = step.getExtensionAttribute(cx_decode);
         if (decode == null) {
@@ -153,7 +155,6 @@ public class HashDocument extends DefaultStep {
         TreeWriter tree = new TreeWriter(runtime);
         tree.startDocument(step.getNode().getBaseURI());
         tree.addStartElement(XProcConstants.c_result);
-        tree.startContent();
         tree.addText(hash);
         tree.addEndElement();
         tree.endDocument();
@@ -204,11 +205,9 @@ public class HashDocument extends DefaultStep {
 
         try {
             try {
-                PrintWriter writer = new PrintWriter(new OutputStreamWriter(baos, "UTF-8"));
+                PrintWriter writer = new PrintWriter(new OutputStreamWriter(baos, StandardCharsets.UTF_8));
                 String json = XMLtoJSON.convert(doc);
                 writer.print(json);
-            } catch (UnsupportedEncodingException e) {
-                // nop; this is never going to happen
             } finally {
                 baos.close();
             }

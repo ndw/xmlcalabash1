@@ -19,8 +19,6 @@
 
 package com.xmlcalabash.library;
 
-import java.util.Map;
-
 import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
@@ -28,7 +26,7 @@ import com.xmlcalabash.util.ProcessMatchingNodes;
 import com.xmlcalabash.util.ProcessMatch;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
-import com.xmlcalabash.model.RuntimeValue;
+import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.s9api.*;
 import com.xmlcalabash.runtime.XAtomicStep;
 
@@ -47,10 +45,8 @@ public class Insert extends DefaultStep implements ProcessMatchingNodes {
     private ReadablePipe insertion = null;
     private ReadablePipe source = null;
     private WritablePipe result = null;
-    private Map<QName, RuntimeValue> inScopeOptions = null;
     private ProcessMatch matcher = null;
     private String position = null;
-    private String matchPattern = null;
 
     /* Creates a new instance of Insert */
     public Insert(XProcRuntime runtime, XAtomicStep step) {
@@ -87,22 +83,26 @@ public class Insert extends DefaultStep implements ProcessMatchingNodes {
         result.write(matcher.getResult());
     }
 
-    public boolean processStartDocument(XdmNode node) throws SaxonApiException {
+    public boolean processStartDocument(XdmNode node) {
         throw XProcException.stepError(25);
     }
 
-    public void processEndDocument(XdmNode node) throws SaxonApiException {
+    public void processEndDocument(XdmNode node) {
         throw XProcException.stepError(25);
     }
 
-    public boolean processStartElement(XdmNode node) throws SaxonApiException {
+    @Override
+    public AttributeMap processAttributes(XdmNode node, AttributeMap matchingAttributes, AttributeMap nonMatchingAttributes) {
+        throw XProcException.stepError(23);
+    }
+
+    @Override
+    public boolean processStartElement(XdmNode node, AttributeMap attributes) {
         if ("before".equals(position)) {
             doInsert();
         }
 
-        matcher.addStartElement(node);
-        matcher.addAttributes(node);
-        matcher.startContent();
+        matcher.addStartElement(node, attributes);
 
         if ("first-child".equals(position)) {
             doInsert();
@@ -111,7 +111,7 @@ public class Insert extends DefaultStep implements ProcessMatchingNodes {
         return true;
     }
 
-    public void processEndElement(XdmNode node) throws SaxonApiException {
+    public void processEndElement(XdmNode node) {
         if ("last-child".equals(position)) {
             doInsert();
         }
@@ -123,19 +123,19 @@ public class Insert extends DefaultStep implements ProcessMatchingNodes {
         }
     }
 
-    public void processText(XdmNode node) throws SaxonApiException {
+    public void processText(XdmNode node) {
         process(node);
     }
 
-    public void processComment(XdmNode node) throws SaxonApiException {
+    public void processComment(XdmNode node)  {
         process(node);
     }
 
-    public void processPI(XdmNode node) throws SaxonApiException {
+    public void processPI(XdmNode node) {
         process(node);
     }
 
-    private void process(XdmNode node) throws SaxonApiException {
+    private void process(XdmNode node) {
         if ("before".equals(position)) {
             doInsert();
         }
@@ -159,16 +159,12 @@ public class Insert extends DefaultStep implements ProcessMatchingNodes {
         }
     }
 
-    public void processAttribute(XdmNode node) throws SaxonApiException {
-        throw XProcException.stepError(23);
-    }
-
-    private void doInsert() throws SaxonApiException {
+    private void doInsert() {
         while (insertion.moreDocuments()) {
             XdmNode doc = insertion.read();
-            XdmSequenceIterator iter = doc.axisIterator(Axis.CHILD);
+            XdmSequenceIterator<XdmNode> iter = doc.axisIterator(Axis.CHILD);
             while (iter.hasNext()) {
-                XdmNode child = (XdmNode) iter.next();
+                XdmNode child = iter.next();
                 matcher.addSubtree(child);
             }
         }

@@ -27,15 +27,13 @@ import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.util.RebasedDocument;
-import com.xmlcalabash.util.RebasedNode;
-import com.xmlcalabash.util.S9apiUtils;
-import com.xmlcalabash.util.TreeWriter;
-import com.xmlcalabash.util.XProcCollectionFinder;
+import com.xmlcalabash.util.*;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.lib.CollectionFinder;
 import net.sf.saxon.lib.OutputURIResolver;
 import net.sf.saxon.lib.UnparsedTextURIResolver;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.EmptyAttributeMap;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.TreeInfo;
 import net.sf.saxon.s9api.Action;
@@ -66,6 +64,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.sax.SAXSource;
 import java.io.ByteArrayOutputStream;
 import java.net.URI;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Vector;
@@ -301,10 +300,12 @@ public class XSLT extends DefaultStep {
                     // Document is apparently not well-formed XML.
                     TreeWriter tree = new TreeWriter(runtime);
                     tree.startDocument(xformed.getBaseURI());
-                    tree.addStartElement(XProcConstants.c_result);
-                    tree.addAttribute(_content_type, "text/plain");
-                    tree.addAttribute(cx_decode, "true");
-                    tree.startContent();
+
+                    AttributeMap attr = EmptyAttributeMap.getInstance();
+                    attr = attr.put(TypeUtils.attributeInfo(_content_type, "text/plain"));
+                    attr = attr.put(TypeUtils.attributeInfo(cx_decode, "true"));
+
+                    tree.addStartElement(XProcConstants.c_result, attr);
 
                     // Serialize the content as text so that we don't wind up with encoded XML characters
                     Serializer serializer = makeSerializer();
@@ -425,10 +426,13 @@ public class XSLT extends DefaultStep {
                     // Document is apparently not well-formed XML.
                     TreeWriter tree = new TreeWriter(runtime);
                     tree.startDocument(doc.getBaseURI());
-                    tree.addStartElement(XProcConstants.c_result);
-                    tree.addAttribute(_content_type, "text/plain");
-                    tree.addAttribute(cx_decode, "true");
-                    tree.startContent();
+
+                    AttributeMap attr = EmptyAttributeMap.getInstance();
+                    attr = attr.put(TypeUtils.attributeInfo(_content_type, "text/plain"));
+                    attr = attr.put(TypeUtils.attributeInfo(cx_decode, "true"));
+
+                    tree.addStartElement(XProcConstants.c_result, attr);
+
                     tree.addText(doc.toString());
                     tree.addEndElement();
                     tree.endDocument();
@@ -452,7 +456,6 @@ public class XSLT extends DefaultStep {
             TreeWriter treeWriter = new TreeWriter(runtime);
             treeWriter.startDocument(content.getBaseURI());
             treeWriter.addStartElement(XProcConstants.c_error);
-            treeWriter.startContent();
 
             treeWriter.addSubtree(content);
 

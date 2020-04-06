@@ -204,7 +204,7 @@ public class XSelect implements ReadablePipe {
         // nop;
     }
 
-    public XdmNode read () throws SaxonApiException {
+    public XdmNode read () {
         if (!initialized) {
             readSource();
         }

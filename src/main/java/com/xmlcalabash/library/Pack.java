@@ -110,7 +110,6 @@ public class Pack extends DefaultStep {
             TreeWriter tree = new TreeWriter(runtime);
             tree.startDocument(step.getNode().getBaseURI());
             tree.addStartElement(wrapper);
-            tree.startContent();
             if (sdoc != null) {
                 tree.addSubtree(sdoc);
             }

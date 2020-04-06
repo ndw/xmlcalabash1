@@ -138,7 +138,7 @@ public class XProcConfiguration {
         bFeatureMap.put("http://saxon.sf.net/feature/assertionsCanSeeComments", Feature.ASSERTIONS_CAN_SEE_COMMENTS);
         sFeatureMap.put("http://saxon.sf.net/feature/collation-uri-resolver-class", Feature.COLLATION_URI_RESOLVER_CLASS);
         sFeatureMap.put("http://saxon.sf.net/feature/collection-finder-class", Feature.COLLECTION_FINDER_CLASS);
-        sFeatureMap.put("http://saxon.sf.net/feature/collection-uri-resolver-class", Feature.COLLECTION_URI_RESOLVER_CLASS);
+        //x10 sFeatureMap.put("http://saxon.sf.net/feature/collection-uri-resolver-class", Feature.COLLECTION_URI_RESOLVER_CLASS);
         bFeatureMap.put("http://saxon.sf.net/feature/compile-with-tracing", Feature.COMPILE_WITH_TRACING);
         sFeatureMap.put("http://saxon.sf.net/feature/configuration-file", Feature.CONFIGURATION_FILE);
         bFeatureMap.put("http://saxon.sf.net/feature/debugByteCode", Feature.DEBUG_BYTE_CODE);
@@ -487,7 +487,7 @@ public class XProcConfiguration {
                                         if (implementations.containsKey(qname)) {
                                             logger.debug("Ignoring step property for configured step: " + qname.getClarkName());
                                         } else {
-                                            Class klass = Class.forName(name);
+                                            Class<?> klass = Class.forName(name);
                                             logger.debug("Loaded step from property: " + qname.getClarkName());
                                             implementations.put(qname, klass);
                                         }
@@ -1414,7 +1414,7 @@ public class XProcConfiguration {
             return false;
         }
 
-        public XdmNode read() throws SaxonApiException {
+        public XdmNode read() {
             read = true;
 
             if (doc != null) {
@@ -1429,6 +1429,7 @@ public class XProcConfiguration {
                         node = (XdmNode) nodes.get(pos);
                     }
                 }
+                assert node != null;
 
                 XdmDestination dest = new XdmDestination();
                 try {

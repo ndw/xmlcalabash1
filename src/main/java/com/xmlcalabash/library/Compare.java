@@ -107,7 +107,6 @@ public class Compare extends DefaultStep {
         TreeWriter treeWriter = new TreeWriter(runtime);
         treeWriter.startDocument(step.getNode().getBaseURI());
         treeWriter.addStartElement(c_result);
-        treeWriter.startContent();
         treeWriter.addText(""+same);
         treeWriter.addEndElement();
         treeWriter.endDocument();

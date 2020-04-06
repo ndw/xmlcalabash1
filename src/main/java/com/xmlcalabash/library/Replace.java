@@ -29,6 +29,7 @@ import com.xmlcalabash.util.ProcessMatch;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
+import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -86,41 +87,43 @@ public class Replace extends DefaultStep implements ProcessMatchingNodes {
         result.write(matcher.getResult());
     }
 
-    public boolean processStartDocument(XdmNode node) throws SaxonApiException {
+    public boolean processStartDocument(XdmNode node) {
         doReplace();
         return false;
     }
 
-    public void processEndDocument(XdmNode node) throws SaxonApiException {
+    public void processEndDocument(XdmNode node) {
         // nop
     }
 
-    public boolean processStartElement(XdmNode node) throws SaxonApiException {
-        doReplace();
-        return false;
-    }
-
-    public void processEndElement(XdmNode node) throws SaxonApiException {
-        // nop
-    }
-
-    public void processAttribute(XdmNode node) throws SaxonApiException {
+    @Override
+    public AttributeMap processAttributes(XdmNode node, AttributeMap matchingAttributes, AttributeMap nonMatchingAttributes) {
         throw XProcException.stepError(23);
     }
 
-    public void processText(XdmNode node) throws SaxonApiException {
+    @Override
+    public boolean processStartElement(XdmNode node, AttributeMap attributes) {
+        doReplace();
+        return false;
+    }
+
+    public void processEndElement(XdmNode node) {
+        // nop
+    }
+
+    public void processText(XdmNode node) {
         doReplace();
     }
 
-    public void processComment(XdmNode node) throws SaxonApiException {
+    public void processComment(XdmNode node) {
         doReplace();
     }
 
-    public void processPI(XdmNode node) throws SaxonApiException {
+    public void processPI(XdmNode node) {
         doReplace();
     }
 
-    private void doReplace() throws SaxonApiException {
+    private void doReplace() {
         while (replacement.moreDocuments()) {
             matcher.addSubtree(replacement.read());
         }

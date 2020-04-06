@@ -22,25 +22,31 @@ package com.xmlcalabash.library;
 import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.util.ProcessMatchingNodes;
-import com.xmlcalabash.util.ProcessMatch;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
+import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.util.ProcessMatch;
+import com.xmlcalabash.util.ProcessMatchingNodes;
+import net.sf.saxon.event.ReceiverOption;
+import net.sf.saxon.om.AttributeInfo;
+import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.om.FingerprintedQName;
 import net.sf.saxon.om.NameOfNode;
 import net.sf.saxon.om.NamespaceBinding;
+import net.sf.saxon.om.NamespaceMap;
 import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.om.NamePool;
-import javax.xml.XMLConstants;
-import com.xmlcalabash.runtime.XAtomicStep;
 import net.sf.saxon.om.NodeName;
-import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmSequenceIterator;
+import net.sf.saxon.type.BuiltInAtomicType;
+import net.sf.saxon.type.SchemaType;
 import net.sf.saxon.type.SimpleType;
+import net.sf.saxon.type.Untyped;
+
+import javax.xml.XMLConstants;
+import java.util.ArrayList;
 
 /**
  *
@@ -115,111 +121,127 @@ public class NamespaceRename extends DefaultStep implements ProcessMatchingNodes
         }
     }
 
-    public boolean processStartDocument(XdmNode node) throws SaxonApiException {
+    public boolean processStartDocument(XdmNode node) {
         return true;
     }
 
-    public void processEndDocument(XdmNode node) throws SaxonApiException {
+    public void processEndDocument(XdmNode node) {
         matcher.addEndElement();
     }
 
-    public boolean processStartElement(XdmNode node) throws SaxonApiException {
+    @Override
+    public AttributeMap processAttributes(XdmNode node, AttributeMap matchingAttributes, AttributeMap nonMatchingAttributes) {
+        throw new UnsupportedOperationException("processAttribute can't be called in NamespaceRename--but it was!?");
+    }
+
+    @Override
+    public boolean processStartElement(XdmNode node, AttributeMap attributes) {
         NodeInfo inode = node.getUnderlyingNode();
-        NamespaceBinding inscopeNS[] = inode.getDeclaredNamespaces(null);
-        NamespaceBinding newNS[] = null;
+        NamespaceMap nsmap = inode.getAllNamespaces();
+        NamespaceMap newNS = inode.getAllNamespaces();
 
-        if ("attributes".equals(applyTo)) {
-            matcher.addStartElement(NameOfNode.makeName(inode), inode.getSchemaType(), inscopeNS);
-        } else {
-            if (inscopeNS.length > 0) {
-                int countNS = 0;
+        // This code had to be competely rewritten for the Saxon 10 API
 
-                for (int pos = 0; pos < inscopeNS.length; pos++) {
-                    NamespaceBinding ns = inscopeNS[pos];
-                    String uri = ns.getURI();
-                    if (!from.equals(uri) || !"".equals(to)) {
-                        countNS++;
-                    }
-                }
+        NodeName startName = NameOfNode.makeName(inode);
+        SchemaType startType = inode.getSchemaType();
+        AttributeMap startAttr = inode.attributes();
 
-                newNS = new NamespaceBinding[countNS];
-                int newPos = 0;
-                for (int pos = 0; pos < inscopeNS.length; pos++) {
-                    NamespaceBinding ns = inscopeNS[pos];
-                    String pfx = ns.getPrefix();
-                    String uri = ns.getURI();
-                    if (from.equals(uri)) {
-                        if ("".equals(to)) {
-                            // Nevermind, we're throwing the namespace away
-                        } else {
-                            NamespaceBinding newns = new NamespaceBinding(pfx,to);
-                            newNS[newPos++] = newns;
-                        }
-                    } else {
-                        newNS[newPos++] = ns;
-                    }
-                }
+        if (!"attributes".equals(applyTo)) {
+            if (from.equals(node.getNodeName().getNamespaceURI())) {
+                String prefix = node.getNodeName().getPrefix();
+                startName = new FingerprintedQName(prefix, to, node.getNodeName().getLocalName());
+                startType = Untyped.INSTANCE;
+                newNS = newNS.remove(prefix);
+                newNS = newNS.put(prefix, to);
             }
-
-            // Careful, we're messing with the namespace bindings
-            // Make sure the nameCode is right...
-            NodeName nameCode = NameOfNode.makeName(inode);
-            String pfx = nameCode.getPrefix();
-            String uri = nameCode.getURI();
-
-            if (from.equals(uri)) {
-                if ("".equals(to)) {
-                    pfx = "";
-                }
-
-                nameCode = new FingerprintedQName(pfx,to,nameCode.getLocalPart());
-            }
-
-            matcher.addStartElement(nameCode, inode.getSchemaType(), newNS);
         }
 
-        if (!"elements".equals(applyTo)) {
-            XdmSequenceIterator iter = node.axisIterator(Axis.ATTRIBUTE);
-            while (iter.hasNext()) {
-                XdmNode attr = (XdmNode) iter.next();
-                inode = attr.getUnderlyingNode();
-                NodeName nameCode = NameOfNode.makeName(inode);
+        if ("all".equals(applyTo)) {
+            for (AttributeInfo attr : inode.attributes()) {
+                NodeName nameCode = attr.getNodeName();
+                SimpleType atype = attr.getType();
+                String uri = nameCode.getURI();
+
+                if (from.equals(uri)) {
+                    startAttr = startAttr.remove(nameCode);
+
+                    String pfx = nameCode.getPrefix();
+                    newNS = newNS.remove(pfx);
+
+                    nameCode = new FingerprintedQName(pfx, to, nameCode.getLocalPart());
+                    atype = BuiltInAtomicType.UNTYPED_ATOMIC;
+                    newNS = newNS.put(pfx, to);
+                }
+
+                startAttr = startAttr.put(new AttributeInfo(nameCode, atype, attr.getValue(), attr.getLocation(), ReceiverOption.NONE));
+            }
+        }
+
+        if ("elements".equals(applyTo)) {
+            for (AttributeInfo attr : inode.attributes()) {
+                NodeName nameCode = attr.getNodeName();
+                SimpleType atype = attr.getType();
+
+                String uri = nameCode.getURI();
+                if (from.equals(uri)) {
+                    startAttr = startAttr.remove(nameCode);
+                    String pfx = prefixFor(newNS, from);
+                    nameCode = new FingerprintedQName(pfx, from, nameCode.getLocalPart());
+                    atype = BuiltInAtomicType.UNTYPED_ATOMIC;
+                    newNS = newNS.put(pfx, from);
+                }
+
+                startAttr = startAttr.put(new AttributeInfo(nameCode, atype, attr.getValue(), attr.getLocation(), ReceiverOption.NONE));
+            }
+        }
+
+        if ("attributes".equals(applyTo)) {
+            for (AttributeInfo attr : inode.attributes()) {
+                NodeName nameCode = attr.getNodeName();
+                startAttr = startAttr.remove(nameCode);
+
                 String pfx = nameCode.getPrefix();
                 String uri = nameCode.getURI();
 
                 if (from.equals(uri)) {
-                    if ("".equals(pfx)) {
-                        pfx = "_1";
-                    }
+                    pfx = prefixFor(newNS, to);
                     nameCode = new FingerprintedQName(pfx,to,nameCode.getLocalPart());
+                    newNS = newNS.put(pfx, to);
                 }
-                matcher.addAttribute(nameCode, (SimpleType) inode.getSchemaType(), attr.getStringValue());
+
+                startAttr = startAttr.put(new AttributeInfo(nameCode, BuiltInAtomicType.UNTYPED_ATOMIC, attr.getValue(), attr.getLocation(), ReceiverOption.NONE));
             }
-        } else {
-            matcher.addAttributes(node);
         }
 
+        /*
+        System.err.println("{"+startName.getURI()+"}"+startName.getPrefix()+":"+startName.getLocalPart());
+        for (NamespaceBinding b : newNS) {
+            System.err.println(b.getPrefix()+"="+b.getURI());
+        }
+        System.err.println("---");
+        for (AttributeInfo a : startAttr) {
+            System.err.println("{"+a.getNodeName().getURI()+"}"+a.getNodeName().getPrefix()+":"+a.getNodeName().getLocalPart());
+        }
+         */
+
+        matcher.addStartElement(startName, startAttr, startType, newNS);
         return true;
     }
 
-    public void processEndElement(XdmNode node) throws SaxonApiException {
+    public void processEndElement(XdmNode node) {
         matcher.addEndElement();
     }
 
-    public void processText(XdmNode node) throws SaxonApiException {
+    public void processText(XdmNode node) {
         matcher.addText(node.getStringValue());
     }
 
-    public void processComment(XdmNode node) throws SaxonApiException {
+    public void processComment(XdmNode node) {
         matcher.addComment(node.getStringValue());
     }
 
-    public void processPI(XdmNode node) throws SaxonApiException {
+    public void processPI(XdmNode node) {
         matcher.addPI(node.getNodeName().getLocalName(), node.getStringValue());
-    }
-
-    public void processAttribute(XdmNode node) throws SaxonApiException {
-        throw new UnsupportedOperationException("processAttribute can't be called in NamespaceRename--but it was!?");
     }
 }
 

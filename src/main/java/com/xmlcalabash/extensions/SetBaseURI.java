@@ -13,6 +13,7 @@ import com.xmlcalabash.util.TreeWriter;
 import net.sf.saxon.s9api.*;
 
 import java.net.URI;
+import java.util.HashMap;
 
 /**
  * Created by IntelliJ IDEA.
@@ -86,9 +87,6 @@ public class SetBaseURI extends DefaultStep {
                     tree.addStartElement(node);
                 } else {
                     tree.addStartElement(node, baseURI);
-                }
-                for (XdmNode child : new AxisNodes(node, Axis.ATTRIBUTE)) {
-                    tree.addAttribute(child);
                 }
                 for (XdmNode child : new AxisNodes(node, Axis.CHILD)) {
                     write(child,underXmlBase);

@@ -24,6 +24,9 @@ import com.xmlcalabash.config.JingConfigurer;
 import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.util.Base64;
 import com.xmlcalabash.util.TreeWriter;
+import com.xmlcalabash.util.TypeUtils;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.EmptyAttributeMap;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -50,6 +53,7 @@ import org.xml.sax.SAXParseException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
+import java.util.HashMap;
 
 /**
  * Created by IntelliJ IDEA.
@@ -119,6 +123,7 @@ public class ValidateJing extends DefaultStep {
         XdmNode doc = source.read();
         XdmNode schema = schemaSource.read();
         XdmNode root = S9apiUtils.getDocumentElement(schema);
+        assert root != null;
 
         docBaseURI = doc.getBaseURI();
 
@@ -201,20 +206,20 @@ public class ValidateJing extends DefaultStep {
                 System.err.println(e.getMessage());
             }
 
+            AttributeMap attr = EmptyAttributeMap.getInstance();
+
             TreeWriter treeWriter = new TreeWriter(runtime);
             treeWriter.startDocument(docBaseURI);
-            treeWriter.addStartElement(XProcConstants.c_error);
 
             if (e.getLineNumber()!=-1) {
-                treeWriter.addAttribute(_line, ""+e.getLineNumber());
+                attr = attr.put(TypeUtils.attributeInfo(_line, ""+e.getLineNumber()));
             }
 
             if (e.getColumnNumber()!=-1) {
-                treeWriter.addAttribute(_column, ""+e.getColumnNumber());
+                attr = attr.put(TypeUtils.attributeInfo(_column, ""+e.getColumnNumber()));
             }
 
-            treeWriter.startContent();
-
+            treeWriter.addStartElement(XProcConstants.c_error, attr);
             treeWriter.addText(e.toString());
 
             treeWriter.addEndElement();

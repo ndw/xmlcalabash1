@@ -23,10 +23,15 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.util.MessageFormatter;
+import com.xmlcalabash.util.TypeUtils;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.EmptyAttributeMap;
+import net.sf.saxon.om.SingletonAttributeMap;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 
@@ -61,7 +66,6 @@ public class DirectoryList extends DefaultStep {
     private static final QName c_file = new QName("c", XProcConstants.NS_XPROC_STEP, "file");
     private static final QName px_show_excluded = new QName(XProcConstants.NS_CALABASH_EX, "show-excluded");
     private WritablePipe result = null;
-    private String path = ".";
     private String inclFilter = null;
     private String exclFilter = null;
 
@@ -85,6 +89,7 @@ public class DirectoryList extends DefaultStep {
             throw XProcException.dynamicError(21);
         }
 
+        String path = ".";
         if (getOption(_path) != null) {
             URI pathbase = getOption(_path).getBaseURI();
             String pathstr = URIUtils.encode(getOption(_path).getString());
@@ -114,11 +119,12 @@ public class DirectoryList extends DefaultStep {
 
         final URI uri = URI.create("file:///").resolve(path);
         final TreeWriter tree = new TreeWriter(runtime);
+        AttributeMap attr = EmptyAttributeMap.getInstance();
+
         tree.startDocument(step.getNode().getBaseURI());
-        tree.addStartElement(c_directory);
-        tree.addAttribute(_name, getName(uri));
-        tree.addAttribute(XProcConstants.xml_base, uri.toASCIIString());
-        tree.startContent();
+        attr = attr.put(TypeUtils.attributeInfo(_name, getName(uri)));
+        attr = attr.put(TypeUtils.attributeInfo(XProcConstants.xml_base, uri.toASCIIString()));
+        tree.addStartElement(c_directory, attr);
 
         final DataStore store = runtime.getDataStore();
         try {
@@ -141,13 +147,11 @@ public class DirectoryList extends DefaultStep {
 
                     if (use) {
                         if (!isFile(id)) {
-                            tree.addStartElement(c_directory);
-                            tree.addAttribute(_name, filename);
+                            tree.addStartElement(c_directory, SingletonAttributeMap.of(TypeUtils.attributeInfo(_name, filename)));
                             tree.addEndElement();
                             logger.trace(MessageFormatter.nodeMessage(step.getNode(), "Including directory: " + filename));
                         } else {
-                            tree.addStartElement(c_file);
-                            tree.addAttribute(_name, filename);
+                            tree.addStartElement(c_file, SingletonAttributeMap.of(TypeUtils.attributeInfo(_name, filename)));
                             tree.addEndElement();
                             logger.trace(MessageFormatter.nodeMessage(step.getNode(), "Including file: " + filename));
                         }
@@ -182,8 +186,7 @@ public class DirectoryList extends DefaultStep {
 		final List<String> entries = new ArrayList<String>();
 		DataStore store = runtime.getDataStore();
 		store.infoEntry(entry, entry, "*/*", new DataInfo() {
-			public void list(URI id, String media, long lastModified)
-					throws IOException {
+			public void list(URI id, String media, long lastModified) {
 				if (media != null) {
 					entries.add(media);
 				}

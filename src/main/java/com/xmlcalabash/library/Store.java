@@ -21,10 +21,14 @@ package com.xmlcalabash.library;
 
 import java.io.*;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.zip.GZIPOutputStream;
 
 import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.util.*;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.EmptyAttributeMap;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.Serializer;
@@ -98,7 +102,9 @@ public class Store extends DefaultStep {
             throw XProcException.dynamicError(6, "Reading source on " + getStep().getName());
         }
 
-        String href = null, base = null;
+        String href = null;
+        String base = null;
+
         if (hrefOpt != null) {
             href = hrefOpt.getString();
             base = hrefOpt.getBaseURI().toASCIIString();
@@ -112,6 +118,7 @@ public class Store extends DefaultStep {
         }
 
         XdmNode root = S9apiUtils.getDocumentElement(doc);
+        assert root != null;
 
         String decode = step.getExtensionAttribute(cx_decode);
         if (decode == null) {
@@ -148,7 +155,6 @@ public class Store extends DefaultStep {
             TreeWriter tree = new TreeWriter(runtime);
             tree.startDocument(step.getNode().getBaseURI());
             tree.addStartElement(XProcConstants.c_result);
-            tree.startContent();
             tree.addText(contentId.toASCIIString());
             tree.addEndElement();
             tree.endDocument();
@@ -172,8 +178,7 @@ public class Store extends DefaultStep {
                 outstr = baos;
                 try {
                     if (method == CompressionMethod.GZIP) {
-                        GZIPOutputStream gzout = new GZIPOutputStream(outstr);
-                        outstr = gzout;
+                        outstr = new GZIPOutputStream(outstr);
                     }
 
                     serializer.setOutputStream(outstr);
@@ -189,8 +194,7 @@ public class Store extends DefaultStep {
                     public void store(OutputStream outstr)
                             throws IOException {
                         if (method == CompressionMethod.GZIP) {
-                            GZIPOutputStream gzout = new GZIPOutputStream(outstr);
-                            outstr = gzout;
+                            outstr = new GZIPOutputStream(outstr);
                         }
 
                         serializer.setOutputStream(outstr);
@@ -227,8 +231,7 @@ public class Store extends DefaultStep {
                 outstr = baos;
                 try {
                     if (method == CompressionMethod.GZIP) {
-                        GZIPOutputStream gzout = new GZIPOutputStream(outstr);
-                        outstr = gzout;
+                        outstr = new GZIPOutputStream(outstr);
                     }
 
                     outstr.write(decoded);
@@ -242,8 +245,7 @@ public class Store extends DefaultStep {
                 return store.writeEntry(href, base, media, new DataWriter() {
                     public void store(OutputStream outstr) throws IOException {
                         if (method == CompressionMethod.GZIP) {
-                            GZIPOutputStream gzout = new GZIPOutputStream(outstr);
-                            outstr = gzout;
+                            outstr = new GZIPOutputStream(outstr);
                         }
 
                         outstr.write(decoded);
@@ -270,8 +272,7 @@ public class Store extends DefaultStep {
             OutputStream outstr = baos;
 
             if (method == CompressionMethod.GZIP) {
-                GZIPOutputStream gzout = new GZIPOutputStream(outstr);
-                outstr = gzout;
+                outstr = new GZIPOutputStream(outstr);
             }
 
             serializer.setOutputStream(outstr);
@@ -313,11 +314,10 @@ public class Store extends DefaultStep {
                 outstr = baos;
                 try {
                     if (method == CompressionMethod.GZIP) {
-                        GZIPOutputStream gzout = new GZIPOutputStream(outstr);
-                        outstr = gzout;
+                        outstr = new GZIPOutputStream(outstr);
                     }
 
-                    PrintWriter writer = new PrintWriter(new OutputStreamWriter(outstr, "UTF-8"));
+                    PrintWriter writer = new PrintWriter(new OutputStreamWriter(outstr, StandardCharsets.UTF_8));
                     String json = XMLtoJSON.convert(doc);
                     writer.print(json);
                 } finally {
@@ -332,11 +332,10 @@ public class Store extends DefaultStep {
                 return store.writeEntry(href, base, media, new DataWriter() {
                     public void store(OutputStream outstr) throws IOException {
                         if (method == CompressionMethod.GZIP) {
-                            GZIPOutputStream gzout = new GZIPOutputStream(outstr);
-                            outstr = gzout;
+                            outstr = new GZIPOutputStream(outstr);
                         }
 
-                        PrintWriter writer = new PrintWriter(new OutputStreamWriter(outstr, "UTF-8"));
+                        PrintWriter writer = new PrintWriter(new OutputStreamWriter(outstr, StandardCharsets.UTF_8));
                         String json = XMLtoJSON.convert(doc);
                         writer.print(json);
                         // No need to close writer here - the underlying 
@@ -354,18 +353,19 @@ public class Store extends DefaultStep {
 
     public void returnData(ByteArrayOutputStream baos) {
         // We're only called if the output is compressed
+        AttributeMap attr = EmptyAttributeMap.getInstance();
 
         TreeWriter tree = new TreeWriter(runtime);
         tree.startDocument(step.getNode().getBaseURI());
-        tree.addStartElement(XProcConstants.c_data);
-        tree.addAttribute(_encoding, "base64");
-        tree.addAttribute(_content_type, "application/x-gzip");
-        tree.startContent();
+
+        attr = attr.put(TypeUtils.attributeInfo(_encoding, "base64"));
+        attr = attr.put(TypeUtils.attributeInfo(_content_type, "application/x-gzip"));
+
+        tree.addStartElement(XProcConstants.c_data, attr);
         tree.addText(Base64.encodeBytes(baos.toByteArray()));
         tree.addEndElement();
         tree.endDocument();
         result.write(tree.getResult());
-
     }
 
     protected enum CompressionMethod { NONE, GZIP };

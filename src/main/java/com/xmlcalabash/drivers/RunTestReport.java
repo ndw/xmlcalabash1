@@ -210,6 +210,7 @@ public class RunTestReport {
 
             doc = builder.build(source);
             root = S9apiUtils.getDocumentElement(doc);
+            assert root != null;
         } catch (Exception sae) {
             TestSuiteResult result = new TestSuiteResult(testfile);
             result.catchException(sae);
@@ -222,22 +223,22 @@ public class RunTestReport {
             results.add(result);
             return new TestSuiteResults(results);
         } else {
-            String title = "";
-            XdmSequenceIterator iter = root.axisIterator(Axis.CHILD, t_title);
+            StringBuilder title = new StringBuilder();
+            XdmSequenceIterator<XdmNode> iter = root.axisIterator(Axis.CHILD, t_title);
             while (iter.hasNext()) {
-                XdmNode test = (XdmNode) iter.next();
-                title += test.getStringValue();
+                XdmNode test = iter.next();
+                title.append(test.getStringValue());
             }
 
             iter = root.axisIterator(Axis.CHILD, t_test);
             while (iter.hasNext()) {
-                XdmNode test = (XdmNode) iter.next();
+                XdmNode test = iter.next();
                 TestSuiteResult result = runTest(test);
                 results.add(result);
             }
 
-            if (!"".equals(title)) {
-                return new TestSuiteResults(title, results);
+            if (!"".equals(title.toString())) {
+                return new TestSuiteResults(title.toString(), results);
             } else {
                 return new TestSuiteResults(results);
             }
@@ -318,16 +319,11 @@ public class RunTestReport {
                 if (compare.inputPorts.contains(port)) {
                     ReadablePipe pipe = pipeoutputs.get(port);
                     while (pipe.moreDocuments()) {
-                        try {
-                            XdmNode p = pipe.read();
-                            if (!cinputs.containsKey(port)) {
-                                cinputs.put(port, new Vector<XdmNode> ());
-                            }
-                            cinputs.get(port).add(p);
-                        } catch (SaxonApiException sae) {
-                            result.catchException(sae);
-                            return result;
+                        XdmNode p = pipe.read();
+                        if (!cinputs.containsKey(port)) {
+                            cinputs.put(port, new Vector<>());
                         }
+                        cinputs.get(port).add(p);
                     }
                 }
             }
@@ -489,9 +485,11 @@ public class RunTestReport {
         try {
             xpipeline.run();
         } catch (XProcException e) {
+            System.err.println(e);
             logger.debug(e.getMessage(), e);
             throw e;
         } catch (Throwable e) {
+            System.err.println(e);
             logger.debug(e.getMessage(), e);
             throw new XProcException(e);
         }

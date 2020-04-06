@@ -89,7 +89,6 @@ public class Copy extends DefaultStep {
                     TreeWriter tree = new TreeWriter(runtime);
                     tree.startDocument(step.getNode().getBaseURI());
                     tree.addStartElement(XProcConstants.c_result);
-                    tree.startContent();
 
                     tree.addText(uri.toASCIIString());
 

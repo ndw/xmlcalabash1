@@ -27,13 +27,20 @@ import com.xmlcalabash.util.ProcessMatchingNodes;
 import com.xmlcalabash.util.ProcessMatch;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
+import com.xmlcalabash.util.TypeUtils;
+import net.sf.saxon.event.ReceiverOption;
+import net.sf.saxon.om.AttributeInfo;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.FingerprintedQName;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.Axis;
 import com.xmlcalabash.runtime.XAtomicStep;
+import net.sf.saxon.type.BuiltInAtomicType;
 
+import javax.sound.midi.Receiver;
 import javax.xml.XMLConstants;
 import java.util.Hashtable;
 
@@ -118,36 +125,29 @@ public class AddAttribute extends DefaultStep implements ProcessMatchingNodes {
         result.write(matcher.getResult());
     }
 
-    public boolean processStartDocument(XdmNode node) throws SaxonApiException {
+    public boolean processStartDocument(XdmNode node) {
         throw XProcException.stepError(13);
     }
 
-    public void processEndDocument(XdmNode node) throws SaxonApiException {
+    public void processEndDocument(XdmNode node) {
         throw XProcException.stepError(13);
     }
 
-    public boolean processStartElement(XdmNode node) throws SaxonApiException {
-        // We're going to have to loop through the attributes several times, so let's grab 'em
-        Hashtable<QName, String> attrs = new Hashtable<QName, String> ();
+    @Override
+    public AttributeMap processAttributes(XdmNode node, AttributeMap matchingAttributes, AttributeMap nonMatchingAttributes) {
+        return null;
+    }
 
-        XdmSequenceIterator iter = node.axisIterator(Axis.ATTRIBUTE);
-        while (iter.hasNext()) {
-            XdmNode child = (XdmNode) iter.next();
-            String value =  child.getStringValue();
-
-            if (!child.getNodeName().equals(attrName)) {
-                attrs.put(child.getNodeName(), value);
-            }
-        }
-
+    @Override
+    public boolean processStartElement(XdmNode node, AttributeMap attributes) {
         QName instanceAttrName = attrName;
 
         if (attrName.getNamespaceURI() != null && !"".equals(attrName.getNamespaceURI())) {
             // If the requested prefix is already bound to something else, drop it
             String prefix = attrName.getPrefix();
-            for (QName attr : attrs.keySet()) {
-                if (prefix.equals(attr.getPrefix())
-                        && !attrName.getNamespaceURI().equals(attr.getNamespaceURI())) {
+            for (AttributeInfo attr : attributes) {
+                if (prefix.equals(attr.getNodeName().getPrefix())
+                        && !attrName.getNamespaceURI().equals(attr.getNodeName().getURI())) {
                     prefix = "";
                 }
             }
@@ -163,10 +163,8 @@ public class AddAttribute extends DefaultStep implements ProcessMatchingNodes {
                     aprefix = "_" + acount;
                     done = true;
 
-                    for (QName attr : attrs.keySet()) {
-                        if (aprefix.equals(attr.getPrefix())) {
-                            done = false;
-                        }
+                    for (AttributeInfo attr : attributes) {
+                        done = done && !prefix.equals(attr.getNodeName().getPrefix());
                     }
                 }
 
@@ -175,34 +173,24 @@ public class AddAttribute extends DefaultStep implements ProcessMatchingNodes {
         }
 
         // Now put the "new" one in, with it's instance-valid QName
-        attrs.put(instanceAttrName, attrValue);
-
-        matcher.addStartElement(node);
-
-        for (QName attr : attrs.keySet()) {
-            matcher.addAttribute(attr, attrs.get(attr));
-        }
-
+        AttributeInfo ainfo = new AttributeInfo(TypeUtils.fqName(instanceAttrName), BuiltInAtomicType.ANY_ATOMIC, attrValue, null, ReceiverOption.NONE);
+        matcher.addStartElement(node, attributes.put(ainfo));
         return true;
     }
 
-    public void processEndElement(XdmNode node) throws SaxonApiException {
+    public void processEndElement(XdmNode node) {
         matcher.addEndElement();
     }
 
-    public void processText(XdmNode node) throws SaxonApiException {
+    public void processText(XdmNode node) {
         throw XProcException.stepError(23);
     }
 
-    public void processComment(XdmNode node) throws SaxonApiException {
+    public void processComment(XdmNode node) {
         throw XProcException.stepError(23);
     }
 
-    public void processPI(XdmNode node) throws SaxonApiException {
-        throw XProcException.stepError(23);
-    }
-
-    public void processAttribute(XdmNode node) throws SaxonApiException {
+    public void processPI(XdmNode node) {
         throw XProcException.stepError(23);
     }
 }

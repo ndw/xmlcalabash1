@@ -124,7 +124,7 @@ public class ReadableDocument implements ReadablePipe {
         return documents;
     }
 
-    public XdmNode read() throws SaxonApiException {
+    public XdmNode read() {
         if (!readDoc) {
             readDoc();
         }

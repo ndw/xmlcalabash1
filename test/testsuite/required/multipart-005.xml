@@ -42,7 +42,7 @@
   
   <t:output port='result'>
     <c:response status="200">
-<c:multipart content-type="multipart/related; boundary=&quot;=-=-=-=-=&quot;" boundary="=-=-=-=-=" xmlns:c="http://www.w3.org/ns/xproc-step"><c:body content-type="text/html">&lt;html xmlns=&apos;http://www.w3.org/1999/xhtml&apos;&gt;
+<c:multipart content-type="multipart/related;boundary=&quot;=-=-=-=-=&quot;" boundary="=-=-=-=-=" xmlns:c="http://www.w3.org/ns/xproc-step"><c:body content-type="text/html">&lt;html xmlns=&apos;http://www.w3.org/1999/xhtml&apos;&gt;
 &lt;head&gt;
 &lt;title&gt;Hello world!&lt;/title&gt;
 &lt;/head&gt;

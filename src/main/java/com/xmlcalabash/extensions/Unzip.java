@@ -12,9 +12,14 @@ import com.xmlcalabash.library.DefaultStep;
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.util.Base64;
 import com.xmlcalabash.util.TreeWriter;
+import com.xmlcalabash.util.TypeUtils;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.EmptyAttributeMap;
+import net.sf.saxon.om.SingletonAttributeMap;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.tree.iter.SingleAtomicIterator;
 import org.xml.sax.InputSource;
 
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -28,6 +33,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -58,7 +64,6 @@ public class Unzip extends DefaultStep {
 
     private WritablePipe result = null;
     private String zipFn = null;
-    private URI zipURI = null;
     private String name = null;
     private String contentType = "application/xml";
     private String charset = null;
@@ -80,7 +85,7 @@ public class Unzip extends DefaultStep {
         super.run();
         
         zipFn = getOption(_href).getString();
-        zipURI = getOption(_href).getBaseURI();
+        URI zipURI = getOption(_href).getBaseURI();
 
         if (getOption(_file) != null) {
             name = getOption(_file).getString();
@@ -104,26 +109,18 @@ public class Unzip extends DefaultStep {
                     unzip(dfactory, id.toASCIIString(), content);
                 }
             });
-        } catch (MalformedURLException mue) {
+        } catch (IOException | DatatypeConfigurationException mue) {
             throw new XProcException(XProcException.err_E0001, mue);
-        } catch (IOException ioe) {
-            throw new XProcException(XProcException.err_E0001, ioe);
-        } catch (DatatypeConfigurationException dce) {
-            throw new XProcException(XProcException.err_E0001, dce);
         }
     }
 
     void unzip(DatatypeFactory dfactory, String systemId, InputStream stream) throws IOException {
-        ZipInputStream zipFile = new ZipInputStream(stream);
-
-        try {
+        try (ZipInputStream zipFile = new ZipInputStream(stream)) {
             TreeWriter tree = new TreeWriter(runtime);
 
             if (name == null) {
                 tree.startDocument(step.getNode().getBaseURI());
-                tree.addStartElement(c_zipfile);
-                tree.addAttribute(_href, systemId);
-                tree.startContent();
+                tree.addStartElement(c_zipfile, SingletonAttributeMap.of(TypeUtils.attributeInfo(_href, systemId)));
 
                 GregorianCalendar cal = new GregorianCalendar();
 
@@ -131,23 +128,26 @@ public class Unzip extends DefaultStep {
                 while (entry != null) {
                     cal.setTimeInMillis(entry.getTime());
                     XMLGregorianCalendar xmlCal = dfactory.newXMLGregorianCalendar(cal);
+                    AttributeMap attr = EmptyAttributeMap.getInstance();
 
-                    if (entry.isDirectory()) {
-                        tree.addStartElement(c_directory);
-                    } else {
-                        tree.addStartElement(c_file);
-
-                        tree.addAttribute(_compressed_size, ""+entry.getCompressedSize());
-                        tree.addAttribute(_size, ""+entry.getSize());
+                    if (!entry.isDirectory()) {
+                        attr = attr.put(TypeUtils.attributeInfo(_compressed_size, "" + entry.getCompressedSize()));
+                        attr = attr.put(TypeUtils.attributeInfo(_size, "" + entry.getSize()));
                     }
 
                     if (entry.getComment() != null) {
-                        tree.addAttribute(_comment, entry.getComment());
+                        attr = attr.put(TypeUtils.attributeInfo(_comment, entry.getComment()));
                     }
 
-                    tree.addAttribute(_name, ""+entry.getName());
-                    tree.addAttribute(_date, xmlCal.toXMLFormat());
-                    tree.startContent();
+                    attr = attr.put(TypeUtils.attributeInfo(_name, "" + entry.getName()));
+                    attr = attr.put(TypeUtils.attributeInfo(_date, xmlCal.toXMLFormat()));
+
+                    if (entry.isDirectory()) {
+                        tree.addStartElement(c_directory, attr);
+                    } else {
+                        tree.addStartElement(c_file, attr);
+                    }
+
                     tree.addEndElement();
                     entry = zipFile.getNextEntry();
                 }
@@ -174,24 +174,23 @@ public class Unzip extends DefaultStep {
                     XdmNode doc = runtime.parse(isource);
                     result.write(doc);
                 } else {
-                    boolean storeText = (contentType != null && contentType.startsWith("text/") && charset != null);
+                    boolean storeText = (contentType.startsWith("text/") && charset != null);
+                    AttributeMap attr = EmptyAttributeMap.getInstance();
 
                     // There's no point giving the file the URI of the pipeline document.
                     // This formulation is parallel to the jar scheme.
                     URI zipURI = URI.create("zip:" + zipFn + "!" + URLEncoder.encode(entry.getName(), "UTF-8"));
 
                     tree.startDocument(zipURI);
-                    tree.addStartElement(XProcConstants.c_data);
-                    tree.addAttribute(_name,name);
-                    tree.addAttribute(_content_type, contentType);
+                    attr = attr.put(TypeUtils.attributeInfo(_name, name));
+                    attr = attr.put(TypeUtils.attributeInfo(_content_type, contentType));
                     if (!storeText) {
-                        tree.addAttribute(_encoding, "base64");
+                        attr = attr.put(TypeUtils.attributeInfo(_encoding, "base64"));
                     }
-                    tree.startContent();
+                    tree.addStartElement(XProcConstants.c_data, attr);
 
                     if (storeText) {
-                        InputStreamReader reader = new InputStreamReader(zipFile, charset);
-                        try {
+                        try (InputStreamReader reader = new InputStreamReader(zipFile, charset)) {
                             int maxlen = 4096;
                             char[] chars = new char[maxlen];
                             int read = reader.read(chars, 0, maxlen);
@@ -202,12 +201,9 @@ public class Unzip extends DefaultStep {
                                 }
                                 read = reader.read(chars, 0, maxlen);
                             }
-                        } finally {
-                            reader.close();
                         }
                     } else {
-                        BufferedInputStream bufstream = new BufferedInputStream(zipFile);
-                        try {
+                        try (BufferedInputStream bufstream = new BufferedInputStream(zipFile)) {
                             int maxlen = 4096 * 3;
                             byte[] bytes = new byte[maxlen];
                             int read = bufstream.read(bytes, 0, maxlen);
@@ -218,8 +214,6 @@ public class Unzip extends DefaultStep {
                                 }
                                 read = bufstream.read(bytes, 0, maxlen);
                             }
-                        } finally {
-                            bufstream.close();
                         }
                     }
 
@@ -228,8 +222,6 @@ public class Unzip extends DefaultStep {
                     result.write(tree.getResult());
                 }
             }
-        } finally {
-            zipFile.close();
         }
     }
 }

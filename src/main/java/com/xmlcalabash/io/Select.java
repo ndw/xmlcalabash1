@@ -159,7 +159,7 @@ public class Select implements ReadablePipe {
         // nop;
     }
 
-    public XdmNode read () throws SaxonApiException {
+    public XdmNode read () {
         if (!initialized) {
             readSource();
         }

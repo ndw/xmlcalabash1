@@ -31,22 +31,14 @@ import com.xmlcalabash.util.MessageFormatter;
 import com.xmlcalabash.util.ProcessMatch;
 import com.xmlcalabash.util.ProcessMatchingNodes;
 import com.xmlcalabash.util.S9apiUtils;
-import net.sf.saxon.om.InscopeNamespaceResolver;
-import net.sf.saxon.om.NamePool;
+import net.sf.saxon.om.AttributeInfo;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.NamespaceBinding;
 import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.s9api.Axis;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XdmAtomicValue;
-import net.sf.saxon.s9api.XdmItem;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmNodeKind;
-import net.sf.saxon.s9api.XdmSequenceIterator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import net.sf.saxon.s9api.*;
 
+import java.util.ArrayList;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.Vector;
 
 /**
@@ -121,42 +113,46 @@ public class Template extends DefaultStep implements ProcessMatchingNodes {
         result.write(matcher.getResult());
     }
 
-    public boolean processStartDocument(XdmNode node) throws SaxonApiException {
+    public boolean processStartDocument(XdmNode node) {
         matcher.startDocument(node.getBaseURI());
         return true;
     }
 
-    public void processEndDocument(XdmNode node) throws SaxonApiException {
+    public void processEndDocument(XdmNode node) {
         matcher.endDocument();
     }
 
-    public boolean processStartElement(XdmNode node) throws SaxonApiException {
-        matcher.addStartElement(node);
+    @Override
+    public AttributeMap processAttributes(XdmNode node, AttributeMap matchingAttributes, AttributeMap nonMatchingAttributes) {
+        return null;
+    }
 
-        XdmSequenceIterator iter = node.axisIterator(Axis.ATTRIBUTE);
-        while (iter.hasNext()) {
-            XdmNode attr = (XdmNode) iter.next();
-            String value = attr.getStringValue();
+    public boolean processStartElement(XdmNode node, AttributeMap attributes) {
+        ArrayList<AttributeInfo> alist = new ArrayList<> ();
+        for (AttributeInfo attr : attributes) {
+            String value = attr.getValue();
             if (value.contains("{") || value.contains("}")) {
-                Vector<XdmItem> items = parse(attr, value);
-                String newvalue = "";
+                Vector<XdmItem> items = parse(node, value);
+                StringBuilder newvalue = new StringBuilder();
                 for (XdmItem item : items) {
-                    newvalue += item.getStringValue();
+                    newvalue.append(item.getStringValue());
                 }
-                matcher.addAttribute(attr, newvalue);
+                alist.add(new AttributeInfo(attr.getNodeName(), attr.getType(), newvalue.toString(), attr.getLocation(), attr.getProperties()));
             } else {
-                matcher.addAttribute(attr);
+                alist.add(attr);
             }
         }
+
+        matcher.addStartElement(node, AttributeMap.fromList(alist));
 
         return true;
     }
 
-    public void processEndElement(XdmNode node) throws SaxonApiException {
+    public void processEndElement(XdmNode node) {
         matcher.addEndElement();
     }
 
-    public void processText(XdmNode node) throws SaxonApiException {
+    public void processText(XdmNode node) {
         String value = node.getStringValue();
         if (value.contains("{") || value.contains("}")) {
             Vector<XdmItem> items = parse(node, value);
@@ -168,9 +164,6 @@ public class Template extends DefaultStep implements ProcessMatchingNodes {
                     switch (nitem.getNodeKind()) {
                         case ELEMENT:
                             matcher.addSubtree(nitem);
-                            break;
-                        case ATTRIBUTE:
-                            matcher.addAttribute(nitem);
                             break;
                         case PROCESSING_INSTRUCTION:
                             matcher.addSubtree(nitem);
@@ -194,7 +187,7 @@ public class Template extends DefaultStep implements ProcessMatchingNodes {
         String ptext = "";
         String ch = "";
 
-        Hashtable<String,String> nsbindings = new Hashtable<String,String> ();
+        Hashtable<String,String> nsbindings = new Hashtable<> ();
 
         // FIXME: Surely there's a better way to do this?
         XdmNode parent = node;
@@ -204,14 +197,11 @@ public class Template extends DefaultStep implements ProcessMatchingNodes {
             parent = S9apiUtils.getParent(parent);
         }
 
+        assert parent != null;
         if (parent.getNodeKind() == XdmNodeKind.ELEMENT) {
             NodeInfo inode = parent.getUnderlyingNode();
-            InscopeNamespaceResolver inscopeNS = new InscopeNamespaceResolver(inode);
-            Iterator<?> prefixes = inscopeNS.iteratePrefixes();
-            while (prefixes.hasNext()) {
-                String nspfx = (String)prefixes.next();
-                String nsuri = inscopeNS.getURIForPrefix(nspfx, true);
-                nsbindings.put(nspfx,nsuri);
+            for (NamespaceBinding bind : inode.getAllNamespaces().getNamespaceBindings()) {
+                nsbindings.put(bind.getPrefix(), bind.getURI());
             }
         }
 
@@ -251,20 +241,25 @@ public class Template extends DefaultStep implements ProcessMatchingNodes {
                     }
                     break;
                 case XPATHMODE:
-                    if ("{".equals(ch)) {
-                        throw XProcException.stepError(67);
-                    } else if ("'".equals(ch)) {
-                        ptext += "'";
-                        state = SQUOTEMODE;
-                    } else if ("\"".equals(ch)) {
-                        ptext += "\"";
-                        state = DQUOTEMODE;
-                    } else if ("}".equals(ch)) {
-                        items.addAll(evaluateXPath(context, nsbindings, ptext, params));
-                        ptext = "";
-                        state = START;
-                    } else {
-                        ptext += ch;
+                    switch (ch) {
+                        case "{":
+                            throw XProcException.stepError(67);
+                        case "'":
+                            ptext += "'";
+                            state = SQUOTEMODE;
+                            break;
+                        case "\"":
+                            ptext += "\"";
+                            state = DQUOTEMODE;
+                            break;
+                        case "}":
+                            items.addAll(evaluateXPath(context, nsbindings, ptext, params));
+                            ptext = "";
+                            state = START;
+                            break;
+                        default:
+                            ptext += ch;
+                            break;
                     }
                     break;
                 case SQUOTEMODE:
@@ -299,35 +294,35 @@ public class Template extends DefaultStep implements ProcessMatchingNodes {
         return items;
     }
 
-    public void processComment(XdmNode node) throws SaxonApiException {
+    public void processComment(XdmNode node) {
         String value = node.getStringValue();
         if (value.contains("{") || value.contains("}")) {
             Vector<XdmItem> items = parse(node, value);
-            String newvalue = "";
+            StringBuilder newvalue = new StringBuilder();
             for (XdmItem item : items) {
-                newvalue += item.getStringValue();
+                newvalue.append(item.getStringValue());
             }
-            matcher.addComment(newvalue);
+            matcher.addComment(newvalue.toString());
         } else {
             matcher.addComment(value);
         }
     }
 
-    public void processPI(XdmNode node) throws SaxonApiException {
+    public void processPI(XdmNode node) {
         String value = node.getStringValue();
         if (value.contains("{") || value.contains("}")) {
             Vector<XdmItem> items = parse(node, value);
-            String newvalue = "";
+            StringBuilder newvalue = new StringBuilder();
             for (XdmItem item : items) {
-                newvalue += item.getStringValue();
+                newvalue.append(item.getStringValue());
             }
-            matcher.addPI(node.getNodeName().getLocalName(), newvalue);
+            matcher.addPI(node.getNodeName().getLocalName(), newvalue.toString());
         } else {
             matcher.addPI(node.getNodeName().getLocalName(), value);
         }
     }
 
-    public void processAttribute(XdmNode node) throws SaxonApiException {
+    public void processAttribute(XdmNode node) {
         throw new UnsupportedOperationException("This can't happen.");
     }
 

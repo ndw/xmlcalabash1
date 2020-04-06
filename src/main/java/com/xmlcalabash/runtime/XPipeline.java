@@ -15,6 +15,10 @@ import com.xmlcalabash.model.Step;
 import com.xmlcalabash.model.Variable;
 import com.xmlcalabash.util.MessageFormatter;
 import com.xmlcalabash.util.TreeWriter;
+import com.xmlcalabash.util.TypeUtils;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.EmptyAttributeMap;
+import net.sf.saxon.om.NamespaceMap;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -134,10 +138,7 @@ public class XPipeline extends XCompoundStep {
         runtime.start(this);
         try {
             doRun();
-        } catch (XProcException ex) {
-            runtime.error(ex);
-            throw ex;
-        } catch (SaxonApiException ex) {
+        } catch (XProcException | SaxonApiException ex) {
             runtime.error(ex);
             throw ex;
         } finally {
@@ -147,31 +148,24 @@ public class XPipeline extends XCompoundStep {
     }
 
     private void setupParameters() {
-        Vector<String> ports = new Vector<String> ();
-        Iterator<String> portIter = getParameterPorts().iterator();
-        while (portIter.hasNext()) {
-            ports.add(portIter.next());
-        }
+        Vector<String> ports = new Vector<>(getParameterPorts());
 
         for (String port : ports) {
             TreeWriter tree = new TreeWriter(runtime);
 
             tree.startDocument(step.getNode().getBaseURI());
             tree.addStartElement(c_param_set);
-            tree.startContent();
 
-            Iterator<QName> paramIter = getParameters(port).iterator();
-            while (paramIter.hasNext()) {
-                QName name = paramIter.next();
+            for (QName name : getParameters(port)) {
+                AttributeMap attr = EmptyAttributeMap.getInstance();
 
-                String value = getParameter(port, name).getString();
-                tree.addStartElement(c_param);
-                tree.addAttribute(_name, name.getLocalName());
+                attr = attr.put(TypeUtils.attributeInfo(_name, name.getLocalName()));
                 if (name.getNamespaceURI() != null) {
-                    tree.addAttribute(_namespace, name.getNamespaceURI());
+                    attr = attr.put(TypeUtils.attributeInfo(_namespace, name.getNamespaceURI()));
                 }
-                tree.addAttribute(_value, value);
-                tree.startContent();
+                attr = attr.put(TypeUtils.attributeInfo(_value, getParameter(port, name).getString()));
+
+                tree.addStartElement(c_param, attr);
                 tree.addEndElement();
             }
 

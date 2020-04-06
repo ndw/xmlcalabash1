@@ -75,7 +75,6 @@ public class Head extends DefaultStep {
         final TreeWriter tree = new TreeWriter(runtime);
         tree.startDocument(step.getNode().getBaseURI());
         tree.addStartElement(XProcConstants.c_result);
-        tree.startContent();
 
         try {
             DataStore store = runtime.getDataStore();
@@ -83,8 +82,7 @@ public class Head extends DefaultStep {
                 public void load(URI id, String media, InputStream content, long len)
                         throws IOException {
                     Reader rdr = new InputStreamReader(content);
-                    BufferedReader brdr = new BufferedReader(rdr);
-                    try {
+                    try (BufferedReader brdr = new BufferedReader(rdr)) {
                         String line = null;
                         int count = 0;
 
@@ -92,7 +90,6 @@ public class Head extends DefaultStep {
                             line = brdr.readLine();
                             while (line != null && count < maxCount) {
                                 tree.addStartElement(c_line);
-                                tree.startContent();
                                 tree.addText(line);
                                 tree.addEndElement();
                                 tree.addText("\n");
@@ -109,19 +106,16 @@ public class Head extends DefaultStep {
                             line = brdr.readLine();
                             while (line != null) {
                                 tree.addStartElement(c_line);
-                                tree.startContent();
                                 tree.addText(line);
                                 tree.addEndElement();
                                 tree.addText("\n");
                                 line = brdr.readLine();
                             }
                         }
-                    } finally {
-                        brdr.close();
-                        // BufferedReader.close() also closes the underlying 
-                        // reader, so this second call is unnecessary.
-                        // rdr.close();
                     }
+                    // BufferedReader.close() also closes the underlying
+                    // reader, so this second call is unnecessary.
+                    // rdr.close();
                 }
             });
         } catch (FileNotFoundException fnfe) {

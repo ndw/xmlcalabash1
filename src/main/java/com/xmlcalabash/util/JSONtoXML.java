@@ -2,6 +2,9 @@ package com.xmlcalabash.util;
 
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.EmptyAttributeMap;
+import net.sf.saxon.om.SingletonAttributeMap;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmNode;
@@ -11,6 +14,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import java.util.HashMap;
 import java.util.Iterator;
 
 /**
@@ -94,7 +98,6 @@ public class JSONtoXML {
 
             if (ch == '{') {
                 tree.addStartElement(j_object);
-                tree.startContent();
                 buildJsonXPairs(tree, new JSONObject(jt));
             } else {
                 tree.addStartElement(j_array);
@@ -132,40 +135,33 @@ public class JSONtoXML {
     }
 
     private static void serializeJsonX(TreeWriter tree, Object json, String name) {
+        AttributeMap attr = EmptyAttributeMap.getInstance();
+        if (name != null) {
+            attr = attr.put(TypeUtils.attributeInfo(_name, name));
+        }
+
         if (json instanceof JSONObject) {
-            tree.addStartElement(j_object);
-            if (name != null) { tree.addAttribute(_name, name); }
-            tree.startContent();
+            tree.addStartElement(j_object, attr);
             buildJsonXPairs(tree, (JSONObject) json);
             tree.addEndElement();
         } else if (json instanceof JSONArray) {
-            tree.addStartElement(j_array);
-            if (name != null) { tree.addAttribute(_name, name); }
-            tree.startContent();
+            tree.addStartElement(j_array, attr);
             buildJsonXArray(tree, (JSONArray) json);
             tree.addEndElement();
         } else if (json instanceof Integer || json instanceof Double || json instanceof Long) {
-            tree.addStartElement(j_number);
-            if (name != null) { tree.addAttribute(_name, name); }
-            tree.startContent();
+            tree.addStartElement(j_number, attr);
             tree.addText(json.toString());
             tree.addEndElement();
         } else if (json instanceof String) {
-            tree.addStartElement(j_string);
-            if (name != null) { tree.addAttribute(_name, name); }
-            tree.startContent();
+            tree.addStartElement(j_string, attr);
             tree.addText(json.toString());
             tree.addEndElement();
         } else if (json instanceof Boolean) {
-            tree.addStartElement(j_boolean);
-            if (name != null) { tree.addAttribute(_name, name); }
-            tree.startContent();
+            tree.addStartElement(j_boolean, attr);
             tree.addText(json.toString());
             tree.addEndElement();
         } else if (json == JSONObject.NULL) {
-            tree.addStartElement(j_null);
-            if (name != null) { tree.addAttribute(_name, name); }
-            tree.startContent();
+            tree.addStartElement(j_null, attr);
             tree.addEndElement();
         } else {
             throw new XProcException("Unexpected type in JSON conversion.");
@@ -173,18 +169,15 @@ public class JSONtoXML {
     }
 
     private static void buildMarkLogic(TreeWriter tree, JSONTokener jt) {
-        tree.addStartElement(mj_json);
-
         try {
             char ch = jt.next();
             jt.back();
 
             if (ch == '{') {
-                tree.addAttribute(_type, "object");
-                tree.startContent();
+                tree.addStartElement(mj_json, SingletonAttributeMap.of(TypeUtils.attributeInfo(_type, "object")));
                 buildMarkLogicPairs(tree, new JSONObject(jt));
             } else {
-                tree.addAttribute(_type, "object");
+                tree.addStartElement(mj_json, SingletonAttributeMap.of(TypeUtils.attributeInfo(_type, "array")));
                 buildMarkLogicArray(tree, new JSONArray(jt));
             }
         } catch (JSONException je) {
@@ -219,51 +212,44 @@ public class JSONtoXML {
     }
 
     private static void serializeMarkLogic(TreeWriter tree, Object json, String name) {
-        String localName = "item";
+        StringBuilder localName = new StringBuilder("item");
         if (name != null) {
             if ("".equals(name)) {
-                localName = "_";
+                localName = new StringBuilder("_");
             } else {
-                localName = "";
+                localName = new StringBuilder();
                 for (int pos = 0; pos < name.length(); pos++) {
                     int ch = name.charAt(pos);
                     if ('_' != ch
                         && ((pos == 0 && XMLCharacterData.isNCNameStart10(ch))
                             || (pos > 0 && XMLCharacterData.isNCName10(ch)))) {
-                        localName += Character.toString((char) ch);
+                        localName.append((char) ch);
                     } else {
-                        localName += String.format("_%04x", ch);
+                        localName.append(String.format("_%04x", ch));
                     }
                 }
             }
         }
 
-        QName elemName = new QName("j", MLJS_NS, localName);
-        tree.addStartElement(elemName);
+        QName elemName = new QName("j", MLJS_NS, localName.toString());
 
         if (json instanceof JSONObject) {
-            tree.addAttribute(_type, "object");
-            tree.startContent();
+            tree.addStartElement(elemName, SingletonAttributeMap.of(TypeUtils.attributeInfo(_type, "object")));
             buildMarkLogicPairs(tree, (JSONObject) json);
         } else if (json instanceof JSONArray) {
-            tree.addAttribute(_type, "array");
-            tree.startContent();
+            tree.addStartElement(elemName, SingletonAttributeMap.of(TypeUtils.attributeInfo(_type, "array")));
             buildMarkLogicArray(tree, (JSONArray) json);
         } else if (json instanceof Integer || json instanceof Double || json instanceof Long) {
-            tree.addAttribute(_type, "number");
-            tree.startContent();
+            tree.addStartElement(elemName, SingletonAttributeMap.of(TypeUtils.attributeInfo(_type, "number")));
             tree.addText(json.toString());
         } else if (json instanceof String) {
-            tree.addAttribute(_type, "string");
-            tree.startContent();
+            tree.addStartElement(elemName, SingletonAttributeMap.of(TypeUtils.attributeInfo(_type, "string")));
             tree.addText(json.toString());
         } else if (json instanceof Boolean) {
-            tree.addAttribute(_type, "boolean");
-            tree.startContent();
+            tree.addStartElement(elemName, SingletonAttributeMap.of(TypeUtils.attributeInfo(_type, "boolean")));
             tree.addText(json.toString());
         } else if (json == JSONObject.NULL) {
-            tree.addAttribute(_type, "null");
-            tree.startContent();
+            tree.addStartElement(elemName, SingletonAttributeMap.of(TypeUtils.attributeInfo(_type, "null")));
         } else {
             throw new XProcException("Unexpected type in JSON conversion.");
         }
@@ -278,7 +264,6 @@ public class JSONtoXML {
 
             if (ch == '{') {
                 tree.addStartElement(jx_object);
-                tree.startContent();
                 buildJxmlPairs(tree, new JSONObject(jt));
             } else {
                 tree.addStartElement(jx_array);
@@ -317,39 +302,31 @@ public class JSONtoXML {
 
     private static void serializeJxml(TreeWriter tree, Object json, String name) {
         if (name != null) {
-            tree.addStartElement(jx_member);
-            tree.addAttribute(_name, name);
-            tree.startContent();
+            tree.addStartElement(jx_member, SingletonAttributeMap.of(TypeUtils.attributeInfo(_name, name)));
         }
 
         if (json instanceof JSONObject) {
             tree.addStartElement(jx_object);
-            tree.startContent();
             buildJxmlPairs(tree, (JSONObject) json);
             tree.addEndElement();
         } else if (json instanceof JSONArray) {
             tree.addStartElement(jx_array);
-            tree.startContent();
             buildJxmlArray(tree, (JSONArray) json);
             tree.addEndElement();
         } else if (json instanceof Integer || json instanceof Double || json instanceof Long) {
             tree.addStartElement(jx_number);
-            tree.startContent();
             tree.addText(json.toString());
             tree.addEndElement();
         } else if (json instanceof String) {
             tree.addStartElement(jx_string);
-            tree.startContent();
             tree.addText(json.toString());
             tree.addEndElement();
         } else if (json instanceof Boolean) {
             tree.addStartElement(jx_boolean);
-            tree.startContent();
             tree.addText(json.toString());
             tree.addEndElement();
         } else if (json == JSONObject.NULL) {
             tree.addStartElement(jx_null);
-            tree.startContent();
             tree.addEndElement();
         } else {
             throw new XProcException("Unexpected type in JSON conversion.");
@@ -361,19 +338,15 @@ public class JSONtoXML {
     }
 
     private static void buildMine(TreeWriter tree, JSONTokener jt, boolean usens) {
-        tree.addStartElement(usens ? c_json : _json);
-
         try {
             char ch = jt.next();
             jt.back();
 
             if (ch == '{') {
-                tree.addAttribute(_type, "object");
-                tree.startContent();
+                tree.addStartElement(usens ? c_json : _json, SingletonAttributeMap.of(TypeUtils.attributeInfo(_type, "object")));
                 buildMyPairs(tree, new JSONObject(jt), usens);
             } else {
-                tree.addAttribute(_type, "array");
-                tree.startContent();
+                tree.addStartElement(usens ? c_json : _json, SingletonAttributeMap.of(TypeUtils.attributeInfo(_type, "array")));
                 buildMyArray(tree, new JSONArray(jt), usens);
             }
         } catch (JSONException je) {
@@ -389,40 +362,33 @@ public class JSONtoXML {
             while (keys.hasNext()) {
                 String name = keys.next();
                 Object json = jo.get(name);
-                tree.addStartElement(usens ? c_pair : _pair);
-                tree.addAttribute(_name, name);
+
+                AttributeMap attr = EmptyAttributeMap.getInstance();
+                attr = attr.put(TypeUtils.attributeInfo(_name, name));
 
                 if (json instanceof JSONObject) {
-                    tree.addAttribute(_type, "object");
-                    tree.startContent();
+                    attr = attr.put(TypeUtils.attributeInfo(_type, "object"));
+                    tree.addStartElement(usens ? c_pair : _pair, attr);
                     buildMyPairs(tree, (JSONObject) json, usens);
                 } else if (json instanceof JSONArray) {
-                    tree.addAttribute(_type, "array");
-                    tree.startContent();
+                    attr = attr.put(TypeUtils.attributeInfo(_type, "array"));
+                    tree.addStartElement(usens ? c_pair : _pair, attr);
                     buildMyArray(tree, (JSONArray) json, usens);
-                } else if (json instanceof Integer) {
-                    tree.addAttribute(_type, "number");
-                    tree.startContent();
-                    tree.addText(json.toString());
-                } else if (json instanceof Double) {
-                    tree.addAttribute(_type, "number");
-                    tree.startContent();
-                    tree.addText(json.toString());
-                } else if (json instanceof Long) {
-                    tree.addAttribute(_type, "number");
-                    tree.startContent();
+                } else if (json instanceof Integer || json instanceof Double || json instanceof  Long) {
+                    attr = attr.put(TypeUtils.attributeInfo(_type, "number"));
+                    tree.addStartElement(usens ? c_pair : _pair, attr);
                     tree.addText(json.toString());
                 } else if (json instanceof String) {
-                    tree.addAttribute(_type, "string");
-                    tree.startContent();
+                    attr = attr.put(TypeUtils.attributeInfo(_type, "string"));
+                    tree.addStartElement(usens ? c_pair : _pair, attr);
                     tree.addText(json.toString());
                 } else if (json instanceof Boolean) {
-                    tree.addAttribute(_type, "boolean");
-                    tree.startContent();
+                    attr = attr.put(TypeUtils.attributeInfo(_type, "boolean"));
+                    tree.addStartElement(usens ? c_pair : _pair, attr);
                     tree.addText(json.toString());
                 } else if (json == JSONObject.NULL) {
-                    tree.addAttribute(_type, "null");
-                    tree.startContent();
+                    attr = attr.put(TypeUtils.attributeInfo(_type, "null"));
+                    tree.addStartElement(usens ? c_pair : _pair, attr);
                 } else {
                     throw new XProcException("Unexpected type in JSON conversion.");
                 }
@@ -439,39 +405,23 @@ public class JSONtoXML {
             for (int pos = 0; pos < arr.length(); pos++) {
                 Object json = arr.get(pos);
 
-                tree.addStartElement(usens ? c_item : _item);
-
                 if (json instanceof JSONObject) {
-                    tree.addAttribute(_type, "object");
-                    tree.startContent();
+                    tree.addStartElement(usens ? c_item : _item, SingletonAttributeMap.of(TypeUtils.attributeInfo(_type, "object")));
                     buildMyPairs(tree, (JSONObject) json, usens);
                 } else if (json instanceof JSONArray) {
-                    tree.addAttribute(_type, "array");
-                    tree.startContent();
+                    tree.addStartElement(usens ? c_item : _item, SingletonAttributeMap.of(TypeUtils.attributeInfo(_type, "array")));
                     buildMyArray(tree, (JSONArray) json, usens);
-                } else if (json instanceof Integer) {
-                    tree.addAttribute(_type, "number");
-                    tree.startContent();
-                    tree.addText(json.toString());
-                } else if (json instanceof Double) {
-                    tree.addAttribute(_type, "number");
-                    tree.startContent();
-                    tree.addText(json.toString());
-                } else if (json instanceof Long) {
-                    tree.addAttribute(_type, "number");
-                    tree.startContent();
+                } else if (json instanceof Integer || json instanceof Double || json instanceof Long) {
+                    tree.addStartElement(usens ? c_item : _item, SingletonAttributeMap.of(TypeUtils.attributeInfo(_type, "number")));
                     tree.addText(json.toString());
                 } else if (json instanceof String) {
-                    tree.addAttribute(_type, "string");
-                    tree.startContent();
+                    tree.addStartElement(usens ? c_item : _item, SingletonAttributeMap.of(TypeUtils.attributeInfo(_type, "string")));
                     tree.addText(json.toString());
                 } else if (json instanceof Boolean) {
-                    tree.addAttribute(_type, "boolean");
-                    tree.startContent();
+                    tree.addStartElement(usens ? c_item : _item, SingletonAttributeMap.of(TypeUtils.attributeInfo(_type, "boolean")));
                     tree.addText(json.toString());
                 } else if (json == JSONObject.NULL) {
-                    tree.addAttribute(_type, "null");
-                    tree.startContent();
+                    tree.addStartElement(usens ? c_item : _item, SingletonAttributeMap.of(TypeUtils.attributeInfo(_type, "null")));
                 } else {
                     throw new XProcException("Unexpected type in JSON conversion.");
                 }

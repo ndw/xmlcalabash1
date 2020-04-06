@@ -11,6 +11,7 @@ import com.xmlcalabash.util.ProcessMatchingNodes;
 import com.xmlcalabash.util.ProcessMatch;
 import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.model.*;
+import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 
@@ -108,7 +109,8 @@ public class XViewport extends XCompoundStep implements ProcessMatchingNodes {
         // nop
     }
 
-    public boolean processStartElement(XdmNode node) {
+    @Override
+    public boolean processStartElement(XdmNode node, AttributeMap attributes) {
         // Use a TreeWriter to make the matching node into a proper document
         TreeWriter treeWriter = new TreeWriter(runtime);
         treeWriter.startDocument(node.getBaseURI());
@@ -140,30 +142,26 @@ public class XViewport extends XCompoundStep implements ProcessMatchingNodes {
         }
 
 
-        try {
-            int count = 0;
-            for (String port : inputs.keySet()) {
-                if (port.startsWith("|")) {
-                    for (ReadablePipe reader : inputs.get(port)) {
-                        while (reader.moreDocuments()) {
-                            count++;
+        int count = 0;
+        for (String port : inputs.keySet()) {
+            if (port.startsWith("|")) {
+                for (ReadablePipe reader : inputs.get(port)) {
+                    while (reader.moreDocuments()) {
+                        count++;
 
-                            if (count > 1) {
-                                XOutput output = getOutput(port.substring(1));
-                                if (!output.getSequence()) {
-                                    throw XProcException.dynamicError(7);
-                                }
+                        if (count > 1) {
+                            XOutput output = getOutput(port.substring(1));
+                            if (!output.getSequence()) {
+                                throw XProcException.dynamicError(7);
                             }
-
-                            XdmNode doc = reader.read();
-                            matcher.addSubtree(doc);
                         }
-                        reader.resetReader();
+
+                        XdmNode doc = reader.read();
+                        matcher.addSubtree(doc);
                     }
+                    reader.resetReader();
                 }
             }
-        } catch (SaxonApiException sae) {
-            throw new XProcException(sae);
         }
 
         return false;
@@ -185,7 +183,8 @@ public class XViewport extends XCompoundStep implements ProcessMatchingNodes {
         throw new UnsupportedOperationException("Can't run a viewport over text, PI, or comments");
     }
 
-    public void processAttribute(XdmNode node) {
+    @Override
+    public AttributeMap processAttributes(XdmNode node, AttributeMap matchingAttributes, AttributeMap nonMatchingAttributes) {
         throw new UnsupportedOperationException("Can't run a viewport over attributes");
     }
 }

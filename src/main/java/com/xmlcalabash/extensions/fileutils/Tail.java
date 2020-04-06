@@ -82,7 +82,6 @@ public class Tail extends DefaultStep {
                     TreeWriter tree = new TreeWriter(runtime);
                     tree.startDocument(id);
                     tree.addStartElement(XProcConstants.c_result);
-                    tree.startContent();
 
                     Reader rdr = new InputStreamReader(content);
                     BufferedReader brdr = new BufferedReader(rdr);
@@ -98,7 +97,6 @@ public class Tail extends DefaultStep {
                                 line = lines.remove(0);
                                 if (!tail) {
                                     tree.addStartElement(c_line);
-                                    tree.startContent();
                                     tree.addText(line);
                                     tree.addEndElement();
                                     tree.addText("\n");
@@ -114,7 +112,6 @@ public class Tail extends DefaultStep {
                     if (tail) {
                         for (String lline : lines) {
                             tree.addStartElement(c_line);
-                            tree.startContent();
                             tree.addText(lline);
                             tree.addEndElement();
                             tree.addText("\n");

@@ -23,7 +23,7 @@
 </t:pipeline>
 
 <t:output port='result'>
-<c:multipart xmlns:c="http://www.w3.org/ns/xproc-step" boundary="=-=-=-=-=" content-type='multipart/alternative; boundary="=-=-=-=-="'><c:body content-type="text/html">&lt;html xmlns='http://www.w3.org/1999/xhtml'&gt;
+<c:multipart xmlns:c="http://www.w3.org/ns/xproc-step" boundary="=-=-=-=-=" content-type='multipart/alternative;boundary="=-=-=-=-="'><c:body content-type="text/html">&lt;html xmlns='http://www.w3.org/1999/xhtml'&gt;
 &lt;head&gt;
 &lt;title&gt;Hello world!&lt;/title&gt;
 &lt;/head&gt;

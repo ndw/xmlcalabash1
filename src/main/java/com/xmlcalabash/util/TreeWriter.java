@@ -28,31 +28,20 @@ import net.sf.saxon.event.NamespaceReducer;
 import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.expr.instruct.Executable;
-import net.sf.saxon.expr.parser.Location;
-import net.sf.saxon.om.FingerprintedQName;
-import net.sf.saxon.om.NameOfNode;
-import net.sf.saxon.om.NamePool;
-import net.sf.saxon.om.NamespaceBinding;
-import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.om.NodeName;
-import net.sf.saxon.om.StandardNames;
-import net.sf.saxon.s9api.Axis;
-import net.sf.saxon.s9api.Processor;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.XdmDestination;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmNodeKind;
-import net.sf.saxon.s9api.XdmSequenceIterator;
+import net.sf.saxon.om.*;
+import net.sf.saxon.s9api.*;
 import net.sf.saxon.serialize.SerializationProperties;
 import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.tree.util.NamespaceIterator;
+import net.sf.saxon.type.BuiltInAtomicType;
 import net.sf.saxon.type.BuiltInType;
 import net.sf.saxon.type.SchemaType;
 import net.sf.saxon.type.SimpleType;
+import net.sf.saxon.type.Untyped;
+import org.w3c.dom.Attr;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Iterator;
+import java.util.*;
 
 /**
  *
@@ -77,6 +66,7 @@ import java.util.Iterator;
 
 public class TreeWriter {
     protected static final String logger = "com.xmlcalabash.util";
+    protected static final AttributeMap emptyAttributeMap = EmptyAttributeMap.getInstance();
     protected Controller controller = null;
     protected XProcRuntime runtime = null;
     protected Executable exec = null;
@@ -153,16 +143,6 @@ public class TreeWriter {
             writeChildren(node);
         } else if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
             addStartElement(node);
-            XdmSequenceIterator iter = node.axisIterator(Axis.ATTRIBUTE);
-            while (iter.hasNext()) {
-                XdmNode child = (XdmNode) iter.next();
-                addAttribute(child, child.getStringValue());
-            }
-            try {
-                receiver.startContent();
-            } catch (XPathException xe) {
-                throw new XProcException(xe);
-            }
             writeChildren(node);
             addEndElement();
         } else if (node.getNodeKind() == XdmNodeKind.COMMENT) {
@@ -177,11 +157,15 @@ public class TreeWriter {
     }
 
     protected void writeChildren(XdmNode node) {
-        XdmSequenceIterator iter = node.axisIterator(Axis.CHILD);
+        XdmSequenceIterator<XdmNode> iter = node.axisIterator(Axis.CHILD);
         while (iter.hasNext()) {
             XdmNode child = (XdmNode) iter.next();
             addSubtree(child);
         }
+    }
+
+    public void addStartElement(QName nodeName) {
+        addStartElement(nodeName, EmptyAttributeMap.getInstance());
     }
 
     public void addStartElement(XdmNode node) {
@@ -213,49 +197,31 @@ public class TreeWriter {
     }
 
     public void addStartElement(XdmNode node, QName newName, URI overrideBaseURI) {
+        AttributeMap attrs = node.getUnderlyingNode().attributes();
+        addStartElement(node, newName, overrideBaseURI, attrs);
+    }
+
+    public void addStartElement(XdmNode node, AttributeMap attrs) {
+        NodeInfo inode = node.getUnderlyingNode();
+        addStartElement(NameOfNode.makeName(inode), attrs, inode.getSchemaType(), inode.getAllNamespaces(), node.getBaseURI());
+    }
+
+    public void addStartElement(XdmNode node, QName newName, URI overrideBaseURI, AttributeMap attrs) {
         NodeInfo inode = node.getUnderlyingNode();
 
-        NamespaceBinding inscopeNS[] = null;
+        NamespaceMap inscopeNS = null;
         if (seenRoot) {
-            inscopeNS = inode.getDeclaredNamespaces(null);
+            ArrayList<NamespaceBinding> nslist = new ArrayList<>();
+            Collections.addAll(nslist, inode.getDeclaredNamespaces(null));
+            inscopeNS = new NamespaceMap(nslist);
         } else {
-            int count = 0;
-            Iterator<NamespaceBinding> nsiter = NamespaceIterator.iterateNamespaces(inode);
-            while (nsiter.hasNext()) {
-                count++;
-                nsiter.next();
-            }
-            inscopeNS = new NamespaceBinding[count];
-            nsiter = NamespaceIterator.iterateNamespaces(inode);
-            count = 0;
-            while (nsiter.hasNext()) {
-                inscopeNS[count] = nsiter.next();
-                count++;
-            }
-            seenRoot = true;
+            inscopeNS = inode.getAllNamespaces();
         }
 
         // If the newName has no prefix, then make sure we don't pass along some other
         // binding for the default namespace...
-        if ("".equals(newName.getPrefix())) {
-            int newLen = 0;
-            for (int pos = 0; pos < inscopeNS.length; pos++) {
-                NamespaceBinding nscode = inscopeNS[pos];
-                if (!"".equals(nscode.getPrefix())) {
-                    newLen++;
-                }
-            }
-            if (newLen != inscopeNS.length) {
-                NamespaceBinding newCodes[] = new NamespaceBinding[newLen];
-                int npos = 0;
-                for (int pos = 0; pos < inscopeNS.length; pos++) {
-                    NamespaceBinding nscode = inscopeNS[pos];
-                    if (!"".equals(nscode.getPrefix())) {
-                        newCodes[npos++] = nscode;
-                    }
-                }
-                inscopeNS = newCodes;
-            }
+        if ("".equals(newName.getPrefix()) && !"".equals(inscopeNS.getDefaultNamespace())) {
+            inscopeNS.remove("");
         }
 
         // Hack. See comment at top of file
@@ -264,17 +230,43 @@ public class TreeWriter {
         }
 
         FingerprintedQName newNameOfNode = new FingerprintedQName(newName.getPrefix(),newName.getNamespaceURI(),newName.getLocalName());
-        addStartElement(newNameOfNode, inode.getSchemaType(), inscopeNS);
+        addStartElement(newNameOfNode, attrs, inode.getSchemaType(), inscopeNS);
     }
 
-    public void addStartElement(QName newName) {
+    public void addStartElement(QName newName, AttributeMap attrs) {
+        addStartElement(newName, attrs, NamespaceMap.emptyMap());
+    }
+
+    public void addStartElement(QName newName, AttributeMap attrs, NamespaceMap nsmap) {
         NodeName elemName = new FingerprintedQName(newName.getPrefix(), newName.getNamespaceURI(), newName.getLocalName());
-        SchemaType typeCode = BuiltInType.getSchemaType(StandardNames.XS_UNTYPED);
-        NamespaceBinding inscopeNS[] = null;
-        addStartElement(elemName, typeCode, inscopeNS);
+        addStartElement(elemName, attrs, Untyped.INSTANCE, nsmap);
     }
 
-    public void addStartElement(NodeName elemName, SchemaType typeCode, NamespaceBinding nscodes[]) {
+    public void addStartElement(NodeName elemName, SchemaType typeCode) {
+        addStartElement(elemName, emptyAttributeMap, typeCode, NamespaceMap.emptyMap());
+    }
+
+    public void addStartElement(NodeName elemName, SchemaType typeCode, NamespaceMap nsmap) {
+        addStartElement(elemName, emptyAttributeMap, typeCode, nsmap);
+    }
+
+    public void addStartElement(NodeName elemName, AttributeMap attrs, SchemaType typeCode, NamespaceMap nsmap, URI overrideBaseURI) {
+        // Hack. See comment at top of file
+        if (overrideBaseURI != null && !"".equals(overrideBaseURI.toASCIIString())) {
+            receiver.setSystemId(overrideBaseURI.toASCIIString());
+        }
+        addStartElement(elemName, attrs, typeCode, nsmap);
+    }
+
+    public void addStartElement(NodeName elemName, AttributeMap attrs, SchemaType typeCode, NamespaceMap nsmap) {
+        // Sort out the namespaces...
+        nsmap = updateMap(nsmap, elemName.getPrefix(), elemName.getURI());
+        for (AttributeInfo attr : attrs) {
+            if (attr.getNodeName().getURI() != null && !"".equals(attr.getNodeName().getURI())) {
+                nsmap = updateMap(nsmap, attr.getNodeName().getPrefix(), attr.getNodeName().getURI());
+            }
+        }
+
         Location loc;
         String sysId = receiver.getSystemId();
         if (sysId == null) {
@@ -284,76 +276,33 @@ public class TreeWriter {
         }
 
         try {
-            receiver.startElement(elemName, typeCode, loc, 0);
-            if (nscodes != null) {
-                for (NamespaceBinding ns : nscodes) {
-                    receiver.namespace(ns, 0);
-                }
+            receiver.startElement(elemName, typeCode, attrs, nsmap, loc, 0);
+        } catch (XPathException e) {
+            throw new XProcException(e);
+        }
+    }
+
+    private NamespaceMap updateMap(NamespaceMap nsmap, String prefix, String uri) {
+        if (uri == null || "".equals(uri)) {
+            return nsmap;
+        }
+
+        if (prefix == null || "".equals(prefix)) {
+            if (!uri.equals(nsmap.getDefaultNamespace())) {
+                return nsmap.put("", uri);
             }
-        } catch (XPathException e) {
-            throw new XProcException(e);
         }
-    }
 
-    public void addNamespace(String prefix, String uri) {
-        NamespaceBinding nsbind = new NamespaceBinding(prefix, uri);
-        try {
-            receiver.namespace(nsbind, 0);
-        } catch (XPathException e) {
-            throw new XProcException(e);
+        String curNS = nsmap.getURI(prefix);
+        if (curNS == null) {
+            return nsmap.put(prefix, uri);
+        } else if (curNS.equals(uri)) {
+            return nsmap;
         }
+
+        throw new XProcException("Cannot add " + prefix + " to namespace map with URI " + uri);
     }
 
-    public void addAttributes(XdmNode element) {
-        XdmSequenceIterator iter = element.axisIterator(Axis.ATTRIBUTE);
-        while (iter.hasNext()) {
-            XdmNode child = (XdmNode) iter.next();
-            addAttribute(child);
-        }
-    }
-
-    public void addAttribute(XdmNode xdmattr) {
-        addAttribute(xdmattr, xdmattr.getStringValue());
-    }
-
-    public void addAttribute(XdmNode xdmattr, String newValue) {
-        NodeInfo inode = xdmattr.getUnderlyingNode();
-        NodeName attrName = NameOfNode.makeName(inode);
-        SimpleType typeCode = (SimpleType) inode.getSchemaType();
-
-        try {
-            receiver.attribute(attrName, typeCode, newValue, VoidLocation.instance(), 0);
-        } catch (XPathException e) {
-            throw new XProcException(e);
-        }
-    }
-
-    public void addAttribute(NodeName elemName, SimpleType typeCode, String newValue) {
-        try {
-            receiver.attribute(elemName, typeCode, newValue, VoidLocation.instance(), 0);
-        } catch (XPathException e) {
-            throw new XProcException(e);
-        }
-    }
-
-    public void addAttribute(QName attrName, String newValue) {
-        NodeName elemName = new FingerprintedQName(attrName.getPrefix(),attrName.getNamespaceURI(),attrName.getLocalName());
-        SimpleType typeCode = (SimpleType) BuiltInType.getSchemaType(StandardNames.XS_UNTYPED_ATOMIC);
-        try {
-            receiver.attribute(elemName, typeCode, newValue, VoidLocation.instance(), 0);
-        } catch (XPathException e) {
-            throw new XProcException(e);
-        }
-    }
-
-    public void startContent() {
-        try {
-            receiver.startContent();
-        } catch (XPathException xe) {
-            throw new XProcException(xe);
-        }
-    }
-    
     public void addEndElement() {
         try {
             receiver.endElement();

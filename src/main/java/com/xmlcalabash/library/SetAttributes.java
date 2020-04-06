@@ -19,8 +19,8 @@
 
 package com.xmlcalabash.library;
 
+import java.util.ArrayList;
 import java.util.Map;
-import java.util.HashSet;
 
 import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcException;
@@ -31,6 +31,8 @@ import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
+import net.sf.saxon.om.AttributeInfo;
+import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -55,7 +57,7 @@ public class SetAttributes extends DefaultStep implements ProcessMatchingNodes {
     private Map<QName, RuntimeValue> inScopeOptions = null;
     private ProcessMatch matcher = null;
     private XdmNode root = null;
-    private HashSet<QName> attrs = null;
+    private AttributeMap attrs = null;
 
     /* Creates a new instance of SetAttributes */
     public SetAttributes(XProcRuntime runtime, XAtomicStep step) {
@@ -83,12 +85,8 @@ public class SetAttributes extends DefaultStep implements ProcessMatchingNodes {
         super.run();
 
         root = S9apiUtils.getDocumentElement(attributes.read());
-        attrs = new HashSet<QName> ();
-        XdmSequenceIterator iter = root.axisIterator(Axis.ATTRIBUTE);
-        while (iter.hasNext()) {
-            XdmNode attr = (XdmNode) iter.next();
-            attrs.add(attr.getNodeName());
-        }
+        assert root != null;
+        attrs = root.getUnderlyingNode().attributes();
 
         matcher = new ProcessMatch(runtime, this);
         matcher.match(source.read(), getOption(_match));
@@ -100,47 +98,48 @@ public class SetAttributes extends DefaultStep implements ProcessMatchingNodes {
         result.write(matcher.getResult());
     }
 
-    public boolean processStartDocument(XdmNode node) throws SaxonApiException {
+    public boolean processStartDocument(XdmNode node) {
         throw XProcException.stepError(23);
     }
 
-    public void processEndDocument(XdmNode node) throws SaxonApiException {
+    public void processEndDocument(XdmNode node) {
         // nop
     }
 
-    public boolean processStartElement(XdmNode node) throws SaxonApiException {
-        matcher.addStartElement(node);
+    @Override
+    public AttributeMap processAttributes(XdmNode node, AttributeMap matchingAttributes, AttributeMap nonMatchingAttributes) {
+        throw XProcException.stepError(23);
+    }
 
-        XdmSequenceIterator iter = node.axisIterator(Axis.ATTRIBUTE);
-        while (iter.hasNext()) {
-            XdmNode attr = (XdmNode) iter.next();
-            if (!attrs.contains(attr.getNodeName())) {
-                matcher.addAttribute(attr);
+    @Override
+    public boolean processStartElement(XdmNode node, AttributeMap attributes) {
+        ArrayList<AttributeInfo> alist = new ArrayList<>();
+        for (AttributeInfo ainfo : attrs) {
+            alist.add(ainfo);
+        }
+        for (AttributeInfo ainfo : attributes) {
+            if (attrs.get(ainfo.getNodeName()) == null) {
+                alist.add(ainfo);
             }
         }
 
-        matcher.addAttributes(root);
-        matcher.startContent();
+        matcher.addStartElement(node, AttributeMap.fromList(alist));
         return true;
     }
 
-    public void processAttribute(XdmNode node) throws SaxonApiException {
-        throw XProcException.stepError(23);
-    }
-    
-    public void processEndElement(XdmNode node) throws SaxonApiException {
+    public void processEndElement(XdmNode node) {
         matcher.addEndElement();
     }
 
-    public void processText(XdmNode node) throws SaxonApiException {
+    public void processText(XdmNode node) {
         throw XProcException.stepError(23);
     }
 
-    public void processComment(XdmNode node) throws SaxonApiException {
+    public void processComment(XdmNode node) {
         throw XProcException.stepError(23);
     }
 
-    public void processPI(XdmNode node) throws SaxonApiException {
+    public void processPI(XdmNode node) {
         throw XProcException.stepError(23);
     }
 }
