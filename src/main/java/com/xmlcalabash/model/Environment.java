@@ -49,11 +49,6 @@ public class Environment {
         return parent;
     }
 
-    protected void setPipeline(Pipeline pipe) {
-        pipeline = pipe;
-        addStep(pipe);
-    }
-
     public void addStep(Step step) {
         visibleSteps.add(step);
     }

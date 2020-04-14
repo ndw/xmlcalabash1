@@ -142,7 +142,7 @@ public class Parser {
         }
 
         loadingStandardLibrary = true;
-        PipelineLibrary library = readLibrary(null, root);
+        PipelineLibrary library = readLibrary(root);
         loadingStandardLibrary = false;
 
         return library;
@@ -204,7 +204,7 @@ public class Parser {
             declStack.peek().addImport(root.getBaseURI().toASCIIString());
         }
 
-        return readLibrary(null, root);
+        return readLibrary(root);
     }
 
     private XdmNode parse(InputStream instream, URI baseURI) throws SaxonApiException {
@@ -222,7 +222,7 @@ public class Parser {
         }
     }
 
-    private PipelineLibrary readLibrary(Step parent, XdmNode node) {
+    private PipelineLibrary readLibrary(XdmNode node) {
         if (!XProcConstants.p_library.equals(node.getNodeName())
                 && !XProcConstants.p_pipeline.equals(node.getNodeName())
                 && !XProcConstants.p_declare_step.equals(node.getNodeName())) {
@@ -259,7 +259,7 @@ public class Parser {
                     XdmNode root = importElem.getRoot();
                     // root will be null if the library has already been imported
                     if (root != null) {
-                        importElem.setLibrary(readLibrary(library, root));
+                        readLibrary(root);
                     }
                 }
             }
@@ -1425,7 +1425,7 @@ public class Parser {
                         XdmNode root = importElem.getRoot();
                         // root will be null if the library has already been imported
                         if (root != null) {
-                            importElem.setLibrary(readLibrary(step, root));
+                            readLibrary(root);
                         }
                     } else {
                         steps.add(substepNode);
@@ -1445,7 +1445,6 @@ public class Parser {
     }
 
     private void parseDeclareStepBodyPassTwo(DeclareStep step) {
-        step.setBodyParsed(true);
 
         for (DeclareStep substep : step.getStepDeclarations()) {
             parseDeclareStepBodyPassTwo(substep);
