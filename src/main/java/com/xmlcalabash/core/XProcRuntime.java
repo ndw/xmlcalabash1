@@ -141,7 +141,6 @@ public class XProcRuntime {
     private boolean htmlSerializer = false;
     private XProcData xprocData = null;
     private XProcMessageListener msgListener = null;
-    private PipelineLibrary standardLibrary = null;
     private XLibrary xStandardLibrary = null;
     private HttpClient httpClient;
     private Map<String, CookieStore> cookieStores;
@@ -316,7 +315,6 @@ public class XProcRuntime {
         useXslt10 = runtime.useXslt10;
         htmlSerializer = runtime.htmlSerializer;
         msgListener = runtime.msgListener;
-        standardLibrary = runtime.standardLibrary;
         xStandardLibrary = runtime.xStandardLibrary;
         httpClient = runtime.httpClient;
         cookieStores = runtime.cookieStores;
@@ -593,18 +591,6 @@ public class XProcRuntime {
         return config.schemaAware;
     }
 
-    public XLibrary getStandardLibrary() {
-        if (xStandardLibrary == null) {
-            xStandardLibrary = new XLibrary(this, standardLibrary);
-
-            if (errorCode != null) {
-                throw new XProcException(errorCode, errorMessage);
-            }
-        }
-
-        return xStandardLibrary;
-    }
-
     private synchronized void reset() {
         errorCode = null;
         errorMessage = null;
@@ -621,7 +607,7 @@ public class XProcRuntime {
         parser = new Parser(this);
         try {
             // FIXME: I should *do* something with these libraries, shouldn't I?
-            standardLibrary = parser.loadStandardLibrary();
+            parser.loadStandardLibrary();
             if (errorCode != null) {
                 throw new XProcException(errorCode, errorMessage);
             }

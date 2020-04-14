@@ -40,19 +40,11 @@ public class DeclareStep extends CompoundStep {
     protected String xpathVersion = "2.0";
     private QName declaredType = null;
     private boolean atomic = true;
-    private Pipeline implementation = null;
     protected Hashtable<QName, DeclareStep> declaredSteps = new Hashtable<QName, DeclareStep> ();
     protected HashSet<String> importedLibs = new HashSet<String> ();
     private DeclareStep parentDecl = null;
     private Vector<XdmNode> rest = null;
     private HashSet<String> excludedInlineNamespaces = null;
-
-    // If a pipeline contains both import statements and inlined step declarations
-    // then we have to be careful not to parse declared steps twice (we will have
-    // parsed the imported ones, but not the inlined ones. This flag keeps track
-    // of whether we've parsed the body of a step declaration or not.
-    // FIXME: Maybe this should be managed by the parser not the DeclareStep?
-    private boolean bodyParsed = false;
 
     /* Creates a new instance of DeclareStep */
     public DeclareStep(XProcRuntime xproc, XdmNode node, String name) {
@@ -65,14 +57,6 @@ public class DeclareStep extends CompoundStep {
 
     protected Vector<XdmNode> getXmlContent() {
         return rest;
-    }
-
-    public boolean getBodyParsed() {
-        return bodyParsed;
-    }
-
-    public void setBodyParsed(boolean parsed) {
-        bodyParsed = parsed;
     }
 
     public void setPsviRequired(boolean psvi) {
@@ -113,14 +97,6 @@ public class DeclareStep extends CompoundStep {
 
     public void setParentDecl(DeclareStep decl) {
         parentDecl = decl;
-    }
-
-    public void setPipeline(Pipeline pipeline) {
-        implementation = pipeline;
-    }
-
-    public Pipeline getPipeline() {
-        return implementation;
     }
 
     public void declareStep(QName type, DeclareStep step) {
