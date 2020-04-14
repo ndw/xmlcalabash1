@@ -7,7 +7,6 @@ import com.xmlcalabash.model.ErrorBinding;
 import com.xmlcalabash.model.Input;
 import com.xmlcalabash.model.Output;
 import com.xmlcalabash.model.PipeNameBinding;
-import com.xmlcalabash.model.Pipeline;
 import com.xmlcalabash.model.PipelineLibrary;
 import com.xmlcalabash.model.DeclareStep;
 import com.xmlcalabash.model.Step;
