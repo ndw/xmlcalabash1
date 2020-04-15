@@ -24,7 +24,10 @@ import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.QName;
 import com.xmlcalabash.core.XProcRuntime;
 
-import java.util.Collection;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.Vector;
 import java.util.Hashtable;
 import java.util.HashSet;
@@ -35,16 +38,17 @@ import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import org.slf4j.LoggerFactory;
 
-public class DeclareStep extends CompoundStep {
+public class DeclareStep extends CompoundStep implements DeclarationScope {
     protected boolean psviRequired = false;
     protected String xpathVersion = "2.0";
     private QName declaredType = null;
     private boolean atomic = true;
     protected Hashtable<QName, DeclareStep> declaredSteps = new Hashtable<QName, DeclareStep> ();
-    protected HashSet<String> importedLibs = new HashSet<String> ();
-    private DeclareStep parentDecl = null;
+    private List<PipelineLibrary> importedLibs = new ArrayList<>();
+    private DeclarationScope parentScope = null;
     private Vector<XdmNode> rest = null;
     private HashSet<String> excludedInlineNamespaces = null;
+    private URI sourceImport = null;
 
     /* Creates a new instance of DeclareStep */
     public DeclareStep(XProcRuntime xproc, XdmNode node, String name) {
@@ -95,54 +99,72 @@ public class DeclareStep extends CompoundStep {
         return declaredType;
     }
 
-    public void setParentDecl(DeclareStep decl) {
-        parentDecl = decl;
+    public void setParentScope(DeclarationScope decls) {
+        parentScope = decls;
     }
 
     public void declareStep(QName type, DeclareStep step) {
-        if (declaredSteps.containsKey(type)) {
-            throw new XProcException(step, "Duplicate step type: " + type);
+        DeclareStep d = getDeclaration(type);
+        if (d != null) {
+            if (!d.equals(step))
+                throw new XProcException(step, "Duplicate step type: " + type);
         } else {
             declaredSteps.put(type, step);
         }
     }
 
-    public boolean imported(String uri) {
-        if (importedLibs.contains(uri)) {
-            return true;
-        }
-
-
-        if (parentDecl == null) {
-            return false;
-        }
-
-        return parentDecl.imported(uri);
+    public void addImport(PipelineLibrary lib) {
+        importedLibs.add(lib);
     }
 
-    public void addImport(String uri) {
-        importedLibs.add(uri);
+    public void setSourceImport(URI href) {
+        sourceImport = href;
+    }
+
+    public URI getSourceImport() {
+        return sourceImport;
     }
 
     public DeclareStep getDeclaration() {
-        return getStepDeclaration(declaredType);
+        return getDeclaration(declaredType);
     }
 
-    public DeclareStep getStepDeclaration(QName type) {
-        if (declaredSteps.containsKey(type)) {
-            return declaredSteps.get(type);
-        } else if (parentDecl != null) {
-            return parentDecl.getStepDeclaration(type);
-        } else {
-            return runtime.getBuiltinDeclaration(type);
+    public DeclareStep getDeclaration(QName type) {
+        DeclareStep decl = null;
+        if (parentScope != null)
+            decl = parentScope.getDeclaration(type);
+        for (PipelineLibrary lib : importedLibs) {
+            DeclareStep d = lib.getDeclaration(type);
+            if (d != null) {
+                if (decl == null)
+                    decl = d;
+                else if (!decl.equals(d))
+                    throw new XProcException(d, "Duplicate step type: " + type);
+            }
         }
+        {
+            DeclareStep d = declaredSteps.get(type);
+            if (d != null) {
+                if (decl == null)
+                    decl = d;
+                else if (!decl.equals(d))
+                    throw new XProcException(d, "Duplicate step type: " + type);
+            }
+        }
+        return decl;
     }
     
-    public Collection<DeclareStep> getStepDeclarations() {
-        return declaredSteps.values();
+    public Set<QName> getInScopeTypes() {
+        Set<QName> decls = new HashSet<>();
+        decls.addAll(declaredSteps.keySet());
+        if (parentScope != null)
+            decls.addAll(parentScope.getInScopeTypes());
+        for (PipelineLibrary lib : importedLibs)
+            decls.addAll(lib.getInScopeTypes());
+        return decls;
     }
 
-    public void setupEnvironment() {
+    private void setupEnvironment() {
         setEnvironment(new Environment(this));
     }
 
@@ -175,7 +197,11 @@ public class DeclareStep extends CompoundStep {
         }
     }
 
+    private boolean setup = false;
     public void setup() {
+        if (setup) return;
+        setup = true;
+
         XProcRuntime runtime = this.runtime;
         DeclareStep decl = this;
         boolean debug = runtime.getDebug();
@@ -457,5 +483,32 @@ public class DeclareStep extends CompoundStep {
         }
 
         return valid;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null)
+            return false;
+        if (this == o)
+            return true;
+        if (this.sourceImport == null)
+            return false;
+        if (!(o instanceof DeclareStep))
+            return false;
+        DeclareStep that = (DeclareStep)o;
+        if (!this.declaredType.equals(that.declaredType))
+            return false;
+        if (!this.sourceImport.equals(that.sourceImport))
+            return false;
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + declaredType.hashCode();
+        result = prime * result + ((sourceImport == null) ? 0 : sourceImport.hashCode());
+        return result;
     }
 }

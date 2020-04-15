@@ -24,10 +24,6 @@ public class XRootStep extends XCompoundStep {
         super(runtime, null, null);
     }
 
-    public DeclareStep getDeclaration(QName stepType) {
-        return runtime.getBuiltinDeclaration(stepType);
-    }
-
     public Hashtable<QName,RuntimeValue> getInScopeOptions() {
         return new Hashtable<QName,RuntimeValue> ();
     }
