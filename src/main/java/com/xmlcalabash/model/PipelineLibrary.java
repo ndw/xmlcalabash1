@@ -25,7 +25,10 @@ import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 
@@ -33,9 +36,10 @@ import java.util.Vector;
  *
  * @author ndw
  */
-public class PipelineLibrary extends Step {
+public class PipelineLibrary extends Step implements DeclarationScope {
     Hashtable<QName,DeclareStep> declaredSteps = new Hashtable<QName,DeclareStep> ();
     Vector<DeclareStep> steps = new Vector<DeclareStep> ();
+    private List<PipelineLibrary> importedLibs = new ArrayList<>();
 
     /* Creates a new instance of PipelineLibrary */
     public PipelineLibrary(XProcRuntime xproc, XdmNode node) {
@@ -54,7 +58,7 @@ public class PipelineLibrary extends Step {
         }
 
         steps.add(step);
-        declaredSteps.put(type, step);
+        declareStep(type, step);
     }
 
     public QName firstStep() {
@@ -65,15 +69,64 @@ public class PipelineLibrary extends Step {
         }
     }
 
-    public Set<QName> declaredTypes() {
-        return declaredSteps.keySet();
+    public void declareStep(QName type, DeclareStep step) {
+        DeclareStep d = getDeclaration(type);
+        if (d != null) {
+            if (!d.equals(step))
+                throw new XProcException(step, "Duplicate step type: " + type);
+        } else {
+            declaredSteps.put(type, step);
+        }
     }
 
+    public void addImport(PipelineLibrary lib) {
+        importedLibs.add(lib);
+    }
+
+    private boolean circularImportGuard = false;
+
     public DeclareStep getDeclaration(QName type) {
-        if (declaredSteps.containsKey(type)) {
-            return declaredSteps.get(type);
-        } else {
-            return null;
+        DeclareStep decl = null;
+        if (!circularImportGuard) {
+            circularImportGuard = true;
+            try {
+                for (PipelineLibrary lib : importedLibs) {
+                    DeclareStep d = lib.getDeclaration(type);
+                    if (d != null) {
+                        if (decl == null)
+                            decl = d;
+                        else if (!decl.equals(d))
+                            throw new XProcException(d, "Duplicate step type: " + type);
+                    }
+                }
+                {
+                    DeclareStep d = declaredSteps.get(type);
+                    if (d != null) {
+                        if (decl == null)
+                            decl = d;
+                        else if (!decl.equals(d))
+                            throw new XProcException(d, "Duplicate step type: " + type);
+                    }
+                }
+            } finally {
+                circularImportGuard = false;
+            }
         }
+        return decl;
+    }
+
+    public Set<QName> getInScopeTypes() {
+        Set<QName> decls = new HashSet<>();
+        if (!circularImportGuard) {
+            circularImportGuard = true;
+            try {
+                decls.addAll(declaredSteps.keySet());
+                for (PipelineLibrary lib : importedLibs)
+                    decls.addAll(lib.getInScopeTypes());
+            } finally {
+                circularImportGuard = false;
+            }
+        }
+        return decls;
     }
 }
