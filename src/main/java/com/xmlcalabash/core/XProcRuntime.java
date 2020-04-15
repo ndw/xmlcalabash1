@@ -41,6 +41,7 @@ import com.xmlcalabash.io.ReadableData;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.URLDataStore;
 import com.xmlcalabash.model.DeclareStep;
+import com.xmlcalabash.model.DeclarationScope;
 import com.xmlcalabash.model.Parser;
 import com.xmlcalabash.model.PipelineLibrary;
 import com.xmlcalabash.runtime.XLibrary;
@@ -102,9 +103,11 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.Stack;
 import java.util.Vector;
 
@@ -114,7 +117,7 @@ import static java.lang.String.format;
  *
  * @author ndw
  */
-public class XProcRuntime {
+public class XProcRuntime implements DeclarationScope {
     protected Logger logger = LoggerFactory.getLogger(XProcRuntime.class);
     private Processor processor = null;
     private Parser parser = null;
@@ -140,7 +143,7 @@ public class XProcRuntime {
     private boolean htmlSerializer = false;
     private XProcData xprocData = null;
     private XProcMessageListener msgListener = null;
-    private XLibrary xStandardLibrary = null;
+    private PipelineLibrary standardLibrary = null;
     private HttpClient httpClient;
     private Map<String, CookieStore> cookieStores;
     private DataStore dataStore;
@@ -307,7 +310,7 @@ public class XProcRuntime {
         useXslt10 = runtime.useXslt10;
         htmlSerializer = runtime.htmlSerializer;
         msgListener = runtime.msgListener;
-        xStandardLibrary = runtime.xStandardLibrary;
+        standardLibrary = runtime.standardLibrary;
         httpClient = runtime.httpClient;
         cookieStores = runtime.cookieStores;
         configurer = runtime.configurer;
@@ -596,8 +599,7 @@ public class XProcRuntime {
 
         parser = new Parser(this);
         try {
-            // FIXME: I should *do* something with these libraries, shouldn't I?
-            parser.loadStandardLibrary();
+            standardLibrary = parser.loadStandardLibrary();
             if (errorCode != null) {
                 throw new XProcException(errorCode, errorMessage);
             }
@@ -614,6 +616,10 @@ public class XProcRuntime {
             profileWriter = new TreeWriter(this);
             profileWriter.startDocument(URI.create("http://xmlcalabash.com/output/profile.xml"));
         }
+    }
+
+    public PipelineLibrary getStandardLibrary() {
+        return standardLibrary;
     }
 
     // FIXME: This design sucks
@@ -904,19 +910,35 @@ public class XProcRuntime {
     }
 
     public void declareStep(QName name, DeclareStep step) {
-        if (declaredSteps.containsKey(name)) {
-            throw new XProcException(step, "Duplicate declaration for " + name);
+        DeclareStep d = getDeclaration(name);
+        if (d != null) {
+            if (!d.equals(step))
+                throw new XProcException(step, "Duplicate step type: " + name);
         } else {
             declaredSteps.put(name, step);
         }
     }
 
-    public DeclareStep getBuiltinDeclaration(QName name) {
-        if (declaredSteps.containsKey(name)) {
-            return declaredSteps.get(name);
-        } else {
-            throw XProcException.staticError(44, null, "Unexpected step name: " + name);
+    public DeclareStep getDeclaration(QName type) {
+        DeclareStep decl = null;
+        if (standardLibrary != null)
+            decl = standardLibrary.getDeclaration(type);
+        DeclareStep d = declaredSteps.get(type);
+        if (d != null) {
+            if (decl == null)
+                decl = d;
+            else
+                throw new XProcException(d, "Duplicate step type: " + type);
         }
+        return decl;
+    }
+
+    public Set<QName> getInScopeTypes() {
+        Set<QName> decls = new HashSet<>();
+        decls.addAll(declaredSteps.keySet());
+        if (standardLibrary != null)
+            decls.addAll(standardLibrary.getInScopeTypes());
+        return decls;
     }
 
     public synchronized CookieStore getCookieStore(String key) {

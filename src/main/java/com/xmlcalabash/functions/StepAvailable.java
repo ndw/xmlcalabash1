@@ -124,13 +124,7 @@ public class StepAvailable extends XProcExtensionFunctionDefinition {
                 step = step.getParent();
             }
 
-            DeclareStep decl = step.getDeclareStep();
-
-            try {
-                decl = decl.getStepDeclaration(stepType);
-            } catch (XProcException e) {
-                decl = null;
-            }
+            DeclareStep decl = step.getDeclareStep().getDeclaration(stepType);
 
             if (decl != null) {
                 if (decl.isAtomic()) {
