@@ -1,13 +1,9 @@
 package com.xmlcalabash.piperack;
 
-import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XPipeline;
-import net.sf.saxon.s9api.QName;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 import org.restlet.representation.Variant;
-
-import java.util.HashMap;
 
 /**
  * Ths file is part of XMLCalabash.
