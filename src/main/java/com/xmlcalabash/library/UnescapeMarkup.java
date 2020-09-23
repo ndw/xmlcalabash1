@@ -121,10 +121,15 @@ public class UnescapeMarkup extends DefaultStep {
         tree.startDocument(doc.getBaseURI());
 
         XdmSequenceIterator<XdmNode> iter = doc.axisIterator(Axis.CHILD);
-        XdmNode child = iter.next();
-        while (child.getNodeKind() != XdmNodeKind.ELEMENT) {
-            tree.addSubtree(child);
+        XdmNode child = null;
+        boolean foundElement = false;
+        while (!foundElement && iter.hasNext()) {
             child = iter.next();
+            foundElement = (child.getNodeKind() == XdmNodeKind.ELEMENT);
+            if (!foundElement) {
+                System.err.println("CHILD:" + child);
+                tree.addSubtree(child);
+            }
         }
         tree.addStartElement(child);
 
