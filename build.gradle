@@ -29,15 +29,15 @@ sourceCompatibility = "1.8"
 targetCompatibility = "1.8"
 
 repositories {
-  mavenLocal()
-  mavenCentral()
-  maven { url "https://maven.restlet.com" }
-
   // For the dependency on xmlcalabash1-print
   // For javax.media:jai_core:1.1.3
   maven { url "https://maven.geotoolkit.org" }
   // For com.sun.media:jai-codec:1.1.3
   maven { url "https://repository.jboss.org/nexus/content/repositories/thirdparty-releases/" }
+
+  mavenLocal()
+  mavenCentral()
+  maven { url "https://maven.restlet.com" }
 }
 
 configurations {
