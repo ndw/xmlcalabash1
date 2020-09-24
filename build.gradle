@@ -22,8 +22,10 @@ plugins {
 apply plugin: 'biz.aQute.bnd.builder'
 
 project.ext.releaseVersion = relVersion
-project.ext.distVersion = relVersion
+project.ext.distVersion = relVersion + "-" + saxonBranch
 project.ext.refDocZip = 'xmlcalabash-ref-' + docsVersion + '.zip'
+
+relVersion = project.ext.distVersion
 
 sourceCompatibility = "1.8"
 targetCompatibility = "1.8"
@@ -240,13 +242,13 @@ jar.dependsOn copyToDist
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
   classifier = 'javadoc'
-  archiveVersion = releaseVersion
+  archiveVersion = relVersion
   from tasks.javadoc.destinationDir
 }
 
 task sourcesJar(type: Jar) {
   classifier = 'sources'
-  archiveVersion = releaseVersion
+  archiveVersion = relVersion
   from sourceSets.main.allSource
 }
 
@@ -269,8 +271,8 @@ task makeDist(dependsOn: [ build, copyJar, copyLib ]) {
 task zipDist(dependsOn: makeDist, type: Zip) {
   from('build/dist')
   exclude(["calabash", "calabash.bat"])
-  into 'xmlcalabash-' + releaseVersion
-  archiveFileName = 'xmlcalabash-' + releaseVersion + ".zip"
+  into 'xmlcalabash-' + relVersion
+  archiveFileName = 'xmlcalabash-' + relVersion + ".zip"
 }
 
 task izPackDist(dependsOn: izPackCreateInstaller) {
@@ -349,13 +351,13 @@ task makeIZPackShell(dependsOn: copyVERSION) {
     def shell = new File("$buildDir/dist", "calabash")
     shell.withPrintWriter { writer ->
       writer.println '#!/bin/bash'
-      writer.println 'java -Xmx1024m -cp %INSTALL_PATH/xmlcalabash-' + releaseVersion + '.jar com.xmlcalabash.drivers.Main "$@"'
+      writer.println 'java -Xmx1024m -cp %INSTALL_PATH/xmlcalabash-' + relVersion + '.jar com.xmlcalabash.drivers.Main "$@"'
     }
     shell.setExecutable(true)
 
     def batch = new File("$buildDir/dist", "calabash.bat")
     batch.withPrintWriter { writer ->
-      writer.println 'java -Xmx1024m -cp %INSTALL_PATH/xmlcalabash-' + releaseVersion + '.jar com.xmlcalabash.drivers.Main %*'
+      writer.println 'java -Xmx1024m -cp %INSTALL_PATH/xmlcalabash-' + relVersion + '.jar com.xmlcalabash.drivers.Main %*'
     }
   }
 }
@@ -413,7 +415,7 @@ publishing {
 
       groupId = "com.xmlcalabash"
       artifactId = "xmlcalabash"
-      version = releaseVersion
+      version = relVersion
       from components.java
       artifact javadocJar
       artifact sourcesJar
