@@ -147,7 +147,17 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
     }
 
     private XdmNode expandXIncludes(XdmNode doc) {
-        logger.trace(MessageFormatter.nodeMessage(doc, "Starting expandXIncludes"));
+        // Does this document include any xi:include elements?
+        Hashtable<String,String> xins = new Hashtable<>();
+        xins.put("xi", "http://www.w3.org/2001/XInclude");
+        Vector<XdmItem> ebv = evaluateXPath(doc, xins,"//xi:include", new Hashtable<QName, RuntimeValue>());
+        if (ebv.isEmpty()) {
+            logger.trace(MessageFormatter.nodeMessage(doc, "Skipping expandXIncludes (no xi:includes): " + doc.getBaseURI()));
+            return doc;
+        } else {
+            logger.trace(MessageFormatter.nodeMessage(doc, "Starting expandXIncludes: " + doc.getBaseURI()));
+        }
+
         ProcessMatch matcher = new ProcessMatch(runtime, this);
         matcherStack.push(matcher);
         matcher.match(doc, new RuntimeValue("/|*", step.getNode()));
