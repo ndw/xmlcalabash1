@@ -326,7 +326,7 @@ public class XProcURIResolver implements URIResolver, EntityResolver, ModuleURIR
         if (moduleURIResolver != null) {
             return moduleURIResolver.resolve(moduleURI, baseURI, locations);
         }
-        ModuleURIResolver resolver = new StandardModuleURIResolver();
+        ModuleURIResolver resolver = new StandardModuleURIResolver(runtime.getProcessor().getUnderlyingConfiguration());
         return resolver.resolve(moduleURI, baseURI, locations);
     }
 
