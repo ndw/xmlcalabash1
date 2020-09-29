@@ -149,30 +149,37 @@ public class TreeWriter {
     }
 
     public void addSubtree(XdmNode node) {
-        if (node.getNodeKind() == XdmNodeKind.DOCUMENT) {
-            writeChildren(node);
-        } else if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
-            addStartElement(node);
-            XdmSequenceIterator iter = node.axisIterator(Axis.ATTRIBUTE);
-            while (iter.hasNext()) {
-                XdmNode child = (XdmNode) iter.next();
-                addAttribute(child, child.getStringValue());
+        try {
+            receiver.append(node.getUnderlyingNode());
+        } catch (UnsupportedOperationException use) {
+            // do it the hard way
+            if (node.getNodeKind() == XdmNodeKind.DOCUMENT) {
+                writeChildren(node);
+            } else if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
+                addStartElement(node);
+                XdmSequenceIterator iter = node.axisIterator(Axis.ATTRIBUTE);
+                while (iter.hasNext()) {
+                    XdmNode child = (XdmNode) iter.next();
+                    addAttribute(child, child.getStringValue());
+                }
+                try {
+                    receiver.startContent();
+                } catch (XPathException xe) {
+                    throw new XProcException(xe);
+                }
+                writeChildren(node);
+                addEndElement();
+            } else if (node.getNodeKind() == XdmNodeKind.COMMENT) {
+                addComment(node.getStringValue());
+            } else if (node.getNodeKind() == XdmNodeKind.TEXT) {
+                addText(node.getStringValue());
+            } else if (node.getNodeKind() == XdmNodeKind.PROCESSING_INSTRUCTION) {
+                addPI(node.getNodeName().getLocalName(), node.getStringValue());
+            } else {
+                throw new UnsupportedOperationException("Unexpected node type");
             }
-            try {
-                receiver.startContent();
-            } catch (XPathException xe) {
-                throw new XProcException(xe);
-            }
-            writeChildren(node);
-            addEndElement();
-        } else if (node.getNodeKind() == XdmNodeKind.COMMENT) {
-            addComment(node.getStringValue());
-        } else if (node.getNodeKind() == XdmNodeKind.TEXT) {
-            addText(node.getStringValue());
-        } else if (node.getNodeKind() == XdmNodeKind.PROCESSING_INSTRUCTION) {
-            addPI(node.getNodeName().getLocalName(), node.getStringValue());
-        } else {
-            throw new UnsupportedOperationException("Unexpected node type");
+        } catch (XPathException xpe) {
+            throw new XProcException(xpe);
         }
     }
 
