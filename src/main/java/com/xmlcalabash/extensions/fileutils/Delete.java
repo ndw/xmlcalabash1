@@ -100,6 +100,10 @@ public class Delete extends DefaultStep {
                 if (fail_on_error) {
                     throw new XProcException(step.getNode(), e);
                 }
+            } catch (XProcException e) {
+                if (fail_on_error) {
+                    throw e;
+                }
             }
         }
         try {
