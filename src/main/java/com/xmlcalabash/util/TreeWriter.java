@@ -139,20 +139,27 @@ public class TreeWriter {
     }
 
     public void addSubtree(XdmNode node) {
-        if (node.getNodeKind() == XdmNodeKind.DOCUMENT) {
-            writeChildren(node);
-        } else if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
-            addStartElement(node);
-            writeChildren(node);
-            addEndElement();
-        } else if (node.getNodeKind() == XdmNodeKind.COMMENT) {
-            addComment(node.getStringValue());
-        } else if (node.getNodeKind() == XdmNodeKind.TEXT) {
-            addText(node.getStringValue());
-        } else if (node.getNodeKind() == XdmNodeKind.PROCESSING_INSTRUCTION) {
-            addPI(node.getNodeName().getLocalName(), node.getStringValue());
-        } else {
-            throw new UnsupportedOperationException("Unexpected node type");
+        try {
+            receiver.append(node.getUnderlyingNode());
+        } catch (UnsupportedOperationException use) {
+            // Do it the hard way
+            if (node.getNodeKind() == XdmNodeKind.DOCUMENT) {
+                writeChildren(node);
+            } else if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
+                addStartElement(node);
+                writeChildren(node);
+                addEndElement();
+            } else if (node.getNodeKind() == XdmNodeKind.COMMENT) {
+                addComment(node.getStringValue());
+            } else if (node.getNodeKind() == XdmNodeKind.TEXT) {
+                addText(node.getStringValue());
+            } else if (node.getNodeKind() == XdmNodeKind.PROCESSING_INSTRUCTION) {
+                addPI(node.getNodeName().getLocalName(), node.getStringValue());
+            } else {
+                throw new UnsupportedOperationException("Unexpected node type");
+            }
+        } catch (XPathException xpe) {
+            throw new XProcException(xpe);
         }
     }
 
