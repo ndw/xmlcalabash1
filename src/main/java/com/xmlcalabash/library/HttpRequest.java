@@ -60,6 +60,7 @@ import org.apache.http.client.config.AuthSchemes;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPatch;
@@ -324,29 +325,41 @@ public class HttpRequest extends DefaultStep {
             }
         }
 
-        String lcMethod = method.toLowerCase();
+        String lcMethod = method.toUpperCase();
 
-        // You can only have a body on PUT or POST or PATCH
-        if (body != null && !("put".equals(lcMethod) || "post".equals(lcMethod) || "patch".equals(lcMethod))) {
+        // You cannot have a body on HEAD or GET
+        if (body != null && ("HEAD".equals(lcMethod) || "GET".equals(lcMethod))) {
             throw XProcException.stepError(5);
         }
 
         HttpUriRequest httpRequest;
         HttpResponse httpResult = null;
-        if ("get".equals(lcMethod)) {
-            httpRequest = doGet();
-        } else if ("post".equals(lcMethod)) {
-            httpRequest = doPost(body);
-        } else if ("put".equals(lcMethod)) {
-            httpRequest = doPut(body);
-        } else if ("patch".equals(lcMethod)) {
-            httpRequest = doPatch(body);
-        } else if ("head".equals(lcMethod)) {
-            httpRequest = doHead();
-        } else if ("delete".equals(lcMethod)) {
-            httpRequest = doDelete();
-        } else {
-            throw new UnsupportedOperationException("Unrecognized http method: " + method);
+
+        switch (lcMethod) {
+            case "GET":
+                httpRequest = doGet();
+                break;
+            case "POST":
+                httpRequest = doPost(body);
+                break;
+            case "PUT":
+                httpRequest = doPut(body);
+                break;
+            case "PATCH":
+                httpRequest = doPatch(body);
+                break;
+            case "HEAD":
+                httpRequest = doHead();
+                break;
+            case "DELETE":
+                httpRequest = doDelete();
+                break;
+            default:
+                if (body != null) {
+                    httpRequest = doGenericMethodWithBody(lcMethod, body);
+                } else {
+                    httpRequest = doGenericMethod(lcMethod);
+                }
         }
 
         TreeWriter tree = new TreeWriter(runtime);
@@ -456,6 +469,22 @@ public class HttpRequest extends DefaultStep {
         XdmNode resultNode = tree.getResult();
 
         result.write(resultNode);
+    }
+
+    private HttpGenericMethod doGenericMethod(String methodName) {
+        HttpGenericMethod method = new HttpGenericMethod(methodName, requestURI);
+
+        for (Header header : headers) {
+            method.addHeader(header);
+        }
+
+        return method;
+    }
+
+    private HttpGenericMethodWithBody doGenericMethodWithBody(String methodName, XdmNode body) {
+        HttpGenericMethodWithBody method = new HttpGenericMethodWithBody(methodName, requestURI);
+        doPutOrPost(method,body);
+        return method;
     }
 
     private HttpGet doGet() {
@@ -1158,6 +1187,32 @@ public class HttpRequest extends DefaultStep {
             byte[] bytes = new byte[pos];
             System.arraycopy(byteContent, 0, bytes, 0, pos);
             return bytes;
+        }
+    }
+
+    private class HttpGenericMethod extends HttpEntityEnclosingRequestBase {
+        private String method;
+        public HttpGenericMethod(String method, URI requestURI) {
+            super();
+            this.method = method;
+            setURI(requestURI);
+        }
+        @Override
+        public String getMethod() {
+            return method;
+        }
+    }
+
+    private class HttpGenericMethodWithBody extends HttpEntityEnclosingRequestBase {
+        private String method;
+        public HttpGenericMethodWithBody(String method, URI requestURI) {
+            super();
+            this.method = method;
+            setURI(requestURI);
+        }
+        @Override
+        public String getMethod() {
+            return method;
         }
     }
 }
