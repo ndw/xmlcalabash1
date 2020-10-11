@@ -293,37 +293,40 @@ public class HttpRequest extends DefaultStep {
             }
         }
 
-        String lcMethod = method.toLowerCase();
+        String lcMethod = method.toUpperCase();
 
-        // You can only have a body on PUT or POST or PATCH
-        if (body != null && !("put".equals(lcMethod) || "post".equals(lcMethod) || "patch".equals(lcMethod))) {
+        // You cannot have a body on HEAD or GET
+        if (body != null && ("HEAD".equals(lcMethod) || "GET".equals(lcMethod))) {
             throw XProcException.stepError(5);
         }
 
         HttpUriRequest httpRequest;
         HttpResponse httpResult = null;
         switch (lcMethod) {
-            case "get":
+            case "GET":
                 httpRequest = doGet();
                 break;
-            case "post":
+            case "POST":
                 httpRequest = doPost(body);
                 break;
-            case "put":
+            case "PUT":
                 httpRequest = doPut(body);
                 break;
-            case "patch":
+            case "PATCH":
                 httpRequest = doPatch(body);
                 break;
-            case "head":
+            case "HEAD":
                 httpRequest = doHead();
                 break;
-            case "delete":
+            case "DELETE":
                 httpRequest = doDelete();
                 break;
             default:
-                throw new UnsupportedOperationException("Unrecognized http method: " + method);
-        }
+                if (body != null) {
+                    httpRequest = doGenericMethodWithBody(lcMethod, body);
+                } else {
+                    httpRequest = doGenericMethod(lcMethod);
+                }        }
 
         TreeWriter tree = new TreeWriter(runtime);
 
@@ -430,6 +433,22 @@ public class HttpRequest extends DefaultStep {
         XdmNode resultNode = tree.getResult();
 
         result.write(resultNode);
+    }
+
+    private HttpGenericMethod doGenericMethod(String methodName) {
+        HttpGenericMethod method = new HttpGenericMethod(methodName, requestURI);
+
+        for (Header header : headers) {
+            method.addHeader(header);
+        }
+
+        return method;
+    }
+
+    private HttpGenericMethodWithBody doGenericMethodWithBody(String methodName, XdmNode body) {
+        HttpGenericMethodWithBody method = new HttpGenericMethodWithBody(methodName, requestURI);
+        doPutOrPost(method,body);
+        return method;
     }
 
     private HttpGet doGet() {
@@ -1098,6 +1117,32 @@ public class HttpRequest extends DefaultStep {
             });
         } catch (IOException fnfe) {
             throw new XProcException(fnfe);
+        }
+    }
+
+    private class HttpGenericMethod extends HttpEntityEnclosingRequestBase {
+        private String method;
+        public HttpGenericMethod(String method, URI requestURI) {
+            super();
+            this.method = method;
+            setURI(requestURI);
+        }
+        @Override
+        public String getMethod() {
+            return method;
+        }
+    }
+
+    private class HttpGenericMethodWithBody extends HttpEntityEnclosingRequestBase {
+        private String method;
+        public HttpGenericMethodWithBody(String method, URI requestURI) {
+            super();
+            this.method = method;
+            setURI(requestURI);
+        }
+        @Override
+        public String getMethod() {
+            return method;
         }
     }
 }
