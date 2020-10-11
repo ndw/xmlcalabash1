@@ -277,6 +277,7 @@ public class Zip extends DefaultStep {
             ZipEntry entry = zipStream.getNextEntry();
             while (entry != null) {
                 processEntry(tree, entry, dfactory);
+                entry = zipStream.getNextEntry();
             }
         } finally {
             zipStream.close();
