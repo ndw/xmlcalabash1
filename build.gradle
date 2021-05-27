@@ -16,7 +16,7 @@ plugins {
   id "maven-publish"
   id "signing"
   id "com.bmuschko.izpack" version "2.0"
-  id "de.undercouch.download" version "4.0.4"
+  id "de.undercouch.download" version "4.1.1"
 }
 
 apply plugin: 'biz.aQute.bnd.builder'
@@ -86,9 +86,8 @@ dependencies {
     [group: 'com.atlassian.commonmark', name: 'commonmark', version: '0.12.1']
   )
 
-  runtime (
-    fileTree(dir: 'lib').include("*.jar"),
-    fileTree(dir: 'lib/' + saxonVersion).include('*.jar')
+  runtimeOnly (
+    fileTree(dir: 'lib').include("*.jar")
   )
 
   reportruntime (
@@ -291,7 +290,7 @@ task testSuiteMessages {
 }
 
 task testSuite(dependsOn: [makeDist, testSuiteMessages], type: JavaExec) {
-  classpath = configurations.reportruntime + configurations.runtime + sourceSets.main.output
+  classpath = configurations.reportruntime + sourceSets.main.output
 
   main = 'com.xmlcalabash.drivers.RunTestReport'
   maxHeapSize = "1024m"
@@ -310,13 +309,13 @@ task testSuite(dependsOn: [makeDist, testSuiteMessages], type: JavaExec) {
 task testSuiteClassPath {
   doLast {
     configurations.reportruntime.each { println it }
-    configurations.runtime.each { println it }
+    configurations.runtimeOnly.each { println it }
     sourceSets.main.output.each { println it }
   }
 }
 
 task htmlReport(dependsOn: testSuite, type: JavaExec) {
-  classpath = configurations.reportruntime + configurations.runtime + sourceSets.main.output
+  classpath = configurations.reportruntime + sourceSets.main.output
   main = 'net.sf.saxon.Transform'
   args('-s:' + testsReport,
        '-xsl:resources/format-report.xsl',
@@ -324,7 +323,7 @@ task htmlReport(dependsOn: testSuite, type: JavaExec) {
 }
 
 task aDocReport(dependsOn: testSuite, type: JavaExec) {
-  classpath = configurations.reportruntime + configurations.runtime + sourceSets.main.output
+  classpath = configurations.reportruntime + sourceSets.main.output
   main = 'net.sf.saxon.Transform'
   args('-s:' + testsReport,
        '-xsl:resources/asciidoc-report.xsl',
@@ -332,7 +331,7 @@ task aDocReport(dependsOn: testSuite, type: JavaExec) {
 }
 
 task aDocErrReport(dependsOn: testSuite, type: JavaExec) {
-  classpath = configurations.reportruntime + configurations.runtime + sourceSets.main.output
+  classpath = configurations.reportruntime + sourceSets.main.output
   main = 'net.sf.saxon.Transform'
   args('-s:' + testsReport,
        '-xsl:resources/asciidoc-report.xsl',
@@ -363,7 +362,7 @@ task makeIZPackShell(dependsOn: copyVERSION) {
 }
 
 task setupIZPack(dependsOn: [makeDist, makeIZPackShell], type: JavaExec) {
-  classpath = configurations.reportruntime + configurations.runtime + sourceSets.main.output
+  classpath = configurations.reportruntime + sourceSets.main.output
 
   main = 'net.sf.saxon.Transform'
   args('-s:src/main/izpack/install.xml',
