@@ -191,6 +191,16 @@ public class Exec extends DefaultStep {
 
             Process process = builder.start();
 
+            boolean showStderr = !"false".equals(step.getExtensionAttribute(cx_show_stderr));
+            ProcessOutputReader stdoutReader = new ProcessOutputReader(process.getInputStream(), resultIsXML, wrapResultLines, false);
+            ProcessOutputReader stderrReader = new ProcessOutputReader(process.getErrorStream(), errorsIsXML, wrapErrorLines, showStderr);
+
+            Thread stdoutThread = new Thread(stdoutReader);
+            Thread stderrThread = new Thread(stderrReader);
+
+            stdoutThread.start();
+            stderrThread.start();
+
             if (source.moreDocuments()) {
                 XdmNode srcDoc = source.read();
 
@@ -226,16 +236,6 @@ public class Exec extends DefaultStep {
                 OutputStream os = process.getOutputStream();
                 os.close();
             }
-
-            boolean showStderr = !"false".equals(step.getExtensionAttribute(cx_show_stderr));
-            ProcessOutputReader stdoutReader = new ProcessOutputReader(process.getInputStream(), resultIsXML, wrapResultLines, false);
-            ProcessOutputReader stderrReader = new ProcessOutputReader(process.getErrorStream(), errorsIsXML, wrapErrorLines, showStderr);
-
-            Thread stdoutThread = new Thread(stdoutReader);
-            Thread stderrThread = new Thread(stderrReader);
-
-            stdoutThread.start();
-            stderrThread.start();
 
             int rc = 0;
             try {
