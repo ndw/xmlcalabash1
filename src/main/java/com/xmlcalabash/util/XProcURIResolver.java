@@ -1,53 +1,47 @@
 package com.xmlcalabash.util;
 
+import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
+import net.sf.saxon.Configuration;
 import net.sf.saxon.lib.ModuleURIResolver;
 import net.sf.saxon.lib.StandardModuleURIResolver;
 import net.sf.saxon.lib.StandardUnparsedTextResolver;
 import net.sf.saxon.lib.UnparsedTextURIResolver;
-import net.sf.saxon.trans.XPathException;
-import org.slf4j.LoggerFactory;
-import org.xml.sax.InputSource;
-import org.xml.sax.EntityResolver;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.XMLReaderFactory;
-
-import javax.xml.transform.URIResolver;
-import javax.xml.transform.Source;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.sax.SAXSource;
-import javax.xml.parsers.SAXParserFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.stream.StreamSource;
-
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.Configuration;
-import com.xmlcalabash.core.XProcException;
-import com.xmlcalabash.core.XProcConstants;
-import com.xmlcalabash.core.XProcRuntime;
+import net.sf.saxon.trans.XPathException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.XMLReaderFactory;
+import org.xmlresolver.Resolver;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParserFactory;
+import javax.xml.transform.Source;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.URIResolver;
+import javax.xml.transform.sax.SAXSource;
+import javax.xml.transform.stream.StreamSource;
 import java.io.IOException;
 import java.io.Reader;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.xmlresolver.CatalogSource;
-import org.xmlresolver.Resolver;
-
-/**
- * Created by IntelliJ IDEA.
- * User: ndw
- * Date: Oct 29, 2008
- * Time: 4:04:27 PM
- * To change this template use File | Settings | File Templates.
- */
 public class XProcURIResolver implements URIResolver, EntityResolver, ModuleURIResolver, UnparsedTextURIResolver {
     private Logger logger = LoggerFactory.getLogger(XProcURIResolver.class);
     private URIResolver uriResolver = null;
@@ -102,24 +96,96 @@ public class XProcURIResolver implements URIResolver, EntityResolver, ModuleURIR
     }
 
     public void addCatalogs(List<String> catalogs) {
-        if (catalogResolver != null) {
-            for (String catalog : catalogs) {
-                logger.debug("Adding catalog to resolver: " + catalog);
-                try {
-                    URL cat = new URL(catalog);
-                    InputSource source = new InputSource(cat.openStream());
-                    source.setSystemId(catalog);
-
-                    CatalogSource catsource = new CatalogSource.InputSourceCatalogSource(source);
-                    catalogResolver.getCatalog().addSource(catsource);
-                } catch (MalformedURLException e) {
-                    logger.info("Malformed catalog URI in jar file: " + catalog);
-                } catch (IOException e) {
-                    logger.info("I/O error reading catalog URI in jar file: " + catalog);
-                }
-            }
-        } else {
+        if (catalogResolver == null) {
             logger.info("Not adding catalogs to resolver, no catalog resolver is known");
+            return;
+        }
+
+        // I really painted myself into a corner here, didn't I? It was possible to add
+        // a catalog to the old XML Resolver (versions 1 and 2) in one way, but that way
+        // doesn't exist in versions 3 and beyond. It's possible to do it in versions
+        // 3 and beyond as well, but that way doesn't exist in versions 1 and 2.
+        //
+        // In order to make it possible to run XML Calabash with either the old resolver
+        // or the new one, we do all this with reflection so that the class loader won't
+        // throw a fit when there are classes missing in one case or the other.
+
+        // What version of the resolver is this?
+        String resolverVersion = null;
+        try {
+            Method version = Resolver.class.getMethod("version");
+            resolverVersion = (String) version.invoke(null);
+        } catch (NoSuchMethodException|IllegalAccessException| InvocationTargetException ex) {
+            // I don't care; if I can't get the version, it's not version 2.0.0 or later
+            resolverVersion = "1.0";
+        }
+
+        try {
+            if (resolverVersion.startsWith("1") || resolverVersion.startsWith("2")) {
+                // Do this the old way
+                Class<?> catsourceClass = Class.forName("org.xmlresolver.CatalogSource");
+                Class<?> cl = Class.forName("org.xmlresolver.CatalogSource$InputSourceCatalogSource");
+                Constructor<?> catsourceConstructor = cl.getDeclaredConstructor(InputSource.class);
+
+                cl = Class.forName("org.xmlresolver.Resolver");
+                Method getCatalogMethod = cl.getMethod("getCatalog");
+                Object getCatalog = getCatalogMethod.invoke(catalogResolver);
+
+                cl = Class.forName("org.xmlresolver.Catalog");
+                Method addSource = cl.getMethod("addSource", catsourceClass);
+
+                for (String catalog : catalogs) {
+                    logger.debug("Adding catalog to resolver: " + catalog);
+                    try {
+                        URL cat = new URL(catalog);
+                        InputSource source = new InputSource(cat.openStream());
+                        source.setSystemId(catalog);
+
+                        // The lines below mimick this code:
+                        // CatalogSource catsource = new CatalogSource.InputSourceCatalogSource(source);
+                        // catalogResolver.getCatalog().addSource(catsource);
+
+                        Object catsource = catsourceConstructor.newInstance(source);
+                        addSource.invoke(getCatalog, catsource);
+                    } catch (MalformedURLException e) {
+                        logger.info("Malformed catalog URI in jar file: " + catalog);
+                    } catch (IOException e) {
+                        logger.info("I/O error reading catalog URI in jar file: " + catalog);
+                    }
+                }
+            } else {
+                // Do this the new way
+                Class<?> resolverClass = Class.forName("org.xmlresolver.Resolver");
+                Class<?> configClass = Class.forName("org.xmlresolver.XMLResolverConfiguration");
+                Class<?> resolverFeatureClass = Class.forName("org.xmlresolver.ResolverFeature");
+
+                Method getConfig = resolverClass.getMethod("getConfiguration");
+                Method getFeature = configClass.getMethod("getFeature", resolverFeatureClass);
+                Method setFeature = configClass.getMethod("setFeature", resolverFeatureClass, Object.class);
+
+                Field catalogFilesField = resolverFeatureClass.getField("CATALOG_FILES");
+                Object catalogFilesFeature = catalogFilesField.get(null);
+
+                Object config = getConfig.invoke(catalogResolver);
+                Object catalogFiles = getFeature.invoke(config, catalogFilesFeature);
+                @SuppressWarnings("unchecked")
+                ArrayList<String> curCatalogs = new ArrayList<>((List<String>) catalogFiles);
+
+                for (String catalog : catalogs) {
+                    logger.debug("Adding catalog to resolver: " + catalog);
+                    try {
+                        URL cat = new URL(catalog);
+                        curCatalogs.add(cat.toString());
+                    } catch (MalformedURLException e) {
+                        logger.info("Malformed catalog URI in jar file: " + catalog);
+                    }
+                }
+
+                setFeature.invoke(config, catalogFilesFeature, curCatalogs);
+            }
+        } catch (ClassNotFoundException | NoSuchMethodException | NoSuchFieldException
+                | IllegalAccessException | InstantiationException | InvocationTargetException ex) {
+            logger.info("Failed to add catalog to resolver: " + ex.getMessage());
         }
     }
 
