@@ -117,7 +117,7 @@ public class XProcConfiguration {
     public boolean useXslt10 = false;
     public boolean htmlSerializer = false;
     public boolean allowTextResults = false;
-    public Vector<String> catalogs = new Vector<String> ();
+    public Vector<String> catalogs = new Vector<> ();
 
     public int piperackPort = 8088;
     public int piperackDefaultExpires = 300;
@@ -355,7 +355,7 @@ public class XProcConfiguration {
                 catfn += "catalog.xml";
                 File f = new File(catfn);
                 if (f.exists() && f.isFile()) {
-                    catalogs.add(catfn);
+                    catalogs.add(f.toURI().toString());
                     logger.debug("Using catalog: " + catfn);
                 }
             }
