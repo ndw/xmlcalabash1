@@ -15,7 +15,7 @@ plugins {
   id "java"
   id "maven-publish"
   id "signing"
-  id "com.bmuschko.izpack" version "2.0"
+  id "com.bmuschko.izpack" version "3.2"
   id "de.undercouch.download" version "4.1.1"
 }
 
@@ -209,6 +209,8 @@ task copyReferenceDocs(dependsOn: downloadReferenceDocs, type: Copy) {
     }
   }
 }
+compileTestJava.dependsOn copyReferenceDocs
+test.dependsOn copyReferenceDocs
 
 task copySchemas(type: Copy) {
   from 'resources/schemas'
