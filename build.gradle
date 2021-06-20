@@ -210,6 +210,7 @@ task copyReferenceDocs(dependsOn: downloadReferenceDocs, type: Copy) {
 }
 compileTestJava.dependsOn copyReferenceDocs
 test.dependsOn copyReferenceDocs
+javadoc.dependsOn copyReferenceDocs
 
 task copySchemas(type: Copy) {
   from 'resources/schemas'
@@ -248,7 +249,7 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
   from tasks.javadoc.destinationDir
 }
 
-task sourcesJar(type: Jar) {
+task sourcesJar(type: Jar, dependsOn: ["copyReferenceDocs"]) {
   classifier = 'sources'
   archiveVersion = relVersion
   from sourceSets.main.allSource
