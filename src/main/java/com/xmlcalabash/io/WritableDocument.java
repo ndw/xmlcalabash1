@@ -19,23 +19,22 @@
 
 package com.xmlcalabash.io;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.URI;
-
-import com.xmlcalabash.util.MessageFormatter;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.Serializer;
-import net.sf.saxon.s9api.XdmNode;
-
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.DataStore.DataWriter;
 import com.xmlcalabash.model.Serialization;
 import com.xmlcalabash.model.Step;
+import com.xmlcalabash.util.MessageFormatter;
 import com.xmlcalabash.util.S9apiUtils;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.Serializer;
+import net.sf.saxon.s9api.XdmNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URI;
 
 /**
  *
@@ -152,6 +151,10 @@ public class WritableDocument implements WritablePipe {
             serializer.setOutputProperty(Serializer.Property.UNDECLARE_PREFIXES, serial.getUndeclarePrefixes() ? "yes" : "no");
             if (serial.getVersion() != null) {
                 serializer.setOutputProperty(Serializer.Property.VERSION, serial.getVersion());
+            }
+
+            if (serial.getCdataSectionElements() != null) {
+                serializer.setOutputProperty(Serializer.Property.CDATA_SECTION_ELEMENTS, serial.getCdataSectionElements());
             }
 
             if (ostream != null) {

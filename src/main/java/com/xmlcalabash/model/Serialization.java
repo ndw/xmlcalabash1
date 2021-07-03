@@ -19,6 +19,8 @@
 
 package com.xmlcalabash.model;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmNode;
@@ -34,7 +36,7 @@ public class Serialization extends SourceArtifact {
     private XProcConfiguration config = null;
 
     boolean byteOrderMark;
-    Vector<QName> cdataSectionElements;
+    String cdataSectionElements;
     String doctypePublic;
     String doctypeSystem;
     String encoding;
@@ -56,7 +58,7 @@ public class Serialization extends SourceArtifact {
         config = xproc.getConfiguration();
 
         byteOrderMark = defValue("byte-order-mark", false);
-        cdataSectionElements = null; // FIXME: support cdata-section-elements
+        cdataSectionElements = null;
         doctypePublic = defValue("doctype-public", (String) null);
         doctypeSystem = defValue("doctype-system", (String) null);
         encoding = defValue("encoding", (String) null);
@@ -73,11 +75,7 @@ public class Serialization extends SourceArtifact {
     }
 
     private String defValue(String name, String defVal) {
-        if (config.serializationOptions.containsKey(name))
-            return config.serializationOptions.get(name);
-        else {
-            return defVal;
-        }
+        return config.serializationOptions.getOrDefault(name, defVal);
     }
 
     private boolean defValue(String name, boolean defVal) {
@@ -104,11 +102,11 @@ public class Serialization extends SourceArtifact {
         return byteOrderMark;
     }
 
-    public void setCdataSectionElements(Vector<QName> cdataSectionElements) {
+    public void setCdataSectionElements(String cdataSectionElements) {
         this.cdataSectionElements = cdataSectionElements;
     }
 
-    public Vector<QName> getCdataSectionElements() {
+    public String getCdataSectionElements() {
         return cdataSectionElements;
     }
 
