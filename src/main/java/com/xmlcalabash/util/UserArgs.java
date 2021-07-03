@@ -448,6 +448,7 @@ public class UserArgs {
             port = "*";
         }
         if (param.equals("byte-order-mark")
+                || param.equals("cdata-section-elements")
                 || param.equals("escape-uri-attributes")
                 || param.equals("include-content-type")
                 || param.equals("indent")

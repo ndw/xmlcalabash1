@@ -1048,7 +1048,13 @@ public class Parser {
 
         value = node.getAttributeValue(new QName("cdata-section-elements"));
         if (value != null) {
-            throw new UnsupportedOperationException("cdata-section-elements not yet supported");
+            StringBuilder sb = new StringBuilder();
+            for (String qname : value.split("\\s+")) {
+                QName name = new QName(qname, node);
+                sb.append(name.getClarkName());
+                sb.append(" ");
+            }
+            serial.setCdataSectionElements(sb.toString());
         }
 
         value = node.getAttributeValue(new QName("doctype-public"));

@@ -52,13 +52,6 @@ import static com.xmlcalabash.util.URIUtils.encode;
 import static java.lang.String.format;
 import static java.lang.System.getProperty;
 
-/**
- * Created by IntelliJ IDEA.
- * User: ndw
- * Date: Nov 11, 2008
- * Time: 7:47:38 PM
- * To change this template use File | Settings | File Templates.
- */
 public class XProcConfiguration {
     public static final QName _prefix = new QName("", "prefix");
     public static final QName _uri = new QName("", "uri");
@@ -654,7 +647,7 @@ public class XProcConfiguration {
         String[] boolSerNames = new String[] {"byte-order-mark", "escape-uri-attributes",
                 "include-content-type","indent", "omit-xml-declaration", "undeclare-prefixes"};
         String[] strSerNames = new String[] {"doctype-public", "doctype-system", "encoding",
-                "media-type", "normalization-form", "version", "standalone"};
+                "media-type", "normalization-form", "version", "standalone", "cdata-section-elements"};
 
         for (String name : boolSerNames) {
             String s = System.getProperty("com.xmlcalabash.serial."+name);
@@ -669,8 +662,6 @@ public class XProcConfiguration {
                 serializationOptions.put(name, s);
             }
         }
-
-        // cdata-section-elements is ignored
 
         String method = System.getProperty("com.xmlcalabash.serial.method");
         if ("html".equals(method) || "xhtml".equals(method) || "text".equals(method) || "xml".equals(method)) {
