@@ -31,3 +31,8 @@ deploy:
 #after_success:
 #  - find . -type f -print
 #  - unzip -v build/distributions/*.zip
+
+cache:
+  directories:
+  - $HOME/.gradle/caches/
+  - $HOME/.gradle/wrapper/
