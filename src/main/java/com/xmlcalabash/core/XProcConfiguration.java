@@ -165,7 +165,6 @@ public class XProcConfiguration {
         bFeatureMap.put("http://saxon.sf.net/feature/multipleSchemaImports", Feature.MULTIPLE_SCHEMA_IMPORTS);
         sFeatureMap.put("http://saxon.sf.net/feature/outputURIResolverClass", Feature.OUTPUT_URI_RESOLVER_CLASS);
         bFeatureMap.put("http://saxon.sf.net/feature/preEvaluateDocFunction", Feature.PRE_EVALUATE_DOC_FUNCTION);
-        bFeatureMap.put("http://saxon.sf.net/feature/preferJaxpParser", Feature.PREFER_JAXP_PARSER);
         bFeatureMap.put("http://saxon.sf.net/feature/recognize-uri-query-parameters", Feature.RECOGNIZE_URI_QUERY_PARAMETERS);
         iFeatureMap.put("http://saxon.sf.net/feature/recoveryPolicy", Feature.RECOVERY_POLICY);
         sFeatureMap.put("http://saxon.sf.net/feature/recoveryPolicyName", Feature.RECOVERY_POLICY_NAME);
