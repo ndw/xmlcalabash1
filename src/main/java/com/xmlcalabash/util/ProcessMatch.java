@@ -27,7 +27,11 @@ import net.sf.saxon.Configuration;
 import net.sf.saxon.event.ComplexContentOutputter;
 import net.sf.saxon.event.NamespaceReducer;
 import net.sf.saxon.event.PipelineConfiguration;
-import net.sf.saxon.om.*;
+import net.sf.saxon.om.AttributeInfo;
+import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.NameOfNode;
+import net.sf.saxon.om.NamespaceResolver;
+import net.sf.saxon.om.NodeName;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmDestination;
@@ -41,7 +45,7 @@ import net.sf.saxon.trans.XPathException;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -305,9 +309,9 @@ public class ProcessMatch extends TreeWriter {
     }
 
     private static class MatchingNamespaceResolver implements NamespaceResolver {
-        private Hashtable<String,String> ns = new Hashtable<String,String> ();
+        private HashMap<String,String> ns = new HashMap<String,String> ();
 
-        public MatchingNamespaceResolver(Hashtable<String,String> bindings) {
+        public MatchingNamespaceResolver(HashMap<String,String> bindings) {
             ns = bindings;
         }
 

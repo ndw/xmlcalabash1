@@ -1,38 +1,37 @@
 package com.xmlcalabash.extensions;
 
 import com.xmlcalabash.core.XMLCalabash;
-import com.xmlcalabash.library.DefaultStep;
+import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
-import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.core.XProcException;
-import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.library.DefaultStep;
+import com.xmlcalabash.model.DeclareStep;
+import com.xmlcalabash.model.Input;
+import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.runtime.XPipeline;
 import com.xmlcalabash.runtime.XInput;
 import com.xmlcalabash.runtime.XLibrary;
-import com.xmlcalabash.model.RuntimeValue;
-import com.xmlcalabash.model.Input;
-import com.xmlcalabash.model.DeclareStep;
+import com.xmlcalabash.runtime.XPipeline;
 import com.xmlcalabash.util.AxisNodes;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.util.TypeUtils;
 import net.sf.saxon.om.SingletonAttributeMap;
+import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmDestination;
+import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
-import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.XdmValue;
-import net.sf.saxon.tree.iter.SingleAtomicIterator;
 
-import java.util.Hashtable;
-import java.util.Vector;
-import java.util.Set;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Set;
+import java.util.Vector;
 
 /**
  * Created by IntelliJ IDEA.
@@ -58,7 +57,7 @@ public class Eval extends DefaultStep {
 
     private Vector<ReadablePipe> sources = new Vector<ReadablePipe> ();
     private ReadablePipe pipeline = null;
-    private Hashtable<QName,RuntimeValue> params = new Hashtable<QName,RuntimeValue> ();
+    private HashMap<QName,RuntimeValue> params = new HashMap<QName,RuntimeValue> ();
     private Vector<ReadablePipe> options = new Vector<ReadablePipe> ();
     private WritablePipe result = null;
 
@@ -163,7 +162,7 @@ public class Eval extends DefaultStep {
                 }
             }
 
-            Hashtable<String, Vector<XdmNode>> inputs = new Hashtable<String, Vector<XdmNode>>();
+            HashMap<String, Vector<XdmNode>> inputs = new HashMap<String, Vector<XdmNode>>();
             for (ReadablePipe pipe : sources) {
                 while (pipe.moreDocuments()) {
                     String port = primaryin;

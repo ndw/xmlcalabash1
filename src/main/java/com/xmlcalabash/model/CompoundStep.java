@@ -19,17 +19,16 @@
 
 package com.xmlcalabash.model;
 
-import java.util.Collection;
-import java.util.Hashtable;
-import java.util.Vector;
-import java.util.HashSet;
-
-import com.xmlcalabash.util.MessageFormatter;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.XdmNode;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.util.MessageFormatter;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.XdmNode;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Vector;
 
 /**
  *
@@ -37,8 +36,8 @@ import com.xmlcalabash.core.XProcRuntime;
  */
 public class CompoundStep extends Step {
     private Environment inheritedEnv = null;
-    private HashSet<QName> variablesSeen = new HashSet<QName> ();
-    private Vector<Variable> variables = new Vector<Variable> (); // Order matters!!!
+    private final HashSet<QName> variablesSeen = new HashSet<> ();
+    private final Vector<Variable> variables = new Vector<> (); // Order matters!!!
     private boolean augmented = false;
     
     /* Creates a new instance of CompoundStep */

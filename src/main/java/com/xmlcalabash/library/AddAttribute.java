@@ -22,27 +22,22 @@ package com.xmlcalabash.library;
 import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.model.RuntimeValue;
-import com.xmlcalabash.util.ProcessMatchingNodes;
-import com.xmlcalabash.util.ProcessMatch;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
+import com.xmlcalabash.model.RuntimeValue;
+import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.util.ProcessMatch;
+import com.xmlcalabash.util.ProcessMatchingNodes;
 import com.xmlcalabash.util.TypeUtils;
 import net.sf.saxon.event.ReceiverOption;
 import net.sf.saxon.om.AttributeInfo;
 import net.sf.saxon.om.AttributeMap;
-import net.sf.saxon.om.FingerprintedQName;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmSequenceIterator;
-import net.sf.saxon.s9api.Axis;
-import com.xmlcalabash.runtime.XAtomicStep;
 import net.sf.saxon.type.BuiltInAtomicType;
 
-import javax.sound.midi.Receiver;
 import javax.xml.XMLConstants;
-import java.util.Hashtable;
 
 /**
  *

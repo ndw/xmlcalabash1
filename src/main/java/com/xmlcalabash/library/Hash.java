@@ -24,7 +24,7 @@
 package com.xmlcalabash.library;
 
 import java.util.ArrayList;
-import java.util.Hashtable;
+import java.util.HashMap;
 import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
@@ -63,7 +63,7 @@ public class Hash extends DefaultStep implements ProcessMatchingNodes {
     private static final QName _sha = new QName("", "sha");
     private static final QName _hmac = new QName("cx", XProcConstants.NS_CALABASH_EX, "hmac");
     private static final QName _accessKey = new QName("cx", XProcConstants.NS_CALABASH_EX, "accessKey");
-    private Hashtable<QName,String> params = new Hashtable<QName, String> ();
+    private HashMap<QName,String> params = new HashMap<QName, String> ();
     protected static final String logger = "org.xproc.library.hash";
     private ReadablePipe source = null;
     private WritablePipe result = null;

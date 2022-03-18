@@ -4,7 +4,7 @@ import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmNode;
 
 import java.net.URI;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Vector;
 
 /**
@@ -13,7 +13,7 @@ import java.util.Vector;
 public interface TestReporter {
 
     public void runningTest(URI testURI);
-    public void startReport(Hashtable<String,String> props);
+    public void startReport(HashMap<String,String> props);
     public void endReport();
     public void startTestSuite();
     public void endTestSuite();

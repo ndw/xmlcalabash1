@@ -23,17 +23,16 @@ package com.xmlcalabash.util;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Hashtable;
-
 import net.sf.saxon.event.ReceiverOption;
 import net.sf.saxon.om.AttributeInfo;
-import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.om.FingerprintedQName;
-import net.sf.saxon.om.SingletonAttributeMap;
-import net.sf.saxon.s9api.*;
+import net.sf.saxon.s9api.ItemType;
+import net.sf.saxon.s9api.ItemTypeFactory;
+import net.sf.saxon.s9api.Location;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XdmAtomicValue;
+import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.type.BuiltInAtomicType;
 
 /**

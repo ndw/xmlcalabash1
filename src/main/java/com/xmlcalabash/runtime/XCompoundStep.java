@@ -1,20 +1,25 @@
 package com.xmlcalabash.runtime;
 
-import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcData;
+import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.io.ReadableEmpty;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
-import com.xmlcalabash.io.ReadableEmpty;
-import com.xmlcalabash.model.*;
+import com.xmlcalabash.model.Binding;
+import com.xmlcalabash.model.DeclareStep;
+import com.xmlcalabash.model.Input;
+import com.xmlcalabash.model.Option;
+import com.xmlcalabash.model.Output;
+import com.xmlcalabash.model.RuntimeValue;
+import com.xmlcalabash.model.Step;
+import com.xmlcalabash.model.Variable;
 import com.xmlcalabash.util.MessageFormatter;
-import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XdmNode;
 
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Vector;
 
 /**
@@ -25,7 +30,7 @@ import java.util.Vector;
  * To change this template use File | Settings | File Templates.
  */
 public class XCompoundStep extends XAtomicStep {
-    protected Hashtable<QName, RuntimeValue> variables = new Hashtable<QName,RuntimeValue> ();
+    protected HashMap<QName, RuntimeValue> variables = new HashMap<QName,RuntimeValue> ();
     protected Vector<XStep> subpipeline = new Vector<XStep> ();
 
     public XCompoundStep(XProcRuntime runtime, Step step, XCompoundStep parent) {

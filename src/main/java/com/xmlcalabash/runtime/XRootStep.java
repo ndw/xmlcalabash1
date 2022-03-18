@@ -1,13 +1,13 @@
 package com.xmlcalabash.runtime;
 
-import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.ReadablePipe;
-import com.xmlcalabash.model.*;
+import com.xmlcalabash.model.RuntimeValue;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmNode;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Vector;
 
 /**
@@ -24,8 +24,8 @@ public class XRootStep extends XCompoundStep {
         super(runtime, null, null);
     }
 
-    public Hashtable<QName,RuntimeValue> getInScopeOptions() {
-        return new Hashtable<QName,RuntimeValue> ();
+    public HashMap<QName,RuntimeValue> getInScopeOptions() {
+        return new HashMap<QName,RuntimeValue> ();
     }
 
 /*

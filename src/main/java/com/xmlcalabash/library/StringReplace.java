@@ -19,28 +19,30 @@
 
 package com.xmlcalabash.library;
 
-import java.util.ArrayList;
-import java.util.Vector;
-import java.util.Hashtable;
-
 import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.util.AxisNodes;
-import com.xmlcalabash.util.ProcessMatchingNodes;
-import com.xmlcalabash.util.ProcessMatch;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
-import com.xmlcalabash.util.S9apiUtils;
+import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.util.AxisNodes;
+import com.xmlcalabash.util.ProcessMatch;
+import com.xmlcalabash.util.ProcessMatchingNodes;
 import com.xmlcalabash.util.TypeUtils;
 import net.sf.saxon.event.ReceiverOption;
 import net.sf.saxon.om.AttributeInfo;
 import net.sf.saxon.om.AttributeMap;
-import net.sf.saxon.om.FingerprintedQName;
 import net.sf.saxon.om.NodeName;
-import net.sf.saxon.s9api.*;
-import com.xmlcalabash.runtime.XAtomicStep;
+import net.sf.saxon.s9api.Axis;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XdmItem;
+import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.type.BuiltInAtomicType;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Vector;
 
 /**
  *
@@ -58,8 +60,8 @@ public class StringReplace extends DefaultStep implements ProcessMatchingNodes {
     private WritablePipe result = null;
     private ProcessMatch matcher = null;
     private RuntimeValue replace = null;
-    private Hashtable<String,String> rns = new Hashtable<>();
-    private static Hashtable<QName,RuntimeValue> atomicStepsGetNoInScopeOptions = new Hashtable<>();
+    private HashMap<String,String> rns = new HashMap<>();
+    private static HashMap<QName,RuntimeValue> atomicStepsGetNoInScopeOptions = new HashMap<>();
 
     /* Creates a new instance of StringReplace */
     public StringReplace(XProcRuntime runtime, XAtomicStep step) {

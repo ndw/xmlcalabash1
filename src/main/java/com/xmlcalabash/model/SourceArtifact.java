@@ -19,14 +19,14 @@
 
 package com.xmlcalabash.model;
 
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.QName;
 import com.xmlcalabash.core.XProcRuntime;
-
-import java.util.Hashtable;
-import java.util.Set;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.XdmNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.Set;
 
 /**
  *
@@ -36,7 +36,7 @@ public abstract class SourceArtifact {
     protected Logger logger = null;
     protected XdmNode node = null;
     protected XProcRuntime runtime = null;
-    protected Hashtable<QName,String> extnAttrs = null;
+    protected HashMap<QName,String> extnAttrs = null;
 
     /* Creates a new instance of SourceArtifact */
     public SourceArtifact(XProcRuntime runtime, XdmNode node) {
@@ -73,7 +73,7 @@ public abstract class SourceArtifact {
 
     public void addExtensionAttribute(XdmNode attr) {
         if (extnAttrs == null) {
-            extnAttrs = new Hashtable<QName,String> ();
+            extnAttrs = new HashMap<> ();
         }
         extnAttrs.put(attr.getNodeName(),attr.getStringValue());
     }
@@ -88,7 +88,7 @@ public abstract class SourceArtifact {
 
     public Set<QName> getExtensionAttributes() {
         if (extnAttrs == null) {
-            extnAttrs = new Hashtable<QName,String> ();
+            extnAttrs = new HashMap<QName,String> ();
         }
         return extnAttrs.keySet();
     }

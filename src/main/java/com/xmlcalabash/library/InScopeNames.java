@@ -20,21 +20,9 @@
 package com.xmlcalabash.library;
 
 import com.xmlcalabash.core.XMLCalabash;
-import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.io.WritablePipe;
-import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.util.TreeWriter;
-import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XdmAtomicValue;
-import net.sf.saxon.s9api.XdmItem;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmSequenceIterator;
-import net.sf.saxon.s9api.XdmValue;
-
-import java.util.Hashtable;
 
 /**
  *

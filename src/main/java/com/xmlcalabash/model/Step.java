@@ -19,23 +19,21 @@
 
 package com.xmlcalabash.model;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Vector;
-import java.util.List;
-
+import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.util.MessageFormatter;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmNode;
-import com.xmlcalabash.core.XProcConstants;
-import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.core.XProcException;
 import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Vector;
 
 /**
  *
@@ -425,7 +423,7 @@ public class Step extends SourceArtifact {
             return true;
         }
         
-        Hashtable<String,Input> declInputs = new Hashtable<String,Input> ();
+        HashMap<String,Input> declInputs = new HashMap<String,Input> ();
         for (Input input : decl.inputs()) {
             declInputs.put(input.getPort(), input);
         }
@@ -444,7 +442,7 @@ public class Step extends SourceArtifact {
             }
         }
 
-        Hashtable<String,Output> declOutputs = new Hashtable<String,Output>();
+        HashMap<String,Output> declOutputs = new HashMap<String,Output>();
         for (Output output : decl.outputs()) {
             declOutputs.put(output.getPort(), output);
         }
@@ -1093,7 +1091,7 @@ public class Step extends SourceArtifact {
             throw new UnsupportedOperationException("Unexpected step type.");
         }
 
-        Hashtable<String,Input> declInputs = new Hashtable<String,Input> ();
+        HashMap<String,Input> declInputs = new HashMap<String,Input> ();
         for (Input input : decl.inputs()) {
             declInputs.put(input.getPort(), input);
         }
@@ -1129,7 +1127,7 @@ public class Step extends SourceArtifact {
             }
         }
         
-        Hashtable<String,Output> declOutputs = new Hashtable<String,Output>();
+        HashMap<String,Output> declOutputs = new HashMap<String,Output>();
         for (Output output : decl.outputs()) {
             declOutputs.put(output.getPort(), output);
         }
@@ -1158,7 +1156,7 @@ public class Step extends SourceArtifact {
             throw new UnsupportedOperationException("Unexpected step type: " + getType());
         }
 
-        Hashtable<QName,Option> declOptions = new Hashtable<QName,Option> ();
+        HashMap<QName,Option> declOptions = new HashMap<QName,Option> ();
         for (Option option : decl.options()) {
             declOptions.put(option.getName(), option);
         }

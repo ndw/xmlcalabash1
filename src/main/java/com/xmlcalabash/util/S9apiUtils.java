@@ -211,6 +211,7 @@ public class S9apiUtils {
     public static boolean xpathEqual(Processor proc, XdmItem a, XdmItem b) {
         try {
             XPathCompiler c = proc.newXPathCompiler();
+            c.setSchemaAware(proc.isSchemaAware());
             c.declareVariable(vara);
             c.declareVariable(varb);
 

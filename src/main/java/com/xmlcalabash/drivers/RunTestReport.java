@@ -30,21 +30,7 @@ import com.xmlcalabash.util.AxisNodes;
 import com.xmlcalabash.util.DefaultTestReporter;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TestReporter;
-import net.sf.saxon.s9api.Axis;
-import net.sf.saxon.s9api.DocumentBuilder;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.Serializer;
-import net.sf.saxon.s9api.XPathCompiler;
-import net.sf.saxon.s9api.XPathExecutable;
-import net.sf.saxon.s9api.XPathSelector;
-import net.sf.saxon.s9api.XdmAtomicValue;
-import net.sf.saxon.s9api.XdmDestination;
-import net.sf.saxon.s9api.XdmItem;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmNodeKind;
-import net.sf.saxon.s9api.XdmSequenceIterator;
-import net.sf.saxon.s9api.XdmValue;
+import net.sf.saxon.s9api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
@@ -58,8 +44,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.Vector;
@@ -288,7 +274,7 @@ public class RunTestReport {
             return result;
         }
 
-        Hashtable<String, ReadablePipe> pipeoutputs = new Hashtable<String, ReadablePipe>();
+        HashMap<String, ReadablePipe> pipeoutputs = new HashMap<String, ReadablePipe>();
         try {
             pipeoutputs = runPipe(t.pipeline.pipeline, t.inputs, t.outputs, t.parameters, t.options);
         } catch (XProcException xprocex) {
@@ -314,7 +300,7 @@ public class RunTestReport {
 
         if (t.comparepipeline != null) {
             XProcPipeline compare = t.comparepipeline;
-            Hashtable<String, Vector<XdmNode>> cinputs = new Hashtable<String, Vector<XdmNode>> ();
+            HashMap<String, Vector<XdmNode>> cinputs = new HashMap<String, Vector<XdmNode>> ();
             for (String port : pipeoutputs.keySet()) {
                 if (compare.inputPorts.contains(port)) {
                     ReadablePipe pipe = pipeoutputs.get(port);
@@ -335,8 +321,8 @@ public class RunTestReport {
             }
         }
 
-        Hashtable<String,Vector<XdmNode>> results = new Hashtable<String,Vector<XdmNode>> ();
-        Hashtable<String,Vector<XdmNode>> expects = new Hashtable<String,Vector<XdmNode>> ();
+        HashMap<String,Vector<XdmNode>> results = new HashMap<String,Vector<XdmNode>> ();
+        HashMap<String,Vector<XdmNode>> expects = new HashMap<String,Vector<XdmNode>> ();
 
         try {
             for (String port : pipeoutputs.keySet()) {
@@ -407,7 +393,7 @@ public class RunTestReport {
                         XdmNode tdoc = pexp.get(pos);
                         XdmNode pdoc = pres.get(pos);
 
-                        XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
+                        XPathCompiler xcomp = runtime.newXPathCompiler(testNode.getBaseURI());
                         xcomp.declareVariable(doca);
                         xcomp.declareVariable(docb);
 
@@ -441,11 +427,11 @@ public class RunTestReport {
         return result;
     }
 
-    private Hashtable<String,ReadablePipe> runPipe(XdmNode pipeline,
-                                                   Hashtable<String, Vector<XdmNode>> inputs,
-                                                   Hashtable<String, Vector<XdmNode>> outputs,
-                                                   Hashtable<QName, String> parameters,
-                                                   Hashtable<QName, String> options) throws SaxonApiException {
+    private HashMap<String,ReadablePipe> runPipe(XdmNode pipeline,
+                                                   HashMap<String, Vector<XdmNode>> inputs,
+                                                   HashMap<String, Vector<XdmNode>> outputs,
+                                                   HashMap<QName, String> parameters,
+                                                   HashMap<QName, String> options) throws SaxonApiException {
 
         XPipeline xpipeline = runtime.use(pipeline);
 
@@ -494,7 +480,7 @@ public class RunTestReport {
             throw new XProcException(e);
         }
 
-        Hashtable<String, ReadablePipe> pipeoutputs = new Hashtable<String, ReadablePipe> ();
+        HashMap<String, ReadablePipe> pipeoutputs = new HashMap<String, ReadablePipe> ();
 
         Set<String> pipeouts = xpipeline.getOutputs();
         for (String port : pipeouts) {
@@ -515,7 +501,7 @@ public class RunTestReport {
     }
 
     private void startReport() {
-        Hashtable<String,String> props = new Hashtable<String,String> ();
+        HashMap<String,String> props = new HashMap<String,String> ();
         props.put("name", runtime.getProductName());
         props.put("vendor", runtime.getVendor());
         props.put("vendor-uri", runtime.getVendorURI());
@@ -569,10 +555,10 @@ public class RunTestReport {
     private class XProcTest {
         private final QName _error = new QName("error");
         private final QName _ignoreWS = new QName("ignore-whitespace-differences");
-        public Hashtable<String, Vector<XdmNode>> inputs = new Hashtable<String, Vector<XdmNode>>();
-        public Hashtable<String, Vector<XdmNode>> outputs = new Hashtable<String, Vector<XdmNode>>();
-        public Hashtable<QName, String> parameters = new Hashtable<QName, String>();
-        public Hashtable<QName, String> options = new Hashtable<QName, String>();
+        public HashMap<String, Vector<XdmNode>> inputs = new HashMap<String, Vector<XdmNode>>();
+        public HashMap<String, Vector<XdmNode>> outputs = new HashMap<String, Vector<XdmNode>>();
+        public HashMap<QName, String> parameters = new HashMap<QName, String>();
+        public HashMap<QName, String> options = new HashMap<QName, String>();
         public XProcPipeline pipeline = null;
         public XProcPipeline comparepipeline = null;
         public XdmNode title = null;

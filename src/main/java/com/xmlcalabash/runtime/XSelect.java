@@ -1,22 +1,29 @@
 package com.xmlcalabash.runtime;
 
-import com.xmlcalabash.io.ReadablePipe;
-import com.xmlcalabash.io.DocumentSequence;
-import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.io.DocumentSequence;
+import com.xmlcalabash.io.ReadablePipe;
+import com.xmlcalabash.model.NamespaceBinding;
+import com.xmlcalabash.model.RuntimeValue;
+import com.xmlcalabash.model.Step;
 import com.xmlcalabash.util.MessageFormatter;
 import com.xmlcalabash.util.S9apiUtils;
-import com.xmlcalabash.model.NamespaceBinding;
-import com.xmlcalabash.model.Step;
-import com.xmlcalabash.model.RuntimeValue;
-
-import java.util.Iterator;
-import java.util.Hashtable;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XPathCompiler;
+import net.sf.saxon.s9api.XPathExecutable;
+import net.sf.saxon.s9api.XPathSelector;
+import net.sf.saxon.s9api.XdmAtomicValue;
+import net.sf.saxon.s9api.XdmDestination;
+import net.sf.saxon.s9api.XdmItem;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmNodeKind;
 import org.slf4j.Logger;
-
-import net.sf.saxon.s9api.*;
-import net.sf.saxon.sxpath.IndependentContext;
 import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.Iterator;
 
 /**
  * Select.java
@@ -82,19 +89,16 @@ public class XSelect implements ReadablePipe {
 
         try {
             NamespaceBinding bindings = new NamespaceBinding(runtime,context);
-            XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
-            xcomp.setBaseURI(context.getBaseURI());
+            XPathCompiler xcomp = runtime.newXPathCompiler(context.getBaseURI());
 
-            IndependentContext icontext = (IndependentContext) xcomp.getUnderlyingStaticContext();
-
-            Hashtable<QName, RuntimeValue> inScopeOptions = new Hashtable<QName, RuntimeValue> ();
+            HashMap<QName, RuntimeValue> inScopeOptions = new HashMap<> ();
             try {
                 inScopeOptions = ((XCompoundStep) forStep).getInScopeOptions();
             } catch (ClassCastException cce) {
                 // FIXME: Surely there's a better way to do this!!!
             }
             
-            Hashtable<QName, RuntimeValue> boundOpts = new Hashtable<QName, RuntimeValue> ();
+            HashMap<QName, RuntimeValue> boundOpts = new HashMap<QName, RuntimeValue> ();
             for (QName name : inScopeOptions.keySet()) {
                 RuntimeValue v = inScopeOptions.get(name);
                 if (v.initialized()) {

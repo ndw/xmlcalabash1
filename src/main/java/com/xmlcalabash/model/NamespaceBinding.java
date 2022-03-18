@@ -21,13 +21,12 @@ package com.xmlcalabash.model;
 
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
-
-import java.util.HashSet;
-import java.util.Hashtable;
-
+import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmSequenceIterator;
-import net.sf.saxon.s9api.Axis;
+
+import java.util.HashMap;
+import java.util.HashSet;
 
 /**
  * Created by IntelliJ IDEA.
@@ -42,15 +41,15 @@ public class NamespaceBinding {
     private String binding = null;
     private String expr = null;
     private HashSet<String> except = new HashSet<String> (); // Default is nothing excluded
-    private Hashtable<String,String> nsBindings = new Hashtable<String,String> ();
+    private HashMap<String,String> nsBindings = new HashMap<String,String> ();
 
     public NamespaceBinding(XProcRuntime xproc, XdmNode node) {
         runtime = xproc;
         this.node = node;
 
-        XdmSequenceIterator nsIter = node.axisIterator(Axis.NAMESPACE);
+        XdmSequenceIterator<XdmNode> nsIter = node.axisIterator(Axis.NAMESPACE);
         while (nsIter.hasNext()) {
-            XdmNode ns = (XdmNode) nsIter.next();
+            XdmNode ns = nsIter.next();
             nsBindings.put((ns.getNodeName()==null ? "" : ns.getNodeName().getLocalName()),ns.getStringValue());
         }
     }
@@ -83,7 +82,7 @@ public class NamespaceBinding {
         return expr;
     }
 
-    public Hashtable<String,String> getNamespaceBindings() {
+    public HashMap<String,String> getNamespaceBindings() {
         return nsBindings;
     }
 

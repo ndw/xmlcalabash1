@@ -28,7 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -58,7 +58,7 @@ public class DefaultStep implements XProcStep {
     public static final QName cx_message = new QName(XProcConstants.NS_CALABASH_EX, "message");
 
     protected Logger logger = null;
-    private Hashtable<QName,RuntimeValue> options = null;
+    private HashMap<QName,RuntimeValue> options = null;
     protected XProcRuntime runtime = null;
     protected XAtomicStep step = null;
 
@@ -101,7 +101,7 @@ public class DefaultStep implements XProcStep {
 
     public void setOption(QName name, RuntimeValue value) {
         if (options == null) {
-            options = new Hashtable<QName,RuntimeValue> ();
+            options = new HashMap<QName,RuntimeValue> ();
         }
         options.put(name,value);
     }
@@ -312,26 +312,14 @@ public class DefaultStep implements XProcStep {
         return serializer;
     }
 
-    public Vector<XdmItem> evaluateXPath(XdmNode doc, Hashtable<String,String> nsBindings, String xpath, Hashtable<QName,RuntimeValue> globals) {
+    public Vector<XdmItem> evaluateXPath(XdmNode doc, HashMap<String,String> nsBindings, String xpath, HashMap<QName,RuntimeValue> globals) {
         Vector<XdmItem> results = new Vector<XdmItem> ();
 
-        Configuration config = runtime.getProcessor().getUnderlyingConfiguration();
-
         try {
-            XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
-            URI baseURI = step.getNode().getBaseURI();
-            if (!"".equals(baseURI.toASCIIString())) {
-                xcomp.setBaseURI(baseURI);
-            }
-
+            XPathCompiler xcomp = runtime.newXPathCompiler(step.getNode().getBaseURI(), nsBindings);
             // Extension functions are not available here...
-
             for (QName varname : globals.keySet()) {
                 xcomp.declareVariable(varname);
-            }
-
-            for (String prefix : nsBindings.keySet()) {
-                xcomp.declareNamespace(prefix, nsBindings.get(prefix));
             }
             XPathExecutable xexec = null;
             try {

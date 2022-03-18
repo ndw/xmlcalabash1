@@ -29,14 +29,27 @@ import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.util.*;
+import com.xmlcalabash.util.AxisNodes;
+import com.xmlcalabash.util.HttpUtils;
+import com.xmlcalabash.util.MessageFormatter;
+import com.xmlcalabash.util.ProcessMatch;
+import com.xmlcalabash.util.ProcessMatchingNodes;
+import com.xmlcalabash.util.TreeWriter;
+import com.xmlcalabash.util.TypeUtils;
+import com.xmlcalabash.util.XPointer;
 import net.sf.saxon.event.ReceiverOption;
 import net.sf.saxon.om.AttributeInfo;
 import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.om.EmptyAttributeMap;
 import net.sf.saxon.om.FingerprintedQName;
 import net.sf.saxon.om.NodeName;
-import net.sf.saxon.s9api.*;
+import net.sf.saxon.s9api.Axis;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XdmItem;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmNodeKind;
+import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.type.BuiltInAtomicType;
 
 import java.io.BufferedReader;
@@ -44,7 +57,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Stack;
+import java.util.Vector;
 import java.util.regex.Pattern;
 
 /**
@@ -148,9 +164,9 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
 
     private XdmNode expandXIncludes(XdmNode doc) {
         // Does this document include any xi:include elements?
-        Hashtable<String,String> xins = new Hashtable<>();
+        HashMap<String,String> xins = new HashMap<>();
         xins.put("xi", "http://www.w3.org/2001/XInclude");
-        Vector<XdmItem> ebv = evaluateXPath(doc, xins,"//xi:include", new Hashtable<QName, RuntimeValue>());
+        Vector<XdmItem> ebv = evaluateXPath(doc, xins,"//xi:include", new HashMap<QName, RuntimeValue>());
         if (ebv.isEmpty()) {
             logger.trace(MessageFormatter.nodeMessage(doc, "Skipping expandXIncludes (no xi:includes): " + doc.getBaseURI()));
             return doc;
@@ -343,7 +359,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                 if (xpointer == null) {
                     matcher.addSubtree(subtree.getResult());
                 } else {
-                    Hashtable<String,String> nsBindings = xpointer.xpathNamespaces();
+                    HashMap<String,String> nsBindings = xpointer.xpathNamespaces();
                     Vector<XdmNode> nodes = xpointer.selectNodes(runtime,subtree.getResult());
                     if (nodes == null) {
                         logger.trace(MessageFormatter.nodeMessage(node, "XInclude parse failed: " + href));

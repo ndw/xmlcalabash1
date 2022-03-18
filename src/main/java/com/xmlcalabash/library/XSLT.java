@@ -27,7 +27,12 @@ import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.util.*;
+import com.xmlcalabash.util.RebasedDocument;
+import com.xmlcalabash.util.RebasedNode;
+import com.xmlcalabash.util.S9apiUtils;
+import com.xmlcalabash.util.TreeWriter;
+import com.xmlcalabash.util.TypeUtils;
+import com.xmlcalabash.util.XProcCollectionFinder;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.lib.CollectionFinder;
 import net.sf.saxon.lib.OutputURIResolver;
@@ -36,24 +41,7 @@ import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.om.EmptyAttributeMap;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.TreeInfo;
-import net.sf.saxon.s9api.Action;
-import net.sf.saxon.s9api.Destination;
-import net.sf.saxon.s9api.DocumentBuilder;
-import net.sf.saxon.s9api.MessageListener;
-import net.sf.saxon.s9api.Processor;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.RawDestination;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.Serializer;
-import net.sf.saxon.s9api.ValidationMode;
-import net.sf.saxon.s9api.XdmDestination;
-import net.sf.saxon.s9api.XdmEmptySequence;
-import net.sf.saxon.s9api.XdmItem;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmValue;
-import net.sf.saxon.s9api.XsltCompiler;
-import net.sf.saxon.s9api.XsltExecutable;
-import net.sf.saxon.s9api.XsltTransformer;
+import net.sf.saxon.s9api.*;
 import org.xml.sax.InputSource;
 
 import javax.xml.transform.Transformer;
@@ -65,8 +53,6 @@ import javax.xml.transform.sax.SAXSource;
 import java.io.ByteArrayOutputStream;
 import java.net.URI;
 import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.Vector;
 import java.util.function.Function;
 
@@ -90,7 +76,7 @@ public class XSLT extends DefaultStep {
     private ReadablePipe stylesheetPipe = null;
     private WritablePipe resultPipe = null;
     private WritablePipe secondaryPipe = null;
-    private Hashtable<QName, RuntimeValue> params = new Hashtable<QName, RuntimeValue>();
+    private HashMap<QName, RuntimeValue> params = new HashMap<QName, RuntimeValue>();
 
     /*
      * Creates a new instance of XSLT

@@ -35,10 +35,15 @@ import net.sf.saxon.om.AttributeInfo;
 import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.om.NamespaceBinding;
 import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.s9api.*;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XdmAtomicValue;
+import net.sf.saxon.s9api.XdmItem;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmNodeKind;
 
 import java.util.ArrayList;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Vector;
 
 /**
@@ -55,7 +60,7 @@ public class Template extends DefaultStep implements ProcessMatchingNodes {
     private ReadablePipe source = null;
     private ReadablePipe template = null;
     private WritablePipe result = null;
-    private Hashtable<QName,RuntimeValue> params = new Hashtable<QName, RuntimeValue> ();
+    private HashMap<QName,RuntimeValue> params = new HashMap<QName, RuntimeValue> ();
     private ProcessMatch matcher = null;
     private XdmNode context = null;
 
@@ -187,7 +192,7 @@ public class Template extends DefaultStep implements ProcessMatchingNodes {
         String ptext = "";
         String ch = "";
 
-        Hashtable<String,String> nsbindings = new Hashtable<> ();
+        HashMap<String,String> nsbindings = new HashMap<> ();
 
         // FIXME: Surely there's a better way to do this?
         XdmNode parent = node;

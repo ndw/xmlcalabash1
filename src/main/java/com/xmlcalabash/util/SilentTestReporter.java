@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Vector;
 
 /**
@@ -22,7 +22,7 @@ public class SilentTestReporter implements TestReporter {
     }
 
     @Override
-    public void startReport(Hashtable<String, String> props) {
+    public void startReport(HashMap<String, String> props) {
         // nop;
     }
 

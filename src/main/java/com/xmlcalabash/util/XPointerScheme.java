@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -74,7 +74,7 @@ public class XPointerScheme {
         return null;
     }
 
-    public Vector<XdmNode> selectNodes(XProcRuntime runtime, XdmNode doc, Hashtable<String,String> nsBindings) {
+    public Vector<XdmNode> selectNodes(XProcRuntime runtime, XdmNode doc, HashMap<String,String> nsBindings) {
         String select = xpathEquivalent();
 
         if (select == null) {
@@ -84,10 +84,7 @@ public class XPointerScheme {
         Vector<XdmNode> selectedNodes = new Vector<XdmNode> ();
 
         XPathSelector selector = null;
-        XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
-        for (String prefix : nsBindings.keySet()) {
-            xcomp.declareNamespace(prefix, nsBindings.get(prefix));
-        }
+        XPathCompiler xcomp = runtime.newXPathCompiler(doc.getBaseURI(), nsBindings);
 
         try {
             XPathExecutable xexec = xcomp.compile(select);

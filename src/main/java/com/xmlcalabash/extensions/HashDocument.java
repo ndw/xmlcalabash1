@@ -20,7 +20,7 @@
 package com.xmlcalabash.extensions;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Hashtable;
+import java.util.HashMap;
 
 import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcConstants;
@@ -61,7 +61,7 @@ public class HashDocument extends DefaultStep {
     private static final QName _sha = new QName("", "sha");
     private static final QName _hmac = new QName("cx", XProcConstants.NS_CALABASH_EX, "hmac");
     private static final QName _accessKey = new QName("cx", XProcConstants.NS_CALABASH_EX, "accessKey");
-    private Hashtable<QName,String> params = new Hashtable<QName, String> ();
+    private HashMap<QName,String> params = new HashMap<QName, String> ();
 
 
     private ReadablePipe source = null;

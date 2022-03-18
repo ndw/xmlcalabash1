@@ -1,37 +1,18 @@
 package com.xmlcalabash.model;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Method;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
-import org.slf4j.Logger;
-
-import javax.xml.XMLConstants;
-import javax.xml.transform.sax.SAXSource;
-
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.extensions.UntilUnchanged;
-import com.xmlcalabash.util.*;
+import com.xmlcalabash.util.AxisNodes;
+import com.xmlcalabash.util.S9apiUtils;
+import com.xmlcalabash.util.TypeUtils;
+import com.xmlcalabash.util.URIUtils;
 import net.sf.saxon.PreparedStylesheet;
 import net.sf.saxon.functions.FunctionLibrary;
 import net.sf.saxon.query.QueryModule;
 import net.sf.saxon.query.StaticQueryContext;
 import net.sf.saxon.query.XQueryExpression;
-import net.sf.saxon.query.XQueryFunctionLibrary;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.Processor;
@@ -43,11 +24,29 @@ import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import net.sf.saxon.s9api.XsltCompiler;
 import net.sf.saxon.s9api.XsltExecutable;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
+
+import javax.xml.XMLConstants;
+import javax.xml.transform.sax.SAXSource;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
 
 /**
  *
@@ -353,8 +352,8 @@ public class Parser {
             sig.add(XProcConstants.p_with_param);
         }
 
-        Hashtable<String,Serialization> serializations = new Hashtable<String,Serialization> ();
-        Hashtable<String,Log> loggers = new Hashtable<String,Log> ();
+        HashMap<String,Serialization> serializations = new HashMap<String,Serialization> ();
+        HashMap<String,Log> loggers = new HashMap<String,Log> ();
 
         int pos = 1;
         boolean done = false;

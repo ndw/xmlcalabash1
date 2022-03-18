@@ -98,13 +98,7 @@ public class SplitSequence extends DefaultStep {
         DocumentSequenceIterator xsi = new DocumentSequenceIterator(); // See below
         xsi.setLast(count);
 
-        XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
-        xcomp.setBaseURI(step.getNode().getBaseURI());
-
-        for (String prefix : test.getNamespaceBindings().keySet()) {
-            xcomp.declareNamespace(prefix, test.getNamespaceBindings().get(prefix));
-        }
-
+        XPathCompiler xcomp = runtime.newXPathCompiler(step.getNode().getBaseURI(), test.getNamespaceBindings());
         XPathExecutable xexec = xcomp.compile(test.getString());
 
         // From Michael Kay: http://markmail.org/message/vkb2vaq2miylgndu

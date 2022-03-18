@@ -19,26 +19,24 @@
 
 package com.xmlcalabash.library;
 
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Iterator;
-
 import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.util.TreeWriter;
-import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.io.WritablePipe;
+import com.xmlcalabash.model.RuntimeValue;
+import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.util.TypeUtils;
 import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.om.EmptyAttributeMap;
-import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.XdmValue;
-import net.sf.saxon.s9api.XdmItem;
+import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmAtomicValue;
+import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
-import com.xmlcalabash.runtime.XAtomicStep;
+import net.sf.saxon.s9api.XdmValue;
+
+import java.util.HashMap;
 
 /**
  *
@@ -58,7 +56,7 @@ public class Parameters extends DefaultStep {
     private static final QName _value = new QName("value");
     private static final QName _type = new QName("type");
     private WritablePipe result = null;
-    Hashtable<QName,RuntimeValue> parameters = new Hashtable<> ();
+    HashMap<QName,RuntimeValue> parameters = new HashMap<> ();
 
     /* Creates a new instance of Count */
     public Parameters(XProcRuntime runtime, XAtomicStep step) {

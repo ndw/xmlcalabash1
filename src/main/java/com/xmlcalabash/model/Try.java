@@ -19,12 +19,12 @@
 
 package com.xmlcalabash.model;
 
-import java.util.HashSet;
-import java.util.Hashtable;
-
-import net.sf.saxon.s9api.XdmNode;
-import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.core.XProcRuntime;
+import net.sf.saxon.s9api.XdmNode;
+
+import java.util.HashMap;
+import java.util.HashSet;
 
 /**
  *
@@ -98,8 +98,8 @@ public class Try  extends DeclareStep {
         boolean valid = true;
        
         // First, make sure all the substeps have the same bindings
-        Hashtable<String,Input> inputs = new Hashtable<String,Input>();
-        Hashtable<String,Output> outputs = new Hashtable<String,Output>();
+        HashMap<String,Input> inputs = new HashMap<String,Input>();
+        HashMap<String,Output> outputs = new HashMap<String,Output>();
 
          if (subpipeline.size() == 2) {
             Group p_group = (Group) subpipeline.get(0);

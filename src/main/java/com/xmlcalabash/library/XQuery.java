@@ -27,7 +27,11 @@ import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.util.*;
+import com.xmlcalabash.util.Base64;
+import com.xmlcalabash.util.S9apiUtils;
+import com.xmlcalabash.util.TreeWriter;
+import com.xmlcalabash.util.TypeUtils;
+import com.xmlcalabash.util.XProcCollectionFinder;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.lib.CollectionFinder;
 import net.sf.saxon.om.AttributeMap;
@@ -41,10 +45,8 @@ import net.sf.saxon.s9api.XQueryExecutable;
 import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -62,7 +64,7 @@ public class XQuery extends DefaultStep {
     private static final QName cx_decode = new QName("cx", XProcConstants.NS_CALABASH_EX, "decode");
 
     private ReadablePipe source = null;
-    private Hashtable<QName,RuntimeValue> params = new Hashtable<QName,RuntimeValue> ();
+    private HashMap<QName,RuntimeValue> params = new HashMap<QName,RuntimeValue> ();
     private ReadablePipe query = null;
     private WritablePipe result = null;
     

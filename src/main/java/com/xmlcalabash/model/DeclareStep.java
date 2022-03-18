@@ -19,31 +19,28 @@
 
 package com.xmlcalabash.model;
 
+import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcData;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.QName;
+import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.XdmNode;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.Vector;
-import java.util.Hashtable;
-import java.util.HashSet;
-import java.util.Iterator;
-import org.slf4j.Logger;
-
-import com.xmlcalabash.core.XProcConstants;
-import com.xmlcalabash.core.XProcException;
-import org.slf4j.LoggerFactory;
 
 public class DeclareStep extends CompoundStep implements DeclarationScope {
     protected boolean psviRequired = false;
     protected String xpathVersion = "2.0";
     private QName declaredType = null;
     private boolean atomic = true;
-    protected Hashtable<QName, DeclareStep> declaredSteps = new Hashtable<QName, DeclareStep> ();
+    protected HashMap<QName, DeclareStep> declaredSteps = new HashMap<QName, DeclareStep> ();
     private List<PipelineLibrary> importedLibs = new ArrayList<>();
     private DeclarationScope parentScope = null;
     private Vector<XdmNode> rest = null;

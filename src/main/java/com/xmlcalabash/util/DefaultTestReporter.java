@@ -12,14 +12,14 @@ import java.io.ByteArrayOutputStream;
 import java.net.URI;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Vector;
 
 /**
  * Created by ndw on 8/27/14.
  */
 public class DefaultTestReporter implements TestReporter {
-    private Logger logger = LoggerFactory.getLogger(DefaultTestReporter.class);
+    private final Logger logger = LoggerFactory.getLogger(DefaultTestReporter.class);
     XProcRuntime runtime = null;
 
     public DefaultTestReporter(XProcRuntime runtime) {
@@ -32,7 +32,7 @@ public class DefaultTestReporter implements TestReporter {
     }
 
     @Override
-    public void startReport(Hashtable<String,String> props) {
+    public void startReport(HashMap<String,String> props) {
         GregorianCalendar cal = new GregorianCalendar();
 
         System.out.println("<test-report xmlns='http://xproc.org/ns/testreport'>");

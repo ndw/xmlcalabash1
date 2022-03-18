@@ -1,19 +1,16 @@
 package com.xmlcalabash.util;
 
 import com.xmlcalabash.core.XProcConstants;
-import net.sf.saxon.s9api.*;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.Vector;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
-
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.XdmNode;
+
+import java.io.BufferedReader;
+import java.util.HashMap;
+import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by IntelliJ IDEA.
@@ -42,8 +39,8 @@ public class XPointer {
         }
     }
 
-    public Hashtable<String,String> xpathNamespaces() {
-        Hashtable<String,String> bindings = new Hashtable<String,String> ();
+    public HashMap<String,String> xpathNamespaces() {
+        HashMap<String,String> bindings = new HashMap<String,String> ();
         for (XPointerScheme scheme : parts) {
             if (_xmlns.equals(scheme.getName())) {
                 XPointerXmlnsScheme xmlns = (XPointerXmlnsScheme) scheme;

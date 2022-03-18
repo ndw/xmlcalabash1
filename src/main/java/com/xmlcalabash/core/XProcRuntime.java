@@ -70,13 +70,13 @@ import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.Serializer;
+import net.sf.saxon.s9api.XPathCompiler;
 import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XsltCompiler;
 import net.sf.saxon.s9api.XsltExecutable;
 import net.sf.saxon.s9api.XsltTransformer;
 import net.sf.saxon.serialize.SerializationProperties;
-import net.sf.saxon.type.BuiltInAtomicType;
 import net.sf.saxon.type.Untyped;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
@@ -109,7 +109,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -131,11 +131,11 @@ public class XProcRuntime implements DeclarationScope {
     private QName errorCode = null;
     private XdmNode errorNode = null;
     private String errorMessage = null;
-    private Hashtable<QName, DeclareStep> declaredSteps = new Hashtable<>();
+    private HashMap<QName, DeclareStep> declaredSteps = new HashMap<>();
     private DeclareStep pipeline = null;
     private XPipeline xpipeline = null;
     private static String episode = null;
-    private Hashtable<String,Vector<XdmNode>> collections = null;
+    private HashMap<String,Vector<XdmNode>> collections = null;
     private URI staticBaseURI = null;
     private URI baseURI = null;
     private boolean allowGeneralExpressions = true;
@@ -159,7 +159,7 @@ public class XProcRuntime implements DeclarationScope {
     private SerializationProperties defaultSerializationProperties = new SerializationProperties();
 
     private Output profile = null;
-    private Hashtable<XStep,Calendar> profileHash = null;
+    private HashMap<XStep,Calendar> profileHash = null;
     private TreeWriter profileWriter = null;
     private QName profileProfile = new QName("http://xmlcalabash.com/ns/profile", "profile");
     private QName profileType = new QName("", "type");
@@ -263,7 +263,7 @@ public class XProcRuntime implements DeclarationScope {
 
         if (config.profile != null) {
             profile = config.profile;
-            profileHash = new Hashtable<XStep, Calendar> ();
+            profileHash = new HashMap<XStep, Calendar> ();
             profileWriter = new TreeWriter(this);
             profileWriter.startDocument(URI.create("http://xmlcalabash.com/output/profile.xml"));
         }
@@ -484,7 +484,7 @@ public class XProcRuntime implements DeclarationScope {
 
     public void setCollection(URI href, Vector<XdmNode> docs) {
         if (collections == null) {
-            collections = new Hashtable<String,Vector<XdmNode>> ();
+            collections = new HashMap<String,Vector<XdmNode>> ();
         }
         collections.put(href.toASCIIString(), docs);
     }
@@ -598,7 +598,7 @@ public class XProcRuntime implements DeclarationScope {
     private synchronized void reset() {
         errorCode = null;
         errorMessage = null;
-        declaredSteps = new Hashtable<QName,DeclareStep> ();
+        declaredSteps = new HashMap<QName,DeclareStep> ();
         //explicitDeclarations = false;
         pipeline = null;
         xpipeline = null;
@@ -623,7 +623,7 @@ public class XProcRuntime implements DeclarationScope {
         }
 
         if (profile != null) {
-            profileHash = new Hashtable<XStep, Calendar>();
+            profileHash = new HashMap<XStep, Calendar>();
             profileWriter = new TreeWriter(this);
             profileWriter.startDocument(URI.create("http://xmlcalabash.com/output/profile.xml"));
         }
@@ -669,6 +669,28 @@ public class XProcRuntime implements DeclarationScope {
             error(ioe);
             throw new XProcException(ioe);
         }
+    }
+
+    public XPathCompiler newXPathCompiler(URI baseURI) {
+        return newXPathCompiler(baseURI, null);
+    }
+
+    public XPathCompiler newXPathCompiler(URI baseURI, HashMap<String,String> nsbindings) {
+        XPathCompiler compiler = processor.newXPathCompiler();
+        compiler.setSchemaAware(processor.isSchemaAware());
+        if (baseURI != null) {
+            if (baseURI.isAbsolute()) {
+                compiler.setBaseURI(baseURI);
+            } else {
+                compiler.setBaseURI(getBaseURI().resolve(baseURI));
+            }
+        }
+        if (nsbindings != null) {
+            for (String prefix : nsbindings.keySet()) {
+                compiler.declareNamespace(prefix, nsbindings.get(prefix));
+            }
+        }
+        return compiler;
     }
 
     private XPipeline _load(Input pipelineInput) throws SaxonApiException, IOException {

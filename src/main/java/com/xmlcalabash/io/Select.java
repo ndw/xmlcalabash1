@@ -73,12 +73,7 @@ public class Select implements ReadablePipe {
         initialized = true;
         try {
             NamespaceBinding bindings = new NamespaceBinding(runtime,context);
-            XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
-            xcomp.setBaseURI(context.getBaseURI());
-            for (String prefix : bindings.getNamespaceBindings().keySet()) {
-                xcomp.declareNamespace(prefix, bindings.getNamespaceBindings().get(prefix));
-            }
-
+            XPathCompiler xcomp = runtime.newXPathCompiler(context.getBaseURI(), bindings.getNamespaceBindings());
             XPathExecutable xexec = xcomp.compile(select);
             selector = xexec.load();
             // FIXME: Set getVariables

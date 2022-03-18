@@ -37,7 +37,7 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Properties;
 
 /**
@@ -52,7 +52,7 @@ public class FileDataStore implements DataStore {
     private Logger logger = LoggerFactory.getLogger(FileDataStore.class);
 	private final DataStore fallback;
 	private final Properties contentTypes;
-    private Hashtable<String,String> cachedMapping = null;
+    private HashMap<String,String> cachedMapping = null;
 
 	public FileDataStore(DataStore fallback) {
 		super();
@@ -258,7 +258,7 @@ public class FileDataStore implements DataStore {
 
         if (cachedMapping == null) {
             // Let's do this only once...
-            cachedMapping = new Hashtable<String,String> ();
+            cachedMapping = new HashMap<String,String> ();
             Enumeration<?> types = contentTypes.propertyNames();
             while (types.hasMoreElements()) {
                 String type = (String) types.nextElement();

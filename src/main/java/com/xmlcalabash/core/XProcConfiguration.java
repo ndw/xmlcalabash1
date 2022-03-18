@@ -72,22 +72,22 @@ public class XProcConfiguration {
     public String saxonProcessor = "he";
     public boolean schemaAware = false;
     public Input saxonConfig = null;
-    public Hashtable<String,String> nsBindings = new Hashtable<String,String> ();
+    public HashMap<String,String> nsBindings = new HashMap<String,String> ();
     public boolean debug = false;
     public boolean showMessages = false;
     public Output profile = null;
-    public Hashtable<String,Vector<ReadablePipe>> inputs = new Hashtable<String,Vector<ReadablePipe>> ();
+    public HashMap<String,Vector<ReadablePipe>> inputs = new HashMap<String,Vector<ReadablePipe>> ();
     public ReadablePipe pipeline = null;
-    public Hashtable<String,String> outputs = new Hashtable<String,String> ();
-    public Hashtable<String,Hashtable<QName,String>> params = new Hashtable<String,Hashtable<QName,String>> ();
-    public Hashtable<QName,String> options = new Hashtable<QName,String> ();
+    public HashMap<String,String> outputs = new HashMap<String,String> ();
+    public HashMap<String,HashMap<QName,String>> params = new HashMap<String,HashMap<QName,String>> ();
+    public HashMap<QName,String> options = new HashMap<QName,String> ();
     public boolean safeMode = false;
     public String stepName = null;
     public String entityResolver = "org.xmlresolver.Resolver";
     public String uriResolver = "org.xmlresolver.Resolver";
     public String errorListener = null;
-    public Hashtable<QName,Class> implementations = new Hashtable<QName,Class> ();
-    public Hashtable<String,String> serializationOptions = new Hashtable<String,String>();
+    public HashMap<QName,Class> implementations = new HashMap<QName,Class> ();
+    public HashMap<String,String> serializationOptions = new HashMap<String,String>();
     public LogOptions logOpt = LogOptions.WRAPPED;
     public HashMap<String,SaxonExtensionFunction> extensionFunctions = new HashMap<String,SaxonExtensionFunction>();
     public String foProcessor = null;
@@ -98,9 +98,9 @@ public class XProcConfiguration {
     public String mailPort = "25";
     public String mailUser = null;
     public String mailPass = null;
-    public Hashtable<String,String> loaders = new Hashtable<String,String> ();
+    public HashMap<String,String> loaders = new HashMap<String,String> ();
     public HashSet<String> setSaxonProperties = new HashSet<String>();
-    public Hashtable<String,String> proxies = new Hashtable<String,String> ();
+    public HashMap<String,String> proxies = new HashMap<String,String> ();
 
     public boolean extensionValues = false;
     public boolean xpointerOnText = false;
@@ -1236,11 +1236,11 @@ public class XProcConfiguration {
             port = "*";
         }
 
-        Hashtable<QName,String> pvalues;
+        HashMap<QName,String> pvalues;
         if (params.containsKey(port)) {
             pvalues = params.get(port);
         } else {
-            pvalues = new Hashtable<QName,String> ();
+            pvalues = new HashMap<QName,String> ();
         }
 
         pvalues.put(name, value);

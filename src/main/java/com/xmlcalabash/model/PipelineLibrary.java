@@ -19,15 +19,15 @@
 
 package com.xmlcalabash.model;
 
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.QName;
-import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.XdmNode;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
 import java.util.Vector;
@@ -37,9 +37,9 @@ import java.util.Vector;
  * @author ndw
  */
 public class PipelineLibrary extends Step implements DeclarationScope {
-    Hashtable<QName,DeclareStep> declaredSteps = new Hashtable<QName,DeclareStep> ();
-    Vector<DeclareStep> steps = new Vector<DeclareStep> ();
-    private List<PipelineLibrary> importedLibs = new ArrayList<>();
+    private final HashMap<QName,DeclareStep> declaredSteps = new HashMap<QName,DeclareStep> ();
+    private final Vector<DeclareStep> steps = new Vector<> ();
+    private final List<PipelineLibrary> importedLibs = new ArrayList<>();
 
     /* Creates a new instance of PipelineLibrary */
     public PipelineLibrary(XProcRuntime xproc, XdmNode node) {
@@ -51,10 +51,6 @@ public class PipelineLibrary extends Step implements DeclarationScope {
         if (type == null) {
             // It can't be called so it doesn't really matter...
             return;
-        }
-
-        if (declaredSteps.contains(type)) {
-            throw new XProcException(step.getNode(), "You aren't allowed to do this");
         }
 
         steps.add(step);

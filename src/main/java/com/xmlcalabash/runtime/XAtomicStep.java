@@ -1,58 +1,56 @@
 package com.xmlcalabash.runtime;
 
+import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.core.XProcData;
+import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.core.XProcStep;
+import com.xmlcalabash.io.Pipe;
+import com.xmlcalabash.io.ReadableDocument;
+import com.xmlcalabash.io.ReadableInline;
+import com.xmlcalabash.io.ReadablePipe;
+import com.xmlcalabash.io.WritablePipe;
+import com.xmlcalabash.model.Binding;
+import com.xmlcalabash.model.ComputableValue;
+import com.xmlcalabash.model.DataBinding;
+import com.xmlcalabash.model.DeclareStep;
+import com.xmlcalabash.model.DocumentBinding;
+import com.xmlcalabash.model.InlineBinding;
+import com.xmlcalabash.model.Input;
+import com.xmlcalabash.model.NamespaceBinding;
+import com.xmlcalabash.model.Option;
+import com.xmlcalabash.model.Output;
+import com.xmlcalabash.model.Parameter;
+import com.xmlcalabash.model.PipeNameBinding;
+import com.xmlcalabash.model.RuntimeValue;
+import com.xmlcalabash.model.Step;
 import com.xmlcalabash.util.AxisNodes;
 import com.xmlcalabash.util.MessageFormatter;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TypeUtils;
-import com.xmlcalabash.core.XProcConstants;
-import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.core.XProcException;
-import com.xmlcalabash.core.XProcStep;
-import com.xmlcalabash.core.XProcData;
-import com.xmlcalabash.io.ReadablePipe;
-import com.xmlcalabash.io.WritablePipe;
-import com.xmlcalabash.io.ReadableInline;
-import com.xmlcalabash.io.ReadableDocument;
-import com.xmlcalabash.io.Pipe;
-import com.xmlcalabash.model.RuntimeValue;
-import com.xmlcalabash.model.Step;
-import com.xmlcalabash.model.Binding;
-import com.xmlcalabash.model.PipeNameBinding;
-import com.xmlcalabash.model.InlineBinding;
-import com.xmlcalabash.model.DocumentBinding;
-import com.xmlcalabash.model.DataBinding;
-import com.xmlcalabash.model.Input;
-import com.xmlcalabash.model.Output;
-import com.xmlcalabash.model.Parameter;
-import com.xmlcalabash.model.ComputableValue;
-import com.xmlcalabash.model.NamespaceBinding;
-import com.xmlcalabash.model.DeclareStep;
-import com.xmlcalabash.model.Option;
-import net.sf.saxon.om.NamePool;
 import net.sf.saxon.om.NamespaceMap;
-import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.Axis;
-import net.sf.saxon.s9api.XdmNodeKind;
-import net.sf.saxon.s9api.XdmAtomicValue;
+import net.sf.saxon.s9api.SaxonApiUncheckedException;
 import net.sf.saxon.s9api.XPathCompiler;
 import net.sf.saxon.s9api.XPathExecutable;
 import net.sf.saxon.s9api.XPathSelector;
-import net.sf.saxon.s9api.XdmItem;
-import net.sf.saxon.s9api.XdmValue;
-import net.sf.saxon.s9api.XdmSequenceIterator;
+import net.sf.saxon.s9api.XdmAtomicValue;
 import net.sf.saxon.s9api.XdmDestination;
-import net.sf.saxon.s9api.SaxonApiUncheckedException;
+import net.sf.saxon.s9api.XdmItem;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmNodeKind;
+import net.sf.saxon.s9api.XdmSequenceIterator;
+import net.sf.saxon.s9api.XdmValue;
+import net.sf.saxon.trans.XPathException;
 
-import java.util.Vector;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.HashSet;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -70,8 +68,8 @@ public class XAtomicStep extends XStep {
     private final static QName _type = new QName("", "type");
     private final static QName cx_item = new QName("cx", XProcConstants.NS_CALABASH_EX, "item");
 
-    protected Hashtable<String, Vector<ReadablePipe>> inputs = new Hashtable<String, Vector<ReadablePipe>> ();
-    protected Hashtable<String, WritablePipe> outputs = new Hashtable<String, WritablePipe> ();
+    protected HashMap<String, Vector<ReadablePipe>> inputs = new HashMap<String, Vector<ReadablePipe>> ();
+    protected HashMap<String, WritablePipe> outputs = new HashMap<String, WritablePipe> ();
 
     public XAtomicStep(XProcRuntime runtime, Step step, XCompoundStep parent) {
         super(runtime, step);
@@ -346,7 +344,7 @@ public class XAtomicStep extends XStep {
         // Calculate all the options
         DeclareStep decl = step.getDeclaration();
         inScopeOptions = parent.getInScopeOptions();
-        Hashtable<QName,RuntimeValue> futureOptions = new Hashtable<QName,RuntimeValue> ();
+        HashMap<QName,RuntimeValue> futureOptions = new HashMap<QName,RuntimeValue> ();
         for (QName name : step.getOptions()) {
             Option option = step.getOption(name);
             RuntimeValue value = computeValue(option);
@@ -559,7 +557,7 @@ public class XAtomicStep extends XStep {
             }
         }
 
-        RuntimeValue value = new RuntimeValue(stringValue.toString(), items, pnode, new Hashtable<String,String> ());
+        RuntimeValue value = new RuntimeValue(stringValue.toString(), items, pnode, new HashMap<String,String> ());
 
         if (port != null) {
             impl.setParameter(port,pname,value);
@@ -569,8 +567,8 @@ public class XAtomicStep extends XStep {
     }
 
     protected RuntimeValue computeValue(ComputableValue var) {
-        Hashtable<String,String> nsBindings = new Hashtable<String,String> ();
-        Hashtable<QName,RuntimeValue> globals = inScopeOptions;
+        HashMap<String,String> nsBindings = new HashMap<> ();
+        HashMap<QName,RuntimeValue> globals = inScopeOptions;
         XdmNode doc = null;
 
         if (var.getBinding().size() > 0) {
@@ -589,7 +587,7 @@ public class XAtomicStep extends XStep {
         }
 
         for (NamespaceBinding nsbinding : var.getNamespaceBindings()) {
-            Hashtable<String,String> localBindings = new Hashtable<String,String> ();
+            HashMap<String,String> localBindings = new HashMap<> ();
 
             // Compute the namespaces associated with this binding
             if (nsbinding.getBinding() != null) {
@@ -602,18 +600,17 @@ public class XAtomicStep extends XStep {
                 localBindings = nsv.getNamespaceBindings();
             } else if (nsbinding.getXPath() != null) {
                 try {
-                    XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
-                    xcomp.setBaseURI(step.getNode().getBaseURI());
-
-                    for (QName varname : globals.keySet()) {
-                        xcomp.declareVariable(varname);
-                    }
+                    XPathCompiler xcomp = runtime.newXPathCompiler(step.getNode().getBaseURI());
 
                     // Make sure the namespace bindings for evaluating the XPath expr are correct
                     NamespaceMap nsmap = nsbinding.getNode().getUnderlyingNode().getAllNamespaces();
                     nsmap.iteratePrefixes().forEachRemaining(prefix -> {
                         xcomp.declareNamespace(prefix, nsmap.getURIForPrefix(prefix, "".equals(prefix)));
                     });
+
+                    for (QName varname : globals.keySet()) {
+                        xcomp.declareVariable(varname);
+                    }
 
                     XPathExecutable xexec = xcomp.compile(nsbinding.getXPath());
                     XPathSelector selector = xexec.load();
@@ -628,9 +625,7 @@ public class XAtomicStep extends XStep {
                     }
 
                     XdmNode element = null;
-                    Iterator<XdmItem> values = selector.iterator();
-                    while (values.hasNext()) {
-                        XdmItem item = values.next();
+                    for (XdmItem item : selector) {
                         if (element != null || item.isAtomicValue()) {
                             throw XProcException.dynamicError(9);
                         }
@@ -644,9 +639,9 @@ public class XAtomicStep extends XStep {
                         throw XProcException.dynamicError(9);
                     }
 
-                    XdmSequenceIterator nsIter = element.axisIterator(Axis.NAMESPACE);
+                    XdmSequenceIterator<XdmNode> nsIter = element.axisIterator(Axis.NAMESPACE);
                     while (nsIter.hasNext()) {
-                        XdmNode ns = (XdmNode) nsIter.next();
+                        XdmNode ns = nsIter.next();
                         QName prefix = ns.getNodeName();
                         localBindings.put(prefix == null ? "" : prefix.getLocalName(),ns.getStringValue());
                     }
@@ -654,7 +649,7 @@ public class XAtomicStep extends XStep {
                     throw new XProcException(sae);
                 }
             } else if (nsbinding.getNamespaceBindings() != null) {
-                Hashtable<String,String> bindings = nsbinding.getNamespaceBindings();
+                HashMap<String,String> bindings = nsbinding.getNamespaceBindings();
                 for (String prefix : bindings.keySet()) {
                     if ("".equals(prefix) || prefix == null) {
                         // nop; the default namespace never plays a role in XPath expression evaluation
@@ -776,9 +771,9 @@ public class XAtomicStep extends XStep {
         }
     }
 
-    protected Vector<XdmItem> evaluateXPath(XdmNode doc, Hashtable<String,String> nsBindings, String xpath, Hashtable<QName,RuntimeValue> globals) {
+    protected Vector<XdmItem> evaluateXPath(XdmNode doc, HashMap<String,String> nsBindings, String xpath, HashMap<QName,RuntimeValue> globals) {
         Vector<XdmItem> results = new Vector<XdmItem> ();
-        Hashtable<QName,RuntimeValue> boundOpts = new Hashtable<QName,RuntimeValue> ();
+        HashMap<QName,RuntimeValue> boundOpts = new HashMap<QName,RuntimeValue> ();
 
         for (QName name : globals.keySet()) {
             RuntimeValue v = globals.get(name);
@@ -788,22 +783,9 @@ public class XAtomicStep extends XStep {
         }
 
         try {
-            XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
-            URI baseURI = step.getNode().getBaseURI();
-            if (baseURI == null || !baseURI.isAbsolute())  {
-                if (runtime.getBaseURI() != null) {
-                    xcomp.setBaseURI(runtime.getBaseURI().resolve(baseURI));
-                }
-            } else {
-                xcomp.setBaseURI(baseURI);
-            }
-
+            XPathCompiler xcomp = runtime.newXPathCompiler(step.getNode().getBaseURI(), nsBindings);
             for (QName varname : boundOpts.keySet()) {
                 xcomp.declareVariable(varname);
-            }
-
-            for (String prefix : nsBindings.keySet()) {
-                xcomp.declareNamespace(prefix, nsBindings.get(prefix));
             }
             XPathExecutable xexec = null;
             try {

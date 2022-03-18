@@ -4,8 +4,8 @@ import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcData;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.io.ReadablePipe;
+import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.DeclareStep;
 import com.xmlcalabash.model.Option;
 import com.xmlcalabash.model.Output;
@@ -18,12 +18,14 @@ import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.util.TypeUtils;
 import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.om.EmptyAttributeMap;
-import net.sf.saxon.om.NamespaceMap;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Vector;
 
 /**
  * Created by IntelliJ IDEA.
@@ -39,7 +41,7 @@ public class XPipeline extends XCompoundStep {
     private static final QName _namespace = new QName("namespace");
     private static final QName _value = new QName("value");
 
-    private Hashtable<QName, RuntimeValue> optionsPassedIn = null;
+    private HashMap<QName, RuntimeValue> optionsPassedIn = null;
 
     public XPipeline(XProcRuntime runtime, Step step, XCompoundStep parent) {
         super(runtime, step, parent);
@@ -51,14 +53,14 @@ public class XPipeline extends XCompoundStep {
 
     public void passOption(QName name, RuntimeValue value) {
         if (optionsPassedIn == null) {
-            optionsPassedIn = new Hashtable<QName,RuntimeValue> ();
+            optionsPassedIn = new HashMap<QName,RuntimeValue> ();
         }
         optionsPassedIn.put(name,value);
     }
 
-    public Hashtable<QName,RuntimeValue> getInScopeOptions() {
+    public HashMap<QName,RuntimeValue> getInScopeOptions() {
         // We make a copy so that what our children do can't effect us
-        Hashtable<QName,RuntimeValue> globals = new Hashtable<QName,RuntimeValue> ();
+        HashMap<QName,RuntimeValue> globals = new HashMap<QName,RuntimeValue> ();
         if (inScopeOptions != null) {
             for (QName name : inScopeOptions.keySet()) {
                 globals.put(name,inScopeOptions.get(name));

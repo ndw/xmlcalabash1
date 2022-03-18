@@ -39,7 +39,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.List;
 
 public class XProcURIResolver implements URIResolver, EntityResolver, ModuleURIResolver, UnparsedTextURIResolver {
@@ -49,7 +49,7 @@ public class XProcURIResolver implements URIResolver, EntityResolver, ModuleURIR
     private ModuleURIResolver moduleURIResolver = null;
     private UnparsedTextURIResolver unparsedTextResolver = null;
     private XProcRuntime runtime = null;
-    private Hashtable<String,XdmNode> cache = new Hashtable<String,XdmNode> ();
+    private HashMap<String,XdmNode> cache = new HashMap<String,XdmNode> ();
     private Resolver catalogResolver = null;
     private static boolean useCache = true; // FIXME: this is supposed to be temporary!
 

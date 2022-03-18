@@ -1,18 +1,22 @@
 package com.xmlcalabash.runtime;
 
-import com.xmlcalabash.core.XProcConstants;
-import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
-import com.xmlcalabash.model.*;
+import com.xmlcalabash.model.NamespaceBinding;
+import com.xmlcalabash.model.RuntimeValue;
+import com.xmlcalabash.model.Step;
+import com.xmlcalabash.model.When;
 import com.xmlcalabash.util.MessageFormatter;
-import net.sf.saxon.s9api.*;
-import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XdmAtomicValue;
+import net.sf.saxon.s9api.XdmItem;
+import net.sf.saxon.s9api.XdmNode;
 
-import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.Vector;
-import java.util.Hashtable;
 
 /**
  * Created by IntelliJ IDEA.
@@ -30,7 +34,7 @@ public class XWhen extends XCompoundStep {
         String testExpr = ((When) step).getTest();
         XdmNode doc = null;
         NamespaceBinding nsbinding = new NamespaceBinding(runtime, step.getNode());
-        Hashtable<QName,RuntimeValue> globals = parent.getInScopeOptions();
+        HashMap<QName,RuntimeValue> globals = parent.getInScopeOptions();
 
         ReadablePipe reader = inputs.get("#xpath-context").firstElement();
         doc = reader.read();

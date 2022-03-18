@@ -87,7 +87,7 @@ public class Compare extends DefaultStep {
         XdmNode sdoc = source.read();
         XdmNode adoc = alternate.read();
 
-        XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
+        XPathCompiler xcomp = runtime.newXPathCompiler(step.getNode().getBaseURI());
         xcomp.declareVariable(doca);
         xcomp.declareVariable(docb);
 

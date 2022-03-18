@@ -1,28 +1,40 @@
 package com.xmlcalabash.library;
 
 import com.xmlcalabash.core.XMLCalabash;
-import net.sf.saxon.s9api.*;
-import net.sf.saxon.Configuration;
-import net.sf.saxon.trans.XPathException;
+import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
-import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.util.S9apiUtils;
-import com.xmlcalabash.model.RuntimeValue;
+import net.sf.saxon.Configuration;
+import net.sf.saxon.om.StructuredQName;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.SaxonApiUncheckedException;
+import net.sf.saxon.s9api.XPathCompiler;
+import net.sf.saxon.s9api.XPathExecutable;
+import net.sf.saxon.s9api.XPathSelector;
+import net.sf.saxon.s9api.XdmAtomicValue;
+import net.sf.saxon.s9api.XdmDestination;
+import net.sf.saxon.s9api.XdmItem;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XsltCompiler;
+import net.sf.saxon.s9api.XsltExecutable;
+import net.sf.saxon.s9api.XsltTransformer;
+import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.type.SchemaType;
 import org.xml.sax.InputSource;
 
-import javax.xml.transform.sax.SAXSource;
-import javax.xml.transform.URIResolver;
 import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
+import javax.xml.transform.URIResolver;
+import javax.xml.transform.sax.SAXSource;
 import java.io.InputStream;
-import java.util.Vector;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
-import net.sf.saxon.om.StructuredQName;
-import net.sf.saxon.type.SchemaType;
+import java.util.Vector;
 
 /**
  * Created by IntelliJ IDEA.
@@ -45,7 +57,7 @@ public class ValidateWithSCH extends DefaultStep {
     private ReadablePipe schema = null;
     private WritablePipe resultPipe = null;
     private WritablePipe reportPipe = null;
-    private Hashtable<QName,RuntimeValue> params = new Hashtable<QName,RuntimeValue> ();
+    private HashMap<QName,RuntimeValue> params = new HashMap<QName,RuntimeValue> ();
     private boolean schemaAware = false;
 
 
@@ -179,7 +191,7 @@ public class ValidateWithSCH extends DefaultStep {
     }
 
     private boolean checkFailedAssert(XdmNode doc) {
-        Hashtable<String,String> nsBindings = new Hashtable<String,String> ();
+        HashMap<String,String> nsBindings = new HashMap<> ();
         nsBindings.put("svrl", "http://purl.oclc.org/dsdl/svrl");
         String xpath = "//svrl:failed-assert|//svrl:successful-report";
         Vector<XdmItem> results = new Vector<XdmItem> ();
@@ -187,12 +199,7 @@ public class ValidateWithSCH extends DefaultStep {
         Configuration config = runtime.getProcessor().getUnderlyingConfiguration();
 
         try {
-            XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
-            xcomp.setBaseURI(step.getNode().getBaseURI());
-
-            for (String prefix : nsBindings.keySet()) {
-                xcomp.declareNamespace(prefix, nsBindings.get(prefix));
-            }
+            XPathCompiler xcomp = runtime.newXPathCompiler(step.getNode().getBaseURI(), nsBindings);
             XPathExecutable xexec = null;
             try {
                 xexec = xcomp.compile(xpath);

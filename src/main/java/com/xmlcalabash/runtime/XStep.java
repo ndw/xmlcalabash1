@@ -1,23 +1,22 @@
 package com.xmlcalabash.runtime;
 
-import com.xmlcalabash.core.XProcRunnable;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.SaxonApiException;
-
-import org.slf4j.Logger;
-import java.util.Hashtable;
-import java.util.Set;
-import java.util.HashSet;
-
-import com.xmlcalabash.core.XProcException;
-import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcConstants;
+import com.xmlcalabash.core.XProcException;
+import com.xmlcalabash.core.XProcRunnable;
+import com.xmlcalabash.core.XProcRuntime;
+import com.xmlcalabash.model.DeclareStep;
+import com.xmlcalabash.model.Input;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.model.Step;
-import com.xmlcalabash.model.Input;
-import com.xmlcalabash.model.DeclareStep;
+import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XdmNode;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Created by IntelliJ IDEA.
@@ -31,12 +30,12 @@ public abstract class XStep implements XProcRunnable {
     protected XProcRuntime runtime = null;
     protected Step step = null;
     protected String name = null;
-    private Hashtable<String,XInput> xinputs = new Hashtable<String,XInput> ();
-    private Hashtable<String,XOutput> xoutputs = new Hashtable<String,XOutput> ();
-    private Hashtable<QName, RuntimeValue> options = new Hashtable<QName, RuntimeValue> ();
-    private Hashtable<String, Hashtable<QName, RuntimeValue>> parameters = new Hashtable<String, Hashtable<QName, RuntimeValue>> ();
+    private HashMap<String,XInput> xinputs = new HashMap<> ();
+    private HashMap<String,XOutput> xoutputs = new HashMap<> ();
+    private HashMap<QName, RuntimeValue> options = new HashMap<> ();
+    private HashMap<String, HashMap<QName, RuntimeValue>> parameters = new HashMap<> ();
     protected XCompoundStep parent = null;
-    protected Hashtable<QName,RuntimeValue> inScopeOptions = new Hashtable<QName,RuntimeValue> ();
+    protected HashMap<QName,RuntimeValue> inScopeOptions = new HashMap<> ();
 
     public XStep(XProcRuntime runtime, Step step) {
         this.runtime = runtime;
@@ -139,7 +138,7 @@ public abstract class XStep implements XProcRunnable {
     }
 
     public void setParameter(String port, QName name, RuntimeValue value) {
-        Hashtable<QName,RuntimeValue> pparams;
+        HashMap<QName,RuntimeValue> pparams;
         if (parameters.containsKey(port)) {
             pparams = parameters.get(port);
         } else {
@@ -148,7 +147,7 @@ public abstract class XStep implements XProcRunnable {
             if (!input.getParameterInput()) {
                 throw new XProcException(step.getNode(), "Attempt to write parameters to non-parameter input port: " + port);
             }
-            pparams = new Hashtable<QName,RuntimeValue> ();
+            pparams = new HashMap<> ();
             parameters.put(port, pparams);
         }
 
@@ -234,7 +233,7 @@ public abstract class XStep implements XProcRunnable {
 
     public RuntimeValue getParameter(String port, QName name) {
         if (parameters.containsKey(port)) {
-            Hashtable<QName,RuntimeValue> pparams = parameters.get(port);
+            HashMap<QName,RuntimeValue> pparams = parameters.get(port);
             if (pparams.containsKey(name)) {
                 return pparams.get(name);
             }
@@ -277,9 +276,9 @@ public abstract class XStep implements XProcRunnable {
         return getParent() != null && getParent().hasInScopeVariableBinding(name);
     }
 
-    public Hashtable<QName,RuntimeValue> getInScopeOptions() {
+    public HashMap<QName,RuntimeValue> getInScopeOptions() {
         // We make a copy so that what our children do can't effect us
-        Hashtable<QName,RuntimeValue> globals = new Hashtable<QName,RuntimeValue> ();
+        HashMap<QName,RuntimeValue> globals = new HashMap<> ();
         if (inScopeOptions != null) {
             for (QName name : inScopeOptions.keySet()) {
                 globals.put(name,inScopeOptions.get(name));

@@ -3,10 +3,7 @@ package com.xmlcalabash.core;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
-import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.QName;
-
-import java.util.Hashtable;
 
 /**
  * Created by IntelliJ IDEA.

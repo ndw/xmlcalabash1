@@ -206,13 +206,7 @@ public class LabelElements extends DefaultStep implements ProcessMatchingNodes {
 
     private String computedLabel(XdmNode node) {
         try {
-            XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
-            xcomp.setBaseURI(step.getNode().getBaseURI());
-
-            // Make sure any namespace bindings in-scope for the label are available for the expression
-            for (String prefix : label.getNamespaceBindings().keySet()) {
-                xcomp.declareNamespace(prefix, label.getNamespaceBindings().get(prefix));
-            }
+            XPathCompiler xcomp = runtime.newXPathCompiler(step.getNode().getBaseURI(), label.getNamespaceBindings());
             xcomp.declareVariable(p_index);
 
             XPathExecutable xexec = xcomp.compile(label.getString());

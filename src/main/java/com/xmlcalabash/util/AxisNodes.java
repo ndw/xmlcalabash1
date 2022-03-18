@@ -199,12 +199,12 @@ public class AxisNodes implements Iterable<XdmNode> {
             }
 
             try {
-                XPathCompiler xcomp = runtime.getProcessor().newXPathCompiler();
+                XPathCompiler xcomp = runtime.newXPathCompiler(null);
                 // FIXME: Static base URI here?
 
-                XdmSequenceIterator nsIter = element.axisIterator(Axis.NAMESPACE);
+                XdmSequenceIterator<XdmNode> nsIter = element.axisIterator(Axis.NAMESPACE);
                 while (nsIter.hasNext()) {
-                    XdmNode ns = (XdmNode) nsIter.next();
+                    XdmNode ns = nsIter.next();
                     xcomp.declareNamespace(ns.getNodeName().getLocalName(),ns.getStringValue());
                 }
 

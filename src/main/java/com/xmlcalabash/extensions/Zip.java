@@ -12,8 +12,13 @@ import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.library.DefaultStep;
 import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.util.*;
+import com.xmlcalabash.util.AxisNodes;
 import com.xmlcalabash.util.Base64;
+import com.xmlcalabash.util.JSONtoXML;
+import com.xmlcalabash.util.S9apiUtils;
+import com.xmlcalabash.util.TreeWriter;
+import com.xmlcalabash.util.TypeUtils;
+import com.xmlcalabash.util.XMLtoJSON;
 import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.om.EmptyAttributeMap;
 import net.sf.saxon.om.SingletonAttributeMap;
@@ -35,12 +40,17 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.zip.CRC32;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
@@ -484,7 +494,7 @@ public class Zip extends DefaultStep {
         private int level = -1;
         private String comment = null;
         private long lastModified = -1;
-        private Hashtable<QName,String> options = null;
+        private HashMap<QName,String> options = null;
 
         public FileToZip(String zipName, String href, int method, int level, String comment, XdmNode entry) {
             try {
@@ -502,7 +512,7 @@ public class Zip extends DefaultStep {
                     String value = entry.getAttributeValue(attr);
                     if (value != null) {
                         if (options == null) {
-                            options = new Hashtable<QName, String> ();
+                            options = new HashMap<QName, String> ();
                         }
                         options.put(attr, value);
                     }
@@ -536,7 +546,7 @@ public class Zip extends DefaultStep {
             return lastModified;
         }
 
-        public Hashtable<QName,String> getOptions() {
+        public HashMap<QName,String> getOptions() {
             return options;
         }
 
@@ -622,7 +632,7 @@ public class Zip extends DefaultStep {
         S9apiUtils.serialize(runtime, doc, serializer);
     }
 
-    public Serializer makeSerializer(Hashtable<QName,String> options) {
+    public Serializer makeSerializer(HashMap<QName,String> options) {
         Serializer serializer = runtime.getProcessor().newSerializer();
 
         if (options == null) {
