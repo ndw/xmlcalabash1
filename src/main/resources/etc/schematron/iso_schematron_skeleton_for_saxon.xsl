@@ -26,6 +26,36 @@
    and the other is tailored for XSLT2 processors. Future versions of the
    XSLT2 skeleton may support more features than that the XSLT 1 skeleton.
 -->
+  
+<!--
+Open Source Initiative OSI - The MIT License:Licensing
+[OSI Approved License]
+
+This source code was previously available under the zlib/libpng license. 
+Attribution is polite.
+
+The MIT License
+
+Copyright (c)  2000-2010 Rick Jellife and Academia Sinica Computing Centre, Taiwan.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+-->
 <!--
    TIPS
       
@@ -66,7 +96,9 @@
     only-child-elements "true" | "false" (Autodetecting) Use only when the schema has no comments
     or PI  as the context nodes
     langCode		ISO language code      language for skeleton errors, if available
-  
+    terminate= yes | no | true | false | assert  Terminate on the first failed assertion or successful report
+                                         Note whether any output at all is generated depends on the XSLT implementation.
+                                         
   The following parameters can be specified as Schematron variables in diagnostics, assertions and so on.
     fileNameParameter string	  
     fileDirParameter string				
@@ -81,7 +113,6 @@
     generate-paths=true|false   generate the @location attribute with XPaths
     full-path-notation = 1|2|3  select the notation for the full paths: 1=computer, 2=human, 3=obsolescent
     diagnose= yes | no    Add the diagnostics to the assertion test in reports
-    terminate= yes | no   Terminate on the first failed assertion or successful report
  
 -->
 
@@ -158,7 +189,7 @@
    complex compared to making the outer process more complex.)
              
   This version has been developed to work with 
-     Saxon 8 
+     Saxon 9
   For versions for XSLT 1 processors, see www.xml.com
 
  Please note that if you are using SAXON and JAXP, then you should use 
@@ -168,36 +199,23 @@
   System.setProperty("javax.xml.xpath.TransformerFactory",
                            "net.sf.saxon.TransformerFactoryImpl");
  which is does not work, at least for the versions of SAXON we tried.
--->
-<!--
- LEGAL INFORMATION
- 
- Copyright (c) 2000-2008 Rick Jelliffe and Academia Sinica Computing Center, Taiwan
-
- This software is provided 'as-is', without any express or implied warranty. 
- In no event will the authors be held liable for any damages arising from 
- the use of this software.
-
- Permission is granted to anyone to use this software for any purpose, 
- including commercial applications, and to alter it and redistribute it freely,
- subject to the following restrictions:
-
- 1. The origin of this software must not be misrepresented; you must not claim
- that you wrote the original software. If you use this software in a product, 
- an acknowledgment in the product documentation would be appreciated but is 
- not required.
-
- 2. Altered source versions must be plainly marked as such, and must not be 
- misrepresented as being the original software.
-
- 3. This notice may not be removed or altered from any source distribution.
--->
+--> 
 <!--
   VERSION INFORMATION
-     2009-05-10 RJ
-     	* Fix up incorrect use of tunnel
-     2009-02-25 RJ
-        * Fix up variable names so none are used twice in same template
+     2010-04-14
+     	* RJ Reorder call-template in exslt case only, report by BD
+        * Add command line parameter 'terminate' which will terminate on first failed 
+        assert and (optionally) successful report. 
+     2010-01-24
+     	* RJ Allow let elements to have direct content instead of @value 
+     2009-08020 
+        * RJ Give better scoping to resolution of abstract rules
+     2009-07-07
+     	* RJ Fix up warning on looking for @* on root  TODO CHECK!!!!
+     2009-05-10 
+     	* RJ Fix up incorrect use of tunnel
+     2009-02-25 
+        * RJ Fix up variable names so none are used twice in same template
       2009-02-19
         * RJ add experimental support for pattern/@documents 
         This takes an XPath that returns a sequence of strings, treats them as 
@@ -498,7 +516,7 @@ which require a preprocess.
   which I find a bit surprising but anyway I'll use the longr faster version.
 -->
 <xsl:variable name="context-xpath">
-  <xsl:if test="$attributes='true'">@*|</xsl:if>
+  <xsl:if test="$attributes='true' and parent::node() ">@*|</xsl:if>
   <xsl:choose>
     <xsl:when test="$only-child-elements='true'">*</xsl:when>
     <xsl:when test="$visit-text='true'">node()</xsl:when>
@@ -524,6 +542,8 @@ which require a preprocess.
 
 <!-- Set the default for schematron-select-full-path, i.e. the notation for svrl's @location-->
 <xsl:param name="full-path-notation">1</xsl:param>
+
+<xsl:param name="terminate">false</xsl:param>
 
 <!-- Simple namespace check -->
 <xsl:template match="/">
@@ -607,7 +627,7 @@ which require a preprocess.
 </xsl:template>
 
 
-<!-- Default uses XSLT 1 -->
+<!-- Uses unknown query language binding -->
 <xsl:template match="iso:schema" priority="-1">
 	<xsl:message terminate="yes" ><xsl:call-template name="outputLocalizedMessage" ><xsl:with-param name="number">3a</xsl:with-param></xsl:call-template>
 	<xsl:value-of select="@queryBinding"/>
@@ -625,11 +645,12 @@ which require a preprocess.
    for ZIP archives.
 	-->
     
+    <xsl:call-template name="iso:exslt.add.imports" /> <!-- RJ moved report BH -->
 	<axsl:param name="archiveDirParameter" />
 	<axsl:param name="archiveNameParameter" />
 	<axsl:param name="fileNameParameter"  />
 	<axsl:param name="fileDirParameter" /> 
-    <xsl:call-template name="iso:exslt.add.imports" />
+	
        
     <axsl:variable name="document-uri"><axsl:value-of select="document-uri(/)" /></axsl:variable>
     <xsl:text>&#10;&#10;</xsl:text><xsl:comment>PHASES</xsl:comment><xsl:text>&#10;</xsl:text>
@@ -1088,19 +1109,29 @@ which require a preprocess.
 	<!-- ISO EXTENDS -->
 	<xsl:template match="iso:extends">
 		<xsl:if test="not(@rule)">
-                   <xsl:message><xsl:call-template name="outputLocalizedMessage" ><xsl:with-param name="number">10</xsl:with-param></xsl:call-template></xsl:message>
-                </xsl:if>
-     		<xsl:if test="not(//iso:rule[@abstract='true'][@id= current()/@rule] )">
-                    <xsl:message><xsl:call-template name="outputLocalizedMessage" ><xsl:with-param name="number">11a</xsl:with-param></xsl:call-template>
-                    <xsl:value-of select="@rule"/>
-                    <xsl:call-template name="outputLocalizedMessage" ><xsl:with-param name="number">11b</xsl:with-param></xsl:call-template></xsl:message>
-                </xsl:if>
-	        <xsl:call-template name="IamEmpty" />
+            <xsl:message><xsl:call-template name="outputLocalizedMessage" ><xsl:with-param name="number">10</xsl:with-param></xsl:call-template></xsl:message>
+        </xsl:if>
+     	<xsl:if test="not(//iso:rule[@abstract='true'][@id= current()/@rule] )">
+            <xsl:message>
+                 <xsl:call-template name="outputLocalizedMessage" ><xsl:with-param name="number">11a</xsl:with-param></xsl:call-template>
+                 <xsl:value-of select="@rule"/>
+                 <xsl:call-template name="outputLocalizedMessage" ><xsl:with-param name="number">11b</xsl:with-param></xsl:call-template></xsl:message>
+        </xsl:if>
+	    <xsl:call-template name="IamEmpty" />
 
-  		<xsl:if test="//iso:rule[@id=current()/@rule]">
-    			<xsl:apply-templates select="//iso:rule[@id=current()/@rule]"
-				mode="extends"/>
-  		</xsl:if>
+        <xsl:choose>
+            <!-- prefer to use a locally declared rule -->
+            <xsl:when test="parent::*/parent::*/iso:rule[@id=current()/@rule]">
+    		    <xsl:apply-templates select="parent::*/parent::*/iso:rule[@id=current()/@rule]"
+				    mode="extends"/>
+            </xsl:when>
+            <!-- otherwise use a global one: this is not in the 2006 standard -->
+            <xsl:when test="//iso:rule[@id=current()/@rule]">
+    		    <xsl:apply-templates select="//iso:rule[@id=current()/@rule]"
+				    mode="extends"/>
+            </xsl:when>
+        </xsl:choose>
+ 
 
 	</xsl:template>
 
@@ -1296,18 +1327,38 @@ which require a preprocess.
                     <xsl:message><xsl:call-template name="outputLocalizedMessage" ><xsl:with-param name="number">25</xsl:with-param></xsl:call-template></xsl:message>
        </xsl:if>
        
-       <!-- lets at the top-level are implemented as parameters -->
+       <!-- lets at the top-level are implemented as parameters unless they have contents -->
        	<xsl:choose>
        		<xsl:when test="parent::iso:schema">
        			<!-- it is an error to have an empty param/@select because an XPath is expected -->
-	      		 <axsl:param name="{@name}" select="{@value}">
-	      		 		<xsl:if test="string-length(@value) &gt; 0">
-	      		 			<xsl:attribute name="select"><xsl:value-of select="@value"/></xsl:attribute>
-	      		 		</xsl:if>
-	      		 </axsl:param> 
+	      			<xsl:choose>
+       				<xsl:when test="@value">
+	      				<axsl:param name="{@name}" select="{@value}">
+	      		 			<xsl:if test="string-length(@value) &gt; 0">
+	      		 				<xsl:attribute name="select"><xsl:value-of select="@value"/></xsl:attribute>
+	      		 			</xsl:if>
+	      		 		</axsl:param>
+	      		 	</xsl:when>
+	      		 	<xsl:otherwise>
+						<axsl:variable name="{@name}"  >
+						  <xsl:copy-of select="child::node()" />
+						</axsl:variable>
+	      		 	</xsl:otherwise> 
+	      		 </xsl:choose>
        		</xsl:when>
        		<xsl:otherwise>
-				<axsl:variable name="{@name}" select="{@value}"/>
+				
+       		    <xsl:choose>
+       		    	<xsl:when  test="@value">
+						<axsl:variable name="{@name}" select="{@value}"/>
+					</xsl:when>
+					<xsl:otherwise>
+						<axsl:variable name="{@name}"  >
+						  <xsl:copy-of select="child::node()" />
+						</axsl:variable>
+				   </xsl:otherwise>
+				 </xsl:choose>
+				  	
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>	
@@ -1556,6 +1607,7 @@ which require a preprocess.
 	<xsl:template match="iso:rule[not(@abstract='true')] ">
                 <xsl:if test="not(@context)">
                     <xsl:message ><xsl:call-template name="outputLocalizedMessage" ><xsl:with-param name="number">30</xsl:with-param></xsl:call-template></xsl:message>
+                  
                     <xsl:message terminate="yes" />
                 </xsl:if>
         <xsl:text>&#10;&#10;	</xsl:text>
@@ -1936,6 +1988,12 @@ which require a preprocess.
 			<xsl:with-param name="role" select="$role"/>
 		</xsl:call-template>
 		
+		<xsl:if test=" $terminate = 'yes' or $terminate = 'true' ">
+		   <axsl:message terminate="yes">TERMINATING</axsl:message>
+		</xsl:if>
+	    <xsl:if test=" $terminate = 'assert' ">
+		   <axsl:message terminate="yes">TERMINATING</axsl:message>
+		</xsl:if>
 		
 	</xsl:template>
 
@@ -1961,6 +2019,10 @@ which require a preprocess.
 			<xsl:with-param name="pattern" select="$test"/>
 			<xsl:with-param name="role" select="$role"/>
 		</xsl:call-template>
+				
+		<xsl:if test=" $terminate = 'yes' or $terminate = 'true'  ">
+		   <axsl:message terminate="yes">TERMINATING</axsl:message>
+		</xsl:if>
 	</xsl:template>
 
 	<xsl:template name="process-diagnostic">
