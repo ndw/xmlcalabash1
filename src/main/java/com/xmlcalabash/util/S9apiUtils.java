@@ -425,6 +425,14 @@ public class S9apiUtils {
         }
     }
 
+    public static AttributeMap mapFromList(List<AttributeInfo> attributes) {
+        AttributeMap map = EmptyAttributeMap.getInstance();
+        for (AttributeInfo attr : attributes) {
+            map = map.put(attr);
+        }
+        return map;
+    }
+
     // FIXME: This method exists only to work around a bug in SaxonHE 9.5.1.1
     public static XdmNode getParent(XdmNode node) {
         try {

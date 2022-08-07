@@ -30,6 +30,7 @@ import com.xmlcalabash.util.ProcessMatch;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
+import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TypeUtils;
 import net.sf.saxon.om.AttributeInfo;
 import net.sf.saxon.om.AttributeMap;
@@ -168,7 +169,7 @@ public class Rename extends DefaultStep implements ProcessMatchingNodes {
             }
         }
 
-        return AttributeMap.fromList(alist);
+        return S9apiUtils.mapFromList(alist);
     }
 
     @Override

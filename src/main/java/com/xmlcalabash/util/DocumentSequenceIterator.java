@@ -47,6 +47,11 @@ public class DocumentSequenceIterator implements FocusIterator, LastPositionFind
     }
 
     @Override
+    public boolean supportsGetLength() {
+        return false;
+    }
+
+    @Override
     public int getLength() {
         return last;
     }

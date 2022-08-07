@@ -4,15 +4,13 @@ import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.util.MessageFormatter;
+import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.*;
 import com.xmlcalabash.util.TypeUtils;
 import net.sf.saxon.event.ReceiverOption;
-import net.sf.saxon.om.AttributeInfo;
-import net.sf.saxon.om.AttributeMap;
-import net.sf.saxon.om.NamespaceMap;
-import net.sf.saxon.om.StructuredQName;
+import net.sf.saxon.om.*;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.QName;
@@ -171,7 +169,7 @@ public class XTry extends XCompoundStep {
                     message = "";
                 }
 
-                treeWriter.addStartElement(c_error, AttributeMap.fromList(alist), nsmap);
+                treeWriter.addStartElement(c_error, S9apiUtils.mapFromList(alist), nsmap);
 
                 treeWriter.addText(message);
                 treeWriter.addEndElement();

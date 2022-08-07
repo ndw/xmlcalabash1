@@ -1,10 +1,7 @@
 package com.xmlcalabash.util;
 
 import net.sf.saxon.event.ReceiverOption;
-import net.sf.saxon.om.AttributeInfo;
-import net.sf.saxon.om.AttributeMap;
-import net.sf.saxon.om.NamespaceMap;
-import net.sf.saxon.om.StructuredQName;
+import net.sf.saxon.om.*;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.QName;
 
@@ -140,7 +137,7 @@ public class StepErrorListener implements ErrorListener {
             }
         }
 
-        writer.addStartElement(c_error, AttributeMap.fromList(alist),nsmap);
+        writer.addStartElement(c_error, S9apiUtils.mapFromList(alist), nsmap);
 
         writer.addText(message);
         writer.addEndElement();

@@ -4,10 +4,8 @@ import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import net.sf.saxon.Configuration;
-import net.sf.saxon.lib.ModuleURIResolver;
-import net.sf.saxon.lib.StandardModuleURIResolver;
-import net.sf.saxon.lib.StandardUnparsedTextResolver;
-import net.sf.saxon.lib.UnparsedTextURIResolver;
+import net.sf.saxon.lib.*;
+import net.sf.saxon.resource.TypedStreamSource;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -19,6 +17,8 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
+import org.xmlresolver.CatalogResolver;
+import org.xmlresolver.ResolvedResource;
 import org.xmlresolver.Resolver;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -42,7 +42,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class XProcURIResolver implements URIResolver, EntityResolver, ModuleURIResolver, UnparsedTextURIResolver {
+public class XProcURIResolver implements URIResolver, EntityResolver, ModuleURIResolver, UnparsedTextURIResolver, ResourceResolver {
     private Logger logger = LoggerFactory.getLogger(XProcURIResolver.class);
     private URIResolver uriResolver = null;
     private EntityResolver entityResolver = null;
@@ -404,5 +404,41 @@ public class XProcURIResolver implements URIResolver, EntityResolver, ModuleURIR
         }
 
         return unparsedTextResolver.resolve(uri, encoding, configuration);
+    }
+
+    @Override
+    public Source resolve(ResourceRequest request) throws XPathException {
+        if (request.uriIsNamespace) {
+            try {
+                Source source = catalogResolver.resolveNamespace(request.uri, request.nature, request.purpose);
+                if (source == null && request.baseUri != null) {
+                    URI baseURI = new URI(request.baseUri);
+                    source = catalogResolver.resolveNamespace(baseURI.resolve(request.uri).toString(), request.nature, request.purpose);
+                }
+                return source;
+            } catch (URISyntaxException | TransformerException | IllegalArgumentException e) {
+                throw new XPathException("Exception from catalog resolver resolveNamespace(): ", e);
+            }
+        } else if (ResourceRequest.DTD_NATURE.equals(request.nature)) {
+            return null;
+        } else if (ResourceRequest.EXTERNAL_ENTITY_NATURE.equals(request.nature)) {
+            try {
+                InputSource source = catalogResolver.resolveEntity(request.entityName, request.publicId, request.baseUri, request.uri);
+                if (source != null) {
+                    return new SAXSource(source);
+                }
+                return null;
+            } catch (SAXException | IOException | IllegalArgumentException e) {
+                throw new XPathException("Exception from catalog resolver resolveEntity():", e);
+            }
+        } else {
+            String href = request.relativeUri == null ? request.uri : request.relativeUri;
+            String baseUri = request.baseUri == null ? request.uri : request.baseUri;
+            try {
+                return catalogResolver.resolve(href, baseUri);
+            } catch (TransformerException | IllegalArgumentException e) {
+                throw new XPathException("Exception from catalog resolver resolverURI()", e);
+            }
+        }
     }
 }

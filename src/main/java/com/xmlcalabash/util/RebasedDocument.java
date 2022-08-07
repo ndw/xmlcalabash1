@@ -10,6 +10,7 @@ package com.xmlcalabash.util;
 import net.sf.saxon.om.GenericTreeInfo;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.TreeInfo;
+import net.sf.saxon.s9api.XdmNode;
 
 import java.util.function.Function;
 
@@ -124,5 +125,11 @@ public class RebasedDocument extends GenericTreeInfo {
         return systemIdMapper;
     }
 
+    public static XdmNode makeUniqueDocumentId(XdmNode node) {
+        DefaultBaseURIMapper bmapper = new DefaultBaseURIMapper(node.getBaseURI().toString());
+        UniqueSystemIdMapper smapper = new UniqueSystemIdMapper();
+        RebasedDocument rebaser = new RebasedDocument(node.getUnderlyingNode().getTreeInfo(), bmapper, smapper);
+        return new XdmNode(rebaser.wrap(node.getUnderlyingNode()));
+    }
 }
 

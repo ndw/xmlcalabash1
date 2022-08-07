@@ -28,6 +28,7 @@ import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.util.ProcessMatch;
 import com.xmlcalabash.util.ProcessMatchingNodes;
+import com.xmlcalabash.util.S9apiUtils;
 import net.sf.saxon.event.ReceiverOption;
 import net.sf.saxon.om.AttributeInfo;
 import net.sf.saxon.om.AttributeMap;
@@ -130,7 +131,7 @@ public class WWWFormURLEncode extends DefaultStep implements ProcessMatchingNode
         for (AttributeInfo attr : matchingAttributes) {
             alist.add(new AttributeInfo(attr.getNodeName(), BuiltInAtomicType.ANY_ATOMIC, encoded, attr.getLocation(), ReceiverOption.NONE));
         }
-        return AttributeMap.fromList(alist);
+        return S9apiUtils.mapFromList(alist);
     }
 
     @Override

@@ -33,7 +33,9 @@ import java.net.MalformedURLException;
  * @author ndw
  */
 public class URIUtils {
-    
+    private static final String uniqueQueryKey = "xmlcalabash_uniqueid";
+    private static int uniqueId = 0;
+
     /** Creates a new instance of URIUtils */
     protected URIUtils() {
     }
@@ -110,6 +112,62 @@ public class URIUtils {
             return new File("//"+uri.getAuthority()+uri.getPath());
         } else {
             return new File(uri.getPath());
+        }
+    }
+
+    /**
+     * Gets the unique ID associated with the URI.
+     * <p>If the URI is null, returns 0. If the URI has no unique ID, returns -1. Otherwise, returns
+     * the unique id value in the URI.</p>
+     * @param uri The uri
+     * @return The unique id
+     */
+    public static int uniqueId(String uri) {
+        if (uri == null) {
+            return 0;
+        }
+
+        int pos = uri.indexOf("?");
+        if (pos >= 0) {
+            String query = uri.substring(pos+1);
+            pos = query.indexOf(uniqueQueryKey);
+            if (pos >= 0) {
+                String id = query.substring(pos).replaceAll(uniqueQueryKey + "=([0-9]+).*$", "$1");
+                return Integer.parseInt(id, 10);
+            } else {
+                return -1;
+            }
+        } else {
+            return -1;
+        }
+
+    }
+
+    /**
+     * Force the uri to be unique.
+     * <p>This method adds a query parameter to the URI to ensure that it's unique. If the query parameter
+     * already exists, it's value is changed so that it remains unique.</p>
+     * @param uri The uri
+     * @return The uri, made unique
+     */
+    public static String makeUnique(String uri) {
+        if (uri == null) {
+            return uri;
+        }
+
+        String id = uniqueQueryKey + "=" + (++uniqueId);
+        int pos = uri.indexOf("?");
+
+        if (pos >= 0) {
+            String query = uri.substring(pos+1);
+            if (query.contains(uniqueQueryKey)) {
+                query = query.replaceAll(uniqueQueryKey + "=[0-9]+", id);
+            } else {
+                query += "&" + id;
+            }
+            return uri.substring(0, pos+1) + query;
+        } else {
+            return uri + "?" + id;
         }
     }
 }

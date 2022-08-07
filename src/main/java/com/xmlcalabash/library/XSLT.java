@@ -27,12 +27,7 @@ import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.util.RebasedDocument;
-import com.xmlcalabash.util.RebasedNode;
-import com.xmlcalabash.util.S9apiUtils;
-import com.xmlcalabash.util.TreeWriter;
-import com.xmlcalabash.util.TypeUtils;
-import com.xmlcalabash.util.XProcCollectionFinder;
+import com.xmlcalabash.util.*;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.lib.CollectionFinder;
 import net.sf.saxon.lib.OutputURIResolver;
@@ -44,6 +39,7 @@ import net.sf.saxon.om.TreeInfo;
 import net.sf.saxon.s9api.*;
 import org.xml.sax.InputSource;
 
+import javax.xml.transform.SourceLocator;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
@@ -268,8 +264,8 @@ public class XSLT extends DefaultStep {
                 //
                 // In Saxon 9.9, I switched to the RawDestination which doesn't have
                 // a base URI setter, so this is still necessary.
-                BaseURIMapper bmapper = new BaseURIMapper(document.getBaseURI().toASCIIString());
-                SystemIdMapper smapper = new SystemIdMapper();
+                DefaultBaseURIMapper bmapper = new DefaultBaseURIMapper(document.getBaseURI().toASCIIString());
+                UniqueSystemIdMapper smapper = new UniqueSystemIdMapper();
                 TreeInfo tree = xformed.getUnderlyingNode().getTreeInfo();
                 RebasedDocument rebaser = new RebasedDocument(tree, bmapper, smapper);
                 RebasedNode xfixbase = rebaser.wrap(xformed.getUnderlyingNode());
@@ -358,31 +354,6 @@ public class XSLT extends DefaultStep {
         }
     }
 
-    private class BaseURIMapper implements Function<NodeInfo, String> {
-        private String origBase = null;
-
-        public BaseURIMapper(String origBase) {
-            this.origBase = origBase;
-        }
-
-        @Override
-        public String apply(NodeInfo node) {
-            String base = node.getBaseURI();
-            if (origBase != null && (base == null) || "".equals(base)) {
-                base = origBase;
-            }
-            return base;
-        }
-    }
-
-    private class SystemIdMapper implements Function<NodeInfo, String> {
-        // This is a nop for now
-        @Override
-        public String apply(NodeInfo node) {
-            return node.getSystemId();
-        }
-    }
-
     private class DocumentCloseAction implements Action {
         private URI uri = null;
         private XdmDestination destination = null;
@@ -396,8 +367,8 @@ public class XSLT extends DefaultStep {
         public void act() throws SaxonApiException {
             XdmNode doc = destination.getXdmNode();
 
-            BaseURIMapper bmapper = new BaseURIMapper(doc.getBaseURI().toASCIIString());
-            SystemIdMapper smapper = new SystemIdMapper();
+            DefaultBaseURIMapper bmapper = new DefaultBaseURIMapper(doc.getBaseURI().toASCIIString());
+            UniqueSystemIdMapper smapper = new UniqueSystemIdMapper();
             TreeInfo treeinfo = doc.getUnderlyingNode().getTreeInfo();
             RebasedDocument rebaser = new RebasedDocument(treeinfo, bmapper, smapper);
             RebasedNode xfixbase = rebaser.wrap(doc.getUnderlyingNode());
@@ -430,11 +401,13 @@ public class XSLT extends DefaultStep {
         }
     }
 
-    class CatchMessages implements MessageListener {
+    class CatchMessages implements MessageListener2 {
         public CatchMessages() {
         }
 
-        public void message(XdmNode content, boolean terminate, javax.xml.transform.SourceLocator locator) {
+
+        @Override
+        public void message(XdmNode content, QName errorCode, boolean terminate, SourceLocator locator) {
             if (runtime.getShowMessages()) {
                 System.err.println(content.toString());
             }

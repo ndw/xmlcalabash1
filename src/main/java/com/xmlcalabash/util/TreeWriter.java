@@ -31,6 +31,8 @@ import net.sf.saxon.expr.instruct.Executable;
 import net.sf.saxon.om.*;
 import net.sf.saxon.s9api.*;
 import net.sf.saxon.serialize.SerializationProperties;
+import net.sf.saxon.str.StringView;
+import net.sf.saxon.str.UnicodeString;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.type.BuiltInAtomicType;
 import net.sf.saxon.type.BuiltInType;
@@ -321,7 +323,7 @@ public class TreeWriter {
 
     public void addComment(String comment) {
         try {
-            receiver.comment(comment, VoidLocation.instance(), 0);
+            receiver.comment(StringView.of(comment), VoidLocation.instance(), 0);
         } catch (XPathException e) {
             throw new XProcException(e);
         }
@@ -329,7 +331,7 @@ public class TreeWriter {
 
     public void addText(String text) {
         try {
-            receiver.characters(text, VoidLocation.instance(), 0);
+            receiver.characters(StringView.of(text), VoidLocation.instance(), 0);
         } catch (XPathException e) {
             throw new XProcException(e);
         }
@@ -337,7 +339,7 @@ public class TreeWriter {
 
     public void addPI(String target, String data) {
         try {
-            receiver.processingInstruction(target, data, VoidLocation.instance(), 0);
+            receiver.processingInstruction(target, StringView.of(data), VoidLocation.instance(), 0);
         } catch (XPathException e) {
             throw new XProcException(e);
         }

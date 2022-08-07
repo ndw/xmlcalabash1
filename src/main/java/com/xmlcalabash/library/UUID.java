@@ -26,6 +26,7 @@ import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.util.ProcessMatchingNodes;
 import com.xmlcalabash.util.ProcessMatch;
+import com.xmlcalabash.util.S9apiUtils;
 import net.sf.saxon.event.ReceiverOption;
 import net.sf.saxon.om.AttributeInfo;
 import net.sf.saxon.om.AttributeMap;
@@ -118,7 +119,7 @@ public class UUID extends DefaultStep implements ProcessMatchingNodes {
         for (AttributeInfo attr : matchingAttributes) {
             alist.add(new AttributeInfo(attr.getNodeName(), BuiltInAtomicType.ANY_ATOMIC, uuid, attr.getLocation(), ReceiverOption.NONE));
         }
-        return AttributeMap.fromList(alist);
+        return S9apiUtils.mapFromList(alist);
     }
 
     @Override

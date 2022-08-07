@@ -224,7 +224,7 @@ public class XProcRuntime implements DeclarationScope {
             saxonConfig.setConfigurationProperty(FeatureKeys.URI_RESOLVER_CLASS, saxonFakeClassName);
         }
 
-        saxonConfig.setURIResolver(uriResolver);
+        saxonConfig.setResourceResolver(uriResolver);
         staticBaseURI = URIUtils.cwdAsURI();
 
         try {

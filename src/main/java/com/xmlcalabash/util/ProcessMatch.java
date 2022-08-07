@@ -27,11 +27,7 @@ import net.sf.saxon.Configuration;
 import net.sf.saxon.event.ComplexContentOutputter;
 import net.sf.saxon.event.NamespaceReducer;
 import net.sf.saxon.event.PipelineConfiguration;
-import net.sf.saxon.om.AttributeInfo;
-import net.sf.saxon.om.AttributeMap;
-import net.sf.saxon.om.NameOfNode;
-import net.sf.saxon.om.NamespaceResolver;
-import net.sf.saxon.om.NodeName;
+import net.sf.saxon.om.*;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmDestination;
@@ -222,8 +218,8 @@ public class ProcessMatch extends TreeWriter {
 
             if (!matchingAttributes.isEmpty()) {
                 AttributeMap processed = processor.processAttributes(node,
-                        AttributeMap.fromList(matchingAttributes),
-                        AttributeMap.fromList(nonMatchingAttributes));
+                        S9apiUtils.mapFromList(matchingAttributes),
+                        S9apiUtils.mapFromList(nonMatchingAttributes));
                 if (processed != null) {
                     allAttributes = processed;
                 }

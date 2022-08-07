@@ -26,10 +26,7 @@ import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XPipeline;
-import com.xmlcalabash.util.AxisNodes;
-import com.xmlcalabash.util.DefaultTestReporter;
-import com.xmlcalabash.util.S9apiUtils;
-import com.xmlcalabash.util.TestReporter;
+import com.xmlcalabash.util.*;
 import net.sf.saxon.s9api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,11 +41,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.Vector;
+import java.util.*;
 
 
 /**
@@ -661,7 +654,8 @@ public class RunTestReport {
                             }
                             XdmDestination dest = new XdmDestination();
                             S9apiUtils.writeXdmValue(runtime, nodes, dest, node.getBaseURI());
-                            add(input, port, dest.getXdmNode());
+
+                            add(input, port, RebasedDocument.makeUniqueDocumentId(dest.getXdmNode()));
                         }
                     } else {
                         // Make sure that we have a document

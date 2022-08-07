@@ -106,11 +106,6 @@ public class XProcCollectionFinder implements CollectionFinder {
         public boolean isStable(XPathContext context) {
             return true;
         }
-
-        @Override
-        public boolean stripWhitespace(SpaceStrippingRule rules) {
-            return false;
-        }
     }
 
     private class DocumentResource implements Resource {
@@ -126,7 +121,7 @@ public class XProcCollectionFinder implements CollectionFinder {
         }
 
         @Override
-        public Item getItem(XPathContext context) throws XPathException {
+        public Item getItem() throws XPathException {
             return doc.getUnderlyingValue().head();
         }
 

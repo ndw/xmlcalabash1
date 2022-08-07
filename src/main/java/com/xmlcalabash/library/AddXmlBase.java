@@ -31,6 +31,7 @@ import com.xmlcalabash.util.ProcessMatchingNodes;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
+import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TypeUtils;
 import net.sf.saxon.event.ReceiverOption;
 import net.sf.saxon.om.AttributeInfo;
@@ -178,7 +179,7 @@ public class AddXmlBase extends DefaultStep implements ProcessMatchingNodes {
             alist.add(new AttributeInfo(fq_xml_base, BuiltInAtomicType.ANY_ATOMIC, xmlBase, null, ReceiverOption.NONE));
         }
 
-        matcher.addStartElement(node, AttributeMap.fromList(alist));
+        matcher.addStartElement(node, S9apiUtils.mapFromList(alist));
         return true;
     }
 

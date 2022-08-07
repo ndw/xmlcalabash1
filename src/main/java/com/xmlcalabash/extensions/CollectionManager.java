@@ -1,18 +1,20 @@
 package com.xmlcalabash.extensions;
 
 import com.xmlcalabash.core.XMLCalabash;
+import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
-import com.xmlcalabash.core.XProcRuntime;
-
+import com.xmlcalabash.library.DefaultStep;
+import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.util.RebasedDocument;
+import com.xmlcalabash.util.URIUtils;
+import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.QName;
-import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.library.DefaultStep;
 
-import java.util.Vector;
 import java.net.URI;
+import java.util.HashSet;
+import java.util.Vector;
 
 /**
  * Created by IntelliJ IDEA.
@@ -56,9 +58,19 @@ public class CollectionManager extends DefaultStep {
 
         URI href = step.getNode().getBaseURI().resolve(getOption(_href).getString());
 
+        HashSet<Integer> seenIds = new HashSet<>();
         Vector<XdmNode> collection = new Vector<XdmNode> ();
         while (source.moreDocuments()) {
-            collection.add(source.read());
+            XdmNode doc = source.read();
+            int id = URIUtils.uniqueId(doc.getDocumentURI().toString());
+            if (seenIds.contains(id)) {
+                doc = RebasedDocument.makeUniqueDocumentId(doc);
+                seenIds.add(URIUtils.uniqueId(doc.getDocumentURI().toString()));
+            } else {
+                seenIds.add(id);
+            }
+
+            collection.add(doc);
         }
 
         if (collection.size() == 0) {

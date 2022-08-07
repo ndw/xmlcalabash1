@@ -123,7 +123,7 @@ public class SetAttributes extends DefaultStep implements ProcessMatchingNodes {
             }
         }
 
-        matcher.addStartElement(node, AttributeMap.fromList(alist));
+        matcher.addStartElement(node, S9apiUtils.mapFromList(alist));
         return true;
     }
 

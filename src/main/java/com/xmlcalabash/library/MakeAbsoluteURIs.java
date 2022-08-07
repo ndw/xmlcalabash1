@@ -26,10 +26,7 @@ import java.util.Map;
 import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
-import com.xmlcalabash.util.MessageFormatter;
-import com.xmlcalabash.util.ProcessMatchingNodes;
-import com.xmlcalabash.util.ProcessMatch;
-import com.xmlcalabash.util.URIUtils;
+import com.xmlcalabash.util.*;
 import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
@@ -121,7 +118,7 @@ public class MakeAbsoluteURIs extends DefaultStep implements ProcessMatchingNode
             alist.add(new AttributeInfo(attr.getNodeName(), BuiltInAtomicType.ANY_ATOMIC, resolved, attr.getLocation(), ReceiverOption.NONE));
         }
 
-        return AttributeMap.fromList(alist);
+        return S9apiUtils.mapFromList(alist);
     }
 
     @Override

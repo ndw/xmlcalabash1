@@ -25,10 +25,7 @@ import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
-import com.xmlcalabash.util.AxisNodes;
-import com.xmlcalabash.util.ProcessMatch;
-import com.xmlcalabash.util.ProcessMatchingNodes;
-import com.xmlcalabash.util.TypeUtils;
+import com.xmlcalabash.util.*;
 import net.sf.saxon.event.ReceiverOption;
 import net.sf.saxon.om.AttributeInfo;
 import net.sf.saxon.om.AttributeMap;
@@ -124,7 +121,7 @@ public class StringReplace extends DefaultStep implements ProcessMatchingNodes {
             alist.add(new AttributeInfo(attr.getNodeName(), BuiltInAtomicType.UNTYPED_ATOMIC, computeReplacement(attrNode), attr.getLocation(), ReceiverOption.NONE));
         }
 
-        return AttributeMap.fromList(alist);
+        return S9apiUtils.mapFromList(alist);
     }
 
     @Override
