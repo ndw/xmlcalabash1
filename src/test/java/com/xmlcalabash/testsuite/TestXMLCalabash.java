@@ -106,10 +106,12 @@ public class TestXMLCalabash {
         suiteRunner.runTest(TESTROOT + "invoke-module-001.xml");
     }
 
+    /* the order of the properties in the result document isn't predictable
     @Test
     public void testJavaProperties001() {
         suiteRunner.runTest(TESTROOT + "java-properties-001.xml");
     }
+     */
 
     @Test
     public void testMessage001() {
