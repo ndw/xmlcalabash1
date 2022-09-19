@@ -141,27 +141,24 @@ public class TreeWriter {
     }
 
     public void addSubtree(XdmNode node) {
-        try {
-            receiver.append(node.getUnderlyingNode());
-        } catch (UnsupportedOperationException use) {
-            // Do it the hard way
-            if (node.getNodeKind() == XdmNodeKind.DOCUMENT) {
-                writeChildren(node);
-            } else if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
-                addStartElement(node);
-                writeChildren(node);
-                addEndElement();
-            } else if (node.getNodeKind() == XdmNodeKind.COMMENT) {
-                addComment(node.getStringValue());
-            } else if (node.getNodeKind() == XdmNodeKind.TEXT) {
-                addText(node.getStringValue());
-            } else if (node.getNodeKind() == XdmNodeKind.PROCESSING_INSTRUCTION) {
-                addPI(node.getNodeName().getLocalName(), node.getStringValue());
-            } else {
-                throw new UnsupportedOperationException("Unexpected node type");
-            }
-        } catch (XPathException xpe) {
-            throw new XProcException(xpe);
+        // N.B. It's tempting to copy the node with
+        // receiver.append(node.getUnderlyingNode());
+        // but that doesn't work: https://saxonica.plan.io/issues/5691
+
+        if (node.getNodeKind() == XdmNodeKind.DOCUMENT) {
+            writeChildren(node);
+        } else if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
+            addStartElement(node);
+            writeChildren(node);
+            addEndElement();
+        } else if (node.getNodeKind() == XdmNodeKind.COMMENT) {
+            addComment(node.getStringValue());
+        } else if (node.getNodeKind() == XdmNodeKind.TEXT) {
+            addText(node.getStringValue());
+        } else if (node.getNodeKind() == XdmNodeKind.PROCESSING_INSTRUCTION) {
+            addPI(node.getNodeName().getLocalName(), node.getStringValue());
+        } else {
+            throw new UnsupportedOperationException("Unexpected node type");
         }
     }
 
@@ -338,11 +335,24 @@ public class TreeWriter {
     }
 
     public void addPI(String target, String data) {
+        addPI(target, data, VoidLocation.instance());
+    }
+
+    public void addPI(String target, String data, Location location) {
         try {
-            receiver.processingInstruction(target, StringView.of(data), VoidLocation.instance(), 0);
+            receiver.processingInstruction(target, StringView.of(data), location, 0);
         } catch (XPathException e) {
             throw new XProcException(e);
         }
+    }
+
+    public void addPI(XdmNode node) {
+        Location location = VoidLocation.instance();
+        if (node.getBaseURI() != null) {
+            location = new SysIdLocation(node.getBaseURI().toString());
+            receiver.setSystemId(node.getBaseURI().toString());
+        }
+        addPI(node.getNodeName().getLocalName(), node.getStringValue(), location);
     }
 }
 

@@ -264,7 +264,7 @@ public class ProcessMatch extends TreeWriter {
                 processor.processPI(node);
                 saw = 0;
             } else {
-                addPI(node.getNodeName().getLocalName(), node.getStringValue());
+                addPI(node);
             }
         } else {
             throw new UnsupportedOperationException("Unexpected node type");
