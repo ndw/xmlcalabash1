@@ -16,7 +16,7 @@ import java.util.function.Function;
 
 
 /**
- * A <tt>RebasedDocument</tt> represents a view of a real Document in which all nodes are mapped to a different
+ * A <code>RebasedDocument</code> represents a view of a real Document in which all nodes are mapped to a different
  * base URI and/or system ID using supplied mapping functions.
  *
  * <p>It is possible to map either base URIs or system IDs or both.</p>
