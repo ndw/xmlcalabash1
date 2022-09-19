@@ -32,18 +32,13 @@ import net.sf.saxon.om.*;
 import net.sf.saxon.s9api.*;
 import net.sf.saxon.serialize.SerializationProperties;
 import net.sf.saxon.str.StringView;
-import net.sf.saxon.str.UnicodeString;
 import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.type.BuiltInAtomicType;
-import net.sf.saxon.type.BuiltInType;
 import net.sf.saxon.type.SchemaType;
-import net.sf.saxon.type.SimpleType;
 import net.sf.saxon.type.Untyped;
-import org.w3c.dom.Attr;
 
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  *
