@@ -1,14 +1,17 @@
-# XML Calabash (1.1.x)
+# XML Calabash (1.x)
 
-This project contains the "1.1" version of XML Calabash.
 
 [![Build Status](https://travis-ci.org/ndw/xmlcalabash1.svg?branch=saxon96)](https://travis-ci.org/ndw/xmlcalabash1.svg?branch=saxon96)
 
 XML Calabash depends on Saxon and the sources vary a bit depending on
 the version of Saxon that you want to use.
 
+* The `saxon100` branch contains the sources for the Saxon 10.5 version of XML Calabash.
+* The `saxon99` branch contains the sources for the Saxon 9.9 version of XML Calabash.
+* The `saxon98` branch contains the sources for the Saxon 9.8 version of XML Calabash.
+* The `saxon97` branch contains the sources for the Saxon 9.7 version of XML Calabash.
 * The `saxon96` branch contains the sources for the Saxon 9.6 version of XML Calabash.
-  This is also the default branch as of 9 March 2015.
+  **This is also the default branch as of 9 March 2015.**
 * The `saxon95` branch contains the sources for the Saxon 9.5 version of XML Calabash.
 * The `saxon94` branch contains the sources for the Saxon 9.4 version of XML Calabash.
 I'm no longer attempting to maintain the Saxon 9.4 version.
