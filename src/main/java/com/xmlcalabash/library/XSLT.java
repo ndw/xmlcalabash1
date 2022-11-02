@@ -249,6 +249,7 @@ public class XSLT extends DefaultStep {
                     throw new XProcException(step.getStep(), "p:xslt returned non-XML result");
                 }
             }
+            docout.endDocument();
 
             xformed = docout.getResult();
         }
