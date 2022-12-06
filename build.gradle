@@ -40,7 +40,7 @@ repositories {
 
   mavenLocal()
   mavenCentral()
-  maven { url "https://maven.restlet.com" }
+  maven { url "https://maven.restlet.talend.com" }
   maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
   maven { url "https://dev.saxonica.com/maven" }
 }
@@ -83,7 +83,7 @@ dependencies {
     [group: 'commons-fileupload', name: 'commons-fileupload', version: '1.4'],
     [group: 'org.slf4j', name: 'slf4j-api', version: '1.7.36'],
     [group: 'org.xmlresolver', name: 'xmlresolver', version: xmlresolverVersion],
-    [group: 'com.atlassian.commonmark', name: 'commonmark', version: '0.17.0']
+    [group: 'org.commonmark', name: 'commonmark', version: '0.21.0']
   )
 
   runtimeOnly (
