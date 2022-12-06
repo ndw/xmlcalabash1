@@ -323,31 +323,19 @@ public class S9apiUtils {
 
                 changed = changed || delete;
 
-                if (!delete) {
+                // Never put the xml namespace in the NamespaceMap
+                if (!delete && !"xml".equals(pfx)) {
                     newNS.add(new NamespaceBinding(pfx, uri));
                 }
             }
 
             NodeInfo inode = node.getUnderlyingNode();
             AttributeMap attrs = inode.attributes();
-            ArrayList<AttributeInfo> attrList = new ArrayList<> ();
             NodeName newName = NameOfNode.makeName(inode);
             if (!preserveUsed) {
                 NamespaceBinding binding = newName.getNamespaceBinding();
                 if (excludeNS.contains(binding.getURI())) {
                     newName = new FingerprintedQName("", "", newName.getLocalPart());
-                }
-
-                // In this case, we may need to change some attributes too
-                for (AttributeInfo attr : attrs.asList()) {
-                    String attrns = attr.getNodeName().getURI();
-                    if (excludeNS.contains(attrns)) {
-                        FingerprintedQName newAttrName = new FingerprintedQName("", "", attr.getNodeName().getLocalPart());
-                        AttributeInfo newAttr = new AttributeInfo(newAttrName, attr.getType(), attr.getValue(), attr.getLocation(), attr.getProperties());
-                        attrList.add(newAttr);
-                    } else {
-                        attrList.add(attr);
-                    }
                 }
             }
 
