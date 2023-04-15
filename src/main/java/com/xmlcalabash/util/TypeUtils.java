@@ -48,14 +48,14 @@ public class TypeUtils {
     private static final QName _ListOfQNames = new QName("ListOfQNames");
     private static final QName _XPathExpression = new QName("XPathExpression");
     private static final QName _NormalizationForm = new QName("NormalizationForm");
-    private static final QName err_XD0045 = new QName(XProcConstants.NS_XPROC_ERROR, "XD0045");
+    private static final QName err_XD0045 = XProcConstants.qNameFor(XProcConstants.NS_XPROC_ERROR, "XD0045");
 
     private static int anonTypeCount = 0;
 
     public static QName generateUniqueType(String baseName) {
         anonTypeCount++;
         String localName = baseName + "_" + anonTypeCount;
-        return new QName(XProcConstants.NS_CALABASH_EX, localName);
+        return XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX, localName);
     }
 
     public static QName generateUniqueType() {
@@ -116,7 +116,7 @@ public class TypeUtils {
     }
 
     public static FingerprintedQName fqName(QName name) {
-        return new FingerprintedQName(name.getPrefix(), name.getNamespaceURI(), name.getLocalName());
+        return new FingerprintedQName(name.getPrefix(), name.getNamespaceUri(), name.getLocalName());
     }
 
     public static AttributeInfo attributeInfo(QName name, String value) {

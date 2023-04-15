@@ -3,6 +3,7 @@ package com.xmlcalabash.util;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmNode;
 
@@ -39,12 +40,12 @@ public class XPointer {
         }
     }
 
-    public HashMap<String,String> xpathNamespaces() {
-        HashMap<String,String> bindings = new HashMap<String,String> ();
+    public HashMap<String, NamespaceUri> xpathNamespaces() {
+        HashMap<String,NamespaceUri> bindings = new HashMap<> ();
         for (XPointerScheme scheme : parts) {
             if (_xmlns.equals(scheme.getName())) {
                 XPointerXmlnsScheme xmlns = (XPointerXmlnsScheme) scheme;
-                bindings.put(xmlns.getPrefix(), xmlns.getURI());
+                bindings.put(xmlns.getPrefix(), NamespaceUri.of(xmlns.getURI()));
             }
         }
         return bindings;

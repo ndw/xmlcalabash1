@@ -35,6 +35,7 @@ import net.sf.saxon.event.ComplexContentOutputter;
 import net.sf.saxon.event.NamespaceReducer;
 import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.om.EmptyAttributeMap;
+import net.sf.saxon.om.NamespaceUri;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -87,7 +88,7 @@ public class ValidateWithXSD extends DefaultStep {
     private static final QName _try_namespaces = new QName("", "try-namespaces");
     private static final QName _line = new QName("line");
     private static final QName _column = new QName("column");
-    private static final QName cx_version = new QName(XProcConstants.NS_CALABASH_EX, "version");
+    private static final QName cx_version =XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX, "version");
 
     private static final Class<?>[] paramTypes = new Class<?>[] {};
     private ReadablePipe source = null;
@@ -163,8 +164,8 @@ public class ValidateWithXSD extends DefaultStep {
         XdmNode doc = source.read();
         docBaseURI = doc.getBaseURI();
 
-        String namespace = S9apiUtils.getDocumentElement(doc).getNodeName().getNamespaceURI();
-        boolean tryNamespaces = getOption(_try_namespaces, false) && !"".equals(namespace);
+        NamespaceUri namespace = S9apiUtils.getDocumentElement(doc).getNodeName().getNamespaceUri();
+        boolean tryNamespaces = getOption(_try_namespaces, false) && namespace != NamespaceUri.NULL;
 
         // Populate the URI cache so that URI references in schema documents will find
         // the schemas provided preferentially
@@ -173,7 +174,7 @@ public class ValidateWithXSD extends DefaultStep {
             XdmNode schemaNode = schemas.read();
             String targetNS = schemaNode.getBaseURI().toASCIIString();
             logger.debug(MessageFormatter.nodeMessage(step.getNode(), "Caching input schema: " + targetNS));
-            if (targetNS.equals(namespace)) {
+            if (targetNS.equals(namespace.toString())) {
                 tryNamespaces = false;
             }
             schemaDocuments.add(schemaNode);

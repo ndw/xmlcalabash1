@@ -10,6 +10,7 @@ import com.xmlcalabash.util.TypeUtils;
 import com.xmlcalabash.util.URIUtils;
 import net.sf.saxon.PreparedStylesheet;
 import net.sf.saxon.functions.FunctionLibrary;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.query.QueryModule;
 import net.sf.saxon.query.StaticQueryContext;
 import net.sf.saxon.query.XQueryExpression;
@@ -41,12 +42,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
+import java.util.*;
 
 /**
  *
@@ -54,17 +50,17 @@ import java.util.Vector;
  */
 public class Parser {
     // TODO: Make new QName() values throughout static
-    private static QName px_name = new QName(XProcConstants.NS_CALABASH_EX,"name");
+    private static QName px_name = XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX,"name");
     private static QName _name = new QName("name");
     private static QName _href = new QName("href");
     private static QName _type = new QName("type");
     private static QName _version = new QName("version");
     private static QName _namespace = new QName("namespace");
-    private static QName err_XS0063 = new QName(XProcConstants.NS_XPROC_ERROR, "XS0063");
-    private static QName p_use_when = new QName(XProcConstants.NS_XPROC, "use-when");
+    private static QName err_XS0063 = XProcConstants.qNameFor(XProcConstants.NS_XPROC_ERROR, "XS0063");
+    private static QName p_use_when = XProcConstants.qNameFor(XProcConstants.NS_XPROC, "use-when");
     private static QName _use_when = new QName("use-when");
     private static QName _exclude_inline_prefixes = new QName("exclude-inline-prefixes");
-    private static QName cx_import = new QName(XProcConstants.NS_CALABASH_EX, "import");
+    private static QName cx_import = XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX, "import");
 
     private XProcRuntime runtime = null;
     private boolean loadingStandardLibrary = false;
@@ -271,7 +267,7 @@ public class Parser {
         } else {
             Step substep = readStep(library, library, node);
 
-            if (XProcConstants.NS_CALABASH_EX.equals(substep.getDeclaredType().getNamespaceURI())
+            if (XProcConstants.NS_CALABASH_EX == substep.getDeclaredType().getNamespaceUri()
                     && (substep.getDeclaredType().getLocalName().startsWith("anonymousType"))) {
                 throw XProcException.staticError(53, node, "No type attribute on imported pipeline.");
             }
@@ -652,8 +648,8 @@ public class Parser {
             input.setSequence(true);
         }
 
-        input.setDebugReader(node.getAttributeValue(new QName(XProcConstants.NS_CALABASH_EX, "debug-reader")) != null);
-        input.setDebugWriter(node.getAttributeValue(new QName(XProcConstants.NS_CALABASH_EX, "debug-writer")) != null);
+        input.setDebugReader(node.getAttributeValue(XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX, "debug-reader")) != null);
+        input.setDebugWriter(node.getAttributeValue(XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX, "debug-writer")) != null);
 
         if (select != null) {
             input.setSelect(select);
@@ -851,12 +847,12 @@ public class Parser {
             inline.addNode(child);
         }
 
-        HashSet<String> excludeURIs = S9apiUtils.excludeInlinePrefixes(node, node.getAttributeValue(_exclude_inline_prefixes));
+        HashSet<NamespaceUri> excludeURIs = S9apiUtils.excludeInlinePrefixes(node, node.getAttributeValue(_exclude_inline_prefixes));
         while (!(parent instanceof DeclareStep)) {
             parent = parent.parent;
         }
 
-        HashSet<String> excluded = ((DeclareStep) parent).getExcludeInlineNamespaces();
+        HashSet<NamespaceUri> excluded = ((DeclareStep) parent).getExcludeInlineNamespaces();
         if (excluded != null) {
             excludeURIs.addAll(excluded);
         }
@@ -887,7 +883,7 @@ public class Parser {
             oname = new QName(name);
         }
 
-        if (XProcConstants.NS_XPROC.equals(oname.getNamespaceURI())) {
+        if (XProcConstants.NS_XPROC == oname.getNamespaceUri()) {
             throw XProcException.staticError(28, node, "You cannot specify an option in the p: namespace.");
         }
 
@@ -951,7 +947,7 @@ public class Parser {
             oname = new QName("", name);
         }
 
-        if (XProcConstants.NS_XPROC.equals(oname.getNamespaceURI())) {
+        if (XProcConstants.NS_XPROC == oname.getNamespaceUri()) {
             throw XProcException.staticError(28, node, "You cannot specify a variable in the p: namespace.");
         }
 
@@ -992,7 +988,7 @@ public class Parser {
                         // Is this really the best way?
                         try {
                             QName n = new QName(pfx+":localName",snode);
-                            nsbinding.addExcludedNamespace(n.getNamespaceURI());
+                            nsbinding.addExcludedNamespace(n.getNamespaceUri());
                         } catch (IllegalArgumentException iae) {
                             // Bad prefix
                             throw XProcException.staticError(51, node, "Unbound prefix in except-prefixes: " + pfx);
@@ -1214,7 +1210,7 @@ public class Parser {
         step.setDeclaration(decl);
         step.parent = parent;
 
-        boolean pStep = XProcConstants.NS_XPROC.equals(node.getNodeName().getNamespaceURI());
+        boolean pStep = XProcConstants.NS_XPROC == node.getNodeName().getNamespaceUri();
 
         // Store extension attributes and convert any option shortcut attributes into options
         for (XdmNode attr : new AxisNodes(node, Axis.ATTRIBUTE)) {
@@ -1225,7 +1221,7 @@ public class Parser {
                 continue;
             }
 
-            if (XMLConstants.NULL_NS_URI.equals(aname.getNamespaceURI())) {
+            if (NamespaceUri.NULL == aname.getNamespaceUri()) {
                 if (!"name".equals(aname.getLocalName())) {
                     Option option = new Option(runtime, node);
                     option.setName(new QName("", aname.getLocalName()));
@@ -1276,7 +1272,7 @@ public class Parser {
             }
             type = new QName(typeName, node);
 
-            if (!loadingStandardLibrary && XProcConstants.NS_XPROC.equals(type.getNamespaceURI())) {
+            if (!loadingStandardLibrary && XProcConstants.NS_XPROC == type.getNamespaceUri()) {
                 throw XProcException.staticError(25, node, "Type cannot be in the p: namespace.");
             }
         }
@@ -1296,7 +1292,7 @@ public class Parser {
         // Store extension attributes and convert any option shortcut attributes into options
         for (XdmNode attr : new AxisNodes(node, Axis.ATTRIBUTE)) {
             QName aname = attr.getNodeName();
-            if (XMLConstants.NULL_NS_URI.equals(aname.getNamespaceURI())) {
+            if (NamespaceUri.NULL == aname.getNamespaceUri()) {
                 if (!"type".equals(aname.getLocalName()) && !"name".equals(aname.getLocalName())
                         && !"version".equals(aname.getLocalName()) && !"use-when".equals(aname.getLocalName())
                         && !"psvi-required".equals(aname.getLocalName()) && !"xpath-version".equals(aname.getLocalName())
@@ -1312,7 +1308,7 @@ public class Parser {
         step.setPsviRequired(psviRequired);
         step.setXPathVersion(xpathVersion);
 
-        HashSet<String> excludeURIs = S9apiUtils.excludeInlinePrefixes(node, node.getAttributeValue(_exclude_inline_prefixes));
+        HashSet<NamespaceUri> excludeURIs = S9apiUtils.excludeInlinePrefixes(node, node.getAttributeValue(_exclude_inline_prefixes));
         // if parent is a p:library, p:declare-step or p:pipeline, get the exclusions from there too...
         if (S9apiUtils.getParent(node) != null) {
             XdmNode parent = node.getParent();
@@ -1320,10 +1316,8 @@ public class Parser {
                 && (XProcConstants.p_library.equals(parent.getNodeName())
                     || XProcConstants.p_pipeline.equals(parent.getNodeName())
                     || XProcConstants.p_declare_step.equals(parent.getNodeName()))) {
-                HashSet<String> pexcl = S9apiUtils.excludeInlinePrefixes(parent, parent.getAttributeValue(_exclude_inline_prefixes));
-                for (String uri : pexcl) {
-                    excludeURIs.add(uri);
-                }
+                HashSet<NamespaceUri> pexcl = S9apiUtils.excludeInlinePrefixes(parent, parent.getAttributeValue(_exclude_inline_prefixes));
+                excludeURIs.addAll(pexcl);
             }
         }
 
@@ -1760,12 +1754,9 @@ public class Parser {
     // ================================================================================================
 
     private HashSet<String> checkAttributes(XdmNode node, String[] attrs, boolean optionShortcutsOk) {
-        HashSet<String> hash = null;
+        HashSet<String> hash = new HashSet<> ();
         if (attrs != null) {
-            hash = new HashSet<String> ();
-            for (String attr : attrs) {
-                hash.add(attr);
-            }
+            hash.addAll(Arrays.asList(attrs));
         }
         HashSet<String> options = null;
 
@@ -1775,14 +1766,14 @@ public class Parser {
             QName aname = attr.getNodeName();
 
             // The use-when attribute is always ok
-            if ((XProcConstants.NS_XPROC.equals(node.getNodeName().getNamespaceURI())
+            if ((XProcConstants.NS_XPROC == node.getNodeName().getNamespaceUri()
                     && aname.equals(_use_when))
-                || (!XProcConstants.NS_XPROC.equals(node.getNodeName().getNamespaceURI())
+                || (XProcConstants.NS_XPROC != node.getNodeName().getNamespaceUri()
                     && aname.equals(p_use_when))) {
                 continue;
             }
 
-            if ("".equals(aname.getNamespaceURI())) {
+            if (NamespaceUri.NULL == aname.getNamespaceUri()) {
                 if (hash.contains(aname.getLocalName())) {
                 // ok
                 } else if (optionShortcutsOk) {
@@ -1795,7 +1786,7 @@ public class Parser {
                 } else {
                     runtime.error(null, node, "Attribute \"" + aname + "\" not allowed on " + node.getNodeName(), XProcConstants.staticError(8));
                 }
-            } else if (XProcConstants.NS_XPROC.equals(aname.getNamespaceURI())) {
+            } else if (XProcConstants.NS_XPROC == aname.getNamespaceUri()) {
                 runtime.error(null, node, "Attribute \"" + aname + "\" not allowed on " + node.getNodeName(), XProcConstants.staticError(8));
                 return null;
             }
@@ -1809,9 +1800,9 @@ public class Parser {
     private void checkExtensionAttributes(XdmNode node, SourceArtifact src) {
         for (XdmNode attr : new AxisNodes(node, Axis.ATTRIBUTE)) {
             QName aname = attr.getNodeName();
-            if ("".equals(aname.getNamespaceURI())) {
+            if (NamespaceUri.NULL == aname.getNamespaceUri()) {
                 // nop
-            } else if (XProcConstants.NS_XPROC.equals(aname.getNamespaceURI())) {
+            } else if (XProcConstants.NS_XPROC == aname.getNamespaceUri()) {
                 runtime.error(null, node, "Attribute \"" + aname + "\" not allowed on " + node.getNodeName(), XProcConstants.staticError(8));
             } else {
                 src.addExtensionAttribute(attr);

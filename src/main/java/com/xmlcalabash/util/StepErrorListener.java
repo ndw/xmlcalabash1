@@ -26,13 +26,13 @@ import java.util.ArrayList;
  * This listener collects messages to send to the error port if applicable.
  */
 public class StepErrorListener implements ErrorListener {
-    private static QName c_error = new QName(XProcConstants.NS_XPROC_STEP, "error");
-    private static StructuredQName err_sxxp0003 = new StructuredQName("err", "http://www.w3.org/2005/xqt-errors", "SXXP0003");
-    private static QName _type = new QName("", "type");
-    private static QName _href = new QName("", "href");
-    private static QName _line = new QName("", "line");
-    private static QName _column = new QName("", "column");
-    private static QName _code = new QName("", "code");
+    private static final QName c_error = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "error");
+    private static final StructuredQName err_sxxp0003 = new StructuredQName("err", NamespaceUri.of("http://www.w3.org/2005/xqt-errors"), "SXXP0003");
+    private static final QName _type = new QName("", "type");
+    private static final QName _href = new QName("", "href");
+    private static final QName _line = new QName("", "line");
+    private static final QName _column = new QName("", "column");
+    private static final QName _code = new QName("", "code");
 
     private XProcRuntime runtime = null;
     private URI baseURI = null;
@@ -101,7 +101,7 @@ public class StepErrorListener implements ErrorListener {
         NamespaceMap nsmap = NamespaceMap.emptyMap();
 
         if (qCode != null) {
-            nsmap = nsmap.put(qCode.getPrefix(), qCode.getNamespaceBinding().getURI());
+            nsmap = nsmap.put(qCode.getPrefix(), qCode.getNamespaceBinding().getNamespaceUri());
             alist.add(new AttributeInfo(TypeUtils.fqName(_code), BuiltInAtomicType.ANY_ATOMIC, qCode.getDisplayName(), null, ReceiverOption.NONE));
         }
 

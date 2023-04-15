@@ -62,9 +62,9 @@ public class DirectoryList extends DefaultStep {
     private static final QName _path = new QName("", "path");
     private static final QName _include_filter = new QName("", "include-filter");
     private static final QName _exclude_filter = new QName("", "exclude-filter");
-    private static final QName c_directory = new QName("c", XProcConstants.NS_XPROC_STEP, "directory");
-    private static final QName c_file = new QName("c", XProcConstants.NS_XPROC_STEP, "file");
-    private static final QName px_show_excluded = new QName(XProcConstants.NS_CALABASH_EX, "show-excluded");
+    private static final QName c_directory = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "directory");
+    private static final QName c_file = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "file");
+    private static final QName px_show_excluded = XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX, "show-excluded");
     private WritablePipe result = null;
     private String inclFilter = null;
     private String exclFilter = null;

@@ -29,6 +29,7 @@ import com.xmlcalabash.core.XMLCalabash;
 import com.xmlcalabash.util.*;
 import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.om.EmptyAttributeMap;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.Serializer;
@@ -56,10 +57,10 @@ import com.xmlcalabash.runtime.XAtomicStep;
 public class Store extends DefaultStep {
     private static final QName _href = new QName("href");
     private static final QName _content_type = new QName("content-type");
-    private static final QName c_encoding = new QName("c", XProcConstants.NS_XPROC_STEP, "encoding");
-    private static final QName c_body = new QName("c", XProcConstants.NS_XPROC_STEP, "body");
-    private static final QName c_json = new QName("c", XProcConstants.NS_XPROC_STEP, "json");
-    private static final QName cx_decode = new QName("cx", XProcConstants.NS_CALABASH_EX, "decode");
+    private static final QName c_encoding = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "encoding");
+    private static final QName c_body = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "body");
+    private static final QName c_json = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "json");
+    private static final QName cx_decode = XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX, "decode");
 
     private ReadablePipe source = null;
     private WritablePipe result = null;
@@ -128,9 +129,9 @@ public class Store extends DefaultStep {
         String contentType = root.getAttributeValue(_content_type);
         URI contentId;
         if (("true".equals(decode) || "1".equals(decode) || method != CompressionMethod.NONE)
-             && ((XProcConstants.NS_XPROC_STEP.equals(root.getNodeName().getNamespaceURI())
+             && ((XProcConstants.NS_XPROC_STEP == root.getNodeName().getNamespaceUri()
                   && "base64".equals(root.getAttributeValue(_encoding)))
-                 || ("".equals(root.getNodeName().getNamespaceURI())
+                 || (root.getNodeName().getNamespaceUri() == NamespaceUri.NULL
                      && "base64".equals(root.getAttributeValue(c_encoding))))) {
             contentId = storeBinary(doc, href, base, contentType);
         } else if (("true".equals(decode) || "1".equals(decode))
@@ -143,9 +144,9 @@ public class Store extends DefaultStep {
                         && ("application/json".equals(contentType)
                             || "text/json".equals(contentType)))
                        || c_json.equals(root.getNodeName()))
-                       || JSONtoXML.JSONX_NS.equals(root.getNodeName().getNamespaceURI())
-                       || JSONtoXML.JXML_NS.equals(root.getNodeName().getNamespaceURI())
-                       || JSONtoXML.MLJS_NS.equals(root.getNodeName().getNamespaceURI()))) {
+                       || JSONtoXML.JSONX_NS == root.getNodeName().getNamespaceUri()
+                       || JSONtoXML.JXML_NS == root.getNodeName().getNamespaceUri()
+                       || JSONtoXML.MLJS_NS == root.getNodeName().getNamespaceUri())) {
             contentId = storeJSON(doc, href, base, contentType);
         } else {
             contentId = storeXML(doc, href, base, contentType);

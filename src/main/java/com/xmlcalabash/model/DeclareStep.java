@@ -23,6 +23,7 @@ import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcData;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmNode;
 
@@ -44,7 +45,7 @@ public class DeclareStep extends CompoundStep implements DeclarationScope {
     private List<PipelineLibrary> importedLibs = new ArrayList<>();
     private DeclarationScope parentScope = null;
     private Vector<XdmNode> rest = null;
-    private HashSet<String> excludedInlineNamespaces = null;
+    private HashSet<NamespaceUri> excludedInlineNamespaces = null;
     private URI sourceImport = null;
 
     /* Creates a new instance of DeclareStep */
@@ -72,11 +73,11 @@ public class DeclareStep extends CompoundStep implements DeclarationScope {
         declaredType = type;
     }
 
-    public void setExcludeInlineNamespaces(HashSet<String> uris) {
+    public void setExcludeInlineNamespaces(HashSet<NamespaceUri> uris) {
         excludedInlineNamespaces = uris;
     }
 
-    public HashSet<String> getExcludeInlineNamespaces() {
+    public HashSet<NamespaceUri> getExcludeInlineNamespaces() {
         return excludedInlineNamespaces;
     }
 

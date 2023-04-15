@@ -31,6 +31,7 @@ import com.xmlcalabash.util.TypeUtils;
 import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.om.EmptyAttributeMap;
 import net.sf.saxon.om.NamespaceMap;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -48,7 +49,7 @@ import java.util.HashMap;
         type = "{http://www.w3.org/ns/xproc}error")
 
 public class Error extends DefaultStep {
-    private static final QName c_error = new QName("c", XProcConstants.NS_XPROC_STEP, "error");
+    private static final QName c_error = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "error");
     private static final QName _name = new QName("name");
     private static final QName _code = new QName("code");
     private static final QName _code_prefix = new QName("code-prefix");
@@ -86,17 +87,17 @@ public class Error extends DefaultStep {
         RuntimeValue codeNameValue = getOption(_code);
         String codeNameStr = codeNameValue.getString();
         String cpfx = getOption(_code_prefix, (String) null);
-        String cns = getOption(_code_namespace, (String) null);
+        NamespaceUri cns = NamespaceUri.of(getOption(_code_namespace, (String) null));
 
-        if (cpfx == null && cns != null) {
+        if (cpfx == null && cns != NamespaceUri.NULL) {
             cpfx = "ERR";
         }
 
-        if (cpfx != null && cns == null) {
+        if (cpfx != null && cns == NamespaceUri.NULL) {
             throw XProcException.dynamicError(34, "You can't specify a prefix without a namespace");
         }
 
-        if (cns != null && codeNameStr.contains(":")) {
+        if (cns != NamespaceUri.NULL && codeNameStr.contains(":")) {
             throw XProcException.dynamicError(34, "You can't specify a namespace if the code name contains a colon");
         }
 
@@ -104,11 +105,11 @@ public class Error extends DefaultStep {
         if (codeNameStr.contains(":")) {
             errorCode = new QName(codeNameStr, codeNameValue.getNode());
         } else {
-            errorCode = new QName(cpfx == null ? "" : cpfx, cns, codeNameStr);
+            errorCode = new QName(cpfx == null ? "" : cpfx, cns.toString(), codeNameStr);
         }
 
         cpfx = errorCode.getPrefix();
-        cns = errorCode.getNamespaceURI();
+        cns = errorCode.getNamespaceUri();
 
         TreeWriter treeWriter = new TreeWriter(runtime);
         treeWriter.startDocument(step.getNode().getBaseURI());

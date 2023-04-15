@@ -30,13 +30,13 @@ import java.util.Vector;
  * To change this template use File | Settings | File Templates.
  */
 public class XTry extends XCompoundStep {
-    private static final QName c_errors = new QName("c", XProcConstants.NS_XPROC_STEP, "errors");
-    private static final QName c_error = new QName("c", XProcConstants.NS_XPROC_STEP, "error");
-    private static QName _href = new QName("", "href");
-    private static QName _line = new QName("", "line");
-    private static QName _column = new QName("", "column");
-    private static QName _code = new QName("", "code");
-    private Vector<XdmNode> errors = new Vector<XdmNode> ();
+    private static final QName c_errors = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "errors");
+    private static final QName c_error = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "error");
+    private static final QName _href = new QName("", "href");
+    private static final QName _line = new QName("", "line");
+    private static final QName _column = new QName("", "column");
+    private static final QName _code = new QName("", "code");
+    private final Vector<XdmNode> errors = new Vector<XdmNode> ();
 
     public XTry(XProcRuntime runtime, Step step, XCompoundStep parent) {
           super(runtime, step, parent);
@@ -142,12 +142,12 @@ public class XTry extends XCompoundStep {
                         message = underlying.getMessage();
                     }
                     if (code != null) {
-                        qCode = new StructuredQName(code.getPrefix(), code.getNamespaceURI(), code.getLocalName());
+                        qCode = new StructuredQName(code.getPrefix(), code.getNamespaceUri(), code.getLocalName());
                     }
                 }
 
                 if (qCode != null) {
-                    nsmap = nsmap.put(qCode.getPrefix(), qCode.getNamespaceBinding().getURI());
+                    nsmap = nsmap.put(qCode.getPrefix(), qCode.getNamespaceBinding().getNamespaceUri());
                     alist.add(new AttributeInfo(TypeUtils.fqName(_code), BuiltInAtomicType.ANY_ATOMIC, qCode.getDisplayName(), null, ReceiverOption.NONE));
                 }
 

@@ -62,9 +62,9 @@ public class Hash extends DefaultStep implements ProcessMatchingNodes {
     private static final QName _crc = new QName("", "crc");
     private static final QName _md = new QName("", "md");
     private static final QName _sha = new QName("", "sha");
-    private static final QName _hmac = new QName("cx", XProcConstants.NS_CALABASH_EX, "hmac");
-    private static final QName _accessKey = new QName("cx", XProcConstants.NS_CALABASH_EX, "accessKey");
-    private HashMap<QName,String> params = new HashMap<QName, String> ();
+    private static final QName _hmac = XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX, "hmac");
+    private static final QName _accessKey = XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX, "accessKey");
+    private final HashMap<QName,String> params = new HashMap<QName, String> ();
     protected static final String logger = "org.xproc.library.hash";
     private ReadablePipe source = null;
     private WritablePipe result = null;

@@ -111,7 +111,7 @@ public class XSelect implements ReadablePipe {
             }
 
             for (String prefix : bindings.getNamespaceBindings().keySet()) {
-                xcomp.declareNamespace(prefix, bindings.getNamespaceBindings().get(prefix));
+                xcomp.declareNamespace(prefix, bindings.getNamespaceBindings().get(prefix).toString());
             }
 
             XPathExecutable xexec = xcomp.compile(select);

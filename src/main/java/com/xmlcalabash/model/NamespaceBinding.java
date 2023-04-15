@@ -21,6 +21,7 @@ package com.xmlcalabash.model;
 
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmSequenceIterator;
@@ -40,8 +41,8 @@ public class NamespaceBinding {
     private XProcRuntime runtime = null;
     private String binding = null;
     private String expr = null;
-    private HashSet<String> except = new HashSet<String> (); // Default is nothing excluded
-    private HashMap<String,String> nsBindings = new HashMap<String,String> ();
+    private HashSet<NamespaceUri> except = new HashSet<> (); // Default is nothing excluded
+    private HashMap<String,NamespaceUri> nsBindings = new HashMap<> ();
 
     public NamespaceBinding(XProcRuntime xproc, XdmNode node) {
         runtime = xproc;
@@ -50,7 +51,7 @@ public class NamespaceBinding {
         XdmSequenceIterator<XdmNode> nsIter = node.axisIterator(Axis.NAMESPACE);
         while (nsIter.hasNext()) {
             XdmNode ns = nsIter.next();
-            nsBindings.put((ns.getNodeName()==null ? "" : ns.getNodeName().getLocalName()),ns.getStringValue());
+            nsBindings.put((ns.getNodeName()==null ? "" : ns.getNodeName().getLocalName()),NamespaceUri.of(ns.getStringValue()));
         }
     }
 
@@ -82,15 +83,15 @@ public class NamespaceBinding {
         return expr;
     }
 
-    public HashMap<String,String> getNamespaceBindings() {
+    public HashMap<String, NamespaceUri> getNamespaceBindings() {
         return nsBindings;
     }
 
-    public void addExcludedNamespace(String exclude) {
+    public void addExcludedNamespace(NamespaceUri exclude) {
         except.add(exclude);
     }
 
-    public HashSet<String> getExcludedNamespaces() {
+    public HashSet<NamespaceUri> getExcludedNamespaces() {
         return except;
     }
 }

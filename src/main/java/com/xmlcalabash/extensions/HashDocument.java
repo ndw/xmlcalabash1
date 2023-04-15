@@ -32,6 +32,7 @@ import com.xmlcalabash.library.DefaultStep;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.util.*;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.Serializer;
@@ -50,18 +51,18 @@ import java.io.*;
 
 public class HashDocument extends DefaultStep {
     private static final QName _content_type = new QName("content-type");
-    private static final QName c_encoding = new QName("c", XProcConstants.NS_XPROC_STEP, "encoding");
-    private static final QName c_body = new QName("c", XProcConstants.NS_XPROC_STEP, "body");
-    private static final QName c_json = new QName("c", XProcConstants.NS_XPROC_STEP, "json");
-    private static final QName cx_decode = new QName("cx", XProcConstants.NS_CALABASH_EX, "decode");
+    private static final QName c_encoding =XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "encoding");
+    private static final QName c_body = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "body");
+    private static final QName c_json = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "json");
+    private static final QName cx_decode = XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX, "decode");
     private static final QName _algorithm = new QName("", "algorithm");
     private static final QName _hash_version = new QName("", "hash-version");
     private static final QName _crc = new QName("", "crc");
     private static final QName _md = new QName("", "md");
     private static final QName _sha = new QName("", "sha");
-    private static final QName _hmac = new QName("cx", XProcConstants.NS_CALABASH_EX, "hmac");
-    private static final QName _accessKey = new QName("cx", XProcConstants.NS_CALABASH_EX, "accessKey");
-    private HashMap<QName,String> params = new HashMap<QName, String> ();
+    private static final QName _hmac = XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX, "hmac");
+    private static final QName _accessKey = XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX, "accessKey");
+    private final HashMap<QName,String> params = new HashMap<QName, String> ();
 
 
     private ReadablePipe source = null;
@@ -116,10 +117,10 @@ public class HashDocument extends DefaultStep {
         String contentType = root.getAttributeValue(_content_type);
         byte[] bytes = null;
         if (("true".equals(decode) || "1".equals(decode))
-             && ((XProcConstants.NS_XPROC_STEP.equals(root.getNodeName().getNamespaceURI())
+             && ((XProcConstants.NS_XPROC_STEP == root.getNodeName().getNamespaceUri())
                   && "base64".equals(root.getAttributeValue(_encoding)))
-                 || ("".equals(root.getNodeName().getNamespaceURI())
-                     && "base64".equals(root.getAttributeValue(c_encoding))))) {
+                 || (NamespaceUri.NULL == root.getNodeName().getNamespaceUri()
+                     && "base64".equals(root.getAttributeValue(c_encoding)))) {
             bytes = binaryContent(doc);
         } else if (("true".equals(decode) || "1".equals(decode))
             && XProcConstants.c_result.equals(root.getNodeName())
@@ -131,9 +132,9 @@ public class HashDocument extends DefaultStep {
                         && ("application/json".equals(contentType)
                             || "text/json".equals(contentType)))
                        || c_json.equals(root.getNodeName()))
-                       || JSONtoXML.JSONX_NS.equals(root.getNodeName().getNamespaceURI())
-                       || JSONtoXML.JXML_NS.equals(root.getNodeName().getNamespaceURI())
-                       || JSONtoXML.MLJS_NS.equals(root.getNodeName().getNamespaceURI()))) {
+                       || JSONtoXML.JSONX_NS == root.getNodeName().getNamespaceUri()
+                       || JSONtoXML.JXML_NS == root.getNodeName().getNamespaceUri()
+                       || JSONtoXML.MLJS_NS == root.getNodeName().getNamespaceUri())) {
             bytes = jsonContent(doc);
         } else {
             bytes = XmlContent(doc);

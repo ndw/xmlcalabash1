@@ -8,6 +8,7 @@ import java.util.Properties;
 import java.util.Vector;
 
 import com.xmlcalabash.core.XMLCalabash;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 
@@ -40,7 +41,7 @@ public class XSLFormatter extends DefaultStep {
     private static final QName _content_type = new QName("","content-type");
     private ReadablePipe source = null;
     private WritablePipe result = null;
-    private Properties options = new Properties();
+    private final Properties options = new Properties();
 
     /* Creates a new instance of Unzip */
     public XSLFormatter(XProcRuntime runtime, XAtomicStep step) {
@@ -56,8 +57,8 @@ public class XSLFormatter extends DefaultStep {
     }
 
     public void setParameter(QName name, RuntimeValue value) {
-        if (!"".equals(name.getNamespaceURI())) {
-            throw new XProcException(step.getNode(), "The p:xsl-formatter parameters are in no namespace: " + name + " (" + name.getNamespaceURI() + ")");
+        if (name.getNamespaceUri() != NamespaceUri.NULL) {
+            throw new XProcException(step.getNode(), "The p:xsl-formatter parameters are in no namespace: " + name + " (" + name.getNamespaceUri() + ")");
         }
         options.setProperty(name.getLocalName(), value.getString());
     }

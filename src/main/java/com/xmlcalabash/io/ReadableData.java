@@ -51,11 +51,11 @@ import org.slf4j.LoggerFactory;
  */
 public class ReadableData implements ReadablePipe {
     public static final QName _contentType = new QName("","content-type");
-    public static final QName c_contentType = new QName("c",XProcConstants.NS_XPROC_STEP, "content-type");
+    public static final QName c_contentType = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "content-type");
     public static final QName _encoding = new QName("","encoding");
-    public static final QName c_encoding = new QName("c",XProcConstants.NS_XPROC_STEP, "encoding");
+    public static final QName c_encoding = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "encoding");
     private String contentType = null;
-    private Logger logger = LoggerFactory.getLogger(ReadablePipe.class);
+    private final Logger logger = LoggerFactory.getLogger(ReadablePipe.class);
     private int pos = 0;
     private QName wrapper = null;
     private String uri = null;

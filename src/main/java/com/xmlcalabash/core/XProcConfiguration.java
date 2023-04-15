@@ -15,6 +15,7 @@ import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.URIUtils;
 import net.sf.saxon.Version;
 import net.sf.saxon.lib.Feature;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.om.NoElementsSpaceStrippingRule;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.DocumentBuilder;
@@ -159,7 +160,7 @@ public class XProcConfiguration {
         bFeatureMap.put("http://saxon.sf.net/feature/linenumbering", Feature.LINE_NUMBERING);
         bFeatureMap.put("http://saxon.sf.net/feature/markDefaultedAttributes", Feature.MARK_DEFAULTED_ATTRIBUTES);
         iFeatureMap.put("http://saxon.sf.net/feature/maxCompiledClasses", Feature.MAX_COMPILED_CLASSES);
-        sFeatureMap.put("http://saxon.sf.net/feature/messageEmitterClass", Feature.MESSAGE_EMITTER_CLASS);
+        //sFeatureMap.put("http://saxon.sf.net/feature/messageEmitterClass", Feature.MESSAGE_EMITTER_CLASS);
         sFeatureMap.put("http://saxon.sf.net/feature/moduleURIResolverClass", Feature.MODULE_URI_RESOLVER_CLASS);
         bFeatureMap.put("http://saxon.sf.net/feature/monitorHotSpotByteCode", Feature.MONITOR_HOT_SPOT_BYTE_CODE);
         bFeatureMap.put("http://saxon.sf.net/feature/multipleSchemaImports", Feature.MULTIPLE_SCHEMA_IMPORTS);
@@ -383,7 +384,7 @@ public class XProcConfiguration {
             cfgProcessor = new Processor(licensed);
         }
 
-        cfgProcessor.getUnderlyingConfiguration().getParseOptions().setSpaceStrippingRule(NoElementsSpaceStrippingRule.getInstance());
+        cfgProcessor.getUnderlyingConfiguration().getParseOptions().withSpaceStrippingRule(NoElementsSpaceStrippingRule.getInstance());
 
         String actualtype = Version.softwareEdition;
         if ((proctype != null) && !"he".equals(proctype) && (!actualtype.toLowerCase().equals(proctype))) {
@@ -697,11 +698,11 @@ public class XProcConfiguration {
         }
 
         for (XdmNode node : new AxisNodes(null, doc, Axis.CHILD, AxisNodes.PIPELINE)) {
-            String uri = node.getNodeName().getNamespaceURI();
+            NamespaceUri uri = node.getNodeName().getNamespaceUri();
             String localName = node.getNodeName().getLocalName();
 
-            if (XProcConstants.NS_CALABASH_CONFIG.equals(uri)
-                    || XProcConstants.NS_EXPROC_CONFIG.equals(uri)) {
+            if (XProcConstants.NS_CALABASH_CONFIG == uri
+                    || XProcConstants.NS_EXPROC_CONFIG == uri) {
                 if ("implementation".equals(localName)) {
                     parseImplementation(node);
                 } else if ("saxon-processor".equals(localName)) {
@@ -786,8 +787,7 @@ public class XProcConfiguration {
             Class<?> klass = implementations.get(type);
             try {
                 Method method = klass.getMethod("isAvailable");
-                Boolean available = (Boolean) method.invoke(null);
-                return available.booleanValue();
+                return (Boolean) method.invoke(null);
             } catch (NoSuchMethodException e) {
                 return true; // Failure to implement the method...
             } catch (InvocationTargetException e) {
@@ -1154,7 +1154,7 @@ public class XProcConfiguration {
 
             documents.add(new ConfigDocument(href, node.getBaseURI().toASCIIString()));
         } else {
-            HashSet<String> excludeURIs = S9apiUtils.excludeInlinePrefixes(node, node.getAttributeValue(_exclude_inline_prefixes));
+            HashSet<NamespaceUri> excludeURIs = S9apiUtils.excludeInlinePrefixes(node, node.getAttributeValue(_exclude_inline_prefixes));
             documents.add(new ConfigDocument(docnodes, excludeURIs));
         }
     }
@@ -1180,7 +1180,7 @@ public class XProcConfiguration {
             }
             pipeline = new ConfigDocument(href, node.getBaseURI().toASCIIString());
         } else {
-            HashSet<String> excludeURIs = S9apiUtils.excludeInlinePrefixes(node, node.getAttributeValue(_exclude_inline_prefixes));
+            HashSet<NamespaceUri> excludeURIs = S9apiUtils.excludeInlinePrefixes(node, node.getAttributeValue(_exclude_inline_prefixes));
             pipeline = new ConfigDocument(docnodes, excludeURIs);
         }
     }
@@ -1258,18 +1258,15 @@ public class XProcConfiguration {
 
 
     private void parseStepName(XdmNode node) {
-        String value = node.getStringValue().trim();
-        stepName = value;
+        stepName = node.getStringValue().trim();
     }
 
     private void parseURIResolver(XdmNode node) {
-        String value = node.getAttributeValue(_class_name);
-        uriResolver = value;
+        uriResolver = node.getAttributeValue(_class_name);
     }
 
     private void parseErrorListener(XdmNode node) {
-        String value = node.getAttributeValue(_class_name);
-        errorListener = value;
+        errorListener = node.getAttributeValue(_class_name);
     }
 
     private void parseImplementation(XdmNode node) {
@@ -1340,21 +1337,18 @@ public class XProcConfiguration {
         }
     }
 
-    private HashSet<String> checkAttributes(XdmNode node, String[] attrs, boolean optionShortcutsOk) {
-        HashSet<String> hash = null;
+    private void checkAttributes(XdmNode node, String[] attrs, boolean optionShortcutsOk) {
+        HashSet<String> hash = new HashSet<> ();
         if (attrs != null) {
-            hash = new HashSet<String> ();
-            for (String attr : attrs) {
-                hash.add(attr);
-            }
+            Collections.addAll(hash, attrs);
         }
         HashSet<String> options = null;
 
         for (XdmNode attr : new AxisNodes(node, Axis.ATTRIBUTE)) {
             QName aname = attr.getNodeName();
-            if ("".equals(aname.getNamespaceURI())) {
+            if (NamespaceUri.NULL == aname.getNamespaceUri()) {
                 if (hash.contains(aname.getLocalName())) {
-                // ok
+                    // ok
                 } else if (optionShortcutsOk) {
                     if (options == null) {
                         options = new HashSet<String> ();
@@ -1363,13 +1357,11 @@ public class XProcConfiguration {
                 } else {
                     throw new XProcException(node, "Configuration error: attribute \"" + aname + "\" not allowed on " + node.getNodeName());
                 }
-            } else if (XProcConstants.NS_XPROC.equals(aname.getNamespaceURI())) {
+            } else if (XProcConstants.NS_XPROC == aname.getNamespaceUri()) {
                 throw new XProcException(node, "Configuration error: attribute \"" + aname + "\" not allowed on " + node.getNodeName());
             }
             // Everything else is ok
         }
-
-        return options;
     }
 
     private void checkBoolean(XdmNode node, String name, String value) {
@@ -1384,14 +1376,14 @@ public class XProcConfiguration {
         private Vector<XdmValue> nodes = null;
         private boolean read = false;
         private XdmNode doc = null;
-        private HashSet<String> excludeUris = null;
+        private HashSet<NamespaceUri> excludeUris = null;
 
         public ConfigDocument(String href, String base) {
             this.href = href;
             this.base = base;
         }
 
-        public ConfigDocument(Vector<XdmValue> nodes, HashSet<String> excludeUris) {
+        public ConfigDocument(Vector<XdmValue> nodes, HashSet<NamespaceUri> excludeUris) {
             this.nodes = nodes;
             this.excludeUris = excludeUris;
         }

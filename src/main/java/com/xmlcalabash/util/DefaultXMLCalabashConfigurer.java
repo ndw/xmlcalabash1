@@ -24,7 +24,7 @@ import net.sf.saxon.s9api.XdmNode;
 public class DefaultXMLCalabashConfigurer implements XMLCalabashConfigurer {
     private static final QName _href = new QName("href");
     private static final QName _dtd_validate = new QName("dtd-validate");
-    private final static QName cx_filemask = new QName("cx", XProcConstants.NS_CALABASH_EX,"filemask");
+    private final static QName cx_filemask = XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX,"filemask");
     protected XProcRuntime runtime = null;
 
     public DefaultXMLCalabashConfigurer(XProcRuntime runtime) {

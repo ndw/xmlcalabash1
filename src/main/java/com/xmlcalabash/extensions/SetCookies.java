@@ -45,10 +45,10 @@ public class SetCookies extends DefaultStep {
     private static final QName _expires = new QName("","expires");
     private static final QName _version = new QName("", "version");
     private static final QName _secure = new QName("","secure");
-    private static final QName c_cookies = new QName("c", XProcConstants.NS_XPROC_STEP, "cookies");
-    private static final QName c_cookie = new QName("c", XProcConstants.NS_XPROC_STEP, "cookie");
-    private static DateFormat iso8601tz = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
-    private static DateFormat iso8601 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+    private static final QName c_cookies = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "cookies");
+    private static final QName c_cookie =XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "cookie");
+    private static final DateFormat iso8601tz = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+    private static final DateFormat iso8601 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
     private ReadablePipe source = null;
 
     /*

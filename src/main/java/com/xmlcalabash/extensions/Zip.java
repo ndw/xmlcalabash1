@@ -21,6 +21,7 @@ import com.xmlcalabash.util.TypeUtils;
 import com.xmlcalabash.util.XMLtoJSON;
 import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.om.EmptyAttributeMap;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.om.SingletonAttributeMap;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.QName;
@@ -74,11 +75,11 @@ public class Zip extends DefaultStep {
     protected final static QName _command = new QName("", "command");
     protected final static QName _compression_method = new QName("", "compression-method");
     protected final static QName _compression_level = new QName("", "compression-level");
-    protected final static QName c_zip_manifest = new QName("c", XProcConstants.NS_XPROC_STEP, "zip-manifest");
-    protected final static QName c_zipfile = new QName("c", XProcConstants.NS_XPROC_STEP, "zipfile");
-    protected final static QName c_entry = new QName("c", XProcConstants.NS_XPROC_STEP, "entry");
-    protected final static QName c_file = new QName("c", XProcConstants.NS_XPROC_STEP, "file");
-    protected final static QName c_directory = new QName("c", XProcConstants.NS_XPROC_STEP, "directory");
+    protected final static QName c_zip_manifest = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "zip-manifest");
+    protected final static QName c_zipfile = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "zipfile");
+    protected final static QName c_entry = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "entry");
+    protected final static QName c_file = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "file");
+    protected final static QName c_directory = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "directory");
     protected final static QName _compressed_size = new QName("", "compressed-size");
     protected final static QName _comment = new QName("", "comment");
     protected final static QName _size = new QName("", "size");
@@ -87,13 +88,13 @@ public class Zip extends DefaultStep {
     private static final QName _detailed = new QName("detailed");
     private static final QName _status = new QName("status");
     private static final QName _value = new QName("value");
-    private static final QName c_encoding = new QName("c", XProcConstants.NS_XPROC_STEP, "encoding");
-    private static final QName c_body = new QName("c", XProcConstants.NS_XPROC_STEP, "body");
-    private static final QName c_json = new QName("c", XProcConstants.NS_XPROC_STEP, "json");
+    private static final QName c_encoding = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "encoding");
+    private static final QName c_body = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "body");
+    private static final QName c_json = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "json");
     private static final QName _content_type = new QName("content-type");
     private final static int bufsize = 8192;
 
-    private final static QName serializerAttrs[] = {
+    private final static QName[] serializerAttrs = {
             _byte_order_mark,
             _cdata_section_elements,
             _doctype_public,
@@ -114,8 +115,8 @@ public class Zip extends DefaultStep {
     private ReadablePipe source = null;
     private ReadablePipe manifest = null;
     private WritablePipe result = null;
-    private Map<String, FileToZip> zipManifest = new LinkedHashMap<String, FileToZip> ();
-    private Map<String, XdmNode> srcManifest = new LinkedHashMap<String, XdmNode> ();
+    private final Map<String, FileToZip> zipManifest = new LinkedHashMap<String, FileToZip> ();
+    private final  Map<String, XdmNode> srcManifest = new LinkedHashMap<String, XdmNode> ();
 
     /* Creates a new instance of Unzip */
     public Zip(XProcRuntime runtime, XAtomicStep step) {
@@ -265,16 +266,13 @@ public class Zip extends DefaultStep {
 
     private void readStream(TreeWriter tree, URI id, InputStream stream, final DatatypeFactory dfactory)
             throws IOException {
-        ZipInputStream zipStream = new ZipInputStream(stream);
 
-        try {
+        try (ZipInputStream zipStream = new ZipInputStream(stream)) {
             ZipEntry entry = zipStream.getNextEntry();
             while (entry != null) {
                 processEntry(tree, entry, dfactory);
                 entry = zipStream.getNextEntry();
             }
-        } finally {
-            zipStream.close();
         }
    }
 
@@ -463,11 +461,7 @@ public class Zip extends DefaultStep {
                 ZipEntry entry;
                 while ((entry = inZip.getNextEntry()) != null) {
                     String name = entry.getName();
-                    boolean delete = false;
-
-                    if (zipManifest.containsKey(name)) {
-                        delete = true;
-                    }
+                    boolean delete = zipManifest.containsKey(name);
 
                     if (!delete) {
                         outZip.putNextEntry(entry);
@@ -583,9 +577,9 @@ public class Zip extends DefaultStep {
         XdmNode root = S9apiUtils.getDocumentElement(doc);
         assert root != null;
 
-        if (((XProcConstants.NS_XPROC_STEP.equals(root.getNodeName().getNamespaceURI())
+        if (((XProcConstants.NS_XPROC_STEP == root.getNodeName().getNamespaceUri()
                 && "base64".equals(root.getAttributeValue(_encoding)))
-                || ("".equals(root.getNodeName().getNamespaceURI())
+                || (NamespaceUri.NULL == root.getNodeName().getNamespaceUri()
                 && "base64".equals(root.getAttributeValue(c_encoding))))) {
             storeBinary(file, doc, out);
         } else if (XProcConstants.c_result.equals(root.getNodeName())
@@ -597,9 +591,9 @@ public class Zip extends DefaultStep {
                 && ("application/json".equals(root.getAttributeValue(_content_type))
                 || "text/json".equals(root.getAttributeValue(_content_type))))
                 || c_json.equals(root.getNodeName()))
-                || JSONtoXML.JSONX_NS.equals(root.getNodeName().getNamespaceURI())
-                || JSONtoXML.JXML_NS.equals(root.getNodeName().getNamespaceURI())
-                || JSONtoXML.MLJS_NS.equals(root.getNodeName().getNamespaceURI()))) {
+                || JSONtoXML.JSONX_NS == root.getNodeName().getNamespaceUri()
+                || JSONtoXML.JXML_NS == root.getNodeName().getNamespaceUri()
+                || JSONtoXML.MLJS_NS == root.getNodeName().getNamespaceUri())) {
             storeJSON(file, doc, out);
         } else {
             storeXML(file, doc, out);

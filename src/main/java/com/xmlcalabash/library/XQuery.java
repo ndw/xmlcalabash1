@@ -61,10 +61,10 @@ import java.util.Vector;
 
 public class XQuery extends DefaultStep {
     private static final QName _content_type = new QName("content-type");
-    private static final QName cx_decode = new QName("cx", XProcConstants.NS_CALABASH_EX, "decode");
+    private static final QName cx_decode = XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX, "decode");
 
     private ReadablePipe source = null;
-    private HashMap<QName,RuntimeValue> params = new HashMap<QName,RuntimeValue> ();
+    private final HashMap<QName,RuntimeValue> params = new HashMap<QName,RuntimeValue> ();
     private ReadablePipe query = null;
     private WritablePipe result = null;
     

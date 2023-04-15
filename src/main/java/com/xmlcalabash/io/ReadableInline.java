@@ -26,6 +26,7 @@ import java.util.function.Function;
 
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.util.*;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.TreeInfo;
 import net.sf.saxon.s9api.*;
@@ -48,7 +49,7 @@ public class ReadableInline implements ReadablePipe {
     private Step reader = null;
 
     /* Creates a new instance of ReadableInline */
-    public ReadableInline(XProcRuntime runtime, Vector<XdmValue> nodes, HashSet<String> excludeNS) {
+    public ReadableInline(XProcRuntime runtime, Vector<XdmValue> nodes, HashSet<NamespaceUri> excludeNS) {
         this.runtime = runtime;
         documents = new DocumentSequence(runtime);
         XdmDestination dest = new XdmDestination();

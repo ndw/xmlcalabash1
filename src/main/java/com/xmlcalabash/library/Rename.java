@@ -32,10 +32,7 @@ import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TypeUtils;
-import net.sf.saxon.om.AttributeInfo;
-import net.sf.saxon.om.AttributeMap;
-import net.sf.saxon.om.FingerprintedQName;
-import net.sf.saxon.om.NamespaceMap;
+import net.sf.saxon.om.*;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -141,11 +138,11 @@ public class Rename extends DefaultStep implements ProcessMatchingNodes {
         NamespaceMap nsmap = node.getUnderlyingNode().getAllNamespaces();
         for (AttributeInfo attr : matchingAttributes) {
             String prefix = newName.getPrefix();
-            String uri = newName.getNamespaceURI();
+            NamespaceUri uri = newName.getNamespaceUri();
             String localName = newName.getLocalName();
 
-            if (uri == null || "".equals(uri)) {
-                FingerprintedQName fqName = new FingerprintedQName("", "", localName);
+            if (uri == NamespaceUri.NULL) {
+                FingerprintedQName fqName = new FingerprintedQName("", NamespaceUri.NULL, localName);
                 AttributeInfo ainfo = new AttributeInfo(fqName, attr.getType(), attr.getValue(), attr.getLocation(), attr.getProperties());
                 alist.add(ainfo);
             } else {
@@ -155,11 +152,11 @@ public class Rename extends DefaultStep implements ProcessMatchingNodes {
 
                 int count = 1;
                 String checkPrefix = prefix;
-                String nsURI = nsmap.getURI(checkPrefix);
+                NamespaceUri nsURI = nsmap.getNamespaceUri(checkPrefix);
                 while (nsURI != null && !nsURI.equals(uri)) {
                     count += 1;
                     checkPrefix = prefix + count;
-                    nsURI = nsmap.getURI(checkPrefix);
+                    nsURI = nsmap.getNamespaceUri(checkPrefix);
                 }
 
                 prefix = checkPrefix;
@@ -195,7 +192,7 @@ public class Rename extends DefaultStep implements ProcessMatchingNodes {
 
     @Override
     public void processPI(XdmNode node) {
-        if (!"".equals(newName.getNamespaceURI())) {
+        if (newName.getNamespaceUri() != NamespaceUri.NULL) {
             throw XProcException.stepError(13);
         }
         matcher.addPI(newName.getLocalName(), node.getStringValue());

@@ -6,6 +6,7 @@ import java.net.URI;
 import java.util.Properties;
 
 import com.xmlcalabash.core.XMLCalabash;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -64,8 +65,8 @@ public class CssFormatter extends DefaultStep {
     }
 
     public void setParameter(QName name, RuntimeValue value) {
-        if (!"".equals(name.getNamespaceURI())) {
-            throw new XProcException(step.getNode(), "The cx:css-formatter parameters are in no namespace: " + name + " (" + name.getNamespaceURI() + ")");
+        if (NamespaceUri.NULL != name.getNamespaceUri()) {
+            throw new XProcException(step.getNode(), "The cx:css-formatter parameters are in no namespace: " + name + " (" + name.getNamespaceUri().toString() + ")");
         }
         options.setProperty(name.getLocalName(), value.getString());
     }

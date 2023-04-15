@@ -18,14 +18,12 @@ import java.util.Set;
 import javax.xml.transform.sax.SAXSource;
 
 import com.xmlcalabash.core.XProcConfiguration;
+import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.runtime.XLibrary;
 import com.xmlcalabash.util.Input.Type;
-import net.sf.saxon.om.AttributeMap;
-import net.sf.saxon.om.EmptyAttributeMap;
-import net.sf.saxon.om.NamespaceMap;
-import net.sf.saxon.om.SingletonAttributeMap;
+import net.sf.saxon.om.*;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -84,7 +82,7 @@ public class UserArgs {
     protected Input pipeline = null;
     protected List<Input> libraries = new ArrayList<>();
     protected Map<String, Output> outputs = new HashMap<>();
-    protected Map<String, String> bindings = new HashMap<>();
+    protected Map<String, NamespaceUri> bindings = new HashMap<>();
     protected List<StepArgs> steps = new ArrayList<>();
     protected StepArgs curStep = new StepArgs();
     protected StepArgs lastStep = null;
@@ -281,7 +279,7 @@ public class UserArgs {
         outputs.put(port, new Output(outputStream));
     }
 
-    public void addBinding(String prefix, String uri) {
+    public void addBinding(String prefix, NamespaceUri uri) {
         if (bindings.containsKey(prefix)) {
             throw new XProcException("Duplicate prefix binding: '" + prefix + "'.");
         }
@@ -824,8 +822,8 @@ public class UserArgs {
                     if (!"*".equals(port)) {
                         attr = attr.put(TypeUtils.attributeInfo(new QName("port"), port));
                     }
-                    if (!pname.getPrefix().isEmpty() || !pname.getNamespaceURI().isEmpty()) {
-                        nsmap = nsmap.put(pname.getPrefix(), pname.getNamespaceURI());
+                    if (!pname.getPrefix().isEmpty() || !pname.getNamespaceUri().isEmpty()) {
+                        nsmap = nsmap.put(pname.getPrefix(), pname.getNamespaceUri());
                     }
 
                     tree.addStartElement(p_with_param, attr, nsmap);
@@ -922,8 +920,8 @@ public class UserArgs {
                     if (!bindings.containsKey(prefix)) {
                         throw new XProcException("Unbound prefix '" + prefix + "' in: '" + name + "'.");
                     }
-                    String uri = bindings.get(prefix);
-                    qname = new QName(prefix, uri, name.substring(cpos + 1));
+                    NamespaceUri uri = bindings.get(prefix);
+                    qname = XProcConstants.qNameFor(prefix, uri, name.substring(cpos + 1));
                 } else {
                     qname = new QName("", name);
                 }
@@ -943,8 +941,8 @@ public class UserArgs {
             }
 
             stepName = makeQName(plainStepName);
-            if ("".equals(stepName.getNamespaceURI())) {
-                stepName = new QName("p", "http://www.w3.org/ns/xproc", stepName.getLocalName());
+            if (stepName.getNamespaceUri() == NamespaceUri.NULL) {
+                stepName = XProcConstants.qNameFor(XProcConstants.NS_XPROC, stepName.getLocalName());
             }
 
             options.clear();

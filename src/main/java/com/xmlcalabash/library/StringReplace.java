@@ -29,6 +29,7 @@ import com.xmlcalabash.util.*;
 import net.sf.saxon.event.ReceiverOption;
 import net.sf.saxon.om.AttributeInfo;
 import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.om.NodeName;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.QName;
@@ -57,8 +58,8 @@ public class StringReplace extends DefaultStep implements ProcessMatchingNodes {
     private WritablePipe result = null;
     private ProcessMatch matcher = null;
     private RuntimeValue replace = null;
-    private HashMap<String,String> rns = new HashMap<>();
-    private static HashMap<QName,RuntimeValue> atomicStepsGetNoInScopeOptions = new HashMap<>();
+    private final HashMap<String,NamespaceUri> rns = new HashMap<>();
+    private static final HashMap<QName,RuntimeValue> atomicStepsGetNoInScopeOptions = new HashMap<>();
 
     /* Creates a new instance of StringReplace */
     public StringReplace(XProcRuntime runtime, XAtomicStep step) {

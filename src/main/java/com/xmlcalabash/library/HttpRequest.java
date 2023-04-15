@@ -31,6 +31,7 @@ import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.util.*;
 import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.om.EmptyAttributeMap;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.om.SingletonAttributeMap;
 import net.sf.saxon.s9api.*;
 import org.apache.http.*;
@@ -75,12 +76,12 @@ import java.util.Vector;
         type = "{http://www.w3.org/ns/xproc}http-request")
 
 public class HttpRequest extends DefaultStep {
-    private static final QName c_request = new QName("c", XProcConstants.NS_XPROC_STEP, "request");
-    private static final QName cx_timeout = new QName("cx",XProcConstants.NS_CALABASH_EX,"timeout");
-    private static final QName cx_cookies = new QName("cx",XProcConstants.NS_CALABASH_EX,"cookies");
-    private static final QName cx_save_cookies = new QName("cx",XProcConstants.NS_CALABASH_EX,"save-cookies");
-    private static final QName cx_use_cookies = new QName("cx",XProcConstants.NS_CALABASH_EX,"use-cookies");
-    private static final QName cx_send_binary = new QName("cx", XProcConstants.NS_CALABASH_EX, "send-binary");
+    private static final QName c_request = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "request");
+    private static final QName cx_timeout = XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX,"timeout");
+    private static final QName cx_cookies = XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX,"cookies");
+    private static final QName cx_save_cookies = XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX,"save-cookies");
+    private static final QName cx_use_cookies = XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX,"use-cookies");
+    private static final QName cx_send_binary = XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX, "send-binary");
 
     public static final QName _href = new QName("", "href");
     public static final QName _detailed = new QName("", "detailed");
@@ -105,7 +106,7 @@ public class HttpRequest extends DefaultStep {
     private boolean detailed = false;
     private boolean sendAuthorization = false;
     private URI requestURI = null;
-    private Vector<Header> headers = new Vector<Header> ();
+    private final Vector<Header> headers = new Vector<Header> ();
     private String overrideContentType = null;
     private String headerContentType = null;
     private boolean encodeBinary = false;
@@ -157,7 +158,7 @@ public class HttpRequest extends DefaultStep {
                     || _override_content_type.equals(name)) {
                 // nop
             } else {
-                if (XMLConstants.DEFAULT_NS_PREFIX.equals(name.getNamespaceURI())) {
+                if (name.getNamespaceUri() == NamespaceUri.NULL) {
                     throw new XProcException(step.getNode(), "Unsupported attribute on c:request for p:http-request: " + name);
                 }
             }
@@ -278,7 +279,7 @@ public class HttpRequest extends DefaultStep {
                     if (name == null) {
                         continue; // this can't happen, right?
                     }
-                    if (name.toLowerCase().equals("content-type")) {
+                    if (name.equalsIgnoreCase("content-type")) {
                         // We'll deal with the content-type header later
                         headerContentType = event.getAttributeValue(_value).toLowerCase();
                     } else {
@@ -411,6 +412,32 @@ public class HttpRequest extends DefaultStep {
                     // Read the response body.
                     if (httpResult.getEntity() != null) {
                         InputStream bodyStream = httpResult.getEntity().getContent();
+
+                        // 15 Apr 2023, I'm suddenly getting an exception:
+                        //
+                        // org.apache.http.ConnectionClosedException: Premature end of chunk coded message body: closing chunk expected
+                        //
+                        // on some connections. (Some connections to tests.xproc.org, for example). I've no idea how to
+                        // fix them, and I see a few places on the web where others are having this problem.
+                        // Apparently when http uses a chunked encoding it's supposed to send a final zero-length
+                        // chunk and this error arises if the server doesn't. I'm just going to paper over it because
+                        // what else can I do?
+
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        try {
+                            byte[] buf = new byte[4096];
+                            int len = bodyStream.read(buf);
+                            while (len >= 0) {
+                                baos.write(buf, 0, len);
+                                len = bodyStream.read(buf);
+                            }
+                        } catch (ConnectionClosedException ex) {
+                            if (!ex.getMessage().contains("closing chunk expected")) {
+                                throw ex;
+                            }
+                        }
+                        bodyStream = new ByteArrayInputStream(baos.toByteArray());
+
                         readBodyContent(tree, bodyStream, httpResult);
                     } else {
                         throw XProcException.dynamicError(6, "Reading HTTP response on " + getStep().getName());
@@ -526,7 +553,7 @@ public class HttpRequest extends DefaultStep {
 
         if (bodyDescription != null) {
             for (Header header : headers) {
-                if (header.getName().toLowerCase().equals("content-description")) {
+                if (header.getName().equalsIgnoreCase("content-description")) {
                     String headDescription = header.getValue();
                     descriptionHeader = true;
                     if (!bodyDescription.equals(headDescription)) {
@@ -542,7 +569,7 @@ public class HttpRequest extends DefaultStep {
 
         if (bodyId != null) {
             for (Header header : headers) {
-                if (header.getName().toLowerCase().equals("content-id")) {
+                if (header.getName().equalsIgnoreCase("content-id")) {
                     String headId = header.getValue();
                     idHeader = true;
                     if (!bodyId.equals(headId)) {
@@ -558,7 +585,7 @@ public class HttpRequest extends DefaultStep {
 
         if (bodyDisposition != null) {
             for (Header header : headers) {
-                if (header.getName().toLowerCase().equals("content-disposition")) {
+                if (header.getName().equalsIgnoreCase("content-disposition")) {
                     String headDisposition = header.getValue();
                     dispositionHeader = true;
                     if (!bodyDisposition.equals(headDisposition)) {

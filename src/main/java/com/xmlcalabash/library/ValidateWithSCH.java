@@ -1,6 +1,7 @@
 package com.xmlcalabash.library;
 
 import com.xmlcalabash.core.XMLCalabash;
+import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.ReadablePipe;
@@ -9,6 +10,7 @@ import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.util.S9apiUtils;
 import net.sf.saxon.Configuration;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -191,8 +193,8 @@ public class ValidateWithSCH extends DefaultStep {
     }
 
     private boolean checkFailedAssert(XdmNode doc) {
-        HashMap<String,String> nsBindings = new HashMap<> ();
-        nsBindings.put("svrl", "http://purl.oclc.org/dsdl/svrl");
+        HashMap<String, NamespaceUri> nsBindings = new HashMap<> ();
+        nsBindings.put("svrl", NamespaceUri.of("http://purl.oclc.org/dsdl/svrl"));
         String xpath = "//svrl:failed-assert|//svrl:successful-report";
         Vector<XdmItem> results = new Vector<XdmItem> ();
 
@@ -220,7 +222,7 @@ public class ValidateWithSCH extends DefaultStep {
                 Throwable sae = saue.getCause();
                 if (sae instanceof XPathException) {
                     XPathException xe = (XPathException) sae;
-                    if ("http://www.w3.org/2005/xqt-errors".equals(xe.getErrorCodeNamespace()) && "XPDY0002".equals(xe.getErrorCodeLocalPart())) {
+                    if (xe.getErrorCodeNamespace() == XProcConstants.NS_XQT_ERRORS && "XPDY0002".equals(xe.getErrorCodeLocalPart())) {
                         throw XProcException.dynamicError(26, step.getNode(), "Expression refers to context when none is available: " + xpath);
                     } else {
                         throw saue;

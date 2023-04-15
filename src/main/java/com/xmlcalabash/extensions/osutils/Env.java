@@ -35,7 +35,7 @@ import java.util.Map;
                 "{http://xmlcalabash.com/ns/extensions/osutils}env")
 
 public class Env extends DefaultStep {
-    private static final QName c_env = new QName("c", XProcConstants.NS_XPROC_STEP, "env");
+    private static final QName c_env = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "env");
     private static final QName _name = new QName("name");
     private static final QName _value = new QName("value");
 

@@ -22,6 +22,7 @@ package com.xmlcalabash.model;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import net.sf.saxon.lib.NamespaceConstant;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.ItemType;
 import net.sf.saxon.s9api.ItemTypeFactory;
@@ -48,7 +49,7 @@ public class RuntimeValue {
     private String value = null;
     private XdmNode node = null;
     private boolean initialized = false;
-    private HashMap<String,String> nsBindings = null;
+    private HashMap<String,NamespaceUri> nsBindings = null;
 
     public RuntimeValue() {
         // nop; returns an uninitialized value
@@ -59,7 +60,7 @@ public class RuntimeValue {
         this.node = node;
         initialized = true;
 
-        nsBindings = new HashMap<String,String> ();
+        nsBindings = new HashMap<> ();
         XdmSequenceIterator<XdmNode> nsIter = node.axisIterator(Axis.NAMESPACE);
         while (nsIter.hasNext()) {
             XdmNode ns = nsIter.next();
@@ -68,22 +69,22 @@ public class RuntimeValue {
 
             if (nodeName == null) {
                 // Huh?
-                nsBindings.put("", uri);
+                nsBindings.put("", NamespaceUri.of(uri));
             } else {
                 String localName = nodeName.getLocalName();
-                nsBindings.put(localName,uri);
+                nsBindings.put(localName, NamespaceUri.of(uri));
             }
         }
     }
 
-    public RuntimeValue(String value, XdmNode node, HashMap<String,String> nsBindings) {
+    public RuntimeValue(String value, XdmNode node, HashMap<String,NamespaceUri> nsBindings) {
         this.value = value;
         this.node = node;
         this.nsBindings = nsBindings;
         initialized = true;
     }
 
-    public RuntimeValue(String value, Vector<XdmItem> generalValue, XdmNode node, HashMap<String,String> nsBindings) {
+    public RuntimeValue(String value, Vector<XdmItem> generalValue, XdmNode node, HashMap<String,NamespaceUri> nsBindings) {
         this.value = value;
         this.generalValue = generalValue;
         this.node = node;
@@ -160,7 +161,7 @@ public class RuntimeValue {
         return node.getBaseURI();
     }
 
-    public HashMap<String,String> getNamespaceBindings() {
+    public HashMap<String, NamespaceUri> getNamespaceBindings() {
         return nsBindings;
     }
 

@@ -40,7 +40,7 @@ public class Head extends DefaultStep {
     private static final QName _href = new QName("href");
     private static final QName _count = new QName("count");
     private static final QName _fail_on_error = new QName("fail-on-error");
-    private static final QName c_line = new QName("c", XProcConstants.NS_XPROC_STEP, "line");
+    private static final QName c_line = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "line");
 
     private WritablePipe result = null;
 

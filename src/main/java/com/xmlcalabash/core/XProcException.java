@@ -32,8 +32,8 @@ import java.net.URI;
  * @author ndw
  */
 public class XProcException extends RuntimeException {
-    public static final QName err_E0001 = new QName(XProcConstants.NS_XPROC_ERROR_EX, "XE0001"); // invalid pipeline
-    public static final QName err_E0002 = new QName(XProcConstants.NS_XPROC_ERROR_EX, "XE0002"); // invalid configuration
+    public static final QName err_E0001 = XProcConstants.qNameFor(XProcConstants.NS_XPROC_ERROR_EX, "XE0001"); // invalid pipeline
+    public static final QName err_E0002 = XProcConstants.qNameFor(XProcConstants.NS_XPROC_ERROR_EX, "XE0002"); // invalid configuration
 
     private QName error = null;
     private Step step = null;

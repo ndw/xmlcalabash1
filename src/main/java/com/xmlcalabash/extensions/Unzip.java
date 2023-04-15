@@ -51,12 +51,12 @@ public class Unzip extends DefaultStep {
     private static final String ACCEPT_ZIP = "application/zip, */*";
     protected final static QName _href = new QName("", "href");
     protected final static QName _content_type = new QName("", "content-type");
-    protected final static QName c_zipfile = new QName("c", XProcConstants.NS_XPROC_STEP, "zipfile");
-    protected final static QName c_file = new QName("c", XProcConstants.NS_XPROC_STEP, "file");
+    protected final static QName c_zipfile = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "zipfile");
+    protected final static QName c_file = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "file");
     protected final static QName _file = new QName("", "file");
     protected final static QName _charset = new QName("", "charset");
     protected final static QName _name = new QName("", "name");
-    protected final static QName c_directory = new QName("c", XProcConstants.NS_XPROC_STEP, "directory");
+    protected final static QName c_directory = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "directory");
     protected final static QName _compressed_size = new QName("", "compressed-size");
     protected final static QName _comment = new QName("", "comment");
     protected final static QName _size = new QName("", "size");

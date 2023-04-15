@@ -27,6 +27,7 @@ import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XPipeline;
 import com.xmlcalabash.util.*;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.s9api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -837,20 +838,20 @@ public class RunTestReport {
 
         public void setDescription(XdmNode desc) {
             if (desc != null) {
-                XdmSequenceIterator iter = desc.axisIterator(Axis.CHILD);
+                XdmSequenceIterator<XdmNode> iter = desc.axisIterator(Axis.CHILD);
                 description = new Vector<XdmNode> ();
                 while (iter.hasNext()) {
-                    XdmNode node = (XdmNode) iter.next();
-                    HashSet<String> prefixes = new HashSet<String> ();
-                    XdmSequenceIterator nsiter = node.axisIterator(Axis.NAMESPACE);
+                    XdmNode node = iter.next();
+                    HashSet<NamespaceUri> prefixes = new HashSet<> ();
+                    XdmSequenceIterator<XdmNode> nsiter = node.axisIterator(Axis.NAMESPACE);
                     while (nsiter.hasNext()){
-                        XdmNode nsnode = (XdmNode) nsiter.next();
+                        XdmNode nsnode = nsiter.next();
                         if (nsnode.getNodeName() != null) {
                             String prefix = nsnode.getNodeName().getLocalName();
                             String uri = nsnode.getStringValue();
                             if (!"http://www.w3.org/1999/xhtml".equals(uri)
                                 && !"xml".equals(prefix)) {
-                                prefixes.add(uri);
+                                prefixes.add(NamespaceUri.of(uri));
                             }
                         }
                     }

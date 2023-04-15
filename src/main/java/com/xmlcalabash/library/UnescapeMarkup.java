@@ -28,6 +28,7 @@ import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.util.*;
 import net.sf.saxon.om.FingerprintedQName;
 import net.sf.saxon.om.NamespaceMap;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.s9api.*;
 import nu.validator.htmlparser.common.XmlViolationPolicy;
@@ -58,7 +59,7 @@ public class UnescapeMarkup extends DefaultStep {
     private static final QName _charset = new QName("charset");
     private ReadablePipe source = null;
     private WritablePipe result = null;
-    private String namespace = null;
+    private NamespaceUri namespace = null;
 
     /*
      * Creates a new instance of UnescapeMarkup
@@ -88,7 +89,7 @@ public class UnescapeMarkup extends DefaultStep {
         contentType = HttpUtils.baseContentType(contentType);
 
         if (getOption(_namespace) != null) {
-            namespace = getOption(_namespace).getString();
+            namespace = NamespaceUri.of(getOption(_namespace).getString());
         }
 
         String encoding = null;
@@ -186,7 +187,7 @@ public class UnescapeMarkup extends DefaultStep {
         if (unescnode.getNodeKind() == XdmNodeKind.ELEMENT) {
             NodeInfo inode = unescnode.getUnderlyingNode();
             NamespaceMap nsmap = inode.getAllNamespaces();
-            if (!"".equals(nsmap.getDefaultNamespace())) {
+            if (nsmap.getDefaultNamespace() != NamespaceUri.NULL) {
                 nsmap = nsmap.put("", namespace);
             }
 

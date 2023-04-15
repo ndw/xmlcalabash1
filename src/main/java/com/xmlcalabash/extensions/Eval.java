@@ -46,19 +46,19 @@ import java.util.Vector;
         type = "{http://xmlcalabash.com/ns/extensions}eval")
 
 public class Eval extends DefaultStep {
-    protected final static QName cx_document = new QName("cx", XProcConstants.NS_CALABASH_EX, "document");
-    protected final static QName cx_options = new QName("cx", XProcConstants.NS_CALABASH_EX, "options");
-    protected final static QName cx_option = new QName("cx", XProcConstants.NS_CALABASH_EX, "option");
+    protected final static QName cx_document = XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX, "document");
+    protected final static QName cx_options = XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX, "options");
+    protected final static QName cx_option = XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX, "option");
     private static final QName _port = new QName("port");
     private static final QName _detailed = new QName("detailed");
     private static final QName _step = new QName("step");
     private static final QName _name = new QName("name");
     private static final QName _value = new QName("value");
 
-    private Vector<ReadablePipe> sources = new Vector<ReadablePipe> ();
+    private final Vector<ReadablePipe> sources = new Vector<ReadablePipe> ();
     private ReadablePipe pipeline = null;
-    private HashMap<QName,RuntimeValue> params = new HashMap<QName,RuntimeValue> ();
-    private Vector<ReadablePipe> options = new Vector<ReadablePipe> ();
+    private final HashMap<QName,RuntimeValue> params = new HashMap<QName,RuntimeValue> ();
+    private final Vector<ReadablePipe> options = new Vector<ReadablePipe> ();
     private WritablePipe result = null;
 
     /*

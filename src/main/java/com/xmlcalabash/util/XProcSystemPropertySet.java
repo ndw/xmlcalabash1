@@ -3,6 +3,7 @@ package com.xmlcalabash.util;
 import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.s9api.QName;
 
 /**
@@ -28,10 +29,10 @@ public interface XProcSystemPropertySet {
     XProcSystemPropertySet BUILTIN = new XProcSystemPropertySet() {
         @Override
         public String systemProperty(XProcRuntime runtime, QName propertyName) throws XProcException {
-            String uri = propertyName.getNamespaceURI();
+            NamespaceUri uri = propertyName.getNamespaceUri();
             String local = propertyName.getLocalName();
 
-            if (uri.equals(XProcConstants.NS_XPROC)) {
+            if (uri == XProcConstants.NS_XPROC) {
                 if ("episode".equals(local)) {
                     return runtime.getEpisode();
                 } else if ("language".equals(local)) {
@@ -53,7 +54,7 @@ public interface XProcSystemPropertySet {
                 } else {
                     return null;
                 }
-            } else if (uri.equals(XProcConstants.NS_CALABASH_EX)) {
+            } else if (uri == XProcConstants.NS_CALABASH_EX) {
                 if ("transparent-json".equals(local)) {
                     return runtime.transparentJSON() ? "true" : "false";
                 } else if ("json-flavor".equals(local)) {

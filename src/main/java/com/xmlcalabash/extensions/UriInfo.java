@@ -48,7 +48,7 @@ public class UriInfo extends DefaultStep {
     private static final QName _password = new QName("password");
     private static final QName _auth_method = new QName("auth_method");
     private static final QName _send_authorization = new QName("send_authorization");
-    protected final static QName c_uriinfo = new QName("c", XProcConstants.NS_XPROC_STEP, "uri-info");
+    protected final static QName c_uriinfo = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "uri-info");
 
     private static final QName _uri = new QName("uri");
     private static final QName _readable = new QName("readable");
@@ -109,7 +109,7 @@ public class UriInfo extends DefaultStep {
 
             if (f.exists()) {
                 attr = attr.put(TypeUtils.attributeInfo(_writable, f.canWrite() ? "true" : "false"));
-                attr = attr.put(TypeUtils.attributeInfo(_size, "" + f.length()));
+                attr = attr.put(TypeUtils.attributeInfo(_size, String.valueOf(f.length())));
                 attr = attr.put(TypeUtils.attributeInfo(_absolute, f.isAbsolute() ? "true" : "false"));
                 attr = attr.put(TypeUtils.attributeInfo(_directory, f.isDirectory() ? "true" : "false"));
                 attr = attr.put(TypeUtils.attributeInfo(_hidden, f.isHidden() ? "true" : "false"));

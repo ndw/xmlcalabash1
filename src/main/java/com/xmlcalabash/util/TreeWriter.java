@@ -230,7 +230,7 @@ public class TreeWriter {
             receiver.setSystemId(overrideBaseURI.toASCIIString());
         }
 
-        FingerprintedQName newNameOfNode = new FingerprintedQName(newName.getPrefix(),newName.getNamespaceURI(),newName.getLocalName());
+        FingerprintedQName newNameOfNode = new FingerprintedQName(newName.getPrefix(),newName.getNamespaceUri(),newName.getLocalName());
         addStartElement(newNameOfNode, attrs, inode.getSchemaType(), inscopeNS);
     }
 
@@ -239,7 +239,7 @@ public class TreeWriter {
     }
 
     public void addStartElement(QName newName, AttributeMap attrs, NamespaceMap nsmap) {
-        NodeName elemName = new FingerprintedQName(newName.getPrefix(), newName.getNamespaceURI(), newName.getLocalName());
+        NodeName elemName = new FingerprintedQName(newName.getPrefix(), newName.getNamespaceUri(), newName.getLocalName());
         addStartElement(elemName, attrs, Untyped.INSTANCE, nsmap);
     }
 
@@ -261,10 +261,10 @@ public class TreeWriter {
 
     public void addStartElement(NodeName elemName, AttributeMap attrs, SchemaType typeCode, NamespaceMap nsmap) {
         // Sort out the namespaces...
-        nsmap = updateMap(nsmap, elemName.getPrefix(), elemName.getURI());
+        nsmap = updateMap(nsmap, elemName.getPrefix(), elemName.getNamespaceUri());
         for (AttributeInfo attr : attrs) {
             if (attr.getNodeName().getURI() != null && !"".equals(attr.getNodeName().getURI())) {
-                nsmap = updateMap(nsmap, attr.getNodeName().getPrefix(), attr.getNodeName().getURI());
+                nsmap = updateMap(nsmap, attr.getNodeName().getPrefix(), attr.getNodeName().getNamespaceUri());
             }
         }
 
@@ -283,18 +283,19 @@ public class TreeWriter {
         }
     }
 
-    private NamespaceMap updateMap(NamespaceMap nsmap, String prefix, String uri) {
-        if (uri == null || "".equals(uri)) {
+    private NamespaceMap updateMap(NamespaceMap nsmap, String prefix, NamespaceUri uri) {
+        if (uri == NamespaceUri.NULL) {
             return nsmap;
         }
 
         if (prefix == null || "".equals(prefix)) {
-            if (!uri.equals(nsmap.getDefaultNamespace())) {
+            if (uri != nsmap.getDefaultNamespace()) {
                 return nsmap.put("", uri);
             }
+            return nsmap;
         }
 
-        String curNS = nsmap.getURI(prefix);
+        NamespaceUri curNS = nsmap.getURIForPrefix(prefix, false);
         if (curNS == null) {
             return nsmap.put(prefix, uri);
         } else if (curNS.equals(uri)) {

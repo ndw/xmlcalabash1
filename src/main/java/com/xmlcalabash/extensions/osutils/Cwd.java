@@ -54,7 +54,7 @@ public class Cwd extends DefaultStep {
         tree.startDocument(step.getNode().getBaseURI());
         tree.addStartElement(XProcConstants.c_result);
 
-        tree.addStartElement(new QName("c", XProcConstants.NS_XPROC_STEP, "cwd"));
+        tree.addStartElement(XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "cwd"));
         tree.addText(System.getProperty("user.dir"));
         tree.addEndElement();
 

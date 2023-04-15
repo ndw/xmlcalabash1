@@ -305,23 +305,22 @@ public class ProcessMatch extends TreeWriter {
     }
 
     private static class MatchingNamespaceResolver implements NamespaceResolver {
-        private HashMap<String,String> ns = new HashMap<String,String> ();
+        private HashMap<String,NamespaceUri> ns = new HashMap<String,NamespaceUri> ();
 
-        public MatchingNamespaceResolver(HashMap<String,String> bindings) {
+        public MatchingNamespaceResolver(HashMap<String,NamespaceUri> bindings) {
             ns = bindings;
         }
 
-        public String getURIForPrefix(String prefix, boolean useDefault) {
+        public NamespaceUri getURIForPrefix(String prefix, boolean useDefault) {
             if ("".equals(prefix) && !useDefault) {
-                return "";
+                return NamespaceUri.NULL;
             }
 
             return ns.get(prefix);
         }
 
         public Iterator<String> iteratePrefixes() {
-            Vector<String> p = new Vector<String> ();
-            p.addAll(ns.keySet());
+            Vector<String> p = new Vector<>(ns.keySet());
             return p.iterator();
         }
     }

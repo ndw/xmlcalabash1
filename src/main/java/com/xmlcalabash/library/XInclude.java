@@ -38,11 +38,7 @@ import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.util.TypeUtils;
 import com.xmlcalabash.util.XPointer;
 import net.sf.saxon.event.ReceiverOption;
-import net.sf.saxon.om.AttributeInfo;
-import net.sf.saxon.om.AttributeMap;
-import net.sf.saxon.om.EmptyAttributeMap;
-import net.sf.saxon.om.FingerprintedQName;
-import net.sf.saxon.om.NodeName;
+import net.sf.saxon.om.*;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -73,18 +69,18 @@ import java.util.regex.Pattern;
         type = "{http://www.w3.org/ns/xproc}xinclude")
 
 public class XInclude extends DefaultStep implements ProcessMatchingNodes {
-    private static final String localAttrNS = "http://www.w3.org/2001/XInclude/local-attributes";
-    private static final String xiNS = "http://www.w3.org/2001/XInclude";
+    private static final NamespaceUri localAttrNS = NamespaceUri.of("http://www.w3.org/2001/XInclude/local-attributes");
+    private static final NamespaceUri xiNS = NamespaceUri.of("http://www.w3.org/2001/XInclude");
 
-    private static final QName xi_include = new QName(xiNS,"include");
-    private static final QName xi_fallback = new QName(xiNS,"fallback");
+    private static final QName xi_include = XProcConstants.qNameFor(xiNS, "include");
+    private static final QName xi_fallback = XProcConstants.qNameFor(xiNS,"fallback");
     private static final QName _fixup_xml_base = new QName("", "fixup-xml-base");
     private static final QName _fixup_xml_lang = new QName("", "fixup-xml-lang");
     private static final QName _set_xml_id = new QName("", "set-xml-id");
     private static final QName _accept = new QName("", "accept");
     private static final QName _accept_language = new QName("", "accept-language");
-    private static final QName cx_trim = new QName("cx", XProcConstants.NS_CALABASH_EX, "trim");
-    private static final QName cx_read_limit = new QName("cx", XProcConstants.NS_CALABASH_EX, "read-limit");
+    private static final QName cx_trim = XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX, "trim");
+    private static final QName cx_read_limit = XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX, "read-limit");
     private static final QName _encoding = new QName("", "encoding");
     private static final QName _href = new QName("", "href");
     private static final QName _parse = new QName("", "parse");
@@ -99,9 +95,9 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
 
     private ReadablePipe source = null;
     private WritablePipe result = null;
-    private Stack<ProcessMatch> matcherStack = new Stack<ProcessMatch> ();
-    private Stack<String> inside = new Stack<String> ();
-    private Stack<String> setXmlId = new Stack<String> ();
+    private final Stack<ProcessMatch> matcherStack = new Stack<ProcessMatch> ();
+    private final Stack<String> inside = new Stack<String> ();
+    private final Stack<String> setXmlId = new Stack<String> ();
     private boolean fixupBase = false;
     private boolean fixupLang = false;
     private boolean copyAttributes = false;
@@ -164,8 +160,8 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
 
     private XdmNode expandXIncludes(XdmNode doc) {
         // Does this document include any xi:include elements?
-        HashMap<String,String> xins = new HashMap<>();
-        xins.put("xi", "http://www.w3.org/2001/XInclude");
+        HashMap<String, NamespaceUri> xins = new HashMap<>();
+        xins.put("xi", NamespaceUri.of("http://www.w3.org/2001/XInclude"));
         Vector<XdmItem> ebv = evaluateXPath(doc, xins,"//xi:include", new HashMap<QName, RuntimeValue>());
         if (ebv.isEmpty()) {
             logger.trace(MessageFormatter.nodeMessage(doc, "Skipping expandXIncludes (no xi:includes): " + doc.getBaseURI()));
@@ -233,7 +229,7 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                             throw new XProcException(step.getNode(), "XInclude element must contain at most one xi:fallback element.");
                         }
                         fallback = child;
-                    } else if (xiNS.equals(child.getNodeName().getNamespaceURI())) {
+                    } else if (xiNS == child.getNodeName().getNamespaceUri()) {
                         throw new XProcException(step.getNode(), "Element not allowed as child of XInclude: " + child.getNodeKind());
                     }
                 }
@@ -359,7 +355,6 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
                 if (xpointer == null) {
                     matcher.addSubtree(subtree.getResult());
                 } else {
-                    HashMap<String,String> nsBindings = xpointer.xpathNamespaces();
                     Vector<XdmNode> nodes = xpointer.selectNodes(runtime,subtree.getResult());
                     if (nodes == null) {
                         logger.trace(MessageFormatter.nodeMessage(node, "XInclude parse failed: " + href));
@@ -570,16 +565,16 @@ public class XInclude extends DefaultStep implements ProcessMatchingNodes {
 
                     for (AttributeInfo ainfo : xiattributes) {
                         // Attribute must be in a namespace
-                        String nsuri = ainfo.getNodeName().getURI();
-                        boolean copy = (nsuri != null && !"".equals(nsuri));
+                        NamespaceUri nsuri = NamespaceUri.of(ainfo.getNodeName().getURI());
+                        boolean copy = (nsuri != NamespaceUri.NULL);
 
                         // But not in the XML namespace
                         copy = copy && !XProcConstants.NS_XML.equals(nsuri);
 
                         if (copy) {
                             NodeName aname = ainfo.getNodeName();
-                            if (localAttrNS.equals(aname.getURI())) {
-                                aname = new FingerprintedQName("", "", aname.getLocalPart());
+                            if (localAttrNS == NamespaceUri.of(aname.getURI())) {
+                                aname = new FingerprintedQName("", NamespaceUri.NULL, aname.getLocalPart());
                             }
 
                             copied.add(aname);

@@ -31,10 +31,7 @@ import com.xmlcalabash.util.MessageFormatter;
 import com.xmlcalabash.util.ProcessMatch;
 import com.xmlcalabash.util.ProcessMatchingNodes;
 import com.xmlcalabash.util.S9apiUtils;
-import net.sf.saxon.om.AttributeInfo;
-import net.sf.saxon.om.AttributeMap;
-import net.sf.saxon.om.NamespaceBinding;
-import net.sf.saxon.om.NodeInfo;
+import net.sf.saxon.om.*;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmAtomicValue;
@@ -192,7 +189,7 @@ public class Template extends DefaultStep implements ProcessMatchingNodes {
         String ptext = "";
         String ch = "";
 
-        HashMap<String,String> nsbindings = new HashMap<> ();
+        HashMap<String, NamespaceUri> nsbindings = new HashMap<> ();
 
         // FIXME: Surely there's a better way to do this?
         XdmNode parent = node;
@@ -206,7 +203,7 @@ public class Template extends DefaultStep implements ProcessMatchingNodes {
         if (parent.getNodeKind() == XdmNodeKind.ELEMENT) {
             NodeInfo inode = parent.getUnderlyingNode();
             for (NamespaceBinding bind : inode.getAllNamespaces().getNamespaceBindings()) {
-                nsbindings.put(bind.getPrefix(), bind.getURI());
+                nsbindings.put(bind.getPrefix(), bind.getNamespaceUri());
             }
         }
 

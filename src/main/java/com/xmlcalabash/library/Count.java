@@ -41,7 +41,7 @@ import com.xmlcalabash.runtime.XAtomicStep;
         type = "{http://www.w3.org/ns/xproc}count")
 
 public class Count extends DefaultStep {
-    private static final QName c_result = new QName("c", XProcConstants.NS_XPROC_STEP, "result");
+    private static final QName c_result = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "result");
     private static final QName _limit = new QName("limit");
     private ReadablePipe source = null;
     private WritablePipe result = null;

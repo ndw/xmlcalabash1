@@ -79,7 +79,7 @@ public class DefaultXProcMessageListener implements XProcMessageListener {
             loc = err.getLocator();
             if (err.getErrorCode() != null) {
                 QName n = err.getErrorCode();
-                qCode = new StructuredQName(n.getPrefix(),n.getNamespaceURI(),n.getLocalName());
+                qCode = new StructuredQName(n.getPrefix(),n.getNamespaceUri(),n.getLocalName());
             }
             if (err.getStep() != null) {
                 message = message + err.getStep() + ":";

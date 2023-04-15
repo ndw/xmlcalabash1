@@ -49,7 +49,7 @@ import com.xmlcalabash.runtime.XAtomicStep;
         type = "{http://www.w3.org/ns/xproc}compare")
 
 public class Compare extends DefaultStep {
-    private static final QName c_result = new QName("c", XProcConstants.NS_XPROC_STEP, "result");
+    private static final QName c_result = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "result");
     private static final QName doca = new QName("","doca");
     private static final QName docb = new QName("","docb");
     private static final QName _fail_if_not_equal = new QName("","fail-if-not-equal");

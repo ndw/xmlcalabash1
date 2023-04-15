@@ -40,9 +40,9 @@ import java.util.Vector;
  * @author ndw
  */
 public class Step extends SourceArtifact {
-    private static final QName cx_depend = new QName("cx",XProcConstants.NS_CALABASH_EX,"depend");
-    private static final QName cx_depends = new QName("cx",XProcConstants.NS_CALABASH_EX,"depends");
-    private static final QName cx_dependson = new QName("cx",XProcConstants.NS_CALABASH_EX,"dependson");
+    private static final QName cx_depend = XProcConstants.qNameFor("cx",XProcConstants.NS_CALABASH_EX,"depend");
+    private static final QName cx_depends = XProcConstants.qNameFor("cx",XProcConstants.NS_CALABASH_EX,"depends");
+    private static final QName cx_dependson = XProcConstants.qNameFor("cx",XProcConstants.NS_CALABASH_EX,"dependson");
 
     protected QName stepType = null;
     protected String stepName = null;
@@ -718,7 +718,7 @@ public class Step extends SourceArtifact {
                     if ("error".equals(pipe.getPort()) && XProcConstants.p_catch.equals(fromstep.getType())) {
                         catchErrors = true;
                     } else {
-                        if (XProcConstants.NS_XPROC.equals(fromstep.getType().getNamespaceURI())
+                        if (XProcConstants.NS_XPROC == fromstep.getType().getNamespaceUri()
                                 && getVersion() > 1.0) {
                             // Nevermind, it's ok to bind to unknown ports in this case
                             input.setSequence(true);
@@ -1265,7 +1265,7 @@ public class Step extends SourceArtifact {
             indent += " ";
         }
 
-        if (getType().getNamespaceURI().equals(XProcConstants.NS_XPROC)) {
+        if (getType().getNamespaceUri() ==  XProcConstants.NS_XPROC) {
             logger.trace(indent + getType().getLocalName() + " " + getName());
         } else {
             logger.trace(indent + "XProcStep " + getName() + " (" + getType() + ")");

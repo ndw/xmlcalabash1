@@ -65,9 +65,9 @@ import net.sf.saxon.s9api.XdmNode;
         type = "{http://www.w3.org/ns/xproc}exec")
 
 public class Exec extends DefaultStep {
-    private static final QName c_result = new QName("c", XProcConstants.NS_XPROC_STEP, "result");
-    private static final QName c_line = new QName("c", XProcConstants.NS_XPROC_STEP, "line");
-    private static final QName cx_show_stderr = new QName("cx", XProcConstants.NS_CALABASH_EX, "show-stderr");
+    private static final QName c_result = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "result");
+    private static final QName c_line = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "line");
+    private static final QName cx_show_stderr = XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX, "show-stderr");
 
     private static final QName _command = new QName("", "command");
     private static final QName _args = new QName("", "args");

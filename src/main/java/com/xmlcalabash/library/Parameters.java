@@ -29,6 +29,7 @@ import com.xmlcalabash.util.TreeWriter;
 import com.xmlcalabash.util.TypeUtils;
 import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.om.EmptyAttributeMap;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmAtomicValue;
@@ -48,9 +49,9 @@ import java.util.HashMap;
         type = "{http://www.w3.org/ns/xproc}parameters")
 
 public class Parameters extends DefaultStep {
-    private static final QName c_param_set = new QName("c", XProcConstants.NS_XPROC_STEP, "param-set");
-    private static final QName c_param = new QName("c", XProcConstants.NS_XPROC_STEP, "param");
-    private static final QName cx_item = new QName("cx", XProcConstants.NS_CALABASH_EX, "item");
+    private static final QName c_param_set = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "param-set");
+    private static final QName c_param = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "param");
+    private static final QName cx_item = XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX, "item");
     private static final QName _name = new QName("name");
     private static final QName _namespace = new QName("namespace");
     private static final QName _value = new QName("value");
@@ -90,8 +91,8 @@ public class Parameters extends DefaultStep {
             AttributeMap attr = EmptyAttributeMap.getInstance();
             String value = parameters.get(param).getStringValue().getStringValue();
             attr = attr.put(TypeUtils.attributeInfo(_name, param.getLocalName()));
-            if (param.getNamespaceURI() != null && !"".equals(param.getNamespaceURI())) {
-                attr = attr.put(TypeUtils.attributeInfo(_namespace, param.getNamespaceURI()));
+            if (param.getNamespaceUri() != NamespaceUri.NULL) {
+                attr = attr.put(TypeUtils.attributeInfo(_namespace, param.getNamespaceUri().toString()));
             } else {
                 // I'm not really sure about this...
                 attr = attr.put(TypeUtils.attributeInfo(_namespace, ""));
@@ -118,7 +119,7 @@ public class Parameters extends DefaultStep {
                         QName type = next.isAtomicValue() ? ((XdmAtomicValue) next).getPrimitiveTypeName() : null;
 
                         if (type != null) {
-                            if (XProcConstants.NS_XMLSCHEMA.equals(type.getNamespaceURI())) {
+                            if (XProcConstants.NS_XMLSCHEMA == type.getNamespaceUri()) {
                                 itemattr = itemattr.put(TypeUtils.attributeInfo(_type, type.getLocalName()));
                             } else {
                                 itemattr = itemattr.put(TypeUtils.attributeInfo(_type, type.getClarkName()));

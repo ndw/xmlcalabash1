@@ -530,9 +530,9 @@ public class Main {
         InputStream instream = getClass().getResourceAsStream("/etc/error-list.xml");
         if (instream != null) {
             XdmNode doc = runtime.parse(new InputSource(instream));
-            XdmSequenceIterator iter = doc.axisIterator(Axis.DESCENDANT, new QName(XProcConstants.NS_XPROC_ERROR,"error"));
+            XdmSequenceIterator<XdmNode> iter = doc.axisIterator(Axis.DESCENDANT, XProcConstants.qNameFor(XProcConstants.NS_XPROC_ERROR,"error"));
             while (iter.hasNext()) {
-                XdmNode error = (XdmNode) iter.next();
+                XdmNode error = iter.next();
                 if (code.getLocalName().equals(error.getAttributeValue(_code))) {
                     return error.getStringValue();
                 }

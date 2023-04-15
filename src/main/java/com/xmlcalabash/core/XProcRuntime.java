@@ -65,6 +65,7 @@ import net.sf.saxon.lib.ExtensionFunctionDefinition;
 import net.sf.saxon.lib.FeatureKeys;
 import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.om.EmptyAttributeMap;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.s9api.ExtensionFunction;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
@@ -675,7 +676,7 @@ public class XProcRuntime implements DeclarationScope {
         return newXPathCompiler(baseURI, null);
     }
 
-    public XPathCompiler newXPathCompiler(URI baseURI, HashMap<String,String> nsbindings) {
+    public XPathCompiler newXPathCompiler(URI baseURI, HashMap<String, NamespaceUri> nsbindings) {
         XPathCompiler compiler = processor.newXPathCompiler();
         compiler.setSchemaAware(processor.isSchemaAware());
         if (baseURI != null) {
@@ -687,7 +688,7 @@ public class XProcRuntime implements DeclarationScope {
         }
         if (nsbindings != null) {
             for (String prefix : nsbindings.keySet()) {
-                compiler.declareNamespace(prefix, nsbindings.get(prefix));
+                compiler.declareNamespace(prefix, nsbindings.get(prefix).toString());
             }
         }
         return compiler;
@@ -929,6 +930,10 @@ public class XProcRuntime implements DeclarationScope {
 
     public XdmNode parse(String uri, String base) {
         return parse(uri, base, false);
+    }
+
+    public XdmNode parse(NamespaceUri uri, String base, boolean validate) {
+        return uriResolver.parse(uri.toString(), base, validate);
     }
 
     public XdmNode parse(String uri, String base, boolean validate) {

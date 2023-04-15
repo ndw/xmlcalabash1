@@ -48,9 +48,9 @@ import java.util.HashMap;
 public class WWWFormURLDecode extends DefaultStep {
     public static final QName _value = new QName("", "value");
     public static final QName _name = new QName("", "name");
-    public static final QName c_paramset = new QName("c",XProcConstants.NS_XPROC_STEP,"param-set");
-    public static final QName c_param = new QName("c", XProcConstants.NS_XPROC_STEP, "param");
-    private static final QName cx_encoding = new QName("cx", XProcConstants.NS_CALABASH_EX, "encoding");
+    public static final QName c_paramset = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP,"param-set");
+    public static final QName c_param = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "param");
+    private static final QName cx_encoding = XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX, "encoding");
     private WritablePipe result = null;
 
     /* Creates a new instance of FormURLDecode */

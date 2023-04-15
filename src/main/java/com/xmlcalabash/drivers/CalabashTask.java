@@ -32,6 +32,7 @@ import javax.xml.transform.URIResolver;
 
 import com.xmlcalabash.util.Input.Type;
 import com.xmlcalabash.util.UserArgs;
+import net.sf.saxon.om.NamespaceUri;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.Project;
@@ -548,7 +549,7 @@ public class CalabashTask extends MatchingTask {
         }
 
         try {
-            userArgs.addBinding(namespace.getPrefix(), namespace.getURI());
+            userArgs.addBinding(namespace.getPrefix(), NamespaceUri.of(namespace.getURI()));
         } catch (Exception e) {
             handleError(e);
         }

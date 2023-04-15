@@ -29,7 +29,7 @@ import net.sf.saxon.s9api.XdmSequenceIterator;
         type = "{http://xmlcalabash.com/ns/extensions}report-errors")
 
 public class ReportErrors extends DefaultStep {
-    private static final QName c_error = new QName(XProcConstants.NS_XPROC_STEP, "error");
+    private static final QName c_error = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "error");
     private static final QName _code = new QName("code");
     private static final QName _code_prefix = new QName("code-prefix");
     private static final QName _code_namespace = new QName("code-namespace");

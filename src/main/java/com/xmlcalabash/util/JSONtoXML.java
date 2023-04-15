@@ -4,6 +4,7 @@ import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.om.EmptyAttributeMap;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.om.SingletonAttributeMap;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
@@ -31,37 +32,37 @@ public class JSONtoXML {
     public static final String JXML                = "jxml";
     public static final String MARKLOGIC           = "marklogic";
 
-    public static final String JSONX_NS = "http://www.ibm.com/xmlns/prod/2009/jsonx";
-    public static final String MLJS_NS  = "http://marklogic.com/json";
-    public static final String JXML_NS  = "http://www.xmlsh.org/jxml";
+    public static final NamespaceUri JSONX_NS = NamespaceUri.of("http://www.ibm.com/xmlns/prod/2009/jsonx");
+    public static final NamespaceUri MLJS_NS  = NamespaceUri.of("http://marklogic.com/json");
+    public static final NamespaceUri JXML_NS  = NamespaceUri.of("http://www.xmlsh.org/jxml");
 
     private static final QName _type = new QName("", "type");
     private static final QName _name = new QName("", "name");
 
-    private static final QName c_json = new QName("c", XProcConstants.NS_XPROC_STEP, "json");
-    private static final QName c_pair = new QName("c", XProcConstants.NS_XPROC_STEP, "pair");
-    private static final QName c_item = new QName("c", XProcConstants.NS_XPROC_STEP, "item");
+    private static final QName c_json = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "json");
+    private static final QName c_pair = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "pair");
+    private static final QName c_item = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "item");
 
     private static final QName _json = new QName("json");
     private static final QName _pair = new QName("pair");
     private static final QName _item = new QName("item");
 
-    private static final QName j_object = new QName("j", JSONX_NS, "object");
-    private static final QName j_array = new QName("j", JSONX_NS, "array");
-    private static final QName j_string = new QName("j", JSONX_NS, "string");
-    private static final QName j_number = new QName("j", JSONX_NS, "number");
-    private static final QName j_boolean = new QName("j", JSONX_NS, "boolean");
-    private static final QName j_null = new QName("j", JSONX_NS, "null");
+    private static final QName j_object = XProcConstants.qNameFor("j", JSONX_NS, "object");
+    private static final QName j_array = XProcConstants.qNameFor("j", JSONX_NS, "array");
+    private static final QName j_string = XProcConstants.qNameFor("j", JSONX_NS, "string");
+    private static final QName j_number = XProcConstants.qNameFor("j", JSONX_NS, "number");
+    private static final QName j_boolean = XProcConstants.qNameFor("j", JSONX_NS, "boolean");
+    private static final QName j_null = XProcConstants.qNameFor("j", JSONX_NS, "null");
 
-    private static final QName mj_json = new QName("j", MLJS_NS, "json");
+    private static final QName mj_json = XProcConstants.qNameFor("j", MLJS_NS, "json");
 
-    private static final QName jx_object = new QName("j", JXML_NS, "object");
-    private static final QName jx_member = new QName("j", JXML_NS, "member");
-    private static final QName jx_boolean = new QName("j", JXML_NS, "boolean");
-    private static final QName jx_array = new QName("j", JXML_NS, "array");
-    private static final QName jx_string = new QName("j", JXML_NS, "string");
-    private static final QName jx_number = new QName("j", JXML_NS, "number");
-    private static final QName jx_null = new QName("j", JXML_NS, "null");
+    private static final QName jx_object = XProcConstants.qNameFor("j", JXML_NS, "object");
+    private static final QName jx_member = XProcConstants.qNameFor("j", JXML_NS, "member");
+    private static final QName jx_boolean = XProcConstants.qNameFor("j", JXML_NS, "boolean");
+    private static final QName jx_array = XProcConstants.qNameFor("j", JXML_NS, "array");
+    private static final QName jx_string = XProcConstants.qNameFor("j", JXML_NS, "string");
+    private static final QName jx_number = XProcConstants.qNameFor("j", JXML_NS, "number");
+    private static final QName jx_null = XProcConstants.qNameFor("j", JXML_NS, "null");
 
     public static boolean knownFlavor(String jsonFlavor) {
         return (JSONtoXML.CALABASH_DEPRECATED.equals(jsonFlavor)
@@ -231,7 +232,7 @@ public class JSONtoXML {
             }
         }
 
-        QName elemName = new QName("j", MLJS_NS, localName.toString());
+        QName elemName = XProcConstants.qNameFor("j", MLJS_NS, localName.toString());
 
         if (json instanceof JSONObject) {
             tree.addStartElement(elemName, SingletonAttributeMap.of(TypeUtils.attributeInfo(_type, "object")));

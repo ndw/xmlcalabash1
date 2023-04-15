@@ -27,6 +27,7 @@ import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.library.DefaultStep;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.Serializer;
@@ -43,10 +44,10 @@ import java.net.URLConnection;
 public class NodeToBytes {
     private static final QName _encoding = new QName("encoding");
     private static final QName _content_type = new QName("content-type");
-    private static final QName c_encoding = new QName("c", XProcConstants.NS_XPROC_STEP, "encoding");
-    private static final QName c_body = new QName("c", XProcConstants.NS_XPROC_STEP, "body");
-    private static final QName c_json = new QName("c", XProcConstants.NS_XPROC_STEP, "json");
-    private static final QName cx_decode = new QName("cx", XProcConstants.NS_CALABASH_EX, "decode");
+    private static final QName c_encoding = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "encoding");
+    private static final QName c_body = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "body");
+    private static final QName c_json = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "json");
+    private static final QName cx_decode = XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX, "decode");
 
     private NodeToBytes() {
         // you aren't allowed to do this
@@ -56,20 +57,22 @@ public class NodeToBytes {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
 
         XdmNode root = S9apiUtils.getDocumentElement(doc);
+        assert root != null;
+
         if (decode
-             && ((XProcConstants.NS_XPROC_STEP.equals(root.getNodeName().getNamespaceURI())
+             && ((XProcConstants.NS_XPROC_STEP == root.getNodeName().getNamespaceUri())
                   && "base64".equals(root.getAttributeValue(_encoding)))
-                 || ("".equals(root.getNodeName().getNamespaceURI())
-                     && "base64".equals(root.getAttributeValue(c_encoding))))) {
+                 || (root.getNodeName().getNamespaceUri() == NamespaceUri.NULL)
+                     && "base64".equals(root.getAttributeValue(c_encoding))) {
             storeBinary(doc, stream);
         } else if (runtime.transparentJSON()
                    && (((c_body.equals(root.getNodeName())
                         && ("application/json".equals(root.getAttributeValue(_content_type))
                             || "text/json".equals(root.getAttributeValue(_content_type))))
                        || c_json.equals(root.getNodeName()))
-                       || JSONtoXML.JSONX_NS.equals(root.getNodeName().getNamespaceURI())
-                       || JSONtoXML.JXML_NS.equals(root.getNodeName().getNamespaceURI())
-                       || JSONtoXML.MLJS_NS.equals(root.getNodeName().getNamespaceURI()))) {
+                       || JSONtoXML.JSONX_NS == root.getNodeName().getNamespaceUri()
+                       || JSONtoXML.JXML_NS == root.getNodeName().getNamespaceUri()
+                       || JSONtoXML.MLJS_NS == root.getNodeName().getNamespaceUri())) {
             storeJSON(doc, stream);
         } else {
             storeXML(runtime, doc, stream);

@@ -29,6 +29,7 @@ import com.xmlcalabash.util.MessageFormatter;
 import com.xmlcalabash.util.S9apiUtils;
 import com.xmlcalabash.util.TypeUtils;
 import net.sf.saxon.om.NamespaceMap;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -66,7 +67,7 @@ public class XAtomicStep extends XStep {
     private final static QName _namespace = new QName("", "namespace");
     private final static QName _value = new QName("", "value");
     private final static QName _type = new QName("", "type");
-    private final static QName cx_item = new QName("cx", XProcConstants.NS_CALABASH_EX, "item");
+    private final static QName cx_item = XProcConstants.qNameFor("cx", XProcConstants.NS_CALABASH_EX, "item");
 
     protected HashMap<String, Vector<ReadablePipe>> inputs = new HashMap<String, Vector<ReadablePipe>> ();
     protected HashMap<String, WritablePipe> outputs = new HashMap<String, WritablePipe> ();
@@ -212,7 +213,7 @@ public class XAtomicStep extends XStep {
             loopdone = true;
 
             for (Parameter p : step.parameters()) {
-                if (XProcConstants.NS_XPROC.equals(p.getName().getNamespaceURI())) {
+                if (XProcConstants.NS_XPROC == p.getName().getNamespaceUri()) {
                     throw XProcException.dynamicError(31);
                 }
 
@@ -245,8 +246,8 @@ public class XAtomicStep extends XStep {
                                 // Check the attributes...
                                 for (XdmNode attr : new AxisNodes(docelem, Axis.ATTRIBUTE)) {
                                     QName aname = attr.getNodeName();
-                                    if ("".equals(aname.getNamespaceURI())
-                                        || XProcConstants.NS_XPROC.equals(aname.getNamespaceURI())) {
+                                    if (aname.getNamespaceUri() == NamespaceUri.NULL
+                                        || XProcConstants.NS_XPROC == aname.getNamespaceUri()) {
                                         throw XProcException.dynamicError(14, step.getNode(), "Attribute not allowed");
                                     }
                                 }
@@ -434,7 +435,7 @@ public class XAtomicStep extends XStep {
         Parameter p = new Parameter(step.getXProc(),pnode);
         String port = p.getPort();
         String name = pnode.getAttributeValue(_name);
-        String ns = pnode.getAttributeValue(_namespace);
+        NamespaceUri ns = NamespaceUri.of(pnode.getAttributeValue(_namespace));
 
         QName pname = null;
         if (ns == null) {
@@ -449,15 +450,15 @@ public class XAtomicStep extends XStep {
                 name = name.substring(pos);
 
                 QName testNode = new QName(name,pnode);
-                if (!ns.equals(testNode.getNamespaceURI())) {
+                if (ns != testNode.getNamespaceUri()) {
                     throw XProcException.dynamicError(25);
                 }
 
             }
-            pname = new QName(ns,name);
+            pname = new QName(ns.toString(), name);
         }
 
-        if (XProcConstants.NS_XPROC.equals(pname.getNamespaceURI())) {
+        if (XProcConstants.NS_XPROC == pname.getNamespaceUri()) {
             throw XProcException.dynamicError(31);
         }
 
@@ -465,7 +466,7 @@ public class XAtomicStep extends XStep {
 
         for (XdmNode attr : new AxisNodes(pnode, Axis.ATTRIBUTE)) {
             QName aname = attr.getNodeName();
-            if ("".equals(aname.getNamespaceURI())) {
+            if (aname.getNamespaceUri() == NamespaceUri.NULL) {
                 if (!aname.equals(_name) && !aname.equals(_namespace) && !aname.equals(_value)) {
                     throw XProcException.dynamicError(14);
                 }
@@ -483,7 +484,7 @@ public class XAtomicStep extends XStep {
         Parameter p = new Parameter(step.getXProc(),pnode);
         String port = p.getPort();
         String name = pnode.getAttributeValue(_name);
-        String ns = pnode.getAttributeValue(_namespace);
+        NamespaceUri ns = NamespaceUri.of(pnode.getAttributeValue(_namespace));
 
         QName pname = null;
         if (ns == null) {
@@ -494,27 +495,27 @@ public class XAtomicStep extends XStep {
                 name = name.substring(pos);
 
                 QName testNode = new QName(name,pnode);
-                if (!ns.equals(testNode.getNamespaceURI())) {
+                if (ns != testNode.getNamespaceUri()) {
                     throw XProcException.dynamicError(25);
                 }
 
             }
-            pname = new QName(ns,name);
+            pname = new QName(ns.toString(), name);
         }
 
         p.setName(pname);
 
         for (XdmNode attr : new AxisNodes(pnode, Axis.ATTRIBUTE)) {
             QName aname = attr.getNodeName();
-            if ("".equals(aname.getNamespaceURI())) {
+            if (aname.getNamespaceUri() == NamespaceUri.NULL) {
                 if (!aname.equals(_name) && !aname.equals(_namespace)) {
                     throw XProcException.dynamicError(14);
                 }
             }
         }
 
-        StringBuffer stringValue = new StringBuffer();
-        Vector<XdmItem> items = new Vector<XdmItem> ();
+        StringBuilder stringValue = new StringBuilder();
+        Vector<XdmItem> items = new Vector<> ();
         for (XdmNode child : new AxisNodes(runtime, pnode, Axis.CHILD, AxisNodes.PIPELINE)) {
             if (child.getNodeKind() == XdmNodeKind.ELEMENT) {
                if (!child.getNodeName().equals(cx_item)) {
@@ -557,7 +558,7 @@ public class XAtomicStep extends XStep {
             }
         }
 
-        RuntimeValue value = new RuntimeValue(stringValue.toString(), items, pnode, new HashMap<String,String> ());
+        RuntimeValue value = new RuntimeValue(stringValue.toString(), items, pnode, new HashMap<> ());
 
         if (port != null) {
             impl.setParameter(port,pname,value);
@@ -567,7 +568,7 @@ public class XAtomicStep extends XStep {
     }
 
     protected RuntimeValue computeValue(ComputableValue var) {
-        HashMap<String,String> nsBindings = new HashMap<> ();
+        HashMap<String,NamespaceUri> nsBindings = new HashMap<> ();
         HashMap<QName,RuntimeValue> globals = inScopeOptions;
         XdmNode doc = null;
 
@@ -587,7 +588,7 @@ public class XAtomicStep extends XStep {
         }
 
         for (NamespaceBinding nsbinding : var.getNamespaceBindings()) {
-            HashMap<String,String> localBindings = new HashMap<> ();
+            HashMap<String,NamespaceUri> localBindings = new HashMap<> ();
 
             // Compute the namespaces associated with this binding
             if (nsbinding.getBinding() != null) {
@@ -605,7 +606,7 @@ public class XAtomicStep extends XStep {
                     // Make sure the namespace bindings for evaluating the XPath expr are correct
                     NamespaceMap nsmap = nsbinding.getNode().getUnderlyingNode().getAllNamespaces();
                     nsmap.iteratePrefixes().forEachRemaining(prefix -> {
-                        xcomp.declareNamespace(prefix, nsmap.getURIForPrefix(prefix, "".equals(prefix)));
+                        xcomp.declareNamespace(prefix, nsmap.getURIForPrefix(prefix, "".equals(prefix)).toString());
                     });
 
                     for (QName varname : globals.keySet()) {
@@ -643,13 +644,13 @@ public class XAtomicStep extends XStep {
                     while (nsIter.hasNext()) {
                         XdmNode ns = nsIter.next();
                         QName prefix = ns.getNodeName();
-                        localBindings.put(prefix == null ? "" : prefix.getLocalName(),ns.getStringValue());
+                        localBindings.put(prefix == null ? "" : prefix.getLocalName(),NamespaceUri.of(ns.getStringValue()));
                     }
                 } catch (SaxonApiException sae) {
                     throw new XProcException(sae);
                 }
             } else if (nsbinding.getNamespaceBindings() != null) {
-                HashMap<String,String> bindings = nsbinding.getNamespaceBindings();
+                HashMap<String,NamespaceUri> bindings = nsbinding.getNamespaceBindings();
                 for (String prefix : bindings.keySet()) {
                     if ("".equals(prefix) || prefix == null) {
                         // nop; the default namespace never plays a role in XPath expression evaluation
@@ -661,7 +662,7 @@ public class XAtomicStep extends XStep {
 
             // Remove the excluded ones
             HashSet<String> prefixes = new HashSet<String> ();
-            for (String uri : nsbinding.getExcludedNamespaces()) {
+            for (NamespaceUri uri : nsbinding.getExcludedNamespaces()) {
                 for (String prefix : localBindings.keySet()) {
                     if (uri.equals(localBindings.get(prefix))) {
                         prefixes.add(prefix);
@@ -740,8 +741,8 @@ public class XAtomicStep extends XStep {
             if (varrefstr.contains(":")) {
                 String vpfx = varrefstr.substring(0, varrefstr.indexOf(":"));
                 String vlocal = varrefstr.substring(varrefstr.indexOf(":")+1);
-                String vns = nsBindings.get(vpfx);
-                varname = new QName(vpfx, vns, vlocal);
+                NamespaceUri vns = nsBindings.get(vpfx);
+                varname = new QName(vpfx, vns.toString(), vlocal);
             } else {
                 varname = new QName("", varrefstr);
             }
@@ -757,10 +758,10 @@ public class XAtomicStep extends XStep {
             XdmNode node = (XdmNode) results.get(0);
             nsBindings.clear();
 
-            XdmSequenceIterator nsIter = node.axisIterator(Axis.NAMESPACE);
+            XdmSequenceIterator<XdmNode> nsIter = node.axisIterator(Axis.NAMESPACE);
             while (nsIter.hasNext()) {
-                XdmNode ns = (XdmNode) nsIter.next();
-                nsBindings.put((ns.getNodeName()==null ? "" : ns.getNodeName().getLocalName()),ns.getStringValue());
+                XdmNode ns = nsIter.next();
+                nsBindings.put((ns.getNodeName()==null ? "" : ns.getNodeName().getLocalName()),NamespaceUri.of(ns.getStringValue()));
             }
         }
 
@@ -771,7 +772,7 @@ public class XAtomicStep extends XStep {
         }
     }
 
-    protected Vector<XdmItem> evaluateXPath(XdmNode doc, HashMap<String,String> nsBindings, String xpath, HashMap<QName,RuntimeValue> globals) {
+    protected Vector<XdmItem> evaluateXPath(XdmNode doc, HashMap<String,NamespaceUri> nsBindings, String xpath, HashMap<QName,RuntimeValue> globals) {
         Vector<XdmItem> results = new Vector<XdmItem> ();
         HashMap<QName,RuntimeValue> boundOpts = new HashMap<QName,RuntimeValue> ();
 

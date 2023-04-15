@@ -72,7 +72,7 @@ public class LabelElements extends DefaultStep implements ProcessMatchingNodes {
     private static final QName _match = new QName("match");
     private static final QName _label = new QName("label");
     private static final QName _replace = new QName("replace");
-    private static final QName p_index = new QName("p", XProcConstants.NS_XPROC, "index");
+    private static final QName p_index = XProcConstants.qNameFor(XProcConstants.NS_XPROC, "index");
     private ReadablePipe source = null;
     private WritablePipe result = null;
     private ProcessMatch matcher = null;
@@ -159,8 +159,8 @@ public class LabelElements extends DefaultStep implements ProcessMatchingNodes {
         NamespaceMap nsmap = node.getUnderlyingNode().getAllNamespaces();
         AttributeMap amap = EmptyAttributeMap.getInstance();
 
-        String prefix = prefixFor(nsmap, attribute.getPrefix(), attribute.getNamespaceURI());
-        NodeName aname = new FingerprintedQName(prefix, attribute.getNamespaceURI(), attribute.getLocalName());
+        String prefix = prefixFor(nsmap, attribute.getPrefix(), attribute.getNamespaceUri());
+        NodeName aname = new FingerprintedQName(prefix, attribute.getNamespaceUri(), attribute.getLocalName());
 
         boolean found = false;
         for (AttributeInfo ainfo : attributes) {

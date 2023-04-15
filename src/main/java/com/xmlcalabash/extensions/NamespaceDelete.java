@@ -8,6 +8,7 @@ import com.xmlcalabash.library.DefaultStep;
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.util.MessageFormatter;
 import com.xmlcalabash.util.S9apiUtils;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -56,7 +57,7 @@ public class NamespaceDelete extends DefaultStep {
     public void run() throws SaxonApiException {
         super.run();
 
-        HashSet<String> excludeUris = S9apiUtils.excludeInlinePrefixes(step.getNode(), getOption(_prefixes).getString());
+        HashSet<NamespaceUri> excludeUris = S9apiUtils.excludeInlinePrefixes(step.getNode(), getOption(_prefixes).getString());
 
         while (source.moreDocuments()) {
             XdmNode doc = source.read();

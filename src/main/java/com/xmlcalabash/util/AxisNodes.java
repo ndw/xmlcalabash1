@@ -52,8 +52,8 @@ public class AxisNodes implements Iterable<XdmNode> {
     private static final int VALID_BITS = PIPELINE;
 
     protected Logger logger = LoggerFactory.getLogger(AxisNodes.class);
-    private static QName use_when = new QName("", "use-when");
-    private static QName p_use_when = new QName(XProcConstants.NS_XPROC, "use-when");
+    private static final QName use_when = new QName("", "use-when");
+    private static final QName p_use_when = XProcConstants.qNameFor(XProcConstants.NS_XPROC, "use-when");
     private AxisNodesIter iter = null;
     private XProcRuntime runtime = null;
     private int filter = ALL;
@@ -87,7 +87,7 @@ public class AxisNodes implements Iterable<XdmNode> {
     }
 
     private class AxisNodesIter implements Iterator<XdmNode> {
-        private XdmSequenceIterator iter = null;
+        private XdmSequenceIterator<XdmNode> iter = null;
         private XdmNode next = null;
         private boolean finished = false;
         private boolean hasNext = false;
@@ -171,11 +171,9 @@ public class AxisNodes implements Iterable<XdmNode> {
                     && node.getNodeKind() == XdmNodeKind.ELEMENT) {
                 String expr = null;
 
-                if (XProcConstants.NS_XPROC.equals(node.getNodeName().getNamespaceURI())) {
+                if (XProcConstants.NS_XPROC == node.getNodeName().getNamespaceUri()) {
                     expr = node.getAttributeValue(use_when);
-                }
-
-                if (!XProcConstants.NS_XPROC.equals(node.getNodeName().getNamespaceURI())) {
+                } else {
                     expr = node.getAttributeValue(p_use_when);
                 }
 
@@ -224,7 +222,7 @@ public class AxisNodes implements Iterable<XdmNode> {
                     Throwable sae = saue.getCause();
                     if (sae instanceof XPathException) {
                         XPathException xe = (XPathException) sae;
-                        if ("http://www.w3.org/2005/xqt-errors".equals(xe.getErrorCodeNamespace()) && "XPDY0002".equals(xe.getErrorCodeLocalPart())) {
+                        if (xe.getErrorCodeNamespace() == XProcConstants.NS_XQT_ERRORS && "XPDY0002".equals(xe.getErrorCodeLocalPart())) {
                             throw XProcException.dynamicError(26, element, "Expression refers to context when none is available: " + xpath);
                         } else {
                             throw saue;

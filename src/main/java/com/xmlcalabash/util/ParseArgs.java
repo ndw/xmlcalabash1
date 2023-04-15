@@ -1,6 +1,7 @@
 package com.xmlcalabash.util;
 
 import com.xmlcalabash.core.XProcException;
+import net.sf.saxon.om.NamespaceUri;
 
 import static com.xmlcalabash.util.Input.Type.DATA;
 import static com.xmlcalabash.util.Input.Type.XML;
@@ -123,7 +124,7 @@ public class ParseArgs {
 
             if (arg.startsWith("-b") || arg.equals("--binding")) {
                 KeyValuePair v = parseKeyValue("b", "binding");
-                userArgs.addBinding(v.key, v.value);
+                userArgs.addBinding(v.key, NamespaceUri.of(v.value));
                 continue;
             }
 

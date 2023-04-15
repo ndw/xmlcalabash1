@@ -19,6 +19,7 @@
 
 package com.xmlcalabash.model;
 
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.s9api.XdmNode;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.core.XProcConstants;
@@ -56,7 +57,7 @@ public class When extends DeclareStep {
     }
 
     @Override
-    public HashSet<String> getExcludeInlineNamespaces() {
+    public HashSet<NamespaceUri> getExcludeInlineNamespaces() {
         return ((DeclareStep) parent).getExcludeInlineNamespaces();
     }
 

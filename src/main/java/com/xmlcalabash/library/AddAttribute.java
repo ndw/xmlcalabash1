@@ -20,6 +20,7 @@
 package com.xmlcalabash.library;
 
 import com.xmlcalabash.core.XMLCalabash;
+import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.ReadablePipe;
@@ -32,6 +33,7 @@ import com.xmlcalabash.util.TypeUtils;
 import net.sf.saxon.event.ReceiverOption;
 import net.sf.saxon.om.AttributeInfo;
 import net.sf.saxon.om.AttributeMap;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -106,11 +108,9 @@ public class AddAttribute extends DefaultStep implements ProcessMatchingNodes {
 
         if ("xmlns".equals(attrName.getLocalName())
                 || "xmlns".equals(attrName.getPrefix())
-                || XMLConstants.XMLNS_ATTRIBUTE_NS_URI.equals(attrName.getNamespaceURI())
-                || (!"xml".equals(attrName.getPrefix())
-                        && XMLConstants.XML_NS_URI.equals(attrName.getNamespaceURI()))
-                || ("xml".equals(attrName.getPrefix())
-                        && !XMLConstants.XML_NS_URI.equals(attrName.getNamespaceURI()))) {
+                || attrName.getNamespaceUri() == XProcConstants.NS_XML_ATTR
+                || (!"xml".equals(attrName.getPrefix()) && attrName.getNamespaceUri() == XProcConstants.NS_XML)
+                || ("xml".equals(attrName.getPrefix()) && attrName.getNamespaceUri() != XProcConstants.NS_XML)) {
             throw XProcException.stepError(59);
         }
 
@@ -137,12 +137,12 @@ public class AddAttribute extends DefaultStep implements ProcessMatchingNodes {
     public boolean processStartElement(XdmNode node, AttributeMap attributes) {
         QName instanceAttrName = attrName;
 
-        if (attrName.getNamespaceURI() != null && !"".equals(attrName.getNamespaceURI())) {
+        if (attrName.getNamespaceUri() != NamespaceUri.NULL) {
             // If the requested prefix is already bound to something else, drop it
             String prefix = attrName.getPrefix();
             for (AttributeInfo attr : attributes) {
                 if (prefix.equals(attr.getNodeName().getPrefix())
-                        && !attrName.getNamespaceURI().equals(attr.getNodeName().getURI())) {
+                        && attrName.getNamespaceUri() != NamespaceUri.of(attr.getNodeName().getURI())) {
                     prefix = "";
                 }
             }
@@ -163,7 +163,7 @@ public class AddAttribute extends DefaultStep implements ProcessMatchingNodes {
                     }
                 }
 
-                instanceAttrName = new QName(aprefix, attrName.getNamespaceURI(), attrName.getLocalName());
+                instanceAttrName = new QName(aprefix, attrName.getNamespaceUri().toString(), attrName.getLocalName());
             }
         }
 

@@ -35,8 +35,8 @@ import java.util.Vector;
  * To change this template use File | Settings | File Templates.
  */
 public class XPipeline extends XCompoundStep {
-    private static final QName c_param_set = new QName("c", XProcConstants.NS_XPROC_STEP, "param-set");
-    private static final QName c_param = new QName("c", XProcConstants.NS_XPROC_STEP, "param");
+    private static final QName c_param_set = XProcConstants.qNameFor("c", XProcConstants.NS_XPROC_STEP, "param-set");
+    private static final QName c_param = XProcConstants.qNameFor("c", XProcConstants.NS_XPROC_STEP, "param");
     private static final QName _name = new QName("name");
     private static final QName _namespace = new QName("namespace");
     private static final QName _value = new QName("value");
@@ -162,8 +162,8 @@ public class XPipeline extends XCompoundStep {
                 AttributeMap attr = EmptyAttributeMap.getInstance();
 
                 attr = attr.put(TypeUtils.attributeInfo(_name, name.getLocalName()));
-                if (name.getNamespaceURI() != null) {
-                    attr = attr.put(TypeUtils.attributeInfo(_namespace, name.getNamespaceURI()));
+                if (name.getNamespaceUri() != null) {
+                    attr = attr.put(TypeUtils.attributeInfo(_namespace, name.getNamespaceUri().toString()));
                 }
                 attr = attr.put(TypeUtils.attributeInfo(_value, getParameter(port, name).getString()));
 

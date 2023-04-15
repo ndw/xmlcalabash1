@@ -87,7 +87,7 @@ public class Pipeline extends BaseResource {
 
                 NamespaceMap nsmap = NamespaceMap.emptyMap();
                 if (!"".equals(name.getPrefix())) {
-                    nsmap = nsmap.put(name.getPrefix(), name.getNamespaceURI());
+                    nsmap = nsmap.put(name.getPrefix(), name.getNamespaceUri());
                 }
 
                 tree.addStartElement(pr_name, EmptyAttributeMap.getInstance(), nsmap);
@@ -118,7 +118,7 @@ public class Pipeline extends BaseResource {
 
                 NamespaceMap nsmap = NamespaceMap.emptyMap();
                 if (!"".equals(name.getPrefix())) {
-                    nsmap = nsmap.put(name.getPrefix(), name.getNamespaceURI());
+                    nsmap = nsmap.put(name.getPrefix(), name.getNamespaceUri());
                 }
 
                 tree.addStartElement(pr_name, EmptyAttributeMap.getInstance(), nsmap);

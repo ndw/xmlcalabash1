@@ -20,6 +20,7 @@
 package com.xmlcalabash.library;
 
 import com.xmlcalabash.core.XMLCalabash;
+import com.xmlcalabash.core.XProcConstants;
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
 import com.xmlcalabash.io.ReadablePipe;
@@ -29,14 +30,7 @@ import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.util.ProcessMatch;
 import com.xmlcalabash.util.ProcessMatchingNodes;
 import net.sf.saxon.event.ReceiverOption;
-import net.sf.saxon.om.AttributeInfo;
-import net.sf.saxon.om.AttributeMap;
-import net.sf.saxon.om.FingerprintedQName;
-import net.sf.saxon.om.NameOfNode;
-import net.sf.saxon.om.NamespaceBinding;
-import net.sf.saxon.om.NamespaceMap;
-import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.om.NodeName;
+import net.sf.saxon.om.*;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmNode;
@@ -64,8 +58,8 @@ public class NamespaceRename extends DefaultStep implements ProcessMatchingNodes
     private ReadablePipe source = null;
     private WritablePipe result = null;
     private ProcessMatch matcher = null;
-    private String from = null;
-    private String to = null;
+    private NamespaceUri from = null;
+    private NamespaceUri to = null;
     private String applyTo = null;
 
     /* Creates a new instance of NamespaceRename */
@@ -90,21 +84,21 @@ public class NamespaceRename extends DefaultStep implements ProcessMatchingNodes
         super.run();
 
         if (getOption(_from) != null) {
-            from = getOption(_from).getString();
+            from = NamespaceUri.of(getOption(_from).getString());
         } else {
-            from = "";
+            from = NamespaceUri.NULL;
         }
 
         if (getOption(_to) != null) {
-            to = getOption(_to).getString();
+            to = NamespaceUri.of(getOption(_to).getString());
         } else {
-            to = "";
+            to = NamespaceUri.NULL;
         }
 
         applyTo = getOption(_apply_to, "all");
 
-        if (XMLConstants.XML_NS_URI.equals(from) || XMLConstants.XML_NS_URI.equals(to)
-                || XMLConstants.XMLNS_ATTRIBUTE_NS_URI.equals(from) || XMLConstants.XMLNS_ATTRIBUTE_NS_URI.equals(to)) {
+        if (from == XProcConstants.NS_XML || to == XProcConstants.NS_XML
+            || from == XProcConstants.NS_XML_ATTR || to == XProcConstants.NS_XML_ATTR) {
             throw XProcException.stepError(14);
         }
 
@@ -147,7 +141,7 @@ public class NamespaceRename extends DefaultStep implements ProcessMatchingNodes
         AttributeMap startAttr = inode.attributes();
 
         if (!"attributes".equals(applyTo)) {
-            if (from.equals(node.getNodeName().getNamespaceURI())) {
+            if (from == node.getNodeName().getNamespaceUri()) {
                 String prefix = node.getNodeName().getPrefix();
                 startName = new FingerprintedQName(prefix, to, node.getNodeName().getLocalName());
                 startType = Untyped.INSTANCE;
@@ -160,9 +154,9 @@ public class NamespaceRename extends DefaultStep implements ProcessMatchingNodes
             for (AttributeInfo attr : inode.attributes()) {
                 NodeName nameCode = attr.getNodeName();
                 SimpleType atype = attr.getType();
-                String uri = nameCode.getURI();
+                NamespaceUri uri = NamespaceUri.of(nameCode.getURI());
 
-                if (from.equals(uri)) {
+                if (from == uri) {
                     startAttr = startAttr.remove(nameCode);
 
                     String pfx = nameCode.getPrefix();
@@ -182,8 +176,9 @@ public class NamespaceRename extends DefaultStep implements ProcessMatchingNodes
                 NodeName nameCode = attr.getNodeName();
                 SimpleType atype = attr.getType();
 
-                String uri = nameCode.getURI();
-                if (from.equals(uri)) {
+                NamespaceUri uri = NamespaceUri.of(nameCode.getURI());
+
+                if (from == uri) {
                     startAttr = startAttr.remove(nameCode);
                     String pfx = prefixFor(newNS, from);
                     nameCode = new FingerprintedQName(pfx, from, nameCode.getLocalPart());
@@ -201,9 +196,9 @@ public class NamespaceRename extends DefaultStep implements ProcessMatchingNodes
                 startAttr = startAttr.remove(nameCode);
 
                 String pfx = nameCode.getPrefix();
-                String uri = nameCode.getURI();
+                NamespaceUri uri = NamespaceUri.of(nameCode.getURI());
 
-                if (from.equals(uri)) {
+                if (from == uri) {
                     pfx = prefixFor(newNS, to);
                     nameCode = new FingerprintedQName(pfx,to,nameCode.getLocalPart());
                     newNS = newNS.put(pfx, to);

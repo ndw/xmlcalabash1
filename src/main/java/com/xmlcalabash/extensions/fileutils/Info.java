@@ -50,12 +50,12 @@ public class Info extends DefaultStep {
     private static final QName _auth_method = new QName("auth_method");
     private static final QName _send_authorization = new QName("send-authorization");
     private static final QName _fail_on_error = new QName("fail-on-error");
-    protected final static QName c_uri = new QName("c", XProcConstants.NS_XPROC_STEP, "uri");
-    protected final static QName c_directory = new QName("c", XProcConstants.NS_XPROC_STEP, "directory");
-    protected final static QName c_file = new QName("c", XProcConstants.NS_XPROC_STEP, "file");
-    protected final static QName c_other = new QName("c", XProcConstants.NS_XPROC_STEP, "other");
-    protected final static QName c_error = new QName("c", XProcConstants.NS_XPROC_STEP, "error");
-    protected final static QName err_fu01 = new QName("err", XProcConstants.NS_XPROC_ERROR, "FU01");
+    protected final static QName c_uri = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "uri");
+    protected final static QName c_directory = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "directory");
+    protected final static QName c_file = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "file");
+    protected final static QName c_other = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "other");
+    protected final static QName c_error = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "error");
+    protected final static QName err_fu01 = XProcConstants.qNameFor(XProcConstants.NS_XPROC_ERROR, "FU01");
 
     private static final QName _uri = new QName("uri");
     private static final QName _readable = new QName("readable");

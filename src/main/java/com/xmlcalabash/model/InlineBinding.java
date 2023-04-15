@@ -22,6 +22,7 @@ package com.xmlcalabash.model;
 import java.util.Vector;
 import java.util.HashSet;
 
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmValue;
 import com.xmlcalabash.core.XProcRuntime;
@@ -35,7 +36,7 @@ import org.slf4j.LoggerFactory;
 public class InlineBinding extends Binding {
     XdmNode root = null;
     Vector<XdmValue> nodes = null;
-    HashSet<String> excludeNS = null;
+    HashSet<NamespaceUri> excludeNS = null;
     
     /* Creates a new instance of InlineBinding */
     public InlineBinding(XProcRuntime xproc, XdmNode node) {
@@ -48,11 +49,11 @@ public class InlineBinding extends Binding {
         nodes.add(node);
     }
 
-    public void excludeNamespaces(HashSet<String> exclude) {
+    public void excludeNamespaces(HashSet<NamespaceUri> exclude) {
         excludeNS = exclude;
     }
 
-    public HashSet<String> getExcludedNamespaces() {
+    public HashSet<NamespaceUri> getExcludedNamespaces() {
         return excludeNS;
     }
 
@@ -61,11 +62,11 @@ public class InlineBinding extends Binding {
     }
 
     protected void dump(int depth) {
-        String indent = "";
+        StringBuilder sb = new StringBuilder();
         for (int count = 0; count < depth; count++) {
-            indent += " ";
+            sb.append(" ");
         }
 
-        logger.trace(indent + "inline binding");
+        logger.trace(sb.append("inline binding").toString());
     }
 }

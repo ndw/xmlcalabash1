@@ -242,8 +242,8 @@ public class S9apiUtils {
         return isource;
     }
 
-    public static HashSet<String> excludeInlinePrefixes(XdmNode node, String prefixList) {
-        HashSet<String> excludeURIs = new HashSet<String> ();
+    public static HashSet<NamespaceUri> excludeInlinePrefixes(XdmNode node, String prefixList) {
+        HashSet<NamespaceUri> excludeURIs = new HashSet<> ();
         excludeURIs.add(XProcConstants.NS_XPROC);
 
         if (prefixList != null) {
@@ -258,7 +258,7 @@ public class S9apiUtils {
                     all = true;
                 } else if ("#default".equals(pfx)) {
                     found = true;
-                    if (!"".equals(nsmap.getDefaultNamespace())) {
+                    if (nsmap.getDefaultNamespace() != NamespaceUri.NULL) {
                         excludeURIs.add(nsmap.getDefaultNamespace());
                     }
                 } else {
@@ -281,11 +281,11 @@ public class S9apiUtils {
         return excludeURIs;
     }
 
-    public static XdmNode removeNamespaces(XProcRuntime runtime, XdmNode node, HashSet<String> excludeNS, boolean preserveUsed) {
+    public static XdmNode removeNamespaces(XProcRuntime runtime, XdmNode node, HashSet<NamespaceUri> excludeNS, boolean preserveUsed) {
         return removeNamespaces(runtime.getProcessor(), node, excludeNS, preserveUsed);
     }
 
-    public static XdmNode removeNamespaces(Processor proc, XdmNode node, HashSet<String> excludeNS, boolean preserveUsed) {
+    public static XdmNode removeNamespaces(Processor proc, XdmNode node, HashSet<NamespaceUri> excludeNS, boolean preserveUsed) {
         TreeWriter tree = new TreeWriter(proc);
         tree.startDocument(node.getBaseURI());
         removeNamespacesWriter(tree, node, excludeNS, preserveUsed);
@@ -293,7 +293,7 @@ public class S9apiUtils {
         return tree.getResult();
     }
 
-    private static void removeNamespacesWriter(TreeWriter tree, XdmNode node, HashSet<String> excludeNS, boolean preserveUsed) {
+    private static void removeNamespacesWriter(TreeWriter tree, XdmNode node, HashSet<NamespaceUri> excludeNS, boolean preserveUsed) {
         if (node.getNodeKind() == XdmNodeKind.DOCUMENT) {
             XdmSequenceIterator<XdmNode> iter = node.axisIterator(Axis.CHILD);
             while (iter.hasNext()) {
@@ -301,8 +301,7 @@ public class S9apiUtils {
                 removeNamespacesWriter(tree, cnode, excludeNS, preserveUsed);
             }
         } else if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
-            boolean usesDefaultNS = ("".equals(node.getNodeName().getPrefix())
-                                     && !"".equals(node.getNodeName().getNamespaceURI()));
+            boolean usesDefaultNS = ("".equals(node.getNodeName().getPrefix()) && node.getNodeName().getNamespaceUri() != NamespaceUri.NULL);
 
             NamespaceMap nsmap = node.getUnderlyingNode().getAllNamespaces();
             boolean excludeDefault = false;
@@ -311,7 +310,7 @@ public class S9apiUtils {
             Iterator<String> pfxiter = nsmap.iteratePrefixes();
             while (pfxiter.hasNext()) {
                 String pfx = pfxiter.next();
-                String uri = nsmap.getURIForPrefix(pfx, "".equals(pfx));
+                NamespaceUri uri = nsmap.getURIForPrefix(pfx, "".equals(pfx));
 
                 boolean delete = excludeNS.contains(uri);
                 excludeDefault = excludeDefault || ("".equals(pfx) && delete);
@@ -334,8 +333,8 @@ public class S9apiUtils {
             NodeName newName = NameOfNode.makeName(inode);
             if (!preserveUsed) {
                 NamespaceBinding binding = newName.getNamespaceBinding();
-                if (excludeNS.contains(binding.getURI())) {
-                    newName = new FingerprintedQName("", "", newName.getLocalPart());
+                if (excludeNS.contains(binding.getNamespaceUri())) {
+                    newName = new FingerprintedQName("", NamespaceUri.NULL, newName.getLocalPart());
                 }
             }
 

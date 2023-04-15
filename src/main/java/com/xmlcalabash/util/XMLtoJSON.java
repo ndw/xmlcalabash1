@@ -29,15 +29,16 @@ public class XMLtoJSON {
     private static final int OBJECT = 1;
     private static final int ARRAY = 2;
 
-    private static QName _type = new QName("", "type");
-    private static QName _name = new QName("", "name");
+    private static final QName _type = new QName("", "type");
+    private static final QName _name = new QName("", "name");
 
-    private static final QName c_body = new QName("c", XProcConstants.NS_XPROC_STEP, "body");
+    private static final QName c_body = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "body");
 
     public static String convert(XdmNode json) {
         JSONStringer js = new JSONStringer();
 
         json = S9apiUtils.getDocumentElement(json);
+        assert json != null;
 
         if (c_body.equals(json.getNodeName())) {
             XdmNode jchild = null;
@@ -70,15 +71,15 @@ public class XMLtoJSON {
     private static void build(XdmNode json, JSONStringer js, int context) throws JSONException {
         String type = null;
 
-        if (JSONtoXML.JSONX_NS.equals(json.getNodeName().getNamespaceURI())
-            || JSONtoXML.JXML_NS.equals(json.getNodeName().getNamespaceURI())) {
+        if (JSONtoXML.JSONX_NS == json.getNodeName().getNamespaceUri()
+            || JSONtoXML.JXML_NS == json.getNodeName().getNamespaceUri()) {
             type = json.getNodeName().getLocalName();
         } else {
             type = json.getAttributeValue(_type);
         }
 
         String name = null;
-        if (JSONtoXML.MLJS_NS.equals(json.getNodeName().getNamespaceURI())) {
+        if (JSONtoXML.MLJS_NS == json.getNodeName().getNamespaceUri()) {
             name = json.getNodeName().getLocalName();
             if (name.contains("_")) {
                 if ("_".equals(name)) {

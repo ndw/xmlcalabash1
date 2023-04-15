@@ -67,12 +67,12 @@ public class XSLT extends DefaultStep {
     private static final QName _output_base_uri = new QName("", "output-base-uri");
     private static final QName _version = new QName("", "version");
     private static final QName _content_type = new QName("content-type");
-    private static final QName cx_decode = new QName("cx", XProcConstants.NS_CALABASH_EX, "decode");
+    private static final QName cx_decode = XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX, "decode");
     private ReadablePipe sourcePipe = null;
     private ReadablePipe stylesheetPipe = null;
     private WritablePipe resultPipe = null;
     private WritablePipe secondaryPipe = null;
-    private HashMap<QName, RuntimeValue> params = new HashMap<QName, RuntimeValue>();
+    private final HashMap<QName, RuntimeValue> params = new HashMap<QName, RuntimeValue>();
 
     /*
      * Creates a new instance of XSLT

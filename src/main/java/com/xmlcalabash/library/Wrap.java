@@ -117,7 +117,7 @@ public class Wrap extends DefaultStep implements ProcessMatchingNodes {
         inGroup.push(false);
 
         XdmNode doc = source.read();
-        wrapperCode = new FingerprintedQName(wrapper.getPrefix(), wrapper.getNamespaceURI(), wrapper.getLocalName());
+        wrapperCode = new FingerprintedQName(wrapper.getPrefix(), wrapper.getNamespaceUri(), wrapper.getLocalName());
 
         matcher = new ProcessMatch(runtime, this);
         matcher.match(doc,getOption(_match));

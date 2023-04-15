@@ -13,6 +13,7 @@ import net.sf.saxon.Configuration;
 import net.sf.saxon.lib.NamespaceConstant;
 import net.sf.saxon.om.NamespaceBinding;
 import net.sf.saxon.om.NamespaceMap;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.SaxonApiUncheckedException;
@@ -55,7 +56,7 @@ public class DefaultStep implements XProcStep {
     public static final QName _standalone = new QName("", "standalone");
     public static final QName _undeclare_prefixes = new QName("", "undeclare-prefixes");
     public static final QName _version = new QName("", "version");
-    public static final QName cx_message = new QName(XProcConstants.NS_CALABASH_EX, "message");
+    public static final QName cx_message = XProcConstants.qNameFor(XProcConstants.NS_CALABASH_EX, "message");
 
     protected Logger logger = null;
     private HashMap<QName,RuntimeValue> options = null;
@@ -171,7 +172,7 @@ public class DefaultStep implements XProcStep {
 
     public void run(String addnLog) {
         String type = null;
-        if (XProcConstants.NS_XPROC.equals(step.getType().getNamespaceURI())) {
+        if (XProcConstants.NS_XPROC == step.getType().getNamespaceUri()) {
             type = step.getType().getLocalName();
         } else {
             type = step.getType().getClarkName();
@@ -183,7 +184,7 @@ public class DefaultStep implements XProcStep {
         }
     }
 
-    protected String prefixFor(NamespaceMap nsmap, String preferredPrefix, String uri) {
+    protected String prefixFor(NamespaceMap nsmap, String preferredPrefix, NamespaceUri uri) {
         if (preferredPrefix == null) {
             return prefixFor(nsmap, uri);
         }
@@ -192,16 +193,16 @@ public class DefaultStep implements XProcStep {
             return "xml";
         }
 
-        String curMapping = nsmap.getURI(preferredPrefix);
-        if (curMapping == null || uri.equals(curMapping)) {
+        NamespaceUri curMapping = nsmap.getURIForPrefix(preferredPrefix, false);
+        if (curMapping == null || uri.equals(curMapping.toString())) {
             return preferredPrefix;
         } else {
             return prefixFor(nsmap, uri);
         }
     }
 
-    protected String prefixFor(NamespaceMap nsmap, String uri) {
-        if (NamespaceConstant.XML.equals(uri)) {
+    protected String prefixFor(NamespaceMap nsmap, NamespaceUri uri) {
+        if (uri == XProcConstants.NS_XML) {
             return "xml";
         }
 
@@ -312,7 +313,7 @@ public class DefaultStep implements XProcStep {
         return serializer;
     }
 
-    public Vector<XdmItem> evaluateXPath(XdmNode doc, HashMap<String,String> nsBindings, String xpath, HashMap<QName,RuntimeValue> globals) {
+    public Vector<XdmItem> evaluateXPath(XdmNode doc, HashMap<String,NamespaceUri> nsBindings, String xpath, HashMap<QName,RuntimeValue> globals) {
         Vector<XdmItem> results = new Vector<XdmItem> ();
 
         try {

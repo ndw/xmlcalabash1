@@ -25,8 +25,8 @@ import java.net.URI;
  * To change this template use File | Settings | File Templates.
  */
 public class PipeLogger {
-    private static final QName cx_basename = new QName("cx", XProcConstants.NS_CALABASH_EX, "basename");
-    private static final QName cx_logstyle = new QName("cx", XProcConstants.NS_CALABASH_EX, "logstyle");
+    private static final QName cx_basename = XProcConstants.qNameFor("cx", XProcConstants.NS_CALABASH_EX, "basename");
+    private static final QName cx_logstyle = XProcConstants.qNameFor("cx", XProcConstants.NS_CALABASH_EX, "logstyle");
     private Log log = null;
     private Serializer serializer = null;
     private PrintStream stream = null;

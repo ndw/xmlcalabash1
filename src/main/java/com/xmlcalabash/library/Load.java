@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory;
 public class Load extends DefaultStep {
     private static final QName _href = new QName("href");
     private static final QName _dtd_validate = new QName("dtd-validate");
-    private static final QName err_XD0011 = new QName("err", XProcConstants.NS_XPROC_ERROR, "XD0011");
+    private static final QName err_XD0011 = XProcConstants.qNameFor("err", XProcConstants.NS_XPROC_ERROR, "XD0011");
 
     private WritablePipe result = null;
     private URI href = null;

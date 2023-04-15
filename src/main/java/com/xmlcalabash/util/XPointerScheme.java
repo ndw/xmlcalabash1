@@ -2,6 +2,7 @@ package com.xmlcalabash.util;
 
 import com.xmlcalabash.core.XProcException;
 import com.xmlcalabash.core.XProcRuntime;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XPathCompiler;
@@ -74,7 +75,7 @@ public class XPointerScheme {
         return null;
     }
 
-    public Vector<XdmNode> selectNodes(XProcRuntime runtime, XdmNode doc, HashMap<String,String> nsBindings) {
+    public Vector<XdmNode> selectNodes(XProcRuntime runtime, XdmNode doc, HashMap<String, NamespaceUri> nsBindings) {
         String select = xpathEquivalent();
 
         if (select == null) {

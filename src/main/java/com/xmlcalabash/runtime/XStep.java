@@ -98,7 +98,7 @@ public abstract class XStep implements XProcRunnable {
         if (xoutputs.containsKey(port)) {
             return xoutputs.get(port);
         } else {
-            if (XProcConstants.NS_XPROC.equals(step.getType().getNamespaceURI())
+            if (XProcConstants.NS_XPROC == step.getType().getNamespaceUri()
                     && step.getStep().getVersion() > 1.0) {
                 return null;
             } else {
@@ -155,7 +155,7 @@ public abstract class XStep implements XProcRunnable {
             throw new XProcException(step.getNode(), "Duplicate parameter: " + name);
         }
 
-        if (XProcConstants.NS_XPROC.equals(name.getNamespaceURI())) {
+        if (XProcConstants.NS_XPROC == name.getNamespaceUri()) {
             throw XProcException.dynamicError(31);
         }
 
@@ -168,11 +168,7 @@ public abstract class XStep implements XProcRunnable {
     }
 
     public RuntimeValue getOption(QName name) {
-        if (options.containsKey(name)) {
-            return options.get(name);
-        } else {
-            return null;
-        }
+        return options.getOrDefault(name, null);
     }
 
     public void setOption(QName name, RuntimeValue value) {

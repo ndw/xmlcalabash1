@@ -38,8 +38,8 @@ import com.xmlcalabash.util.TreeWriter;
 
 public class JavaProperties extends DefaultStep {
     private static final String ACCEPT_TEXT = "text/plain, text/*, */*";
-    private static final QName c_param_set = new QName("c", XProcConstants.NS_XPROC_STEP, "param-set");
-    private static final QName c_param = new QName("c", XProcConstants.NS_XPROC_STEP, "param");
+    private static final QName c_param_set = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "param-set");
+    private static final QName c_param = XProcConstants.qNameFor(XProcConstants.NS_XPROC_STEP, "param");
     private static final QName _href = new QName("","href");
     private static final QName _name = new QName("name");
     private static final QName _namespace = new QName("namespace");
