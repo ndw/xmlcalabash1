@@ -72,9 +72,9 @@ dependencies {
     [group: 'com.ibm.icu', name: 'icu4j', version: '72.1'],
     [group: 'nu.validator.htmlparser', name: 'htmlparser', version: '1.4'],
     [group: 'org.apache.ant', name: 'ant', version: '1.9.4'],
-    [group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.13'],
-    [group: 'org.apache.httpcomponents', name: 'httpmime', version: '4.5.13'],
-    [group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.4.15'],
+    [group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.14'],
+    [group: 'org.apache.httpcomponents', name: 'httpmime', version: '4.5.14'],
+    [group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.4.16'],
     [group: 'org.atteo.classindex', name: 'classindex', version: '3.3'],
     [group: 'org.ccil.cowan.tagsoup', name: 'tagsoup', version: '1.2.1'],
     [group: 'org.restlet.jee', name: 'org.restlet', version: '2.2.2'],
@@ -244,13 +244,13 @@ task copyToDist(dependsOn: [copyLib,copyNotices,copyReferenceDocs,copySchemas,
 jar.dependsOn copyToDist
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
-  classifier = 'javadoc'
+  archiveClassifier = 'javadoc'
   archiveVersion = relVersion
   from tasks.javadoc.destinationDir
 }
 
 task sourcesJar(type: Jar, dependsOn: ["copyReferenceDocs"]) {
-  classifier = 'sources'
+  archiveClassifier = 'sources'
   archiveVersion = relVersion
   from sourceSets.main.allSource
 }
@@ -296,7 +296,7 @@ task testSuiteMessages {
 task testSuite(dependsOn: [makeDist, testSuiteMessages], type: JavaExec) {
   classpath = configurations.reportruntime + sourceSets.main.output
 
-  main = 'com.xmlcalabash.drivers.RunTestReport'
+  mainClass = 'com.xmlcalabash.drivers.RunTestReport'
   maxHeapSize = "1024m"
   args('-D', '-a',
        testsRoot + '/tests/required/test-suite.xml',
@@ -320,7 +320,7 @@ task testSuiteClassPath {
 
 task htmlReport(dependsOn: testSuite, type: JavaExec) {
   classpath = configurations.reportruntime + sourceSets.main.output
-  main = 'net.sf.saxon.Transform'
+  mainClass = 'net.sf.saxon.Transform'
   args('-s:' + testsReport,
        '-xsl:resources/format-report.xsl',
        '-o:' + testsFormat)
@@ -328,7 +328,7 @@ task htmlReport(dependsOn: testSuite, type: JavaExec) {
 
 task aDocReport(dependsOn: testSuite, type: JavaExec) {
   classpath = configurations.reportruntime + sourceSets.main.output
-  main = 'net.sf.saxon.Transform'
+  mainClass = 'net.sf.saxon.Transform'
   args('-s:' + testsReport,
        '-xsl:resources/asciidoc-report.xsl',
        '-o:' + testsADoc)
@@ -336,7 +336,7 @@ task aDocReport(dependsOn: testSuite, type: JavaExec) {
 
 task aDocErrReport(dependsOn: testSuite, type: JavaExec) {
   classpath = configurations.reportruntime + sourceSets.main.output
-  main = 'net.sf.saxon.Transform'
+  mainClass = 'net.sf.saxon.Transform'
   args('-s:' + testsReport,
        '-xsl:resources/asciidoc-report.xsl',
        '-o:' + testsFailADoc,
@@ -368,7 +368,7 @@ task makeIZPackShell(dependsOn: copyVERSION) {
 task setupIZPack(dependsOn: [makeDist, makeIZPackShell], type: JavaExec) {
   classpath = configurations.reportruntime + sourceSets.main.output
 
-  main = 'net.sf.saxon.Transform'
+  mainClass = 'net.sf.saxon.Transform'
   args('-s:src/main/izpack/install.xml',
        '-xsl:resources/izpack-filter.xsl',
        '-o:build/install.xml',
