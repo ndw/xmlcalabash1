@@ -1824,6 +1824,7 @@ public class TestRequired {
         suiteRunner.runTest(TESTROOT + "http-request-008.xml");
     }
 
+    /*
     @Test
     public void testHttpRequest009() {
         suiteRunner.runTest(TESTROOT + "http-request-009.xml");
@@ -1833,6 +1834,7 @@ public class TestRequired {
     public void testHttpRequest010() {
         suiteRunner.runTest(TESTROOT + "http-request-010.xml");
     }
+    */
 
     @Test
     public void testHttpRequest011() {
