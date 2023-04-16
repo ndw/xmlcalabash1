@@ -70,3 +70,5 @@ jobs:
         run: |
           echo BRANCH ${{ env.SAXON_BRANCH }}
           echo VERSION ${{ env.SAXON_VERSION }}
+          echo build/distributions/xmlcalabash-${{ env.CI_TAG }}-${{ env.SAXON_VERSION }}.zip
+
