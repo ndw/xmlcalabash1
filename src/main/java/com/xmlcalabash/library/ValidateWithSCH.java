@@ -9,6 +9,8 @@ import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
 import com.xmlcalabash.util.S9apiUtils;
 import net.sf.saxon.Configuration;
+import net.sf.saxon.lib.ResourceRequest;
+import net.sf.saxon.lib.ResourceResolver;
 import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -129,7 +131,7 @@ public class ValidateWithSCH extends DefaultStep {
 
         compiler = runtime.getProcessor().newXsltCompiler();
         compiler.setSchemaAware(schemaAware);
-        compiler.setURIResolver(new UResolver());
+        compiler.setResourceResolver(new UResolver());
         exec = compiler.compile(getSchematronXSLT("iso_svrl_for_xslt2.xsl"));
         XsltTransformer schemaCompiler = exec.load();
 
@@ -166,7 +168,7 @@ public class ValidateWithSCH extends DefaultStep {
         compiler.setSchemaAware(schemaAware);
         exec = compiler.compile(compiledSchema.asSource());
         transformer = exec.load();
-	    for (QName name : params.keySet()) {
+        for (QName name : params.keySet()) {
              RuntimeValue v = params.get(name);
              transformer.setParameter(name, v.getUntypedAtomic(runtime));
         }        
@@ -237,13 +239,13 @@ public class ValidateWithSCH extends DefaultStep {
         return results.size() != 0;
     }
 
-    private class UResolver implements URIResolver {
-
-        public Source resolve(String href, String base) throws TransformerException {
-            if ("iso_schematron_skeleton_for_saxon.xsl".equals(href)) {
+    private class UResolver implements ResourceResolver {
+        @Override
+        public Source resolve(ResourceRequest request) throws XPathException {
+            if ("iso_schematron_skeleton_for_saxon.xsl".equals(request.relativeUri)) {
                 return new SAXSource(new InputSource(skeleton));
             } else {
-                throw new XProcException(step.getNode(), "Failed to resolve " + href + " from JAR file.");
+                throw new XProcException(step.getNode(), "Failed to resolve " + request.relativeUri + " from JAR file.");
             }
         }
     }
@@ -260,7 +262,7 @@ public class ValidateWithSCH extends DefaultStep {
     private XdmNode transform(XdmNode source, SAXSource stylesheet) throws SaxonApiException {
         XsltCompiler compiler = runtime.getProcessor().newXsltCompiler();
         compiler.setSchemaAware(schemaAware);
-        compiler.setURIResolver(new UResolver());
+        compiler.setResourceResolver(new UResolver());
         XsltExecutable exec = compiler.compile(stylesheet);
         XsltTransformer schemaCompiler = exec.load();
 

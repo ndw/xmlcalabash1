@@ -229,14 +229,14 @@ public class XProcRuntime implements DeclarationScope {
 
         try {
             if (config.uriResolver != null) {
-                uriResolver.setUnderlyingURIResolver(Class.forName(config.uriResolver).asSubclass(URIResolver.class).newInstance());
+                uriResolver.setUnderlyingURIResolver(Class.forName(config.uriResolver).asSubclass(URIResolver.class).getDeclaredConstructor().newInstance());
             }
             if (config.entityResolver != null) {
-                uriResolver.setUnderlyingEntityResolver(Class.forName(config.entityResolver).asSubclass(EntityResolver.class).newInstance());
+                uriResolver.setUnderlyingEntityResolver(Class.forName(config.entityResolver).asSubclass(EntityResolver.class).getDeclaredConstructor().newInstance());
             }
 
             if (config.errorListener != null) {
-                msgListener = Class.forName(config.errorListener).asSubclass(XProcMessageListener.class).newInstance();
+                msgListener = Class.forName(config.errorListener).asSubclass(XProcMessageListener.class).getDeclaredConstructor().newInstance();
             } else {
                 msgListener = new DefaultXProcMessageListener();
             }
@@ -279,7 +279,7 @@ public class XProcRuntime implements DeclarationScope {
                 Object def = null;
 
                 try {
-                    def = Class.forName(className).newInstance();
+                    def = Class.forName(className).getDeclaredConstructor().newInstance();
                 } catch (Throwable e) {
                     logger.trace("Attempting to instantiate " + className + " with processor context");
                     Class<?> cl = Class.forName(className);
