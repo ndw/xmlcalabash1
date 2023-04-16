@@ -79,7 +79,7 @@ jobs:
           prerelease: false
           fail_on_unmatched_files: true
           files: |
-            build/distributions/xmlcalabash-${{ env.CI_TAG }}-${{ env.SAXON_VERSION }}.zip
+            build/distributions/xmlcalabash-${{ env.CI_TAG }}.zip
 
       - name: Publish to Sonatype
         if: ${{ env.HAVE_GPGKEYURI == 'true' && env.CI_BRANCH == env.SAXON_BRANCH && env.CI_TAG != '' }}
