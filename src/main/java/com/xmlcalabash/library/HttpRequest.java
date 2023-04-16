@@ -65,7 +65,6 @@ import java.io.*;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 
@@ -105,7 +104,7 @@ public class HttpRequest extends DefaultStep {
     private boolean detailed = false;
     private boolean sendAuthorization = false;
     private URI requestURI = null;
-    private Vector<Header> headers = new Vector<Header> ();
+    private final Vector<Header> headers = new Vector<> ();
     private String overrideContentType = null;
     private String headerContentType = null;
     private boolean encodeBinary = false;
@@ -147,7 +146,6 @@ public class HttpRequest extends DefaultStep {
 
         // Check for valid attributes
         XdmSequenceIterator<XdmNode> iter = start.axisIterator(Axis.ATTRIBUTE);
-        boolean ok = true;
         while (iter.hasNext()) {
             XdmNode attr = iter.next();
             QName name = attr.getNodeName();
@@ -266,7 +264,7 @@ public class HttpRequest extends DefaultStep {
         iter = start.axisIterator(Axis.CHILD);
         XdmNode body = null;
         while (iter.hasNext()) {
-            XdmNode event = (XdmNode) iter.next();
+            XdmNode event = iter.next();
             // FIXME: What about non-whitespace text nodes?
             if (event.getNodeKind() == XdmNodeKind.ELEMENT) {
                 if (body != null) {
@@ -278,7 +276,7 @@ public class HttpRequest extends DefaultStep {
                     if (name == null) {
                         continue; // this can't happen, right?
                     }
-                    if (name.toLowerCase().equals("content-type")) {
+                    if (name.equalsIgnoreCase("content-type")) {
                         // We'll deal with the content-type header later
                         headerContentType = event.getAttributeValue(_value).toLowerCase();
                     } else {
@@ -376,7 +374,7 @@ public class HttpRequest extends DefaultStep {
             }
 
             if (detailed) {
-                tree.addStartElement(XProcConstants.c_response, SingletonAttributeMap.of(TypeUtils.attributeInfo(_status, ""+statusCode)));
+                tree.addStartElement(XProcConstants.c_response, SingletonAttributeMap.of(TypeUtils.attributeInfo(_status, String.valueOf(statusCode))));
 
                 for (Header header : httpResult.getAllHeaders()) {
                     // I don't understand why/how HeaderElement parsing works. I get very weird results.
@@ -552,7 +550,7 @@ public class HttpRequest extends DefaultStep {
 
         if (bodyDescription != null) {
             for (Header header : headers) {
-                if (header.getName().toLowerCase().equals("content-description")) {
+                if (header.getName().equalsIgnoreCase("content-description")) {
                     String headDescription = header.getValue();
                     descriptionHeader = true;
                     if (!bodyDescription.equals(headDescription)) {
@@ -568,7 +566,7 @@ public class HttpRequest extends DefaultStep {
 
         if (bodyId != null) {
             for (Header header : headers) {
-                if (header.getName().toLowerCase().equals("content-id")) {
+                if (header.getName().equalsIgnoreCase("content-id")) {
                     String headId = header.getValue();
                     idHeader = true;
                     if (!bodyId.equals(headId)) {
@@ -584,7 +582,7 @@ public class HttpRequest extends DefaultStep {
 
         if (bodyDisposition != null) {
             for (Header header : headers) {
-                if (header.getName().toLowerCase().equals("content-disposition")) {
+                if (header.getName().equalsIgnoreCase("content-disposition")) {
                     String headDisposition = header.getValue();
                     dispositionHeader = true;
                     if (!bodyDisposition.equals(headDisposition)) {
@@ -651,7 +649,7 @@ public class HttpRequest extends DefaultStep {
                         throw XProcException.stepError(22);
                     }
 
-                    Vector<XdmNode> content = new Vector<XdmNode> ();
+                    Vector<XdmNode> content = new Vector<> ();
                     XdmSequenceIterator<XdmNode> iter = body.axisIterator(Axis.CHILD);
                     while (iter.hasNext()) {
                         XdmNode node = iter.next();
@@ -945,7 +943,6 @@ public class HttpRequest extends DefaultStep {
 
     private void readMultipartContent(TreeWriter tree, InputStream bodyStream, String boundary) throws IOException, SaxonApiException {
         MIMEReader reader = new MIMEReader(bodyStream, boundary);
-        boolean done = false;
         while (reader.readHeaders()) {
             Header pctype = reader.getHeader("Content-Type");
             Header pclen  = reader.getHeader("Content-Length");
@@ -1147,7 +1144,7 @@ public class HttpRequest extends DefaultStep {
     }
 
     private class HttpGenericMethod extends HttpEntityEnclosingRequestBase {
-        private String method;
+        private final String method;
         public HttpGenericMethod(String method, URI requestURI) {
             super();
             this.method = method;

@@ -54,17 +54,17 @@ import java.util.Vector;
  */
 public class Parser {
     // TODO: Make new QName() values throughout static
-    private static QName px_name = new QName(XProcConstants.NS_CALABASH_EX,"name");
-    private static QName _name = new QName("name");
-    private static QName _href = new QName("href");
-    private static QName _type = new QName("type");
-    private static QName _version = new QName("version");
-    private static QName _namespace = new QName("namespace");
-    private static QName err_XS0063 = new QName(XProcConstants.NS_XPROC_ERROR, "XS0063");
-    private static QName p_use_when = new QName(XProcConstants.NS_XPROC, "use-when");
-    private static QName _use_when = new QName("use-when");
-    private static QName _exclude_inline_prefixes = new QName("exclude-inline-prefixes");
-    private static QName cx_import = new QName(XProcConstants.NS_CALABASH_EX, "import");
+    private static final QName px_name = new QName(XProcConstants.NS_CALABASH_EX,"name");
+    private static final QName _name = new QName("name");
+    private static final QName _href = new QName("href");
+    private static final QName _type = new QName("type");
+    private static final QName _version = new QName("version");
+    private static final QName _namespace = new QName("namespace");
+    private static final QName err_XS0063 = new QName(XProcConstants.NS_XPROC_ERROR, "XS0063");
+    private static final QName p_use_when = new QName(XProcConstants.NS_XPROC, "use-when");
+    private static final QName _use_when = new QName("use-when");
+    private static final QName _exclude_inline_prefixes = new QName("exclude-inline-prefixes");
+    private static final QName cx_import = new QName(XProcConstants.NS_CALABASH_EX, "import");
 
     private XProcRuntime runtime = null;
     private boolean loadingStandardLibrary = false;

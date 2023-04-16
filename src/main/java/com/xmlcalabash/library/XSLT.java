@@ -37,13 +37,12 @@ import net.sf.saxon.Configuration;
 import net.sf.saxon.lib.CollectionFinder;
 import net.sf.saxon.lib.OutputURIResolver;
 import net.sf.saxon.lib.UnparsedTextURIResolver;
-import net.sf.saxon.om.AttributeMap;
-import net.sf.saxon.om.EmptyAttributeMap;
-import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.om.TreeInfo;
+import net.sf.saxon.om.*;
 import net.sf.saxon.s9api.*;
+import net.sf.saxon.s9api.Action;
 import org.xml.sax.InputSource;
 
+import javax.xml.transform.SourceLocator;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
@@ -431,11 +430,12 @@ public class XSLT extends DefaultStep {
         }
     }
 
-    class CatchMessages implements MessageListener {
+    class CatchMessages implements MessageListener2 {
         public CatchMessages() {
         }
 
-        public void message(XdmNode content, boolean terminate, javax.xml.transform.SourceLocator locator) {
+        @Override
+        public void message(XdmNode content, QName errorCode, boolean terminate, SourceLocator locator) {
             if (runtime.getShowMessages()) {
                 System.err.println(content.toString());
             }

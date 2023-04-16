@@ -274,10 +274,8 @@ public class ValidateWithXSD extends DefaultStep {
                     throw new XProcException(XProcConstants.stepError(53), spe);
                 }
             }
-        } catch (SAXException se) {
+        } catch (SAXException | IOException se) {
             throw new XProcException(se);
-        } catch (IOException ioe) {
-            throw new XProcException(ioe);
         }
 
         result.write(doc);

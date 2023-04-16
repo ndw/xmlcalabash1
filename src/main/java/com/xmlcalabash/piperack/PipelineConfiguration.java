@@ -74,15 +74,11 @@ public class PipelineConfiguration {
         if (inputs.containsKey(port)) {
             count = inputs.get(port);
         }
-        inputs.put(port, new Integer(count + 1));
+        inputs.put(port, count + 1);
     }
 
     public int documentCount(String port) {
-        if (inputs.containsKey(port)) {
-            return inputs.get(port);
-        } else {
-            return 0;
-        }
+        return inputs.getOrDefault(port, 0);
     }
 
     public void setOption(QName name, String value) {
