@@ -85,7 +85,7 @@ public class CssFormatter extends DefaultStep {
 
         final CssProcessor provider;
         try {
-            provider = (CssProcessor) Class.forName(cssClass).newInstance();
+            provider = (CssProcessor) Class.forName(cssClass).getDeclaredConstructor().newInstance();
             provider.initialize(runtime,step,options);
         } catch (Exception e) {
             logger.debug(e.getMessage(), e);

@@ -81,7 +81,7 @@ public class XSLFormatter extends DefaultStep {
         for (String className : foClasses) {
             if (provider == null) {
                 try {
-                    provider = (FoProcessor) Class.forName(className).newInstance();
+                    provider = (FoProcessor) Class.forName(className).getDeclaredConstructor().newInstance();
                     provider.initialize(runtime,step,options);
                     break;
                 } catch (NoClassDefFoundError ncdfe) {
