@@ -8,6 +8,7 @@ jobs:
       branch: ${{ steps.check_step.outputs.branch }}
       reponame: ${{ steps.check_step.outputs.reponame }}
       tag: ${{ steps.check_step.outputs.tag }}
+      saxonver: ${{ steps.check_step.outputs.saxonver }}
       saxonbranch: ${{ steps.check_step.outputs.saxonbranch }}
     steps:
       - name: Checkout
@@ -32,8 +33,11 @@ jobs:
             echo "Running in $reponame on $branch"
           fi
           echo "tag=$tag" >> $GITHUB_OUTPUT
-          sbranch=$(grep saxonBranch gradle.properties | cut -d= -f2)
-          echo “saxonbranch=$sbranch” >> $GITHUB_OUTPUT
+          saxver=$(grep saxonBranch gradle.properties | cut -d= -f2)
+          sbranch="saxon-$saxver"
+          echo "Branch $sbranch for $saxver"
+          echo "saxonver=$axver" >> $GITHUB_OUTPUT
+          echo "saxonbranch=$sbranch" >> $GITHUB_OUTPUT
 
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -49,6 +53,7 @@ jobs:
       CI_PROJECT_REPONAME: ${{ needs.check_branch.outputs.reponame }}
       CI_BRANCH: ${{ needs.check_branch.outputs.branch }}
       CI_TAG: ${{ needs.check_branch.outputs.tag }}
+      SAXON_VERSION: ${{ needs.check_branch.outputs.saxonver }}
       SAXON_BRANCH: ${{ needs.check_branch.outputs.saxonbranch }}
     steps:
       - uses: actions/checkout@v3
@@ -61,28 +66,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Build and test
+      - name: show me versions
         run: |
-          ./gradlew dist
-
-      - name: Publish release
-        uses: softprops/action-gh-release@v1
-        if: ${{ env.HAVE_ACCESS_TOKEN == 'true' && env.CI_BRANCH == 'saxon100' && env.CI_TAG != '' }}
-        with:
-          draft: false
-          prerelease: false
-          fail_on_unmatched_files: true
-          files: |
-            build/distributions/xmlcalabash-${{ env.CI_TAG }}-${{ env.SAXON_BRANCH }}.zip
-
-      - name: Publish to Sonatype
-        if: ${{ env.HAVE_GPGKEYURI == 'true' && env.CI_BRANCH == 'saxon100' && env.CI_TAG != '' }}
-        run: |
-          curl -s -o secret.gpg ${{ secrets.GPGKEYURI }}
-          ./gradlew -PsonatypeUsername=${{ secrets.SONATYPEUSER }} \
-                  -PsonatypePassword="${{ secrets.SONATYPEPASS }}" \
-                  -Psigning.keyId="${{ secrets.SIGNKEY }}" \
-                  -Psigning.password="${{ secrets.SIGNPSW }}" \
-                  -Psigning.secretKeyRingFile=./secret.gpg \
-                  publish
-          rm -f secret.gpg
+          echo BRANCH ${{ env.SAXON_BRANCH }}
+          echo VERSION ${{ env.SAXON_VERSION }}
