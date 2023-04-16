@@ -36,7 +36,7 @@ jobs:
           saxver=$(grep saxonBranch gradle.properties | cut -d= -f2)
           sbranch="saxon-$saxver"
           echo "Branch $sbranch for $saxver"
-          echo "saxonver=$axver" >> $GITHUB_OUTPUT
+          echo "saxonver=$saxver" >> $GITHUB_OUTPUT
           echo "saxonbranch=$sbranch" >> $GITHUB_OUTPUT
 
   build-and-deploy:
