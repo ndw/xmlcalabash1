@@ -1,0 +1,94 @@
+name: build-branch
+on: push
+
+jobs:
+  check_branch:
+    runs-on: ubuntu-latest
+    outputs:
+      branch: ${{ steps.check_step.outputs.branch }}
+      reponame: ${{ steps.check_step.outputs.reponame }}
+      tag: ${{ steps.check_step.outputs.tag }}
+      saxonver: ${{ steps.check_step.outputs.saxonver }}
+      saxonbranch: ${{ steps.check_step.outputs.saxonbranch }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Get branch name, etc.
+        id: check_step
+        run: |
+          raw=${{ github.repository }}
+          reponame=${raw##*/}
+          echo "reponame=$reponame" >> $GITHUB_OUTPUT
+          raw=$(git branch -r --contains ${{ github.ref }})
+          branch=${raw##*/}
+          echo "branch=$branch" >> $GITHUB_OUTPUT
+          tag=""
+          if [ ${{ github.ref_type }} = "tag" ]; then
+            tag=${{ github.ref_name }}
+            echo "Running in $reponame on $branch for $tag"
+          else
+            echo "Running in $reponame on $branch"
+          fi
+          echo "tag=$tag" >> $GITHUB_OUTPUT
+          saxver=$(grep saxonBranch gradle.properties | cut -d= -f2)
+          sbranch="saxon$saxver"
+          echo "Branch $sbranch for $saxver"
+          echo "saxonver=$saxver" >> $GITHUB_OUTPUT
+          echo "saxonbranch=$sbranch" >> $GITHUB_OUTPUT
+
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    needs: check_branch
+    env:
+      HAVE_ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN != '' }}
+      HAVE_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY != '' }}
+      HAVE_GPGKEYURI: ${{ secrets.ACCESS_TOKEN != '' && secrets.GPGKEYURI != '' }}
+      CIWORKFLOW: yes
+      CI_SHA1: ${{ github.sha }}
+      CI_BUILD_NUM: ${{ github.run_number }}
+      CI_PROJECT_USERNAME: ${{ github.repository_owner }}
+      CI_PROJECT_REPONAME: ${{ needs.check_branch.outputs.reponame }}
+      CI_BRANCH: ${{ needs.check_branch.outputs.branch }}
+      CI_TAG: ${{ needs.check_branch.outputs.tag }}
+      SAXON_VERSION: ${{ needs.check_branch.outputs.saxonver }}
+      SAXON_BRANCH: ${{ needs.check_branch.outputs.saxonbranch }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup SSH key
+        if: ${{ env.HAVE_PRIVATE_KEY == 'true' }}
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build and test
+        run: |
+          echo Building ${{ env.CI_BRANCH }} for Saxon ${{ env.SAXON_VERSION }} / ${{ env.SAXON_BRANCH }}
+          ./gradlew dist
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v1
+        if: ${{ env.HAVE_ACCESS_TOKEN == 'true' && env.CI_BRANCH == env.SAXON_BRANCH && env.CI_TAG != '' }}
+        with:
+          draft: false
+          prerelease: false
+          fail_on_unmatched_files: true
+          files: |
+            build/distributions/xmlcalabash-${{ env.CI_TAG }}.zip
+
+      - name: Publish to Sonatype
+        if: ${{ env.HAVE_GPGKEYURI == 'true' && env.CI_BRANCH == env.SAXON_BRANCH && env.CI_TAG != '' }}
+        run: |
+          curl -s -o secret.gpg ${{ secrets.GPGKEYURI }}
+          ./gradlew -PsonatypeUsername=${{ secrets.SONATYPEUSER }} \
+                  -PsonatypePassword="${{ secrets.SONATYPEPASS }}" \
+                  -Psigning.keyId="${{ secrets.SIGNKEY }}" \
+                  -Psigning.password="${{ secrets.SIGNPSW }}" \
+                  -Psigning.secretKeyRingFile=./secret.gpg \
+                  publish
+          rm -f secret.gpg
