@@ -8,6 +8,7 @@ import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.util.QNameUtils;
 import com.xmlcalabash.util.S9apiUtils;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.lib.ResourceRequest;
@@ -224,7 +225,7 @@ public class ValidateWithSCH extends DefaultStep {
                 Throwable sae = saue.getCause();
                 if (sae instanceof XPathException) {
                     XPathException xe = (XPathException) sae;
-                    if (xe.getErrorCodeNamespace() == XProcConstants.NS_XQT_ERRORS && "XPDY0002".equals(xe.getErrorCodeLocalPart())) {
+                    if (QNameUtils.hasForm(xe.getErrorCodeQName(), XProcConstants.NS_XQT_ERRORS, "XPDY0002")) {
                         throw XProcException.dynamicError(26, step.getNode(), "Expression refers to context when none is available: " + xpath);
                     } else {
                         throw saue;

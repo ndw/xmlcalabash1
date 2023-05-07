@@ -8,6 +8,7 @@ import com.xmlcalabash.io.ReadablePipe;
 import com.xmlcalabash.io.WritablePipe;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.runtime.XAtomicStep;
+import com.xmlcalabash.util.QNameUtils;
 import com.xmlcalabash.util.S9apiUtils;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.lib.NamespaceConstant;
@@ -356,7 +357,7 @@ public class DefaultStep implements XProcStep {
                 Throwable sae = saue.getCause();
                 if (sae instanceof XPathException) {
                     XPathException xe = (XPathException) sae;
-                    if ("http://www.w3.org/2005/xqt-errors".equals(xe.getErrorCodeNamespace()) && "XPDY0002".equals(xe.getErrorCodeLocalPart())) {
+                    if (QNameUtils.hasForm(xe.getErrorCodeQName(), "http://www.w3.org/2005/xqt-errors", "XPDY0002")) {
                         throw XProcException.dynamicError(26,"Expression refers to context when none is available: " + xpath);
                     } else {
                         throw saue;

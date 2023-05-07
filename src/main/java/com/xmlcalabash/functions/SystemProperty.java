@@ -91,8 +91,8 @@ public class SystemProperty extends XProcExtensionFunctionDefinition {
                         staticContext.getNamespaceResolver());
                 propertyName = new QName(qpropertyName);
             } catch (XPathException e) {
-                if (e.getErrorCodeLocalPart()==null || e.getErrorCodeLocalPart().equals("FOCA0002")
-                        || e.getErrorCodeLocalPart().equals("FONS0004")) {
+                String local = e.getErrorCodeQName() == null ? null : e.getErrorCodeQName().getLocalPart();
+                if (local == null || "FOCA0002".equals(local) || "FONS0004".equals(local)) {
                     e.setErrorCode("XTDE1390");
                 }
                 throw e;

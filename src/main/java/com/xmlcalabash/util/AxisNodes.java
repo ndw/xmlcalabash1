@@ -222,7 +222,7 @@ public class AxisNodes implements Iterable<XdmNode> {
                     Throwable sae = saue.getCause();
                     if (sae instanceof XPathException) {
                         XPathException xe = (XPathException) sae;
-                        if (xe.getErrorCodeNamespace() == XProcConstants.NS_XQT_ERRORS && "XPDY0002".equals(xe.getErrorCodeLocalPart())) {
+                        if (QNameUtils.hasForm(xe.getErrorCodeQName(), XProcConstants.NS_XQT_ERRORS, "XPDY0002")) {
                             throw XProcException.dynamicError(26, element, "Expression refers to context when none is available: " + xpath);
                         } else {
                             throw saue;

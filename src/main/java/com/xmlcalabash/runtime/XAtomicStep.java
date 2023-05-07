@@ -24,10 +24,7 @@ import com.xmlcalabash.model.Parameter;
 import com.xmlcalabash.model.PipeNameBinding;
 import com.xmlcalabash.model.RuntimeValue;
 import com.xmlcalabash.model.Step;
-import com.xmlcalabash.util.AxisNodes;
-import com.xmlcalabash.util.MessageFormatter;
-import com.xmlcalabash.util.S9apiUtils;
-import com.xmlcalabash.util.TypeUtils;
+import com.xmlcalabash.util.*;
 import net.sf.saxon.om.NamespaceMap;
 import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.s9api.Axis;
@@ -706,7 +703,7 @@ public class XAtomicStep extends XStep {
             Throwable sae = saue.getCause();
             if (sae instanceof XPathException) {
                 XPathException xe = (XPathException) sae;
-                if ("http://www.w3.org/2005/xqt-errors".equals(xe.getErrorCodeNamespace()) && "XPDY0002".equals(xe.getErrorCodeLocalPart())) {
+                if (QNameUtils.hasForm(xe.getErrorCodeQName(), "http://www.w3.org/2005/xqt-errors", "XPDY0002")) {
                     throw XProcException.dynamicError(26, step.getNode(), "The expression for $" + var.getName() + " refers to the context item.");
                 } else {
                     throw saue;
@@ -828,7 +825,7 @@ public class XAtomicStep extends XStep {
                 Throwable sae = saue.getCause();
                 if (sae instanceof XPathException) {
                     XPathException xe = (XPathException) sae;
-                    if ("http://www.w3.org/2005/xqt-errors".equals(xe.getErrorCodeNamespace()) && "XPDY0002".equals(xe.getErrorCodeLocalPart())) {
+                    if (QNameUtils.hasForm(xe.getErrorCodeQName(), "http://www.w3.org/2005/xqt-errors", "XPDY0002")) {
                         throw XProcException.dynamicError(26, step.getNode(), "Expression refers to context when none is available: " + xpath);
                     } else {
                         throw saue;
