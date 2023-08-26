@@ -435,7 +435,20 @@ public class XProcURIResolver implements URIResolver, EntityResolver, ModuleURIR
             String href = request.relativeUri == null ? request.uri : request.relativeUri;
             String baseUri = request.baseUri == null ? request.uri : request.baseUri;
             try {
-                return catalogResolver.resolve(href, baseUri);
+                Source source = catalogResolver.resolve(href, baseUri);
+                // Hack. Starting at maybe 10.9, Saxon got cranky about what comes back from
+                // attempting to read an unparsed text resource. It has to be a stream source.
+                // This is an attempt to work around that problem
+                if (ResourceRequest.TEXT_NATURE.equals(request.nature)
+                        || ResourceRequest.BINARY_NATURE.equals(request.nature)) {
+                    try {
+                        URL url = new URL(source.getSystemId());
+                        return new StreamSource(url.openStream(), source.getSystemId());
+                    } catch (IOException ex) {
+                        // nevermind
+                    }
+                }
+                return source;
             } catch (TransformerException | IllegalArgumentException e) {
                 throw new XPathException("Exception from catalog resolver resolverURI()", e);
             }
