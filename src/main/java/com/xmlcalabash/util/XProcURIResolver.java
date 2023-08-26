@@ -439,8 +439,7 @@ public class XProcURIResolver implements URIResolver, EntityResolver, ModuleURIR
                 // Hack. Starting at maybe 10.9, Saxon got cranky about what comes back from
                 // attempting to read an unparsed text resource. It has to be a stream source.
                 // This is an attempt to work around that problem
-                if (ResourceRequest.TEXT_NATURE.equals(request.nature)
-                        || ResourceRequest.BINARY_NATURE.equals(request.nature)) {
+                if (ResourceRequest.TEXT_NATURE.equals(request.nature)) {
                     try {
                         URL url = new URL(source.getSystemId());
                         return new StreamSource(url.openStream(), source.getSystemId());
