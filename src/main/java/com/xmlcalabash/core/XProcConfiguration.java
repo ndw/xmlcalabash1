@@ -86,6 +86,7 @@ public class XProcConfiguration {
     public String stepName = null;
     public String entityResolver = "org.xmlresolver.Resolver";
     public String uriResolver = "org.xmlresolver.Resolver";
+    public String unparsedTextResolver = null;
     public String errorListener = null;
     public HashMap<QName,Class> implementations = new HashMap<QName,Class> ();
     public HashMap<String,String> serializationOptions = new HashMap<String,String>();
