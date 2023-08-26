@@ -20,6 +20,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 import org.xmlresolver.Resolver;
+import org.xmlresolver.sources.ResolverSAXSource;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParserFactory;
@@ -29,6 +30,7 @@ import javax.xml.transform.URIResolver;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamSource;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -399,10 +401,45 @@ public class XProcURIResolver implements URIResolver, EntityResolver, ModuleURIR
     @Override
     public Reader resolve(URI uri, String encoding, Configuration configuration) throws XPathException {
         if (unparsedTextResolver == null) {
-            // If there's no resolver, let Saxon do it...
-            unparsedTextResolver = new StandardUnparsedTextResolver();
+            // If there's no resolver, let's try to use the catalog resolver
+            if (catalogResolver != null) {
+                unparsedTextResolver = new CatalogUnparsedTextURIResolver(catalogResolver);
+            } else {
+                unparsedTextResolver = new StandardUnparsedTextResolver();
+            }
+
         }
 
         return unparsedTextResolver.resolve(uri, encoding, configuration);
     }
+
+    private class CatalogUnparsedTextURIResolver implements UnparsedTextURIResolver {
+        private final Resolver resolver;
+
+        public CatalogUnparsedTextURIResolver(Resolver resolver) {
+            this.resolver = resolver;
+        }
+
+        @Override
+        public Reader resolve(URI uri, String encoding, Configuration configuration) throws XPathException {
+            InputStreamReader reader = null;
+
+            try {
+                Source source = resolver.resolveNamespace(uri.toString(), "https://www.iana.org/assignments/media-types/text/plain", null);
+
+                if (source instanceof ResolverSAXSource) {
+                    InputSource isource = ((ResolverSAXSource) source).getInputSource();
+                    reader = new InputStreamReader(isource.getByteStream());
+                } else if (source != null) {
+                    URL url = new URL(source.getSystemId());
+                    reader = new InputStreamReader(url.openStream());
+                }
+            } catch (IOException|TransformerException ex) {
+                reader = null;
+            }
+
+            return reader;
+        }
+    }
+
 }

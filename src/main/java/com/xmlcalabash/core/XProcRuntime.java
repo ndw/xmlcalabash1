@@ -63,6 +63,7 @@ import com.xmlcalabash.util.XProcURIResolverX;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
 import net.sf.saxon.lib.FeatureKeys;
+import net.sf.saxon.lib.UnparsedTextURIResolver;
 import net.sf.saxon.om.AttributeMap;
 import net.sf.saxon.om.EmptyAttributeMap;
 import net.sf.saxon.s9api.ExtensionFunction;
@@ -225,6 +226,7 @@ public class XProcRuntime implements DeclarationScope {
         }
 
         saxonConfig.setURIResolver(uriResolver);
+        saxonConfig.setUnparsedTextURIResolver(uriResolver);
         staticBaseURI = URIUtils.cwdAsURI();
 
         try {
@@ -233,6 +235,9 @@ public class XProcRuntime implements DeclarationScope {
             }
             if (config.entityResolver != null) {
                 uriResolver.setUnderlyingEntityResolver(Class.forName(config.entityResolver).asSubclass(EntityResolver.class).getDeclaredConstructor().newInstance());
+            }
+            if (config.unparsedTextResolver != null) {
+                uriResolver.setUnderlyingUnparsedTextURIResolver(Class.forName(config.unparsedTextResolver).asSubclass(UnparsedTextURIResolver.class).getDeclaredConstructor().newInstance());
             }
 
             if (config.errorListener != null) {
