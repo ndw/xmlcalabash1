@@ -414,6 +414,14 @@ publishing {
             name = 'Norman Walsh'
           }
         }
+
+        repositories {
+          repository {
+            id 'maven-restlet'
+            name 'Restlet repository'
+            url 'https://maven.restlet.talend.com'
+          }
+        }
       }
 
       groupId = "com.xmlcalabash"
